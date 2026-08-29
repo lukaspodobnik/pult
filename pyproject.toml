@@ -1,5 +1,5 @@
 [project]
-name = "schoolools-tui"
+name = "schooltools-tui"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
@@ -12,8 +12,12 @@ dependencies = [
 ]
 
 [project.scripts]
-schoolools-tui = "schoolools_tui:main"
+schooltools-tui = "schooltools_tui:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"

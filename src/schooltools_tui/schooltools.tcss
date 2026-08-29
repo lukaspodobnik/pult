@@ -1,0 +1,49 @@
+Screen {
+    background: $surface;
+}
+
+#main {
+    height: 1fr;
+}
+
+#picker {
+    width: 24;
+    padding: 1;
+    border-right: solid $primary;
+}
+
+#content {
+    width: 1fr;
+    padding: 1 2;
+}
+
+.picker-entry {
+    height: 3;
+    padding: 1;
+}
+
+#page-title {
+    height: 3;
+    text-style: bold;
+    color: $accent;
+}
+
+#schedule {
+    height: 1fr;
+    border: round $primary;
+    padding: 1;
+}
+
+#next-lesson {
+    height: 5;
+    margin-top: 1;
+    border: round $secondary;
+    padding: 1;
+}
+
+#school-year {
+    height: 5;
+    margin-top: 1;
+    border: round $secondary;
+    padding: 1;
+}
