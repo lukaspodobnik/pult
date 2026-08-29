@@ -6,9 +6,10 @@ readme = "README.md"
 authors = [
     { name = "Lukas Podobnik", email = "lukas.podobnik@gmail.com" }
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 dependencies = [
     "textual>=8.2.8",
+    "tomli-w>=1.2.0",
 ]
 
 [project.scripts]
