@@ -1,8 +1,10 @@
 from typing import ClassVar
 
-from textual.app import App, ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.widgets import Footer, Header, Static
+from textual.app import App
+from textual.widgets import Static
+
+from schooltools_tui.config import load_app_config
+from schooltools_tui.screens.home import HomeScreen
 
 
 class SchooltoolsApp(App):
@@ -16,26 +18,17 @@ class SchooltoolsApp(App):
         ("h", "show_home", "Home"),
     ]
 
-    def compose(self) -> ComposeResult:
-        yield Header()
-
-        with Horizontal(id="main"):
-            with Vertical(id="picker"):
-                yield Static("Home", classes="picker-entry")
-                yield Static("7A", classes="picker-entry")
-                yield Static("8B", classes="picker-entry")
-
-            with Vertical(id="content"):
-                yield Static("Stundenplan", id="page-title")
-                yield Static("Hier erscheint dann der Stundenplan", id="schedule")
-                yield Static("Nächste Stunde", id="next-lesson")
-                yield Static("Schuljahr", id="school-year")
-
-        yield Footer()
+    def __init__(self):
+        self.app_config = load_app_config()
 
     def on_mount(self) -> None:
         self.theme = "gruvbox"
 
+        if self.app_config is None:
+            pass
+        else:
+            self.push_screen(HomeScreen(self.app_config))
+
     def action_show_home(self) -> None:
-        page_title = self.query_one("#page-title", Static)
-        page_title.update("Stundenplan")
+        assert self.app_config is not None
+        self.push_screen(HomeScreen(self.app_config))
