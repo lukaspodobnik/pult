@@ -7,11 +7,13 @@ from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label
 
 from schooltools_tui.config import AppConfig
-from schooltools_tui.initialization import SetupError, initialize_schooltools
+from schooltools_tui.initialization import (
+    SetupError,
+    initialize_schooltools,
+)
 
 
 class SetupScreen(Screen[AppConfig]):
-
     def compose(self) -> ComposeResult:
         yield Header()
 
@@ -54,7 +56,7 @@ class SetupScreen(Screen[AppConfig]):
 
         try:
             app_config = initialize_schooltools(
-                data_directory=data_directory_input.value,
+                root=data_directory_input.value,
                 editor=editor_input.value,
             )
         except SetupError as error:

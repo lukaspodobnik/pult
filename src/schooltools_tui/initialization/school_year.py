@@ -5,7 +5,7 @@ SCHOOL_YEAR_DIRECTORIES = (
     Path("classes"),
 )
 
-def initialize_schoolyear(root: Path, year: str) -> None:
+def initialize_school_year(root: Path, year: str) -> None:
     path = root / "school-years" / year
 
     for relative_path in SCHOOL_YEAR_DIRECTORIES:
