@@ -1,7 +1,7 @@
 
 from pathlib import Path
 
-from schooltools_tui.timetable import create_empty_timetable
+from schooltools_tui.timetable import create_empty_timetable, get_timetable_path
 
 SCHOOL_YEAR_DIRECTORIES = (
     Path("classes"),
@@ -14,5 +14,5 @@ def initialize_school_year(root: Path, year: str) -> None:
         directory = school_year_path / relative_path
         directory.mkdir(parents=True, exist_ok=True)
 
-    create_empty_timetable(school_year_path / "timetable.csv")
+    create_empty_timetable(get_timetable_path(root, year))
 
