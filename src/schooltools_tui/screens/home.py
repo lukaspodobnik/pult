@@ -5,7 +5,7 @@ from textual.widgets import Footer, Header, Static
 from schooltools_tui.screens.base import SchooltoolsScreen
 
 
-class HomeScreen(SchooltoolsScreen):
+class HomeScreen(SchooltoolsScreen[None]):
     def compose(self) -> ComposeResult:
         yield Header()
 

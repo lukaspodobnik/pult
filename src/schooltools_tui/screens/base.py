@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from textual.screen import Screen
 
@@ -8,7 +8,9 @@ if TYPE_CHECKING:
     from schooltools_tui.app import SchooltoolsApp
 
 
-class SchooltoolsScreen(Screen[None]):
+ScreenResult = TypeVar("ScreenResult")
+
+class SchooltoolsScreen(Screen[ScreenResult], Generic[ScreenResult]):
 
     @property
     def schooltools_app(self) -> "SchooltoolsApp":

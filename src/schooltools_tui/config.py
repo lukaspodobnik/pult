@@ -10,6 +10,7 @@ APP_CONFIG_PATH = Path.home() / ".config" / "schooltools-tui" / "config.toml"
 class AppConfig:
     data_directory: Path
     editor: str
+    active_school_year: str | None = None
 
 
 def load_app_config() -> AppConfig | None:
@@ -21,6 +22,7 @@ def load_app_config() -> AppConfig | None:
     return AppConfig(
         data_directory=Path(data["data_directory"]),
         editor=data["editor"],
+        active_school_year=data.get("active_school_year"),
     )
 
 def save_app_config(app_config: AppConfig) -> None:
@@ -28,5 +30,8 @@ def save_app_config(app_config: AppConfig) -> None:
         "data_directory": str(app_config.data_directory),
         "editor": app_config.editor,
     }
+
+    if app_config.active_school_year is not None:
+        data["active_school_year"] = app_config.active_school_year
     
     save_toml(APP_CONFIG_PATH, data)
