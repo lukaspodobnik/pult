@@ -1,0 +1,34 @@
+SetupScreen {
+    align: center middle;
+}
+
+SetupScreen #setup-form {
+    width: 64;
+    height: auto;
+    padding: 2 3;
+    background: $surface;
+    border: round $primary;
+}
+
+SetupScreen #setup-title {
+    width: 1fr;
+    height: 3;
+    content-align: center middle;
+    color: $text-accent;
+    text-style: bold;
+}
+
+SetupScreen .field-label {
+    height: 2;
+    margin-top: 1;
+    color: $foreground-muted;
+}
+
+SetupScreen Input {
+    width: 1fr;
+}
+
+SetupScreen #submit-setup {
+    width: 1fr;
+    margin-top: 2;
+}

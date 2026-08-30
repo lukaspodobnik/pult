@@ -1,0 +1,12 @@
+Screen {
+    background: $background;
+    color: $foreground;
+}
+
+Header {
+    background: $panel;
+}
+
+Footer {
+    background: $panel;
+}

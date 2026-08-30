@@ -8,7 +8,11 @@ from schooltools_tui.screens.setup import SetupScreen
 
 
 class SchooltoolsApp(App):
-    CSS_PATH = "schooltools.tcss"
+    CSS_PATH: ClassVar = [
+        "styles/app.tcss",
+        "styles/home.tcss",
+        "styles/setup.tcss",
+    ]
     
     TITLE = "Schooltools"
     SUB_TITLE = "Schulalltag im Blick"

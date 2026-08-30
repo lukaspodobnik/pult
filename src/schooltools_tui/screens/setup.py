@@ -6,7 +6,8 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label
 
-from schooltools_tui.config import AppConfig, save_app_config
+from schooltools_tui.config import AppConfig
+from schooltools_tui.initialization import SetupError, initialize_schooltools
 
 
 class SetupScreen(Screen[AppConfig]):
@@ -15,8 +16,11 @@ class SetupScreen(Screen[AppConfig]):
         yield Header()
 
         with Vertical(id="setup-form"):
-            yield Label("Willkommen bei Schooltools")
-            yield Label("Wo sollen deine Daten gespeichert werden?")
+            yield Label("Willkommen bei Schooltools", id="setup-title")
+            yield Label(
+                "Wo sollen deine Daten gespeichert werden?",
+                classes="field-label",
+            )
 
             yield Input(
                 value=str(Path.home() / "Schooltools"),
@@ -24,7 +28,10 @@ class SetupScreen(Screen[AppConfig]):
                 id="data-directory",
             )
 
-            yield Label("Welchen Editor möchtest du verwenden?")
+            yield Label(
+                "Welchen Editor möchtest du verwenden?",
+                classes="field-label",
+            )
 
             yield Input(
                 value="nvim",
@@ -45,37 +52,16 @@ class SetupScreen(Screen[AppConfig]):
         data_directory_input = self.query_one("#data-directory", Input)
         editor_input = self.query_one("#editor", Input)
 
-        data_directory_value = data_directory_input.value.strip()
-        editor_value = editor_input.value.strip()
-
-        if not data_directory_value:
+        try:
+            app_config = initialize_schooltools(
+                data_directory=data_directory_input.value,
+                editor=editor_input.value,
+            )
+        except SetupError as error:
             self.notify(
-                "Bitte gib ein Datenverzeichnis an.",
+                str(error),
                 severity="error",
             )
             return
-
-        if not editor_input:
-            self.notify(
-                "Bitte gib einen Editor an.",
-                severity="error",
-            )
-            return
-
-        data_directory = Path(data_directory_value).expanduser()
-
-        if data_directory.exists() and not data_directory.is_dir():
-            self.notify(
-                "Der angegebene Pfad ist kein Verzeichnis.",
-                severity="error",
-            )
-            return
-
-        app_config = AppConfig(
-            data_directory=data_directory,
-            editor=editor_value,
-        )
-
-        save_app_config(app_config)
 
         self.dismiss(app_config)
