@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from textual.app import App
 
-from schooltools_tui.config import AppConfig, load_app_config, save_app_config
+from schooltools_tui.config import AppConfig, load_app_config
 from schooltools_tui.screens.home import HomeScreen
 from schooltools_tui.screens.setup import SetupScreen
 
@@ -22,21 +22,25 @@ class SchooltoolsApp(App):
         super().__init__()
         self.app_config: AppConfig | None = None
 
+    def require_config(self) -> AppConfig:
+        if self.app_config is None:
+            raise RuntimeError("AppConfig wurde vor abschluss des Setups angefordert.")
+
+        return self.app_config
+
     def on_mount(self) -> None:
         self.theme = "gruvbox"
         self.app_config = load_app_config()
 
         if self.app_config is None:
-            self.push_screen(SetupScreen(), self.finish_setup,)
+            self.push_screen(SetupScreen(), self.on_setup_complete,)
         else:
-            self.push_screen(HomeScreen(self.app_config))
+            self.push_screen(HomeScreen())
 
-    def finish_setup(self, app_config: AppConfig | None) -> None:
+    def on_setup_complete(self, app_config: AppConfig | None) -> None:
         assert app_config is not None
-
-        save_app_config(app_config)
         self.app_config = app_config
-        self.push_screen(HomeScreen(app_config))
+        self.push_screen(HomeScreen())
 
     def action_show_home(self) -> None:
         if self.app_config is None:
@@ -46,4 +50,4 @@ class SchooltoolsApp(App):
         if isinstance(self.screen, HomeScreen):
             return
 
-        self.switch_screen(HomeScreen(self.app_config))
+        self.switch_screen(HomeScreen())

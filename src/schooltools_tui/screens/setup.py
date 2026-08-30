@@ -6,10 +6,10 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Input, Label
 
-from schooltools_tui.config import AppConfig
+from schooltools_tui.config import AppConfig, save_app_config
 
 
-class SetupScreen(Screen):
+class SetupScreen(Screen[AppConfig]):
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -75,5 +75,7 @@ class SetupScreen(Screen):
             data_directory=data_directory,
             editor=editor_value,
         )
+
+        save_app_config(app_config)
 
         self.dismiss(app_config)

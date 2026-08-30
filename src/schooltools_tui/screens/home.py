@@ -1,17 +1,11 @@
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Footer, Header, Static
 
-from schooltools_tui.config import AppConfig
+from schooltools_tui.screens.base import SchooltoolsScreen
 
 
-class HomeScreen(Screen):
-
-    def __init__(self, app_config: AppConfig) -> None:
-        super().__init__()
-        self.app_config = app_config
-
+class HomeScreen(SchooltoolsScreen):
     def compose(self) -> ComposeResult:
         yield Header()
 
