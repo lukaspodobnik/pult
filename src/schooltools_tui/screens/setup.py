@@ -26,8 +26,8 @@ class SetupScreen(Screen[AppConfig]):
 
             yield Input(
                 value=str(Path.home() / "Schooltools"),
-                placeholder="Pfad zum Dateiverzeichnis",
-                id="data-directory",
+                placeholder="Pfad zum Root-Verzeichnis",
+                id="root",
             )
 
             yield Label(
@@ -51,12 +51,12 @@ class SetupScreen(Screen[AppConfig]):
 
     @on(Button.Pressed, "#submit-setup")
     def submit_setup(self) -> None:
-        data_directory_input = self.query_one("#data-directory", Input)
+        root_input = self.query_one("#root", Input)
         editor_input = self.query_one("#editor", Input)
 
         try:
             app_config = initialize_schooltools(
-                root=data_directory_input.value,
+                root=root_input.value,
                 editor=editor_input.value,
             )
         except SetupError as error:

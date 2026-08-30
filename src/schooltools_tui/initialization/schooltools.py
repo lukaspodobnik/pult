@@ -35,7 +35,7 @@ def initialize_schooltools(root: str, editor: str) -> AppConfig:
         ) from error
 
     app_config = AppConfig(
-        data_directory=root_path,
+        root=root_path,
         editor=editor,
         active_school_year=None,
     )

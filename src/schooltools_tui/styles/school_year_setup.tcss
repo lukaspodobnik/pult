@@ -1,0 +1,33 @@
+SchoolYearSetupScreen {
+    align: center middle;
+}
+
+SchoolYearSetupScreen #school-year-setup-form {
+    width: 60;
+    height: auto;
+    padding: 2 3;
+    background: $surface;
+    border: round $primary;
+}
+
+SchoolYearSetupScreen #school-year-setup-title {
+    width: 1fr;
+    height: 3;
+    content-align: center middle;
+    color: $text-accent;
+    text-style: bold;
+}
+
+SchoolYearSetupScreen #school-year-setup-description {
+    width: 1fr;
+    height: 2;
+    color: $foreground-muted;
+    text-align: center;
+}
+
+SchoolYearSetupScreen #school-years {
+    width: 1fr;
+    height: 7;
+    margin-top: 1;
+    border: round $secondary;
+}

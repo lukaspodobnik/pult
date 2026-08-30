@@ -1,13 +1,57 @@
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
-
-
+from textual import on
 from textual.app import ComposeResult
-from textual.widgets import Footer, Header
+from textual.containers import Vertical
+from textual.widgets import Footer, Header, Label, OptionList
+from textual.widgets.option_list import Option
 
+from schooltools_tui.initialization.school_year import initialize_school_year
 from schooltools_tui.screens.base import SchooltoolsScreen
 
 
-class SchoolYearSetupScreen(SchooltoolsScreen[str | None]):
+class SchoolYearSetupScreen(SchooltoolsScreen[str]):
     def compose(self) -> ComposeResult:
         yield Header()
+
+        with Vertical(id="school-year-setup-form"):
+            yield Label("Schuljahr einrichten", id="school-year-setup-title")
+            yield Label(
+                "Wähle das Schuljahr, mit dem du arbeiten möchtest.",
+                id="school-year-setup-description",
+            )
+            yield OptionList(
+                *self.get_year_options(),
+                id="school-years",
+            )
+
         yield Footer()
+
+    def get_year_options(self) -> list[Option]:
+        now = datetime.now(ZoneInfo("Europe/Berlin"))
+        start_year = now.year if now.month >= 8 else now.year - 1
+        return [
+            Option(
+                f"{year}-{year + 1}",
+                id=f"year-{year}-{year + 1}",
+            )
+            for year in range(start_year - 1, start_year + 2)
+        ]
+
+    def on_mount(self) -> None:
+        option_list = self.query_one("#school-years", OptionList)
+        option_list.highlighted = 1
+        option_list.focus()
+
+    @on(OptionList.OptionSelected, "#school-years")
+    def select_school_year(self, event: OptionList.OptionSelected) -> None:
+        option_id = event.option_id
+        if option_id is None:
+            return
+
+        year = option_id.removeprefix("year-")
+
+        initialize_school_year(self.app_config.root, year)
+
+        self.dismiss(year)
