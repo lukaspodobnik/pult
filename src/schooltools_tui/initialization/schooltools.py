@@ -1,16 +1,20 @@
-
+from importlib.resources import files
 from pathlib import Path
 
 from schooltools_tui.config import AppConfig, save_app_config
-
+from schooltools_tui.subject import FILE_NAME as subject_file
 
 class SetupError(Exception):
     """An expected error while setting up Schooltools."""
+
 
 INITIAL_DIRECTORIES = (
     Path("sequences"),
     Path("school-years"),
 )
+
+DEFAULT_FILES = (subject_file,)
+
 
 def initialize_schooltools(root: str, editor: str) -> AppConfig:
     root = root.strip()
@@ -29,6 +33,7 @@ def initialize_schooltools(root: str, editor: str) -> AppConfig:
 
     try:
         _create_initial_directories(root_path)
+        _create_default_files(root_path)
     except OSError as error:
         raise SetupError(
             f"Das Datenverzeichnis konnte nicht initialisiert werden: {error}"
@@ -54,3 +59,16 @@ def _create_initial_directories(root_path: Path) -> None:
     for relative_path in INITIAL_DIRECTORIES:
         directory = root_path / relative_path
         directory.mkdir(parents=True, exist_ok=True)
+
+
+def _create_default_files(root_path: Path) -> None:
+    for default_file_path in DEFAULT_FILES:
+        destination = root_path / default_file_path
+
+        if destination.exists():
+            continue
+
+        file = files("schooltools_tui.defaults") / default_file_path
+        content = file.read_text(encoding="utf-8")
+
+        destination.write_text(content, encoding="utf-8")

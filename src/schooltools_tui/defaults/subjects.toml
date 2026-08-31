@@ -1,0 +1,9 @@
+[[subjects]]
+id = "mathematik"
+name = "Mathematik"
+short_name = "MA"
+
+[[subjects]]
+id = "informatik"
+name = "Informatik"
+short_name = "INF"
