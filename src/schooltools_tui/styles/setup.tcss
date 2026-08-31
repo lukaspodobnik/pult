@@ -28,6 +28,10 @@ SetupScreen Input {
     width: 1fr;
 }
 
+SetupScreen Select {
+    width: 1fr;
+}
+
 SetupScreen #submit-setup {
     width: 1fr;
     margin-top: 2;

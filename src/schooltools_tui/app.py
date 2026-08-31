@@ -47,13 +47,6 @@ class SchooltoolsApp(App):
             )
             return
 
-        if self.app_config.active_school_year is None:
-            self.push_screen(
-                SchoolYearSetupScreen(),
-                self.on_school_year_setup_complete,
-            )
-            return
-
         self.push_screen(HomeScreen())
 
     def on_setup_complete(self, app_config: AppConfig | None) -> None:
@@ -74,13 +67,6 @@ class SchooltoolsApp(App):
     def action_show_home(self) -> None:
         if self.app_config is None:
             self.notify("Schooltools muss zuerst eingerichtet werden.")
-            return
-
-        if self.app_config.active_school_year is None:
-            self.notify(
-                "Bitte richte zuerst ein Schuljahr ein.",
-                severity="warning",
-            )
             return
 
         if isinstance(self.screen, HomeScreen):

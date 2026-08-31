@@ -35,8 +35,6 @@ class HomeScreen(SchooltoolsScreen[None]):
         config = self.app_config
         school_year = config.active_school_year
 
-        assert school_year is not None
-
         path = get_timetable_path(config.root, school_year)
         entries = load_timetable(path)
         self.populate_timetable(entries)
@@ -69,6 +67,5 @@ class HomeScreen(SchooltoolsScreen[None]):
                     cells.append(f"{entry.class_name}-{entry.subject}{entry.room}")
 
             table.add_row(*cells)
-
 
 

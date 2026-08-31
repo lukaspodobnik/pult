@@ -2,6 +2,7 @@ from importlib.resources import files
 from pathlib import Path
 
 from schooltools_tui.config import AppConfig, save_app_config
+from schooltools_tui.initialization.school_year import initialize_school_year
 from schooltools_tui.subject import SUBJECTS_FILE_NAME as subject_file
 
 
@@ -17,15 +18,19 @@ INITIAL_DIRECTORIES = (
 DEFAULT_FILES = (subject_file,)
 
 
-def initialize_schooltools(root: str, editor: str) -> AppConfig:
+def initialize_schooltools(root: str, editor: str, year: str) -> AppConfig:
     root = root.strip()
     editor = editor.strip()
+    year = year.strip()
 
     if not root:
         raise SetupError("Bitte gib ein Datenverzeichnis an.")
 
     if not editor:
         raise SetupError("Bitte gib einen Editor an.")
+
+    if not year:
+        raise SetupError("Bitte wähle ein Schuljahr aus.")
 
     root_path = Path(root).expanduser()
 
@@ -35,6 +40,7 @@ def initialize_schooltools(root: str, editor: str) -> AppConfig:
     try:
         _create_initial_directories(root_path)
         _create_default_files(root_path)
+        initialize_school_year(root_path, year)
     except OSError as error:
         raise SetupError(
             f"Das Datenverzeichnis konnte nicht initialisiert werden: {error}"
@@ -43,7 +49,7 @@ def initialize_schooltools(root: str, editor: str) -> AppConfig:
     app_config = AppConfig(
         root=root_path,
         editor=editor,
-        active_school_year=None,
+        active_school_year=year,
     )
 
     try:

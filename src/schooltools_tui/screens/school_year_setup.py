@@ -1,13 +1,13 @@
-from datetime import datetime
-from zoneinfo import ZoneInfo
-
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import Footer, Header, Label, OptionList
 from textual.widgets.option_list import Option
 
-from schooltools_tui.initialization.school_year import initialize_school_year
+from schooltools_tui.initialization.school_year import (
+    get_school_year_options,
+    initialize_school_year,
+)
 from schooltools_tui.screens.base import SchooltoolsScreen
 
 
@@ -22,22 +22,14 @@ class SchoolYearSetupScreen(SchooltoolsScreen[str]):
                 id="school-year-setup-description",
             )
             yield OptionList(
-                *self.get_year_options(),
+                *[
+                    Option(label, id=f"year-{year}")
+                    for label, year in get_school_year_options()
+                ],
                 id="school-years",
             )
 
         yield Footer()
-
-    def get_year_options(self) -> list[Option]:
-        now = datetime.now(ZoneInfo("Europe/Berlin"))
-        start_year = now.year if now.month >= 8 else now.year - 1
-        return [
-            Option(
-                f"{year}-{year + 1}",
-                id=f"year-{year}-{year + 1}",
-            )
-            for year in range(start_year - 1, start_year + 2)
-        ]
 
     def on_mount(self) -> None:
         option_list = self.query_one("#school-years", OptionList)

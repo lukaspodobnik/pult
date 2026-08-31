@@ -4,17 +4,20 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Input, Label
+from textual.widgets import Button, Footer, Header, Input, Label, Select
 
 from schooltools_tui.config import AppConfig
 from schooltools_tui.initialization import (
     SetupError,
     initialize_schooltools,
 )
+from schooltools_tui.initialization.school_year import get_school_year_options
 
 
 class SetupScreen(Screen[AppConfig]):
     def compose(self) -> ComposeResult:
+        school_year_options = get_school_year_options()
+
         yield Header()
 
         with Vertical(id="setup-form"):
@@ -41,6 +44,18 @@ class SetupScreen(Screen[AppConfig]):
                 id="editor",
             )
 
+            yield Label(
+                "Mit welchem Schuljahr möchtest du beginnen?",
+                classes="field-label",
+            )
+
+            yield Select(
+                school_year_options,
+                value=school_year_options[1][1],
+                allow_blank=False,
+                id="school-year",
+            )
+
             yield Button(
                 "Einrichten",
                 id="submit-setup",
@@ -53,11 +68,13 @@ class SetupScreen(Screen[AppConfig]):
     def submit_setup(self) -> None:
         root_input = self.query_one("#root", Input)
         editor_input = self.query_one("#editor", Input)
+        school_year_select = self.query_one("#school-year", Select)
 
         try:
             app_config = initialize_schooltools(
                 root=root_input.value,
                 editor=editor_input.value,
+                year=str(school_year_select.value),
             )
         except SetupError as error:
             self.notify(
