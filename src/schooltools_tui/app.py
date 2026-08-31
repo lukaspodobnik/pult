@@ -2,9 +2,8 @@ from typing import ClassVar
 
 from textual.app import App
 
-from schooltools_tui.config import AppConfig, load_app_config, save_app_config
+from schooltools_tui.config import AppConfig, load_app_config
 from schooltools_tui.screens.home import HomeScreen
-from schooltools_tui.screens.school_year_setup import SchoolYearSetupScreen
 from schooltools_tui.screens.setup import SetupScreen
 
 
@@ -52,16 +51,6 @@ class SchooltoolsApp(App):
     def on_setup_complete(self, app_config: AppConfig | None) -> None:
         assert app_config is not None
         self.app_config = app_config
-        self.show_initial_screen()
-
-    def on_school_year_setup_complete(self, year: str | None) -> None:
-        if year is None:
-            self.show_initial_screen()
-            return
-
-        app_config = self.require_config()
-        app_config.active_school_year = year
-        save_app_config(app_config)
         self.show_initial_screen()
 
     def action_show_home(self) -> None:
