@@ -1,31 +1,31 @@
-HomeScreen #main {
+MainScreen #main {
     height: 1fr;
 }
 
-HomeScreen #picker {
+MainScreen #picker {
     width: 24;
     padding: 1;
     background: $panel;
     border-right: tall $primary;
 }
 
-HomeScreen .picker-entry {
+MainScreen .picker-entry {
     height: 3;
     padding: 1 2;
     color: $foreground-muted;
 }
 
-HomeScreen .picker-entry:hover {
+MainScreen .picker-entry:hover {
     background: $primary-muted;
     color: $text-primary;
 }
 
-HomeScreen #content {
+MainScreen #content {
     width: 1fr;
     padding: 1 2;
 }
 
-HomeScreen #page-title {
+MainScreen #page-title {
     height: 3;
     padding-left: 1;
     content-align-vertical: middle;
@@ -33,7 +33,7 @@ HomeScreen #page-title {
     text-style: bold;
 }
 
-HomeScreen #schedule {
+MainScreen #schedule {
     height: 1fr;
     min-height: 10;
     padding: 1 2;
@@ -41,8 +41,8 @@ HomeScreen #schedule {
     border: round $primary;
 }
 
-HomeScreen #next-lesson,
-HomeScreen #school-year {
+MainScreen #next-lesson,
+MainScreen #school-year {
     height: 5;
     margin-top: 1;
     padding: 1 2;

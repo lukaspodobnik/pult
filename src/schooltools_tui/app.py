@@ -3,8 +3,8 @@ from typing import ClassVar
 from textual.app import App
 
 from schooltools_tui.config import AppConfig, load_app_config
-from schooltools_tui.screens.home import HomeScreen
-from schooltools_tui.screens.setup import SetupScreen
+from schooltools_tui.screens.main import MainScreen
+from schooltools_tui.screens.setup_school_tools import SetupScreen
 
 
 class SchooltoolsApp(App):
@@ -46,7 +46,7 @@ class SchooltoolsApp(App):
             )
             return
 
-        self.push_screen(HomeScreen())
+        self.push_screen(MainScreen())
 
     def on_setup_complete(self, app_config: AppConfig | None) -> None:
         assert app_config is not None
@@ -58,7 +58,7 @@ class SchooltoolsApp(App):
             self.notify("Schooltools muss zuerst eingerichtet werden.")
             return
 
-        if isinstance(self.screen, HomeScreen):
+        if isinstance(self.screen, MainScreen):
             return
 
-        self.switch_screen(HomeScreen())
+        self.switch_screen(MainScreen())
