@@ -44,11 +44,11 @@ class MainScreen(SchooltoolsScreen[None]):
 
     def refresh_picker(self) -> None:
         config = self.app_config
+        school_classes = load_school_classes(config.root, config.active_school_year)
 
-        school_classes = load_school_classes(
-            config.root, config.active_school_year
-        )
         picker = self.query_one("#picker-options", OptionList)
+        picker.clear_options()
+
         picker.add_option(Option("HOME", id="home"))
         for school_class in school_classes:
             picker.add_option(Option(school_class.id, id=f"class-{school_class.id}"))
@@ -84,4 +84,7 @@ class MainScreen(SchooltoolsScreen[None]):
 
     @on(Button.Pressed, "#register-class")
     def register_class(self) -> None:
-        self.app.push_screen(SchoolClassSetupScreen())
+        self.app.push_screen(SchoolClassSetupScreen(), self.school_class_registered)
+
+    def school_class_registered(self, _result: None) -> None:
+        self.refresh_picker()

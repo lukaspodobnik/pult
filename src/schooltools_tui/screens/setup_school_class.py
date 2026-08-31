@@ -13,7 +13,7 @@ from schooltools_tui.screens.base import SchooltoolsScreen
 from schooltools_tui.subject import load_subjects
 
 
-class SchoolClassSetupScreen(SchooltoolsScreen):
+class SchoolClassSetupScreen(SchooltoolsScreen[None]):
     def compose(self) -> ComposeResult:
         yield Header()
 
