@@ -22,9 +22,6 @@ def load_subjects(root: Path) -> list[Subject]:
     path = root / SUBJECTS_FILE_NAME
     data = load_toml(path)
 
-    if data is None:
-        raise FileNotFoundError(f"Die Fächerdatei wurde nicht gefunden: {path}")
-
     subjects = data.get("subjects")
 
     if not isinstance(subjects, list):

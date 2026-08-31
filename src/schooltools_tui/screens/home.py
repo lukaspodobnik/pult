@@ -1,8 +1,10 @@
+from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import DataTable, Footer, Header, Static
+from textual.widgets import Button, DataTable, Footer, Header, Static
 
 from schooltools_tui.screens.base import SchooltoolsScreen
+from schooltools_tui.screens.setup_school_class import SchoolClassSetupScreen
 from schooltools_tui.timetable import TimetableEntry, get_timetable_path, load_timetable
 
 WEEKDAYS = (
@@ -13,6 +15,7 @@ WEEKDAYS = (
     ("friday", "Freitag"),
 )
 
+
 class HomeScreen(SchooltoolsScreen[None]):
     def compose(self) -> ComposeResult:
         yield Header()
@@ -22,6 +25,7 @@ class HomeScreen(SchooltoolsScreen[None]):
                 yield Static("Home", classes="picker-entry")
                 yield Static("7A", classes="picker-entry")
                 yield Static("8B", classes="picker-entry")
+                yield Button("Klasse anlegen", variant="primary", id="register-class")
 
             with Vertical(id="content"):
                 yield Static("Stundenplan", id="page-title")
@@ -50,11 +54,8 @@ class HomeScreen(SchooltoolsScreen[None]):
             (entry.period for entry in entries),
             default=6,
         )
-        
-        entries_by_slot = {
-            (entry.weekday, entry.period): entry
-            for entry in entries
-        }
+
+        entries_by_slot = {(entry.weekday, entry.period): entry for entry in entries}
 
         for period in range(1, max_period + 1):
             cells = [str(period)]
@@ -68,4 +69,6 @@ class HomeScreen(SchooltoolsScreen[None]):
 
             table.add_row(*cells)
 
-
+    @on(Button.Pressed, "#register-class")
+    def register_class(self) -> None:
+        self.app.push_screen(SchoolClassSetupScreen())

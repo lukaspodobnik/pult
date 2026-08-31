@@ -14,9 +14,9 @@ class AppConfig:
 
 
 def load_app_config() -> AppConfig | None:
-    data = load_toml(APP_CONFIG_PATH)
-
-    if data is None:
+    try:
+        data = load_toml(APP_CONFIG_PATH)
+    except FileNotFoundError:
         return None
 
     root = data.get("root")
@@ -36,4 +36,5 @@ def save_app_config(app_config: AppConfig) -> None:
         "active_school_year": app_config.active_school_year,
     }
 
+    APP_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     save_toml(APP_CONFIG_PATH, data)

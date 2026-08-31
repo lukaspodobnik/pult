@@ -10,7 +10,7 @@ from schooltools_tui.screens.base import SchooltoolsScreen
 from schooltools_tui.subject import load_subjects
 
 
-class SchoolClassSetup(SchooltoolsScreen):
+class SchoolClassSetupScreen(SchooltoolsScreen):
     def compose(self) -> ComposeResult:
         yield Header()
 
@@ -32,8 +32,11 @@ class SchoolClassSetup(SchooltoolsScreen):
     def submit_class(self) -> None:
         school_class_id_input = self.query_one("#class-name", Input)
         subjects = self.query_one("#subjects", SelectionList).selected
+        
         school_class = SchoolClass(id=school_class_id_input.value, subject_ids=subjects)
         initialize_school_class(self.app_config.root, self.app_config.active_school_year, school_class)
+        
+        self.dismiss()
 
 
 

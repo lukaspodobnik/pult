@@ -37,8 +37,6 @@ def create_empty_timetable(path: Path) -> None:
 
 def load_timetable(path: Path) -> list[TimetableEntry]:
     rows = load_csv(path)
-    if rows is None:
-        raise FileNotFoundError(f"Der Stundenplan wurde nicht gefunden: {path}")
 
     entries = []
     for row in rows:
