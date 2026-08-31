@@ -2,7 +2,8 @@ from importlib.resources import files
 from pathlib import Path
 
 from schooltools_tui.config import AppConfig, save_app_config
-from schooltools_tui.subject import FILE_NAME as subject_file
+from schooltools_tui.subject import SUBJECTS_FILE_NAME as subject_file
+
 
 class SetupError(Exception):
     """An expected error while setting up Schooltools."""
