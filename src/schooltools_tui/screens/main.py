@@ -1,25 +1,21 @@
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, DataTable, Footer, Header, OptionList, Static
+from textual.containers import Container, Horizontal, Vertical
+from textual.widgets import Button, Footer, Header, OptionList
 from textual.widgets.option_list import Option
 
 from schooltools_tui.school_class import load_school_classes
 from schooltools_tui.screens.base import SchooltoolsScreen
 from schooltools_tui.screens.setup_school_class import SchoolClassSetupScreen
-from schooltools_tui.timetable import TimetableEntry, get_timetable_path, load_timetable
-
-WEEKDAYS = (
-    ("monday", "Montag"),
-    ("tuesday", "Dienstag"),
-    ("wednesday", "Mittwoch"),
-    ("thursday", "Donnerstag"),
-    ("friday", "Freitag"),
-)
+from schooltools_tui.timetable import get_timetable_path, load_timetable
+from schooltools_tui.views.home import HomeView
 
 
 class MainScreen(SchooltoolsScreen[None]):
     def compose(self) -> ComposeResult:
+        config = self.app_config
+        timetable_entries = load_timetable(get_timetable_path(config.root, config.active_school_year))
+
         yield Header()
 
         with Horizontal(id="main"):
@@ -27,20 +23,13 @@ class MainScreen(SchooltoolsScreen[None]):
                 yield OptionList(id="picker-options")
                 yield Button("Klasse anlegen", variant="primary", id="register-class")
 
-            with Vertical(id="content"):
-                yield Static("Stundenplan", id="page-title")
-                yield DataTable(id="schedule")
-                yield Static("Nächste Stunde", id="next-lesson")
-                yield Static("Schuljahr", id="school-year")
+            with Container(id="content"):
+                yield HomeView(timetable_entries)
 
         yield Footer()
 
     def on_mount(self) -> None:
-        config = self.app_config
         self.refresh_picker()
-        path = get_timetable_path(config.root, config.active_school_year)
-        entries = load_timetable(path)
-        self.populate_timetable(entries)
 
     def refresh_picker(self) -> None:
         config = self.app_config
@@ -56,31 +45,6 @@ class MainScreen(SchooltoolsScreen[None]):
         picker.highlighted = 0
         picker.focus()
 
-    def populate_timetable(self, entries: list[TimetableEntry]) -> None:
-        table = self.query_one("#schedule", DataTable)
-
-        table.add_column("Stunde", key="period")
-        for weekday, label in WEEKDAYS:
-            table.add_column(label, key=weekday)
-
-        max_period = max(
-            (entry.period for entry in entries),
-            default=6,
-        )
-
-        entries_by_slot = {(entry.weekday, entry.period): entry for entry in entries}
-
-        for period in range(1, max_period + 1):
-            cells = [str(period)]
-
-            for weekday, label in WEEKDAYS:
-                entry = entries_by_slot.get((weekday, period))
-                if entry is None:
-                    cells.append("--")
-                else:
-                    cells.append(f"{entry.class_name}-{entry.subject}{entry.room}")
-
-            table.add_row(*cells)
 
     @on(Button.Pressed, "#register-class")
     def register_class(self) -> None:
