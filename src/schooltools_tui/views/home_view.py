@@ -21,6 +21,17 @@ WEEKDAYS = (
 )
 
 
+class TimetableDataTable(DataTable):
+    def on_mount(self) -> None:
+        self.show_cursor = self.has_focus
+
+    def on_focus(self) -> None:
+        self.show_cursor = True
+
+    def on_blur(self) -> None:
+        self.show_cursor = False
+
+
 class HomeView(Vertical):
     class EditTimetableSlot(Message):
         def __init__(
@@ -51,7 +62,7 @@ class HomeView(Vertical):
         self.current_time_position: tuple[str | None, int | None] | None = None
 
     def compose(self) -> ComposeResult:
-        yield DataTable(id="schedule", cursor_type="cell")
+        yield TimetableDataTable(id="schedule", cursor_type="cell")
 
     def on_mount(self) -> None:
         self.refresh_time_highlight()

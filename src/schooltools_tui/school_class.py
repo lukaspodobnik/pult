@@ -21,6 +21,9 @@ class SchoolClass:
         if any(character.isspace() for character in self.id):
             raise ValueError("Die Klassenbezeichnung darf keine Leerzeichen enthalten.")
 
+        if not self.subject_ids:
+            raise ValueError("Es muss mindestens ein Fach gewählt werden.")
+
 
 def school_class_sort_key(school_class: SchoolClass) -> tuple[int, str]:
     match = re.fullmatch(r"([0-9]+)(.*)", school_class.id)
