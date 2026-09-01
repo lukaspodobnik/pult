@@ -11,7 +11,12 @@ from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
-from schooltools_tui.timetable import TimetableEntry, get_timetable_path, load_timetable
+from schooltools_tui.timetable import (
+    TimetableEntry,
+    get_timetable_path,
+    load_timetable,
+    save_timetable_entry,
+)
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 
@@ -105,5 +110,12 @@ class MainScreen(SchooltoolsScreen[None]):
             self.timetable_edited,
         )
 
-    def timetable_edited(self, timetable_entry: TimetableEntry | None) -> None:
-        pass
+    async def timetable_edited(self, timetable_entry: TimetableEntry | None) -> None:
+        if timetable_entry is None:
+            return
+
+        config = self.app_config
+        path = get_timetable_path(config.root, config.active_school_year)
+        save_timetable_entry(path, timetable_entry)
+        
+        await self.show_home_view()

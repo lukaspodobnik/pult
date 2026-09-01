@@ -67,3 +67,9 @@ def save_timetable(path: Path, entries: list[TimetableEntry]) -> None:
         rows.append(row)
 
     save_csv(path, TIMETABLE_FIELDS, rows)
+
+
+def save_timetable_entry(path: Path, entry: TimetableEntry) -> None:
+    entries = load_timetable(path)
+    entries.append(entry)
+    save_timetable(path, entries)
