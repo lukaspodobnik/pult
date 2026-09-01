@@ -9,8 +9,9 @@ from textual.widgets.option_list import Option
 
 from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
-from schooltools_tui.timetable import get_timetable_path, load_timetable
+from schooltools_tui.timetable import TimetableEntry, get_timetable_path, load_timetable
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 
@@ -92,3 +93,17 @@ class MainScreen(SchooltoolsScreen[None]):
         picker = self.query_one("#picker-options", OptionList)
         picker.highlighted = 0
         picker.focus()
+
+    @on(HomeView.EditTimetableSlot)
+    def edit_timetable_slot(self, message: HomeView.EditTimetableSlot) -> None:
+        self.app.push_screen(
+            EditTimetableScreen(
+                weekday=message.weekday,
+                period=message.period,
+                entry=message.entry,
+            ),
+            self.timetable_edited,
+        )
+
+    def timetable_edited(self, timetable_entry: TimetableEntry | None) -> None:
+        pass

@@ -1,6 +1,7 @@
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
+from textual.message import Message
 from textual.widgets import DataTable
 
 from schooltools_tui.timetable import TimetableEntry
@@ -15,9 +16,22 @@ WEEKDAYS = (
 
 
 class HomeView(Vertical):
+    class EditTimetableSlot(Message):
+        def __init__(
+            self,
+            weekday: str,
+            period: int,
+            entry: TimetableEntry | None,
+        ) -> None:
+            super().__init__()
+            self.weekday = weekday
+            self.period = period
+            self.entry = entry
+
     def __init__(self, timetable_entries: list[TimetableEntry]):
         super().__init__()
         self.timetable_entries = timetable_entries
+        self.timetable_entries_by_slot = {(entry.weekday, entry.period): entry for entry in timetable_entries}
 
     def compose(self) -> ComposeResult:
         yield DataTable(id="schedule", cursor_type="cell")
@@ -36,13 +50,11 @@ class HomeView(Vertical):
             default=6,
         )
 
-        entries_by_slot = {(entry.weekday, entry.period): entry for entry in entries}
-
         for period in range(1, max_period + 1):
             cells = []
 
             for weekday, label in WEEKDAYS:
-                entry = entries_by_slot.get((weekday, period))
+                entry = self.timetable_entries_by_slot.get((weekday, period))
                 if entry is None:
                     cells.append("--")
                 else:
@@ -55,4 +67,17 @@ class HomeView(Vertical):
         weekday = event.cell_key.column_key.value
         period = event.cell_key.row_key.value
 
-        self.notify(f"Ausgewählte Zelle: {weekday}-{period}")
+        assert weekday is not None
+        assert period is not None
+
+        weekday = str(weekday)
+        period = int(period)
+        entry = self.timetable_entries_by_slot.get((weekday, period))
+
+        self.post_message(
+            self.EditTimetableSlot(
+                weekday=weekday,
+                period=period,
+                entry=entry,
+            )
+        )
