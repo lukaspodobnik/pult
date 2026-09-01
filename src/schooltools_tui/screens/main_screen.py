@@ -11,6 +11,7 @@ from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
+from schooltools_tui.subject import load_subjects
 from schooltools_tui.timetable import (
     TimetableEntry,
     get_timetable_path,
@@ -46,13 +47,12 @@ class MainScreen(SchooltoolsScreen[None]):
 
     def refresh_picker(self) -> None:
         config = self.app_config
-        school_classes = load_school_classes(config.root, config.active_school_year)
 
         picker = self.query_one("#picker-options", OptionList)
         picker.clear_options()
 
         picker.add_option(Option("HOME", id="home"))
-        for school_class in school_classes:
+        for school_class in load_school_classes(config.root, config.active_school_year):
             option_id = f"class-{school_class.id}"
             picker.add_option(Option(school_class.id, id=option_id))
             self.school_classes_by_id[option_id] = school_class
@@ -101,11 +101,16 @@ class MainScreen(SchooltoolsScreen[None]):
 
     @on(HomeView.EditTimetableSlot)
     def edit_timetable_slot(self, message: HomeView.EditTimetableSlot) -> None:
+        config = self.app_config
+        school_classes = load_school_classes(config.root, config.active_school_year)
+        subjects = load_subjects(config.root)
         self.app.push_screen(
             EditTimetableScreen(
                 weekday=message.weekday,
                 period=message.period,
                 entry=message.entry,
+                school_classes=school_classes,
+                subjects=subjects,
             ),
             self.timetable_edited,
         )
@@ -117,5 +122,5 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         path = get_timetable_path(config.root, config.active_school_year)
         save_timetable_entry(path, timetable_entry)
-        
+
         await self.show_home_view()
