@@ -3,6 +3,7 @@ from pathlib import Path
 
 from schooltools_tui.config import AppConfig, save_app_config
 from schooltools_tui.initialization.school_year import initialize_school_year
+from schooltools_tui.period import PERIODS_FILE_NAME as periods_file
 from schooltools_tui.subject import SUBJECTS_FILE_NAME as subject_file
 
 
@@ -15,7 +16,10 @@ INITIAL_DIRECTORIES = (
     Path("school-years"),
 )
 
-DEFAULT_FILES = (subject_file,)
+DEFAULT_FILES = (
+    subject_file,
+    periods_file,
+)
 
 
 def initialize_schooltools(root: str, editor: str, year: str) -> AppConfig:

@@ -1,0 +1,39 @@
+[[periods]]
+number = 1
+start = "08:00"
+end = "08:45"
+
+[[periods]]
+number = 2
+start = "08:45"
+end = "09:30"
+
+[[periods]]
+number = 3
+start = "09:50"
+end = "10:35"
+
+[[periods]]
+number = 4
+start = "10:35"
+end = "11:20"
+
+[[periods]]
+number = 5
+start = "11:35"
+end = "12:20"
+
+[[periods]]
+number = 6
+start = "12:20"
+end = "13:05"
+
+[[periods]]
+number = 7
+start = "13:20"
+end = "14:05"
+
+[[periods]]
+number = 8
+start = "14:05"
+end = "14:50"

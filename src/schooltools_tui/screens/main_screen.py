@@ -7,6 +7,7 @@ from textual.widget import Widget
 from textual.widgets import Button, Footer, Header, OptionList
 from textual.widgets.option_list import Option
 
+from schooltools_tui.period import load_periods
 from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.edit_timetable_screen import (
@@ -93,8 +94,9 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         path = get_timetable_path(config.root, config.active_school_year)
         timetable_entries = load_timetable(path)
+        periods = load_periods(config.root)
         subjects = load_subjects(config.root)
-        await self.switch_view(HomeView(timetable_entries, subjects))
+        await self.switch_view(HomeView(timetable_entries, subjects, periods))
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
         await self.switch_view(SchoolClassView(school_class))
