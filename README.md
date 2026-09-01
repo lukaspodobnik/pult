@@ -1,36 +1,51 @@
-# Ein persönliches Projekt zur Verwaltung alltäglicher schulbezogener Aufgaben.
+# Schooltools TUI
 
-## Zusammenfassung
+Eine persönliche TUI zur Planung und Begleitung des Schulalltags.
 
-Eine kleine TUI, die Stundenplan, Unterrichtssequenzen und Ausfälle verwaltet. Der Fortschritt angelegter Klassen wird verfolgt und angezeigt. **Bayerische** Feiertage und Schulferien werden berücksichtigt, um die Anzahl verbleibender Unterrichtsstunden zu berechnen.
+## Geplanter Funktionsumfang für Version 1
 
+### Einrichtung und Verwaltung
 
-### Geplanter Funktionsumfang für Version 1
+- Datenverzeichnis, Editor und aktives Schuljahr einrichten.
+- Schuljahre anlegen und wechseln.
+- Klassen mit ihren Fächern anlegen und verwalten.
 
-- Styling nach dem aktuellen **Omrachy**-Theme.
-- Initialisierung eines Stammordners sowie Ordner für Schuljahre und Klassen.
-- Verwaltung eines Stundenplans.
-- Verwaltung von globalen Unterrichtssequenzen.
-- Verwaltung von lokalen Unterrichtsausfällen.
-- Verwaltung von schriftlichen Leistungsnachweisen (Art und Datum).
-- Anzeigen von Metainformationen auf der Startseite.
-- Anzeigen klassenspezifischer Informationen auf Klassenseiten.
-	- Fortschritt der einzelnen Unterrichtssequenzen.
-	- Bilanz von benötigten zu zur Verfügung stehenden Stunden.
+### Stundenplan
 
-### Vereinbarungen
+- Stundenplan direkt in der TUI bearbeiten.
+- Einträge anlegen, ändern und löschen.
+- Aktuellen Wochentag und aktuelle Unterrichtsstunde hervorheben.
 
-- Verwaltung des Stundenplans in einer .csv Datei.
-- Verwaltung von Unterrichtssequenzen in .toml Dateien.
-- Editieren der Datein findet in einem externen Editor statt. Entsprechende Dateien werden über die TUI für easy-access geöffnet.
+### Unterrichtssequenzen
 
-### TUI-Desing
+- Wiederverwendbare Sequenzpläne pro Fach anlegen und pflegen.
+- Sequenzen aus geordneten Stunden mit Titel, Aufgaben und Notizen aufbauen.
+- Sequenzpläne einer Klasse als eigenen Stand zuweisen.
+- Fortschritt pro Sequenz mit `next` und `previous` verwalten.
 
-- Spalte auf der linken Seite der TUI als **PICKER**.
-- Rechtes Panel als Anzeige.
-- Bedienung über **VIM-MOTIONS** und Pfeiltasten.
-- Design so intuitiv wie möglich.
-- Je weniger Tasten gedrückt werden müssen, um an die gewünschte Ansicht zu kommen, desto besser.
-- ":" startet Eingabe für **Commands**.
-- "q" beendet die TUI.
-- Startseite über Hotkey sofort erreichbar (Wahl steht noch aus).
+### Kalender und Ausfälle
+
+- Bayerische Ferien und gesetzliche Feiertage berücksichtigen.
+- Schulweite lokale Ausfälle verwalten.
+- Klassenbezogene Ausfälle verwalten.
+- Tatsächlich verfügbare Unterrichtsstunden berechnen.
+
+### Ansichten
+
+- Home-Ansicht mit Stundenplan und Fortschritt des Schuljahres.
+- Klassenansichten mit nächster Stunde, Sequenzfortschritt und Stundenbilanz.
+
+## Bedienung und Design
+
+- Dauerhafte Navigation im linken Picker, Inhalte im rechten Bereich.
+- Bedienung mit Pfeiltasten, Vim-Motions und kurzen Commands.
+- Häufige Aktionen mit möglichst wenigen Eingaben erreichen.
+- Fokus, Auswahl und mögliche Aktionen jederzeit klar darstellen.
+- Layout für unterschiedliche Terminalgrößen optimieren.
+- Farben und Erscheinungsbild an das aktuelle Omarchy-Theme anpassen.
+
+## Datenspeicherung
+
+- Lokale, lesbare Dateien ohne externe Datenbank.
+- Stundenpläne als CSV-Dateien.
+- Konfiguration, Klassen, Sequenzen, Status und Ausfälle als TOML-Dateien.
