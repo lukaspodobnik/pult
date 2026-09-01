@@ -110,6 +110,13 @@ class MainScreen(SchooltoolsScreen[None]):
     def edit_timetable_slot(self, message: HomeView.EditTimetableSlot) -> None:
         config = self.app_config
         school_classes = load_school_classes(config.root, config.active_school_year)
+        if not school_classes:
+            self.notify(
+                "Lege zuerst mindestens eine Klasse an.",
+                severity="warning",
+            )
+            return
+
         subjects = load_subjects(config.root)
         self.app.push_screen(
             EditTimetableScreen(
