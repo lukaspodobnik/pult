@@ -20,7 +20,6 @@ class SchooltoolsApp(App):
 
     BINDINGS: ClassVar = [
         ("q", "quit", "Beenden"),
-        ("h", "show_home", "Home"),
     ]
 
     def __init__(self) -> None:
@@ -53,12 +52,3 @@ class SchooltoolsApp(App):
         self.app_config = app_config
         self.show_initial_screen()
 
-    def action_show_home(self) -> None:
-        if self.app_config is None:
-            self.notify("Schooltools muss zuerst eingerichtet werden.")
-            return
-
-        if isinstance(self.screen, MainScreen):
-            return
-
-        self.switch_screen(MainScreen())

@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
@@ -14,6 +16,8 @@ from schooltools_tui.views.school_class_view import SchoolClassView
 
 
 class MainScreen(SchooltoolsScreen[None]):
+    BINDINGS: ClassVar = (("h", "show_home", "HOME"),)
+
     def __init__(self):
         super().__init__()
         self.school_classes_by_id: dict[str, SchoolClass] = {}
@@ -50,7 +54,6 @@ class MainScreen(SchooltoolsScreen[None]):
         picker.highlighted = 0
         picker.focus()
 
-
     @on(Button.Pressed, "#register-class")
     def register_class(self) -> None:
         self.app.push_screen(SchoolClassSetupScreen(), self.school_class_registered)
@@ -84,3 +87,8 @@ class MainScreen(SchooltoolsScreen[None]):
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
         await self.switch_view(SchoolClassView(school_class))
+
+    def action_show_home(self) -> None:
+        picker = self.query_one("#picker-options", OptionList)
+        picker.highlighted = 0
+        picker.focus()
