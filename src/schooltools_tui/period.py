@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import time
+from itertools import pairwise
 from pathlib import Path
 from typing import Any
 
@@ -115,7 +116,7 @@ def _validate_periods(periods: list[Period]) -> None:
     if len(numbers) != len(set(numbers)):
         raise PeriodsFileError("Jede Stundennummer darf nur einmal vorkommen.")
 
-    for previous, current in zip(periods, periods[1:]):
+    for previous, current in pairwise(periods):
         if previous.end > current.start:
             raise PeriodsFileError("Unterrichtsstunden dürfen sich nicht überschneiden.")
 
