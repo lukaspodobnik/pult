@@ -2,7 +2,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Input, Label, Select
+from textual.widgets import Button, Input, Label, Select
 
 from schooltools_tui.school_class import SchoolClass
 from schooltools_tui.subject import Subject
@@ -27,13 +27,13 @@ class EditTimetableScreen(ModalScreen[TimetableEntry | None]):
 
     def compose(self) -> ComposeResult:
         selected_class_id = (
-            self.entry.class_name
+            self.entry.school_class_id
             if self.entry is not None
             else self.school_classes[0].id
         )
         subject_options = self.get_subject_options(selected_class_id)
         selected_subject_id = (
-            self.entry.subject
+            self.entry.subject_id
             if self.entry is not None
             else subject_options[0][1]
         )
@@ -70,6 +70,12 @@ class EditTimetableScreen(ModalScreen[TimetableEntry | None]):
                 id="room",
             )
 
+            yield Button(
+                "Speichern",
+                variant="primary",
+                id="save-timetable-entry",
+            )
+
     def get_subject_options(self, school_class_id: str) -> list[tuple[str, str]]:
         school_class = next(
             school_class
@@ -89,3 +95,22 @@ class EditTimetableScreen(ModalScreen[TimetableEntry | None]):
 
         subject_select = self.query_one("#subject", Select)
         subject_select.set_options(self.get_subject_options(str(event.value)))
+
+    @on(Button.Pressed, "#save-timetable-entry")
+    def save_timetable_entry(self) -> None:
+        school_class = self.query_one("#school-class", Select).value
+        subject = self.query_one("#subject", Select).value
+        room = self.query_one("#room", Input).value.strip()
+
+        if school_class is Select.NULL or subject is Select.NULL:
+            return
+
+        self.dismiss(
+            TimetableEntry(
+                weekday=self.weekday,
+                period=self.period,
+                school_class_id=str(school_class),
+                subject_id=str(subject),
+                room=room,
+            )
+        )

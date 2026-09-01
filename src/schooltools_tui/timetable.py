@@ -6,8 +6,8 @@ from schooltools_tui.storage import load_csv, save_csv
 TIMETABLE_FIELDS = (
     "weekday",
     "period",
-    "class_name",
-    "subject",
+    "school_class_id",
+    "subject_id",
     "room",
 )
 
@@ -16,8 +16,8 @@ TIMETABLE_FIELDS = (
 class TimetableEntry:
     weekday: str
     period: int
-    class_name: str
-    subject: str
+    school_class_id: str
+    subject_id: str
     room: str
 
 
@@ -43,8 +43,8 @@ def load_timetable(path: Path) -> list[TimetableEntry]:
         entry = TimetableEntry(
             weekday=row["weekday"],
             period=int(row["period"]),
-            class_name=row["class_name"],
-            subject=row["subject"],
+            school_class_id=row.get("school_class_id") or row["class_name"],
+            subject_id=row.get("subject_id") or row["subject"],
             room=row["room"],
         )
 
@@ -59,8 +59,8 @@ def save_timetable(path: Path, entries: list[TimetableEntry]) -> None:
         row = {
             "weekday": entry.weekday,
             "period": str(entry.period),
-            "class_name": entry.class_name,
-            "subject": entry.subject,
+            "school_class_id": entry.school_class_id,
+            "subject_id": entry.subject_id,
             "room": entry.room,
         }
 
@@ -71,5 +71,9 @@ def save_timetable(path: Path, entries: list[TimetableEntry]) -> None:
 
 def save_timetable_entry(path: Path, entry: TimetableEntry) -> None:
     entries = load_timetable(path)
-    entries.append(entry)
-    save_timetable(path, entries)
+    entries_by_slot = {
+        (existing_entry.weekday, existing_entry.period): existing_entry
+        for existing_entry in entries
+    }
+    entries_by_slot[(entry.weekday, entry.period)] = entry
+    save_timetable(path, list(entries_by_slot.values()))

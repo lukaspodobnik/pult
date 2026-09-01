@@ -89,7 +89,8 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         path = get_timetable_path(config.root, config.active_school_year)
         timetable_entries = load_timetable(path)
-        await self.switch_view(HomeView(timetable_entries))
+        subjects = load_subjects(config.root)
+        await self.switch_view(HomeView(timetable_entries, subjects))
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
         await self.switch_view(SchoolClassView(school_class))

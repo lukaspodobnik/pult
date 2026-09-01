@@ -4,6 +4,7 @@ from textual.containers import Vertical
 from textual.message import Message
 from textual.widgets import DataTable
 
+from schooltools_tui.subject import Subject
 from schooltools_tui.timetable import TimetableEntry
 
 WEEKDAYS = (
@@ -28,10 +29,18 @@ class HomeView(Vertical):
             self.period = period
             self.entry = entry
 
-    def __init__(self, timetable_entries: list[TimetableEntry]):
+    def __init__(
+        self,
+        timetable_entries: list[TimetableEntry],
+        subjects: list[Subject],
+    ) -> None:
         super().__init__()
         self.timetable_entries = timetable_entries
-        self.timetable_entries_by_slot = {(entry.weekday, entry.period): entry for entry in timetable_entries}
+        self.subjects_by_id = {subject.id: subject for subject in subjects}
+        self.timetable_entries_by_slot = {
+            (entry.weekday, entry.period): entry
+            for entry in timetable_entries
+        }
 
     def compose(self) -> ComposeResult:
         yield DataTable(id="schedule", cursor_type="cell")
@@ -49,6 +58,7 @@ class HomeView(Vertical):
             (entry.period for entry in entries),
             default=6,
         )
+        max_period = max(max_period, 6)
 
         for period in range(1, max_period + 1):
             cells = []
@@ -58,7 +68,10 @@ class HomeView(Vertical):
                 if entry is None:
                     cells.append("--")
                 else:
-                    cells.append(f"{entry.class_name}-{entry.subject}{entry.room}")
+                    subject = self.subjects_by_id[entry.subject_id]
+                    cells.append(
+                        f"{entry.school_class_id}-{subject.short_name} {entry.room}"
+                    )
 
             table.add_row(*cells, key=str(period), label=str(period))
 
