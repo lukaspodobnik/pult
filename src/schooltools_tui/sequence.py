@@ -123,9 +123,7 @@ def load_sequence(
             subject_id=_require_string(data, "subject_id"),
             grade_level=_require_integer(data, "grade_level"),
             title=_require_string(data, "title"),
-            recommended_lesson_count=_require_integer(
-                data, "recommended_lesson_count"
-            ),
+            recommended_lesson_count=_require_integer(data, "recommended_lesson_count"),
             lessons=[
                 _load_lesson(lesson_data, index)
                 for index, lesson_data in enumerate(lessons_data, start=1)
@@ -155,9 +153,7 @@ def load_sequences(
 ) -> list[Sequence]:
     directory = get_sequence_directory(root, grade_level, subject_id)
     paths = sorted(directory.glob(f"*{SEQUENCE_FILE_SUFFIX}"))
-    return [
-        load_sequence(root, grade_level, subject_id, path.stem) for path in paths
-    ]
+    return [load_sequence(root, grade_level, subject_id, path.stem) for path in paths]
 
 
 def save_sequence(root: Path, sequence: Sequence) -> None:
