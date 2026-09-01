@@ -77,3 +77,13 @@ def save_timetable_entry(path: Path, entry: TimetableEntry) -> None:
     }
     entries_by_slot[(entry.weekday, entry.period)] = entry
     save_timetable(path, list(entries_by_slot.values()))
+
+
+def delete_timetable_entry(path: Path, weekday: str, period: int) -> None:
+    entries = load_timetable(path)
+    remaining_entries = [
+        entry
+        for entry in entries
+        if (entry.weekday, entry.period) != (weekday, period)
+    ]
+    save_timetable(path, remaining_entries)

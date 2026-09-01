@@ -1,6 +1,10 @@
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import ClassVar
+
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select
 
@@ -9,7 +13,20 @@ from schooltools_tui.subject import Subject
 from schooltools_tui.timetable import TimetableEntry
 
 
-class EditTimetableScreen(ModalScreen[TimetableEntry | None]):
+class TimetableEditAction(Enum):
+    SAVE = auto()
+    DELETE = auto()
+
+
+@dataclass(frozen=True)
+class TimetableEditResult:
+    action: TimetableEditAction
+    entry: TimetableEntry
+
+
+class EditTimetableScreen(ModalScreen[TimetableEditResult | None]):
+    BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
+
     def __init__(
         self,
         weekday: str,
@@ -70,11 +87,23 @@ class EditTimetableScreen(ModalScreen[TimetableEntry | None]):
                 id="room",
             )
 
-            yield Button(
-                "Speichern",
-                variant="primary",
-                id="save-timetable-entry",
-            )
+            with Horizontal(id="edit-timetable-actions"):
+                if self.entry is not None:
+                    yield Button(
+                        "Löschen",
+                        variant="error",
+                        id="delete-timetable-entry",
+                    )
+
+                yield Button(
+                    "Abbrechen",
+                    id="cancel-timetable-edit",
+                )
+                yield Button(
+                    "Speichern",
+                    variant="primary",
+                    id="save-timetable-entry",
+                )
 
     def get_subject_options(self, school_class_id: str) -> list[tuple[str, str]]:
         school_class = next(
@@ -106,11 +135,33 @@ class EditTimetableScreen(ModalScreen[TimetableEntry | None]):
             return
 
         self.dismiss(
-            TimetableEntry(
-                weekday=self.weekday,
-                period=self.period,
-                school_class_id=str(school_class),
-                subject_id=str(subject),
-                room=room,
+            TimetableEditResult(
+                action=TimetableEditAction.SAVE,
+                entry=TimetableEntry(
+                    weekday=self.weekday,
+                    period=self.period,
+                    school_class_id=str(school_class),
+                    subject_id=str(subject),
+                    room=room,
+                ),
             )
         )
+
+    @on(Button.Pressed, "#delete-timetable-entry")
+    def delete_timetable_entry(self) -> None:
+        if self.entry is None:
+            return
+
+        self.dismiss(
+            TimetableEditResult(
+                action=TimetableEditAction.DELETE,
+                entry=self.entry,
+            )
+        )
+
+    @on(Button.Pressed, "#cancel-timetable-edit")
+    def cancel_timetable_edit(self) -> None:
+        self.action_cancel()
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)

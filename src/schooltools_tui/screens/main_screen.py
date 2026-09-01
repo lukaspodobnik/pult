@@ -9,11 +9,15 @@ from textual.widgets.option_list import Option
 
 from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
-from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
+from schooltools_tui.screens.edit_timetable_screen import (
+    EditTimetableScreen,
+    TimetableEditAction,
+    TimetableEditResult,
+)
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
 from schooltools_tui.subject import load_subjects
 from schooltools_tui.timetable import (
-    TimetableEntry,
+    delete_timetable_entry,
     get_timetable_path,
     load_timetable,
     save_timetable_entry,
@@ -116,12 +120,20 @@ class MainScreen(SchooltoolsScreen[None]):
             self.timetable_edited,
         )
 
-    async def timetable_edited(self, timetable_entry: TimetableEntry | None) -> None:
-        if timetable_entry is None:
+    async def timetable_edited(self, result: TimetableEditResult | None) -> None:
+        if result is None:
             return
 
         config = self.app_config
         path = get_timetable_path(config.root, config.active_school_year)
-        save_timetable_entry(path, timetable_entry)
+
+        if result.action is TimetableEditAction.SAVE:
+            save_timetable_entry(path, result.entry)
+        else:
+            delete_timetable_entry(
+                path,
+                result.entry.weekday,
+                result.entry.period,
+            )
 
         await self.show_home_view()
