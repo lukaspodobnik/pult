@@ -5,10 +5,10 @@ from textual.widgets import Button, Footer, Header, OptionList
 from textual.widgets.option_list import Option
 
 from schooltools_tui.school_class import load_school_classes
-from schooltools_tui.screens.base import SchooltoolsScreen
-from schooltools_tui.screens.setup_school_class import SchoolClassSetupScreen
+from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
 from schooltools_tui.timetable import get_timetable_path, load_timetable
-from schooltools_tui.views.home import HomeView
+from schooltools_tui.views.home_view import HomeView
 
 
 class MainScreen(SchooltoolsScreen[None]):

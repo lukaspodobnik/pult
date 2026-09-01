@@ -3,8 +3,8 @@ from typing import ClassVar
 from textual.app import App
 
 from schooltools_tui.config import AppConfig, load_app_config
-from schooltools_tui.screens.main import MainScreen
-from schooltools_tui.screens.setup_school_tools import SetupScreen
+from schooltools_tui.screens.main_screen import MainScreen
+from schooltools_tui.screens.setup_school_tools_screen import SetupScreen
 
 
 class SchooltoolsApp(App):

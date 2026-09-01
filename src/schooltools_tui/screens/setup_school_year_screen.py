@@ -8,7 +8,7 @@ from schooltools_tui.initialization.school_year import (
     get_school_year_options,
     initialize_school_year,
 )
-from schooltools_tui.screens.base import SchooltoolsScreen
+from schooltools_tui.screens.base_screen import SchooltoolsScreen
 
 
 class SchoolYearSetupScreen(SchooltoolsScreen[str]):

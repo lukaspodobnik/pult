@@ -9,7 +9,7 @@ from schooltools_tui.initialization.school_class import (
     initialize_school_class,
 )
 from schooltools_tui.school_class import SchoolClass
-from schooltools_tui.screens.base import SchooltoolsScreen
+from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.subject import load_subjects
 
 
