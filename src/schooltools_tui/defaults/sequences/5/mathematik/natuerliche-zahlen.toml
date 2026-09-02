@@ -1,0 +1,80 @@
+id = "natuerliche-zahlen"
+curriculum_section_id = "M5 1.1"
+subject_id = "mathematik"
+grade_level = 5
+chapter_id = "M5 1"
+chapter_title = "Natürliche und ganze Zahlen – Addition und Subtraktion"
+title = "Natürliche Zahlen und ihre Erweiterung zu den ganzen Zahlen"
+recommended_lesson_count = 12
+
+[[lessons]]
+id = "stunde-01"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-02"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-03"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-04"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-05"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-06"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-07"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-08"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-09"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-10"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-11"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-12"
+title = ""
+tasks = []
+notes = ""
