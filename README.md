@@ -37,7 +37,12 @@ Eine persönliche TUI zur Planung und Begleitung des Schulalltags.
 
 ## Bedienung und Design
 
-- Dauerhafte Navigation im linken Picker, Inhalte im rechten Bereich.
+- Dauerhafte Navigation links, reine Inhaltsansichten rechts.
+- Zwei Navigationsbereiche: `Ansichten` mit Home und Klassen sowie `Verwaltung` mit den zentralen Werkzeugen.
+- `Tab` und `Shift+Tab` wechseln nur zwischen den beiden Navigationsbereichen; der Inhaltsbereich liegt nicht in der Fokusreihenfolge.
+- Das Hervorheben unter `Ansichten` wechselt sofort die View; Einträge unter `Verwaltung` werden erst mit `Enter` geöffnet.
+- Home zeigt den Stundenplan nur an; die Bearbeitung erfolgt über eine eigene Verwaltungsansicht.
+- Die Sequenzbibliothek wird über `Verwaltung` geöffnet und bearbeitet Sequenzdateien im konfigurierten Editor.
 - Bedienung mit Pfeiltasten, Vim-Motions und kurzen Commands.
 - Häufige Aktionen mit möglichst wenigen Eingaben erreichen.
 - Fokus, Auswahl und mögliche Aktionen jederzeit klar darstellen.
