@@ -66,7 +66,7 @@ class Sequence:
     subject_id: str
     grade_level: int
     title: str
-    recommended_lesson_count: int
+    recommended_lesson_count: int | None
     lessons: list[Lesson]
     chapter_id: str | None = None
     chapter_title: str | None = None
@@ -102,11 +102,19 @@ class Sequence:
             if not self.chapter_title:
                 raise ValueError("Der Kapiteltitel darf nicht leer sein.")
 
-        if self.recommended_lesson_count < 1:
-            raise ValueError("Die empfohlene Stundenzahl muss größer als 0 sein.")
+        if self.recommended_lesson_count is not None:
+            if (
+                isinstance(self.recommended_lesson_count, bool)
+                or not isinstance(self.recommended_lesson_count, int)
+                or self.recommended_lesson_count < 1
+            ):
+                raise ValueError("Die empfohlene Stundenzahl muss größer als 0 sein.")
 
-        if not self.lessons:
-            raise ValueError("Eine Sequenz muss mindestens eine Stunde enthalten.")
+            if not self.lessons:
+                raise ValueError(
+                    "Eine Sequenz mit empfohlener Stundenzahl muss mindestens "
+                    "eine Stunde enthalten."
+                )
 
         lesson_ids = [lesson.id for lesson in self.lessons]
         if len(lesson_ids) != len(set(lesson_ids)):
@@ -159,7 +167,9 @@ def load_sequence(
             subject_id=_require_string(data, "subject_id"),
             grade_level=_require_integer(data, "grade_level"),
             title=_require_string(data, "title"),
-            recommended_lesson_count=_require_integer(data, "recommended_lesson_count"),
+            recommended_lesson_count=_optional_integer(
+                data, "recommended_lesson_count"
+            ),
             lessons=[
                 _load_lesson(lesson_data, index)
                 for index, lesson_data in enumerate(lessons_data, start=1)
@@ -201,13 +211,12 @@ def save_sequence(root: Path, sequence: Sequence) -> None:
         sequence.subject_id,
         sequence.id,
     )
-    data = {
+    data: dict[str, Any] = {
         "id": sequence.id,
         "curriculum_section_id": sequence.curriculum_section_id,
         "subject_id": sequence.subject_id,
         "grade_level": sequence.grade_level,
         "title": sequence.title,
-        "recommended_lesson_count": sequence.recommended_lesson_count,
         "lessons": [
             {
                 "id": lesson.id,
@@ -218,6 +227,9 @@ def save_sequence(root: Path, sequence: Sequence) -> None:
             for lesson in sequence.lessons
         ],
     }
+
+    if sequence.recommended_lesson_count is not None:
+        data["recommended_lesson_count"] = sequence.recommended_lesson_count
 
     if sequence.chapter_id is not None and sequence.chapter_title is not None:
         data["chapter_id"] = sequence.chapter_id
@@ -258,6 +270,15 @@ def _optional_string(data: dict[str, Any], key: str) -> str | None:
 
 def _require_integer(data: dict[str, Any], key: str) -> int:
     value = data[key]
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise TypeError(f"'{key}' muss eine ganze Zahl sein.")
+    return value
+
+
+def _optional_integer(data: dict[str, Any], key: str) -> int | None:
+    value = data.get(key)
+    if value is None:
+        return None
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError(f"'{key}' muss eine ganze Zahl sein.")
     return value
