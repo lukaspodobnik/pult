@@ -5,10 +5,10 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Select
 
 from schooltools_tui.school_class import SchoolClass
+from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 from schooltools_tui.subject import Subject
 from schooltools_tui.timetable import TimetableEntry
 
@@ -24,7 +24,9 @@ class TimetableEditResult:
     entry: TimetableEntry
 
 
-class EditTimetabelEntryScreen(ModalScreen[TimetableEditResult | None]):
+class EditTimetabelEntryScreen(
+    SchooltoolsModalScreen[TimetableEditResult | None]
+):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
 
     def __init__(

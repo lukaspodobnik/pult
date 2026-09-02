@@ -1,4 +1,5 @@
 import re
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -100,3 +101,11 @@ def save_school_class(root: Path, year: str, school_class: SchoolClass) -> None:
 
     path = get_school_class_path(root, year, school_class.id)
     save_toml(path, data)
+
+
+def delete_school_class(root: Path, year: str, school_class_id: str) -> None:
+    class_directory = get_school_class_path(root, year, school_class_id).parent
+    if not class_directory.exists():
+        raise FileNotFoundError(f"Die Klasse '{school_class_id}' existiert nicht.")
+
+    shutil.rmtree(class_directory)

@@ -5,21 +5,33 @@ from schooltools_tui.school_class import SchoolClass
 
 
 class ViewPicker(OptionList):
-    def refresh_options(self, school_classes: list[SchoolClass]) -> None:
+    def refresh_options(
+        self,
+        school_classes: list[SchoolClass],
+        highlighted_option_id: str | None = None,
+    ) -> None:
         self.clear_options()
 
-        self.add_option(Option("Home", id="home"))
+        options = [Option("Home", id="home")]
         for school_class in school_classes:
-            self.add_option(Option(school_class.id, id=f"class-{school_class.id}"))
+            options.append(
+                Option(school_class.id, id=f"class-{school_class.id}")
+            )
 
-        self.highlighted = 0
-        self.focus()
+        self.add_options(options)
+
+        option_ids = [option.id for option in options]
+        self.highlighted = (
+            option_ids.index(highlighted_option_id)
+            if highlighted_option_id in option_ids
+            else 0
+        )
 
 
 class ManagementPicker(OptionList):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__(
-            Option("Klasse anlegen", id="create-class"),
+            Option("Klassen", id="edit-classes"),
             Option("Sequenzbibliothek", id="sequence-library"),
             Option("Stundenplan", id="edit-timetable"),
             id=id,

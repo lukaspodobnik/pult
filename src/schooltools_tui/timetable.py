@@ -87,3 +87,13 @@ def delete_timetable_entry(path: Path, weekday: str, period: int) -> None:
         if (entry.weekday, entry.period) != (weekday, period)
     ]
     save_timetable(path, remaining_entries)
+
+
+def delete_timetable_entries_for_school_class(
+    path: Path, school_class_id: str
+) -> None:
+    entries = load_timetable(path)
+    remaining_entries = [
+        entry for entry in entries if entry.school_class_id != school_class_id
+    ]
+    save_timetable(path, remaining_entries)

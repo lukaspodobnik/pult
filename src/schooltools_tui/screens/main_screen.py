@@ -8,7 +8,7 @@ from schooltools_tui.period import load_periods
 from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
-from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
+from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
 from schooltools_tui.subject import load_subjects
 from schooltools_tui.timetable import get_timetable_path, load_timetable
 from schooltools_tui.views.home_view import HomeView
@@ -39,11 +39,20 @@ class MainScreen(SchooltoolsScreen[None]):
 
     def on_mount(self) -> None:
         self.refresh_view_picker()
+        self.query_one("#view-picker", ViewPicker).focus()
 
     def refresh_view_picker(self) -> None:
+        view_picker = self.query_one("#view-picker", ViewPicker)
+        highlighted_option_id = None
+        if view_picker.highlighted is not None:
+            option = view_picker.get_option_at_index(view_picker.highlighted)
+            if option.id is not None:
+                highlighted_option_id = str(option.id)
+
         self.refresh_school_classes()
-        self.query_one("#view-picker", ViewPicker).refresh_options(
-            list(self.school_classes_by_id.values())
+        view_picker.refresh_options(
+            list(self.school_classes_by_id.values()),
+            highlighted_option_id,
         )
 
     def refresh_school_classes(self) -> None:
@@ -93,10 +102,8 @@ class MainScreen(SchooltoolsScreen[None]):
             return
 
         match option_id:
-            case "create-class":
-                self.app.push_screen(
-                    SchoolClassSetupScreen(), self.school_class_registered
-                )
+            case "edit-classes":
+                self.app.push_screen(EditClassesScreen(), self.classes_edited)
             case "sequence-library":
                 pass
             case "edit-timetable":
@@ -104,7 +111,7 @@ class MainScreen(SchooltoolsScreen[None]):
                     EditTimetableScreen(), self.timetable_edit_finished
                 )
 
-    def school_class_registered(self, _: None) -> None:
+    def classes_edited(self, _: None) -> None:
         self.refresh_view_picker()
 
     async def timetable_edit_finished(self, _: None) -> None:

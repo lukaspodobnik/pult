@@ -1,0 +1,59 @@
+SchoolClassSetupScreen,
+ConfirmClassDeletionScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+SchoolClassSetupScreen #school-class-setup-form,
+ConfirmClassDeletionScreen #confirm-class-deletion-dialog {
+    width: 64;
+    height: auto;
+    padding: 2 3;
+    background: $surface;
+    border: round $primary;
+}
+
+SchoolClassSetupScreen #school-class-setup-title,
+ConfirmClassDeletionScreen #confirm-class-deletion-title,
+EditClassesScreen #edit-classes-title {
+    height: 3;
+    content-align: center middle;
+    color: $text-accent;
+    text-style: bold;
+}
+
+SchoolClassSetupScreen #subjects {
+    height: 12;
+    margin-top: 1;
+}
+
+SchoolClassSetupScreen #school-class-setup-actions,
+ConfirmClassDeletionScreen #confirm-class-deletion-actions,
+EditClassesScreen #edit-classes-actions {
+    height: auto;
+    margin-top: 1;
+    align-horizontal: right;
+}
+
+SchoolClassSetupScreen #school-class-setup-actions Button,
+ConfirmClassDeletionScreen #confirm-class-deletion-actions Button,
+EditClassesScreen #edit-classes-actions Button {
+    margin-left: 1;
+}
+
+ConfirmClassDeletionScreen #confirm-class-deletion-message {
+    height: auto;
+    margin: 1 0;
+    text-align: center;
+}
+
+EditClassesScreen #edit-classes-screen {
+    height: 1fr;
+    padding: 1 2;
+}
+
+EditClassesScreen #school-classes {
+    height: 1fr;
+    min-height: 8;
+    border: round $primary;
+}

@@ -1,7 +1,9 @@
+from typing import ClassVar
+
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical
-from textual.widgets import Button, Footer, Header, Input, Label, SelectionList
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Button, Input, Label, SelectionList
 from textual.widgets.selection_list import Selection
 
 from schooltools_tui.initialization.school_class import (
@@ -12,24 +14,24 @@ from schooltools_tui.school_class import (
     SchoolClass,
     get_grade_level_from_school_class_id,
 )
-from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 from schooltools_tui.subject import Subject, load_subjects
 
 
-class SchoolClassSetupScreen(SchooltoolsScreen[None]):
+class SchoolClassSetupScreen(SchooltoolsModalScreen[None]):
+    BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
+
     def compose(self) -> ComposeResult:
         self.subjects = load_subjects(self.app_config.root)
         self.current_grade_level: int | None = None
-
-        yield Header()
 
         with Vertical(id="school-class-setup-form"):
             yield Label("Klasse anlegen", id="school-class-setup-title")
             yield Input(placeholder="Klassenname, z. B. '8A'", id="class-name")
             yield SelectionList(id="subjects")
-            yield Button("Anlegen", variant="primary", id="submit-class")
-
-        yield Footer()
+            with Horizontal(id="school-class-setup-actions"):
+                yield Button("Abbrechen", id="cancel-class-setup")
+                yield Button("Anlegen", variant="primary", id="submit-class")
 
     def get_subject_selections(self, grade_level: int) -> list[Selection]:
         return [
@@ -86,3 +88,10 @@ class SchoolClassSetupScreen(SchooltoolsScreen[None]):
             return
 
         self.dismiss()
+
+    @on(Button.Pressed, "#cancel-class-setup")
+    def cancel_setup(self) -> None:
+        self.action_cancel()
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)

@@ -11,6 +11,7 @@ class SchooltoolsApp(App):
     CSS_PATH: ClassVar = [
         "styles/app.tcss",
         "styles/home.tcss",
+        "styles/classes.tcss",
         "styles/setup.tcss",
         "styles/school_year_setup.tcss",
     ]
@@ -51,4 +52,3 @@ class SchooltoolsApp(App):
         assert app_config is not None
         self.app_config = app_config
         self.show_initial_screen()
-
