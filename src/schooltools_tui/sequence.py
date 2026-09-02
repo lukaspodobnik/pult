@@ -6,7 +6,9 @@ from typing import Any
 from schooltools_tui.storage import load_toml, save_toml
 
 ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
-CURRICULUM_ID_PATTERN = re.compile(r"[A-ZÄÖÜ]+[0-9]+ [0-9]+(?:\.[0-9]+)*")
+CURRICULUM_SECTION_ID_PATTERN = re.compile(
+    r"[A-ZÄÖÜ]+[0-9]+ [0-9]+(?:\.[0-9]+)*"
+)
 SEQUENCES_DIRECTORY_NAME = Path("sequences")
 SEQUENCE_FILE_SUFFIX = ".toml"
 
@@ -27,10 +29,10 @@ def validate_id(value: str, field_name: str) -> str:
     return value
 
 
-def validate_curriculum_id(value: str, field_name: str) -> str:
+def validate_curriculum_section_id(value: str, field_name: str) -> str:
     value = " ".join(value.strip().upper().split())
 
-    if not CURRICULUM_ID_PATTERN.fullmatch(value):
+    if not CURRICULUM_SECTION_ID_PATTERN.fullmatch(value):
         raise ValueError(
             f"{field_name} muss dem Format einer Lehrplangliederung entsprechen, "
             "z. B. 'M5 1' oder 'M5 1.1'."
@@ -60,7 +62,7 @@ class Lesson:
 @dataclass
 class Sequence:
     id: str
-    curriculum_id: str
+    curriculum_section_id: str
     subject_id: str
     grade_level: int
     title: str
@@ -71,8 +73,8 @@ class Sequence:
 
     def __post_init__(self) -> None:
         self.id = validate_id(self.id, "Die Sequenz-ID")
-        self.curriculum_id = validate_curriculum_id(
-            self.curriculum_id, "Die Lehrplan-ID"
+        self.curriculum_section_id = validate_curriculum_section_id(
+            self.curriculum_section_id, "Die Lehrplanabschnitts-ID"
         )
         self.subject_id = validate_id(self.subject_id, "Die Fach-ID")
         self.title = self.title.strip()
@@ -92,7 +94,7 @@ class Sequence:
             )
 
         if self.chapter_id is not None and self.chapter_title is not None:
-            self.chapter_id = validate_curriculum_id(
+            self.chapter_id = validate_curriculum_section_id(
                 self.chapter_id, "Die Kapitel-ID"
             )
             self.chapter_title = self.chapter_title.strip()
@@ -153,7 +155,7 @@ def load_sequence(
 
         sequence = Sequence(
             id=_require_string(data, "id"),
-            curriculum_id=_require_string(data, "curriculum_id"),
+            curriculum_section_id=_require_string(data, "curriculum_section_id"),
             subject_id=_require_string(data, "subject_id"),
             grade_level=_require_integer(data, "grade_level"),
             title=_require_string(data, "title"),
@@ -201,7 +203,7 @@ def save_sequence(root: Path, sequence: Sequence) -> None:
     )
     data = {
         "id": sequence.id,
-        "curriculum_id": sequence.curriculum_id,
+        "curriculum_section_id": sequence.curriculum_section_id,
         "subject_id": sequence.subject_id,
         "grade_level": sequence.grade_level,
         "title": sequence.title,

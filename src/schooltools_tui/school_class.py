@@ -10,6 +10,7 @@ CLASS_FILE_NAME = Path("class.toml")
 @dataclass
 class SchoolClass:
     id: str
+    grade_level: int
     subject_ids: list[str]
 
     def __post_init__(self) -> None:
@@ -20,6 +21,13 @@ class SchoolClass:
 
         if any(character.isspace() for character in self.id):
             raise ValueError("Die Klassenbezeichnung darf keine Leerzeichen enthalten.")
+
+        if (
+            isinstance(self.grade_level, bool)
+            or not isinstance(self.grade_level, int)
+            or not 5 <= self.grade_level <= 13
+        ):
+            raise ValueError("Die Jahrgangsstufe muss zwischen 5 und 13 liegen.")
 
         if not self.subject_ids:
             raise ValueError("Es muss mindestens ein Fach gewählt werden.")
@@ -43,6 +51,7 @@ def load_school_class(root: Path, year: str, school_class_id: str) -> SchoolClas
 
     return SchoolClass(
         id=data["id"],
+        grade_level=data["grade_level"],
         subject_ids=data["subject_ids"],
     )
 
@@ -70,6 +79,7 @@ def load_school_classes(root: Path, year: str) -> list[SchoolClass]:
 def save_school_class(root: Path, year: str, school_class: SchoolClass) -> None:
     data = {
         "id": school_class.id,
+        "grade_level": school_class.grade_level,
         "subject_ids": school_class.subject_ids,
     }
 

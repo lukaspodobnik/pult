@@ -23,7 +23,7 @@ short_name = "Inf-NTG"
 grade_levels = [9, 10, 11]
 
 [[subjects]]
-id = "informatik-spät-beginnend"
+id = "informatik-spaet-beginnend"
 name = "Informatik (spät beginnend)"
 short_name = "Inf-SB"
 grade_levels = [11, 12]
@@ -35,7 +35,7 @@ short_name = "Inf-GA"
 grade_levels = [12, 13]
 
 [[subjects]]
-id = "informatik-erhöhtes-anforderungsniveau"
+id = "informatik-erhoehtes-anforderungsniveau"
 name = "Informatik (erhöhtes Anforderungsniveau)"
 short_name = "Inf-EA"
 grade_levels = [12, 13]
