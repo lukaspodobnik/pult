@@ -31,7 +31,6 @@ class HomeView(Vertical):
         periods: list[Period],
     ) -> None:
         super().__init__()
-        self.timetable_entries = timetable_entries
         self.periods = periods
         self.subjects_by_id = {subject.id: subject for subject in subjects}
         self.timetable_entries_by_slot = {

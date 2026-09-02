@@ -5,9 +5,6 @@ from schooltools_tui.school_class import SchoolClass
 
 
 class ViewPicker(OptionList):
-    def __init__(self, id: str) -> None:
-        super().__init__(id=id)
-
     def refresh_options(self, school_classes: list[SchoolClass]) -> None:
         self.clear_options()
 
@@ -20,9 +17,9 @@ class ViewPicker(OptionList):
 
 
 class ManagementPicker(OptionList):
-    def __init__(self, id: str) -> None:
+    def __init__(self, *, id: str | None = None) -> None:
         super().__init__(
-            Option("Klassen", id="edit-classes"),
+            Option("Klasse anlegen", id="create-class"),
             Option("Sequenzbibliothek", id="sequence-library"),
             Option("Stundenplan", id="edit-timetable"),
             id=id,

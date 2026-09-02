@@ -7,8 +7,8 @@ from textual.widgets import Footer, Header, Label, OptionList
 from schooltools_tui.period import load_periods
 from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
-from schooltools_tui.screens.timetable_screen import EditTimetableScreen
 from schooltools_tui.subject import load_subjects
 from schooltools_tui.timetable import get_timetable_path, load_timetable
 from schooltools_tui.views.home_view import HomeView
@@ -17,7 +17,7 @@ from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
 
 
 class MainScreen(SchooltoolsScreen[None]):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.school_classes_by_id: dict[str, SchoolClass] = {}
 
@@ -38,9 +38,9 @@ class MainScreen(SchooltoolsScreen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.refresh_picker()
+        self.refresh_view_picker()
 
-    def refresh_picker(self) -> None:
+    def refresh_view_picker(self) -> None:
         self.refresh_school_classes()
         self.query_one("#view-picker", ViewPicker).refresh_options(
             list(self.school_classes_by_id.values())
@@ -52,10 +52,6 @@ class MainScreen(SchooltoolsScreen[None]):
         self.school_classes_by_id = {
             school_class.id: school_class for school_class in school_classes
         }
-
-        # ---------------------------------------------------------------------------
-        # |                         ViewPicker handling                             |
-        # ---------------------------------------------------------------------------
 
     @on(OptionList.OptionHighlighted, "#view-picker")
     async def view_picker_highlighted(
@@ -90,10 +86,6 @@ class MainScreen(SchooltoolsScreen[None]):
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
         await self.switch_view(SchoolClassView(school_class))
 
-        # ---------------------------------------------------------------------------
-        # |                  ManagementPicker handling                              |
-        # ---------------------------------------------------------------------------
-
     @on(OptionList.OptionSelected, "#management-picker")
     def management_picker_selected(self, event: OptionList.OptionSelected) -> None:
         option_id = event.option_id
@@ -101,7 +93,7 @@ class MainScreen(SchooltoolsScreen[None]):
             return
 
         match option_id:
-            case "edit-classes":
+            case "create-class":
                 self.app.push_screen(
                     SchoolClassSetupScreen(), self.school_class_registered
                 )
@@ -113,7 +105,7 @@ class MainScreen(SchooltoolsScreen[None]):
                 )
 
     def school_class_registered(self, _: None) -> None:
-        self.refresh_picker()
+        self.refresh_view_picker()
 
     async def timetable_edit_finished(self, _: None) -> None:
         if self.query(HomeView):
