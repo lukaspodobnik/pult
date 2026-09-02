@@ -1,0 +1,96 @@
+id = "praktische-softwareentwicklung-projekt"
+curriculum_section_id = "INF12 6"
+subject_id = "informatik-spaet-beginnend"
+grade_level = 12
+title = "Praktische Softwareentwicklung, Projekt"
+recommended_lesson_count = 15
+
+[[lessons]]
+id = "stunde-01"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-02"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-03"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-04"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-05"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-06"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-07"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-08"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-09"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-10"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-11"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-12"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-13"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-14"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-15"
+title = ""
+tasks = []
+notes = ""
