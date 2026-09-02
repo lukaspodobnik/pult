@@ -1,9 +1,41 @@
 [[subjects]]
 id = "mathematik"
 name = "Mathematik"
-short_name = "MA"
+short_name = "Ma"
+grade_levels = [5, 6, 7, 8, 9, 10, 11, 12, 13]
 
 [[subjects]]
-id = "informatik"
-name = "Informatik"
-short_name = "INF"
+id = "mathematik-vertiefung"
+name = "Mathematik (Vertiefungskurs)"
+short_name = "Ma-V"
+grade_levels = [12]
+
+[[subjects]]
+id = "nut-informatik"
+name = "Natur und Technik - Informatik"
+short_name = "NuT-Inf"
+grade_levels = [6, 7]
+
+[[subjects]]
+id = "informatik-ntg"
+name = "Informatik NTG"
+short_name = "Inf-NTG"
+grade_levels = [9, 10, 11]
+
+[[subjects]]
+id = "informatik-spät-beginnend"
+name = "Informatik (spät beginnend)"
+short_name = "Inf-SB"
+grade_levels = [11, 12]
+
+[[subjects]]
+id = "informatik-grundlegendes-anforderungsniveau"
+name = "Informatik (grundlegendes Anforderungsniveau)"
+short_name = "Inf-GA"
+grade_levels = [12, 13]
+
+[[subjects]]
+id = "informatik-erhöhtes-anforderungsniveau"
+name = "Informatik (erhöhtes Anforderungsniveau)"
+short_name = "Inf-EA"
+grade_levels = [12, 13]
