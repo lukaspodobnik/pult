@@ -1,0 +1,66 @@
+id = "graphen"
+curriculum_section_id = "INF11 1"
+subject_id = "informatik-ntg"
+grade_level = 11
+title = "Graphen"
+recommended_lesson_count = 10
+
+[[lessons]]
+id = "stunde-01"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-02"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-03"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-04"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-05"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-06"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-07"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-08"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-09"
+title = ""
+tasks = []
+notes = ""
+
+[[lessons]]
+id = "stunde-10"
+title = ""
+tasks = []
+notes = ""
