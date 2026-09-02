@@ -1,10 +1,11 @@
+from pathlib import Path
 from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widget import Widget
-from textual.widgets import Button, Footer, Header, OptionList
+from textual.widgets import Button, Footer, Header, Label, OptionList
 from textual.widgets.option_list import Option
 
 from schooltools_tui.period import load_periods
@@ -25,22 +26,28 @@ from schooltools_tui.timetable import (
 )
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
+from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
 
 
 class MainScreen(SchooltoolsScreen[None]):
-    BINDINGS: ClassVar = (("h", "show_home", "HOME"),)
-
     def __init__(self):
         super().__init__()
         self.school_classes_by_id: dict[str, SchoolClass] = {}
+
+        config = self.app_config
+        for school_class in load_school_classes(config.root, config.active_school_year):
+            self.school_classes_by_id[school_class.id] = school_class
 
     def compose(self) -> ComposeResult:
         yield Header()
 
         with Horizontal(id="main"):
-            with Vertical(id="picker"):
-                yield OptionList(id="picker-options")
-                yield Button("Klasse anlegen", variant="primary", id="register-class")
+            with Vertical(id="navigation"):
+                yield Label("ANSICHTEN", id="view-label")
+                yield ViewPicker(id="view-picker")
+
+                yield Label("VERWALTUNG", id="management-label")
+                yield ManagementPicker(id="management-picker")
 
             with Container(id="content"):
                 pass
@@ -48,7 +55,12 @@ class MainScreen(SchooltoolsScreen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.refresh_picker()
+        config = self.app_config
+        view_picker = self.query_one("#view-picker", ViewPicker)
+
+        view_picker.refresh_options(
+            load_school_classes(config.root, config.active_school_year)
+        )
 
     def refresh_picker(self) -> None:
         config = self.app_config
@@ -65,15 +77,17 @@ class MainScreen(SchooltoolsScreen[None]):
         picker.highlighted = 0
         picker.focus()
 
-    @on(Button.Pressed, "#register-class")
-    def register_class(self) -> None:
-        self.app.push_screen(SchoolClassSetupScreen(), self.school_class_registered)
-
     def school_class_registered(self, _: None) -> None:
         self.refresh_picker()
 
-    @on(OptionList.OptionHighlighted, "#picker-options")
-    async def option_highlighted(self, event: OptionList.OptionHighlighted) -> None:
+        # ---------------------------------------------------------------------------
+        # |                         ViewPicker handling                             |
+        # ---------------------------------------------------------------------------
+
+    @on(OptionList.OptionHighlighted, "#view-picker")
+    async def view_picker_highlighted(
+        self, event: OptionList.OptionHighlighted
+    ) -> None:
         option_id = event.option_id
         if option_id is None:
             return
@@ -82,7 +96,9 @@ class MainScreen(SchooltoolsScreen[None]):
             await self.show_home_view()
             return
 
-        await self.show_school_class_view(self.school_classes_by_id[option_id])
+        await self.show_school_class_view(
+            self.school_classes_by_id[option_id.removeprefix("class-")]
+        )
 
     async def switch_view(self, view: Widget) -> None:
         content = self.query_one("#content", Container)
@@ -101,10 +117,23 @@ class MainScreen(SchooltoolsScreen[None]):
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
         await self.switch_view(SchoolClassView(school_class))
 
-    def action_show_home(self) -> None:
-        picker = self.query_one("#picker-options", OptionList)
-        picker.highlighted = 0
-        picker.focus()
+        # ---------------------------------------------------------------------------
+        # |                  ManagementPicker handling                              |
+        # ---------------------------------------------------------------------------
+
+    @on(OptionList.OptionSelected, "#management-picker")
+    def management_picker_selected(self, event: OptionList.OptionSelected) -> None:
+        option_id = event.option_id
+        if option_id is None:
+            return
+
+        match option_id:
+            case "edit-classes":
+                pass
+            case "sequence-library":
+                pass
+            case "edit-timetabel":
+                pass
 
     @on(HomeView.EditTimetableSlot)
     def edit_timetable_slot(self, message: HomeView.EditTimetableSlot) -> None:

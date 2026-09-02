@@ -50,9 +50,7 @@ class EditTimetableScreen(ModalScreen[TimetableEditResult | None]):
         )
         subject_options = self.get_subject_options(selected_class_id)
         selected_subject_id = (
-            self.entry.subject_id
-            if self.entry is not None
-            else subject_options[0][1]
+            self.entry.subject_id if self.entry is not None else subject_options[0][1]
         )
 
         with Vertical(id="edit-timetable-dialog"):
