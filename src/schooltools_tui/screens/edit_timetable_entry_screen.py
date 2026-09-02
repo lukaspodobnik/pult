@@ -24,7 +24,7 @@ class TimetableEditResult:
     entry: TimetableEntry
 
 
-class EditTimetableScreen(ModalScreen[TimetableEditResult | None]):
+class EditTimetabelEntryScreen(ModalScreen[TimetableEditResult | None]):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
 
     def __init__(
@@ -93,10 +93,7 @@ class EditTimetableScreen(ModalScreen[TimetableEditResult | None]):
                         id="delete-timetable-entry",
                     )
 
-                yield Button(
-                    "Abbrechen",
-                    id="cancel-timetable-edit",
-                )
+                yield Button("Abbrechen", id="cancel-timetable-entry-edit")
                 yield Button(
                     "Speichern",
                     variant="primary",
@@ -157,8 +154,8 @@ class EditTimetableScreen(ModalScreen[TimetableEditResult | None]):
             )
         )
 
-    @on(Button.Pressed, "#cancel-timetable-edit")
-    def cancel_timetable_edit(self) -> None:
+    @on(Button.Pressed, "#cancel-timetable-entry-edit")
+    def cancel_timetable_entry_edit(self) -> None:
         self.action_cancel()
 
     def action_cancel(self) -> None:

@@ -24,6 +24,6 @@ class ManagementPicker(OptionList):
         super().__init__(
             Option("Klassen", id="edit-classes"),
             Option("Sequenzbibliothek", id="sequence-library"),
-            Option("Stundenplan", id="edit-timetabel"),
+            Option("Stundenplan", id="edit-timetable"),
             id=id,
         )

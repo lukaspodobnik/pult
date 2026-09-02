@@ -1,29 +1,16 @@
-from pathlib import Path
-from typing import ClassVar
-
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widget import Widget
-from textual.widgets import Button, Footer, Header, Label, OptionList
-from textual.widgets.option_list import Option
+from textual.widgets import Footer, Header, Label, OptionList
 
 from schooltools_tui.period import load_periods
 from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
-from schooltools_tui.screens.edit_timetable_screen import (
-    EditTimetableScreen,
-    TimetableEditAction,
-    TimetableEditResult,
-)
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
+from schooltools_tui.screens.timetable_screen import EditTimetableScreen
 from schooltools_tui.subject import load_subjects
-from schooltools_tui.timetable import (
-    delete_timetable_entry,
-    get_timetable_path,
-    load_timetable,
-    save_timetable_entry,
-)
+from schooltools_tui.timetable import get_timetable_path, load_timetable
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
@@ -33,10 +20,6 @@ class MainScreen(SchooltoolsScreen[None]):
     def __init__(self):
         super().__init__()
         self.school_classes_by_id: dict[str, SchoolClass] = {}
-
-        config = self.app_config
-        for school_class in load_school_classes(config.root, config.active_school_year):
-            self.school_classes_by_id[school_class.id] = school_class
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -55,30 +38,20 @@ class MainScreen(SchooltoolsScreen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
-        config = self.app_config
-        view_picker = self.query_one("#view-picker", ViewPicker)
-
-        view_picker.refresh_options(
-            load_school_classes(config.root, config.active_school_year)
-        )
+        self.refresh_picker()
 
     def refresh_picker(self) -> None:
+        self.refresh_school_classes()
+        self.query_one("#view-picker", ViewPicker).refresh_options(
+            list(self.school_classes_by_id.values())
+        )
+
+    def refresh_school_classes(self) -> None:
         config = self.app_config
-
-        picker = self.query_one("#picker-options", OptionList)
-        picker.clear_options()
-
-        picker.add_option(Option("HOME", id="home"))
-        for school_class in load_school_classes(config.root, config.active_school_year):
-            option_id = f"class-{school_class.id}"
-            picker.add_option(Option(school_class.id, id=option_id))
-            self.school_classes_by_id[option_id] = school_class
-
-        picker.highlighted = 0
-        picker.focus()
-
-    def school_class_registered(self, _: None) -> None:
-        self.refresh_picker()
+        school_classes = load_school_classes(config.root, config.active_school_year)
+        self.school_classes_by_id = {
+            school_class.id: school_class for school_class in school_classes
+        }
 
         # ---------------------------------------------------------------------------
         # |                         ViewPicker handling                             |
@@ -129,49 +102,19 @@ class MainScreen(SchooltoolsScreen[None]):
 
         match option_id:
             case "edit-classes":
-                pass
+                self.app.push_screen(
+                    SchoolClassSetupScreen(), self.school_class_registered
+                )
             case "sequence-library":
                 pass
-            case "edit-timetabel":
-                pass
+            case "edit-timetable":
+                self.app.push_screen(
+                    EditTimetableScreen(), self.timetable_edit_finished
+                )
 
-    @on(HomeView.EditTimetableSlot)
-    def edit_timetable_slot(self, message: HomeView.EditTimetableSlot) -> None:
-        config = self.app_config
-        school_classes = load_school_classes(config.root, config.active_school_year)
-        if not school_classes:
-            self.notify(
-                "Lege zuerst mindestens eine Klasse an.",
-                severity="warning",
-            )
-            return
+    def school_class_registered(self, _: None) -> None:
+        self.refresh_picker()
 
-        subjects = load_subjects(config.root)
-        self.app.push_screen(
-            EditTimetableScreen(
-                weekday=message.weekday,
-                period=message.period,
-                entry=message.entry,
-                school_classes=school_classes,
-                subjects=subjects,
-            ),
-            self.timetable_edited,
-        )
-
-    async def timetable_edited(self, result: TimetableEditResult | None) -> None:
-        if result is None:
-            return
-
-        config = self.app_config
-        path = get_timetable_path(config.root, config.active_school_year)
-
-        if result.action is TimetableEditAction.SAVE:
-            save_timetable_entry(path, result.entry)
-        else:
-            delete_timetable_entry(
-                path,
-                result.entry.weekday,
-                result.entry.period,
-            )
-
-        await self.show_home_view()
+    async def timetable_edit_finished(self, _: None) -> None:
+        if self.query(HomeView):
+            await self.show_home_view()

@@ -2,11 +2,16 @@ MainScreen #main {
     height: 1fr;
 }
 
-MainScreen #picker {
+MainScreen #navigation {
     width: 24;
     padding: 1;
     background: $panel;
     border-right: tall $primary;
+}
+
+MainScreen #view-picker,
+MainScreen #management-picker {
+    height: 1fr;
 }
 
 MainScreen .picker-entry {
@@ -48,4 +53,32 @@ MainScreen #school-year {
     padding: 1 2;
     background: $surface;
     border: round $secondary;
+}
+
+EditTimetableScreen #edit-timetable-screen {
+    height: 1fr;
+    padding: 1 2;
+}
+
+EditTimetableScreen #edit-timetable-screen-title {
+    height: 3;
+    content-align-vertical: middle;
+    text-style: bold;
+}
+
+EditTimetableScreen #edit-schedule {
+    height: 1fr;
+    min-height: 10;
+    background: $surface;
+    border: round $primary;
+}
+
+EditTimetableScreen #edit-timetable-screen-actions {
+    height: auto;
+    margin-top: 1;
+    align-horizontal: right;
+}
+
+EditTimetableScreen #edit-timetable-screen-actions Button {
+    margin-left: 1;
 }

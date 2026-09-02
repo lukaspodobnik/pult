@@ -2,10 +2,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from rich.text import Text
-from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.message import Message
 from textual.widgets import DataTable
 
 from schooltools_tui.period import Period, get_period_at
@@ -22,29 +20,10 @@ WEEKDAYS = (
 
 
 class TimetableDataTable(DataTable):
-    def on_mount(self) -> None:
-        self.show_cursor = self.has_focus
-
-    def on_focus(self) -> None:
-        self.show_cursor = True
-
-    def on_blur(self) -> None:
-        self.show_cursor = False
+    can_focus = False
 
 
 class HomeView(Vertical):
-    class EditTimetableSlot(Message):
-        def __init__(
-            self,
-            weekday: str,
-            period: int,
-            entry: TimetableEntry | None,
-        ) -> None:
-            super().__init__()
-            self.weekday = weekday
-            self.period = period
-            self.entry = entry
-
     def __init__(
         self,
         timetable_entries: list[TimetableEntry],
@@ -62,7 +41,10 @@ class HomeView(Vertical):
         self.current_time_position: tuple[str | None, int | None] | None = None
 
     def compose(self) -> ComposeResult:
-        yield TimetableDataTable(id="schedule", cursor_type="cell")
+        yield TimetableDataTable(
+            id="schedule",
+            cursor_type="none",
+        )
 
     def on_mount(self) -> None:
         self.refresh_time_highlight()
@@ -87,7 +69,7 @@ class HomeView(Vertical):
         for period in self.periods:
             cells = []
 
-            for weekday, label in WEEKDAYS:
+            for weekday, _ in WEEKDAYS:
                 entry = self.timetable_entries_by_slot.get(
                     (weekday, period.number)
                 )
@@ -127,10 +109,8 @@ class HomeView(Vertical):
 
         self.current_time_position = position
         table = self.query_one("#schedule", DataTable)
-        cursor = table.cursor_coordinate
         table.clear(columns=True)
         self.populate_timetable(*position)
-        table.move_cursor(row=cursor.row, column=cursor.column)
 
     @staticmethod
     def get_highlighted_text(
@@ -148,26 +128,6 @@ class HomeView(Vertical):
             styles.append("reverse")
 
         return Text(content, style=" ".join(styles))
-
-    @on(DataTable.CellSelected, "#schedule")
-    def select_timetable_slot(self, event: DataTable.CellSelected) -> None:
-        weekday = event.cell_key.column_key.value
-        period = event.cell_key.row_key.value
-
-        assert weekday is not None
-        assert period is not None
-
-        weekday = str(weekday)
-        period = int(period)
-        entry = self.timetable_entries_by_slot.get((weekday, period))
-
-        self.post_message(
-            self.EditTimetableSlot(
-                weekday=weekday,
-                period=period,
-                entry=entry,
-            )
-        )
 
 
 def get_current_timetable_position(
