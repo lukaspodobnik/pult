@@ -7,6 +7,18 @@ from schooltools_tui.storage import load_toml, save_toml
 CLASS_FILE_NAME = Path("class.toml")
 
 
+def get_grade_level_from_school_class_id(school_class_id: str) -> int:
+    match = re.match(r"[0-9]+", school_class_id.strip())
+    if match is None:
+        raise ValueError("Die Klassenbezeichnung muss mit einer Zahl beginnen.")
+
+    grade_level = int(match.group())
+    if not 5 <= grade_level <= 13:
+        raise ValueError("Die Jahrgangsstufe muss zwischen 5 und 13 liegen.")
+
+    return grade_level
+
+
 @dataclass
 class SchoolClass:
     id: str
@@ -15,9 +27,7 @@ class SchoolClass:
 
     def __post_init__(self) -> None:
         self.id = self.id.strip().upper()
-
-        if not self.id or self.id[0] not in "0123456789":
-            raise ValueError("Die Klassenbezeichnung muss mit einer Zahl beginnen.")
+        id_grade_level = get_grade_level_from_school_class_id(self.id)
 
         if any(character.isspace() for character in self.id):
             raise ValueError("Die Klassenbezeichnung darf keine Leerzeichen enthalten.")
@@ -28,6 +38,11 @@ class SchoolClass:
             or not 5 <= self.grade_level <= 13
         ):
             raise ValueError("Die Jahrgangsstufe muss zwischen 5 und 13 liegen.")
+
+        if self.grade_level != id_grade_level:
+            raise ValueError(
+                "Die Jahrgangsstufe muss zur Klassenbezeichnung passen."
+            )
 
         if not self.subject_ids:
             raise ValueError("Es muss mindestens ein Fach gewählt werden.")

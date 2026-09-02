@@ -8,29 +8,57 @@ from schooltools_tui.initialization.school_class import (
     SchoolClassSetupError,
     initialize_school_class,
 )
-from schooltools_tui.school_class import SchoolClass
+from schooltools_tui.school_class import (
+    SchoolClass,
+    get_grade_level_from_school_class_id,
+)
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
-from schooltools_tui.subject import load_subjects
+from schooltools_tui.subject import Subject, load_subjects
 
 
 class SchoolClassSetupScreen(SchooltoolsScreen[None]):
     def compose(self) -> ComposeResult:
+        self.subjects = load_subjects(self.app_config.root)
+        self.current_grade_level: int | None = None
+
         yield Header()
 
         with Vertical(id="school-class-setup-form"):
             yield Label("Klasse anlegen", id="school-class-setup-title")
             yield Input(placeholder="Klassenname, z. B. '8A'", id="class-name")
-            yield SelectionList(*self.get_subject_selections(), id="subjects")
+            yield SelectionList(id="subjects")
             yield Button("Anlegen", variant="primary", id="submit-class")
 
         yield Footer()
 
-    def get_subject_selections(self) -> list[Selection]:
-        subjects = load_subjects(self.app_config.root)
+    def get_subject_selections(self, grade_level: int) -> list[Selection]:
         return [
-            Selection(f"{subject.name}", f"{subject.id}", id=f"{subject.id}")
-            for subject in subjects
+            self.get_subject_selection(subject)
+            for subject in self.subjects
+            if grade_level in subject.grade_levels
         ]
+
+    @staticmethod
+    def get_subject_selection(subject: Subject) -> Selection:
+        return Selection(subject.name, subject.id, id=subject.id)
+
+    @on(Input.Changed, "#class-name")
+    def update_subject_selections(self, event: Input.Changed) -> None:
+        try:
+            grade_level = get_grade_level_from_school_class_id(event.value)
+        except ValueError:
+            grade_level = None
+
+        if grade_level == self.current_grade_level:
+            return
+
+        self.current_grade_level = grade_level
+        selection_list = self.query_one("#subjects", SelectionList)
+        selection_list.clear_options()
+
+        if grade_level is not None:
+            selection_list.add_options(self.get_subject_selections(grade_level))
+            selection_list.highlighted = 0
 
     @on(Button.Pressed, "#submit-class")
     def submit_class(self) -> None:
@@ -38,7 +66,13 @@ class SchoolClassSetupScreen(SchooltoolsScreen[None]):
         subjects = self.query_one("#subjects", SelectionList).selected
 
         try:
-            school_class = SchoolClass(id=school_class_id_input.value, subject_ids=subjects)
+            school_class = SchoolClass(
+                id=school_class_id_input.value,
+                grade_level=get_grade_level_from_school_class_id(
+                    school_class_id_input.value
+                ),
+                subject_ids=subjects,
+            )
         except ValueError as error:
             self.notify(str(error), severity="error")
             return
