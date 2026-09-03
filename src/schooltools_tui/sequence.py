@@ -123,6 +123,17 @@ class Sequence:
             )
 
 
+def sequence_sort_key(
+    sequence: Sequence,
+) -> tuple[str, tuple[int, ...], str]:
+    prefix, section = sequence.curriculum_section_id.split(" ", maxsplit=1)
+    return (
+        prefix,
+        tuple(int(part) for part in section.split(".")),
+        sequence.id,
+    )
+
+
 def get_sequence_directory(
     root: Path,
     grade_level: int,

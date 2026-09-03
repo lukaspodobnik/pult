@@ -1,7 +1,7 @@
 from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
-from schooltools_tui.sequence import Sequence
+from schooltools_tui.sequence import Sequence, sequence_sort_key
 from schooltools_tui.subject import Subject
 
 
@@ -64,9 +64,8 @@ class SequenceTree(Tree[Sequence | None]):
         sorted_sequences = sorted(
             sequences,
             key=lambda sequence: (
-                _curriculum_section_sort_key(sequence.curriculum_section_id),
+                sequence_sort_key(sequence),
                 sequence.title.casefold(),
-                sequence.id,
             ),
         )
 
@@ -85,8 +84,3 @@ class SequenceTree(Tree[Sequence | None]):
                 chapter_nodes[sequence.chapter_id] = chapter_node
 
             chapter_node.add(sequence.title, data=sequence)
-
-
-def _curriculum_section_sort_key(value: str) -> tuple[str, tuple[int, ...]]:
-    prefix, section = value.split(" ", maxsplit=1)
-    return prefix, tuple(int(part) for part in section.split("."))

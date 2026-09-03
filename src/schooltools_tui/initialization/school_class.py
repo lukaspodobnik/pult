@@ -5,6 +5,13 @@ from schooltools_tui.school_class import (
     get_school_class_path,
     save_school_class,
 )
+from schooltools_tui.sequence import load_sequence_library, sequence_sort_key
+from schooltools_tui.sequence_status import (
+    ActiveSequence,
+    SequenceStatus,
+    save_sequence_status,
+    validate_sequence_status,
+)
 from schooltools_tui.subject import load_subjects
 
 
@@ -21,6 +28,7 @@ def initialize_school_class(root: Path, year: str, school_class: SchoolClass) ->
         )
 
     subjects_by_id = {subject.id: subject for subject in load_subjects(root)}
+    sequences = load_sequence_library(root)
 
     for subject_id in school_class.subject_ids:
         subject = subjects_by_id.get(subject_id)
@@ -34,5 +42,34 @@ def initialize_school_class(root: Path, year: str, school_class: SchoolClass) ->
                 f"{school_class.grade_level}. Jahrgangsstufe nicht verfügbar."
             )
 
+    active_sequences: list[ActiveSequence] = []
+    for subject_id in school_class.subject_ids:
+        subject_sequences = [
+            sequence
+            for sequence in sequences
+            if sequence.grade_level == school_class.grade_level
+            and sequence.subject_id == subject_id
+        ]
+        if not subject_sequences:
+            raise SchoolClassSetupError(
+                f"Für das Fach '{subjects_by_id[subject_id].name}' existieren in "
+                f"der {school_class.grade_level}. Jahrgangsstufe keine Sequenzen."
+            )
+
+        first_sequence = min(subject_sequences, key=sequence_sort_key)
+        active_sequences.append(
+            ActiveSequence(
+                subject_id=subject_id,
+                sequence_id=first_sequence.id,
+            )
+        )
+
+    sequence_status = SequenceStatus(
+        active_sequences=tuple(active_sequences),
+        progress=(),
+    )
+    validate_sequence_status(sequence_status, school_class, sequences)
+
     class_directory.mkdir(parents=True, exist_ok=True)
     save_school_class(root, year, school_class)
+    save_sequence_status(root, year, school_class.id, sequence_status)
