@@ -36,9 +36,6 @@ class ActiveSequence:
     subject_id: str
     sequence_id: str
 
-    def __post_init__(self) -> None:
-        pass
-
 
 @dataclass(frozen=True)
 class SequenceStatus:
@@ -67,8 +64,7 @@ def validate_sequence_status(
 ) -> None:
     expected_subject_ids = set(school_class.subject_ids)
     active_subject_ids = {
-        active_sequence.subject_id
-        for active_sequence in status.active_sequences
+        active_sequence.subject_id for active_sequence in status.active_sequences
     }
 
     if active_subject_ids != expected_subject_ids:
@@ -108,9 +104,7 @@ def validate_sequence_status(
                 f"{school_class.grade_level}. Jahrgangsstufe nicht."
             )
 
-    progress_by_sequence: dict[
-        tuple[str, str], list[LessonProgressEntry]
-    ] = {}
+    progress_by_sequence: dict[tuple[str, str], list[LessonProgressEntry]] = {}
     for entry in status.progress:
         if entry.subject_id not in expected_subject_ids:
             raise SequenceStatusValidationError(
@@ -283,4 +277,6 @@ def _require_exact_keys(
     if unexpected_keys:
         details.append(f"unbekannt: {', '.join(unexpected_keys)}")
 
-    raise ValueError(f"{description} enthält ungültige Schlüssel ({'; '.join(details)}).")
+    raise ValueError(
+        f"{description} enthält ungültige Schlüssel ({'; '.join(details)})."
+    )
