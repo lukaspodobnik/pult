@@ -154,9 +154,9 @@ def load_sequence(
     sequence_id: str,
 ) -> Sequence:
     path = get_sequence_path(root, grade_level, subject_id, sequence_id)
-    data = load_toml(path)
 
     try:
+        data = load_toml(path)
         lessons_data = data["lessons"]
         if not isinstance(lessons_data, list):
             raise TypeError("'lessons' muss eine Liste sein.")

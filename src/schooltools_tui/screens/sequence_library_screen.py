@@ -1,14 +1,21 @@
 import shlex
 import subprocess
 from typing import ClassVar
-from textual.widgets.tree import TreeNode
+
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Footer, Header, Label, Tree
+from textual.widgets.tree import TreeNode
 
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
-from schooltools_tui.sequence import Sequence, get_sequence_path, load_sequence, load_sequence_library
+from schooltools_tui.sequence import (
+    Sequence,
+    SequenceFileError,
+    get_sequence_path,
+    load_sequence,
+    load_sequence_library,
+)
 from schooltools_tui.subject import load_subjects
 from schooltools_tui.widgets.sequence_preview import SequencePreview
 from schooltools_tui.widgets.sequence_tree import SequenceTree
@@ -62,19 +69,53 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
 
         config = self.app_config
 
-        command = [
-            *shlex.split(config.editor),
-            get_sequence_path(
-                config.root, sequence.grade_level, sequence.subject_id, sequence.id
-            ),
-        ]
-
-        with self.app.suspend():
-            subprocess.run(command, check=False)
-
-        updated_sequence = load_sequence(
-            config.root, sequence.grade_level, sequence.subject_id, sequence.id
+        path = get_sequence_path(
+            config.root,
+            sequence.grade_level,
+            sequence.subject_id,
+            sequence.id,
         )
+        try:
+            command = [*shlex.split(config.editor), str(path)]
+        except ValueError as error:
+            self.notify(
+                f"Der konfigurierte Editor-Befehl ist ungültig: {error}",
+                severity="error",
+            )
+            return
+
+        try:
+            with self.app.suspend():
+                result = subprocess.run(command, check=False)
+        except OSError as error:
+            self.notify(
+                f"Der Editor konnte nicht gestartet werden: {error}",
+                severity="error",
+            )
+            return
+
+        if result.returncode != 0:
+            self.notify(
+                f"Der Editor wurde mit Status {result.returncode} beendet.",
+                severity="warning",
+            )
+
+        try:
+            updated_sequence = load_sequence(
+                config.root,
+                sequence.grade_level,
+                sequence.subject_id,
+                sequence.id,
+            )
+        except SequenceFileError as error:
+            self.notify(str(error), severity="error", timeout=10)
+            return
+        except OSError as error:
+            self.notify(
+                f"Die Sequenzdatei konnte nicht gelesen werden: {error}",
+                severity="error",
+            )
+            return
 
         node.data = updated_sequence
 
