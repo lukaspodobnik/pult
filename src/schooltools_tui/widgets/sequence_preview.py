@@ -1,15 +1,18 @@
-from textual.widgets import Markdown, MarkdownViewer
+from textual.widgets import MarkdownViewer
 
 from schooltools_tui.sequence import Sequence
 
 
 class SequencePreview(MarkdownViewer):
+    can_focus = True
+    can_focus_children = False
+
     def __init__(self, *, id: str | None) -> None:
         super().__init__("Wähle eine Sequnz.", show_table_of_contents=False, id=id)
 
     def show_sequence(self, sequence: Sequence) -> None:
         self.document.update(self.render_sequence(sequence))
-        self.scroll_home()
+        self.scroll_home(animate=False)
 
     @staticmethod
     def render_sequence(sequence: Sequence) -> str:
