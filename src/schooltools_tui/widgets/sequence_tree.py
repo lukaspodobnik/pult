@@ -8,6 +8,7 @@ from schooltools_tui.subject import Subject
 class SequenceTree(Tree[Sequence | None]):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__("Sequenzen", id=id)
+        self.show_root = False
 
     def on_mount(self) -> None:
         self.root.expand()
@@ -35,10 +36,7 @@ class SequenceTree(Tree[Sequence | None]):
             key=lambda subject_id: subjects_by_id[subject_id].name.casefold(),
         )
         for subject_id in sorted_subjects:
-            subject_node = self.root.add(
-                subjects_by_id[subject_id].name,
-                expand=True,
-            )
+            subject_node = self.root.add(subjects_by_id[subject_id].name)
             subject_sequences = sequences_by_subject[subject_id]
             grade_levels = sorted(
                 {sequence.grade_level for sequence in subject_sequences}
@@ -47,7 +45,6 @@ class SequenceTree(Tree[Sequence | None]):
             for grade_level in grade_levels:
                 grade_node = subject_node.add(
                     f"{grade_level}. Jahrgangsstufe",
-                    expand=True,
                 )
                 grade_sequences = [
                     sequence
