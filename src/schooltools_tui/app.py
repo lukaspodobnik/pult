@@ -12,6 +12,7 @@ class SchooltoolsApp(App):
         "styles/app.tcss",
         "styles/home.tcss",
         "styles/classes.tcss",
+        "styles/sequences.tcss",
         "styles/setup.tcss",
         "styles/school_year_setup.tcss",
     ]

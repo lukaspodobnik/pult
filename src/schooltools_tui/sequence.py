@@ -204,6 +204,41 @@ def load_sequences(
     return [load_sequence(root, grade_level, subject_id, path.stem) for path in paths]
 
 
+def load_sequence_library(root: Path) -> list[Sequence]:
+    library_directory = root / SEQUENCES_DIRECTORY_NAME
+    grade_directories: list[tuple[int, Path]] = []
+
+    for grade_directory in library_directory.iterdir():
+        if not grade_directory.is_dir():
+            continue
+
+        try:
+            grade_level = int(grade_directory.name)
+        except ValueError as error:
+            raise SequenceFileError(
+                f"Ungültiges Jahrgangsstufenverzeichnis '{grade_directory}'."
+            ) from error
+
+        if not 5 <= grade_level <= 13:
+            raise SequenceFileError(
+                f"Ungültiges Jahrgangsstufenverzeichnis '{grade_directory}'."
+            )
+
+        grade_directories.append((grade_level, grade_directory))
+
+    sequences: list[Sequence] = []
+    for grade_level, grade_directory in sorted(grade_directories):
+        subject_directories = sorted(
+            path for path in grade_directory.iterdir() if path.is_dir()
+        )
+        for subject_directory in subject_directories:
+            sequences.extend(
+                load_sequences(root, grade_level, subject_directory.name)
+            )
+
+    return sequences
+
+
 def save_sequence(root: Path, sequence: Sequence) -> None:
     path = get_sequence_path(
         root,

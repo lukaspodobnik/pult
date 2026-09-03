@@ -1,0 +1,38 @@
+SequenceLibraryScreen #sequence-library {
+    height: 1fr;
+}
+
+SequenceLibraryScreen #sequence-navigation {
+    width: 36;
+    padding: 1;
+    background: $panel;
+    border-right: tall $primary;
+}
+
+SequenceLibraryScreen #sequence-navigation-title,
+SequenceLibraryScreen #sequence-preview-title {
+    height: 3;
+    content-align-vertical: middle;
+    color: $text-accent;
+    text-style: bold;
+}
+
+SequenceLibraryScreen #sequence-tree {
+    height: 1fr;
+}
+
+SequenceLibraryScreen #sequence-content {
+    width: 1fr;
+    padding: 1 2;
+}
+
+SequenceLibraryScreen #sequence-preview {
+    height: 1fr;
+    padding: 1 2;
+    background: $surface;
+    border: round $primary;
+}
+
+SequenceLibraryScreen #sequence-preview-placeholder {
+    color: $foreground-muted;
+}

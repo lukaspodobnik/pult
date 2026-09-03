@@ -7,8 +7,9 @@ from textual.widgets import Footer, Header, Label, OptionList
 from schooltools_tui.period import load_periods
 from schooltools_tui.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
-from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
+from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
+from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
 from schooltools_tui.subject import load_subjects
 from schooltools_tui.timetable import get_timetable_path, load_timetable
 from schooltools_tui.views.home_view import HomeView
@@ -105,7 +106,7 @@ class MainScreen(SchooltoolsScreen[None]):
             case "edit-classes":
                 self.app.push_screen(EditClassesScreen(), self.classes_edited)
             case "sequence-library":
-                pass
+                self.app.push_screen(SequenceLibraryScreen())
             case "edit-timetable":
                 self.app.push_screen(
                     EditTimetableScreen(), self.timetable_edit_finished
