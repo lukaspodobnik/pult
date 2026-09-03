@@ -57,7 +57,11 @@ class ConfirmClassDeletionScreen(SchooltoolsModalScreen[bool]):
 
 
 class EditClassesScreen(SchooltoolsScreen[None]):
-    BINDINGS: ClassVar = [("escape", "cancel", "Zurück")]
+    BINDINGS: ClassVar = [
+        ("a", "create_class", "Anlegen"),
+        ("d", "delete_class", "Löschen"),
+        ("escape", "cancel", "Zurück"),
+    ]
 
     def __init__(self) -> None:
         super().__init__()
@@ -117,14 +121,20 @@ class EditClassesScreen(SchooltoolsScreen[None]):
         self.selected_school_class_id = event.option_id
 
     @on(Button.Pressed, "#create-school-class")
-    def create_school_class(self) -> None:
+    def create_school_class_pressed(self) -> None:
+        self.action_create_class()
+
+    def action_create_class(self) -> None:
         self.app.push_screen(SchoolClassSetupScreen(), self.school_class_created)
 
     def school_class_created(self, _: None) -> None:
         self.refresh_classes()
 
     @on(Button.Pressed, "#delete-school-class")
-    def request_school_class_deletion(self) -> None:
+    def delete_school_class_pressed(self) -> None:
+        self.action_delete_class()
+
+    def action_delete_class(self) -> None:
         if self.selected_school_class_id is None:
             return
 
