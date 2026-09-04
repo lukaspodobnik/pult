@@ -1,17 +1,17 @@
 from pathlib import Path
 
+from schooltools_tui.class_progress import (
+    ActiveSequence,
+    ClassProgress,
+    save_class_progress,
+    validate_class_progress,
+)
 from schooltools_tui.school_class import (
     SchoolClass,
     get_school_class_path,
     save_school_class,
 )
 from schooltools_tui.sequence import load_sequence_library, sequence_sort_key
-from schooltools_tui.sequence_status import (
-    ActiveSequence,
-    SequenceStatus,
-    save_sequence_status,
-    validate_sequence_status,
-)
 from schooltools_tui.subject import load_subjects
 
 
@@ -64,12 +64,12 @@ def initialize_school_class(root: Path, year: str, school_class: SchoolClass) ->
             )
         )
 
-    sequence_status = SequenceStatus(
+    class_progress = ClassProgress(
         active_sequences=tuple(active_sequences),
-        progress=(),
+        entries=(),
     )
-    validate_sequence_status(sequence_status, school_class, sequences)
+    validate_class_progress(class_progress, school_class, sequences)
 
     class_directory.mkdir(parents=True, exist_ok=True)
     save_school_class(root, year, school_class)
-    save_sequence_status(root, year, school_class.id, sequence_status)
+    save_class_progress(root, year, school_class.id, class_progress)
