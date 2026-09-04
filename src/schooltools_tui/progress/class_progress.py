@@ -4,8 +4,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from schooltools_tui.school_class import SchoolClass, get_school_class_path
-from schooltools_tui.sequence import Sequence, validate_id
+from schooltools_tui.curriculum.sequence import Sequence, validate_id
+from schooltools_tui.school.school_class import SchoolClass, get_school_class_path
 from schooltools_tui.storage import load_toml, save_toml
 
 CLASS_PROGRESS_FILE_NAME = Path("class-progress.toml")

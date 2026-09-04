@@ -6,7 +6,7 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Header, Label, OptionList
 from textual.widgets.option_list import Option
 
-from schooltools_tui.school_class import (
+from schooltools_tui.school.school_class import (
     delete_school_class,
     load_school_classes,
 )
@@ -15,7 +15,7 @@ from schooltools_tui.screens.base_screen import (
     SchooltoolsScreen,
 )
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
-from schooltools_tui.timetable import (
+from schooltools_tui.school.timetable import (
     delete_timetable_entries_for_school_class,
     get_timetable_path,
 )

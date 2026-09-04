@@ -4,10 +4,8 @@ from textual.containers import Vertical
 from textual.widgets import Footer, Header, Label, OptionList
 from textual.widgets.option_list import Option
 
-from schooltools_tui.initialization.school_year import (
-    get_school_year_options,
-    initialize_school_year,
-)
+from schooltools_tui.initialization.school_year import initialize_school_year
+from schooltools_tui.school.school_year import get_school_year_options
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 
 

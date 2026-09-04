@@ -4,8 +4,8 @@ from pathlib import Path
 
 from schooltools_tui.config import AppConfig, save_app_config
 from schooltools_tui.initialization.school_year import initialize_school_year
-from schooltools_tui.period import PERIODS_FILE_NAME as periods_file
-from schooltools_tui.subject import SUBJECTS_FILE_NAME as subject_file
+from schooltools_tui.school.period import PERIODS_FILE_NAME as periods_file
+from schooltools_tui.school.subject import SUBJECTS_FILE_NAME as subject_file
 
 
 class SetupError(Exception):

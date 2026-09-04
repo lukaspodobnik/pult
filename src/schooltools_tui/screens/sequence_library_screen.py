@@ -9,14 +9,14 @@ from textual.widgets import Footer, Header, Label, Tree
 from textual.widgets.tree import TreeNode
 
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
-from schooltools_tui.sequence import (
+from schooltools_tui.curriculum.sequence import (
     Sequence,
     SequenceFileError,
     get_sequence_path,
     load_sequence,
     load_sequence_library,
 )
-from schooltools_tui.subject import load_subjects
+from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.widgets.sequence_preview import SequencePreview
 from schooltools_tui.widgets.sequence_tree import SequenceTree
 

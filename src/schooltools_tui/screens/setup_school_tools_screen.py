@@ -11,7 +11,7 @@ from schooltools_tui.initialization import (
     SetupError,
     initialize_schooltools,
 )
-from schooltools_tui.initialization.school_year import get_school_year_options
+from schooltools_tui.school.school_year import get_school_year_options
 
 
 class SetupScreen(Screen[AppConfig]):

@@ -1,18 +1,18 @@
 from pathlib import Path
 
-from schooltools_tui.class_progress import (
+from schooltools_tui.progress.class_progress import (
     ActiveSequence,
     ClassProgress,
     save_class_progress,
     validate_class_progress,
 )
-from schooltools_tui.school_class import (
+from schooltools_tui.school.school_class import (
     SchoolClass,
     get_school_class_path,
     save_school_class,
 )
-from schooltools_tui.sequence import load_sequence_library, sequence_sort_key
-from schooltools_tui.subject import load_subjects
+from schooltools_tui.curriculum.sequence import load_sequence_library, sequence_sort_key
+from schooltools_tui.school.subject import load_subjects
 
 
 class SchoolClassSetupError(ValueError):

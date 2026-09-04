@@ -10,12 +10,12 @@ from schooltools_tui.initialization.school_class import (
     SchoolClassSetupError,
     initialize_school_class,
 )
-from schooltools_tui.school_class import (
+from schooltools_tui.school.school_class import (
     SchoolClass,
     get_grade_level_from_school_class_id,
 )
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
-from schooltools_tui.subject import Subject, load_subjects
+from schooltools_tui.school.subject import Subject, load_subjects
 
 
 class SchoolClassSetupScreen(SchooltoolsModalScreen[None]):

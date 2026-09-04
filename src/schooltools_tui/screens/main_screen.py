@@ -4,14 +4,14 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Label, OptionList
 
-from schooltools_tui.period import load_periods
-from schooltools_tui.school_class import SchoolClass, load_school_classes
+from schooltools_tui.school.period import load_periods
+from schooltools_tui.school.school_class import SchoolClass, load_school_classes
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
-from schooltools_tui.subject import load_subjects
-from schooltools_tui.timetable import get_timetable_path, load_timetable
+from schooltools_tui.school.subject import load_subjects
+from schooltools_tui.school.timetable import get_timetable_path, load_timetable
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker

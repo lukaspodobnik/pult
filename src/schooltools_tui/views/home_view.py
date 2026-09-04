@@ -6,9 +6,9 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import DataTable
 
-from schooltools_tui.period import Period, get_period_at
-from schooltools_tui.subject import Subject
-from schooltools_tui.timetable import TimetableEntry
+from schooltools_tui.school.period import Period, get_period_at
+from schooltools_tui.school.subject import Subject
+from schooltools_tui.school.timetable import TimetableEntry
 
 WEEKDAYS = (
     ("monday", "Montag"),

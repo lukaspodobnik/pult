@@ -1,7 +1,7 @@
 from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
-from schooltools_tui.school_class import SchoolClass
+from schooltools_tui.school.school_class import SchoolClass
 
 
 class ViewPicker(OptionList):

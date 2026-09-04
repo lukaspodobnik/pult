@@ -120,4 +120,3 @@ def _validate_periods(periods: list[Period]) -> None:
         if previous.end > current.start:
             raise PeriodsFileError("Unterrichtsstunden dürfen sich nicht überschneiden.")
 
-

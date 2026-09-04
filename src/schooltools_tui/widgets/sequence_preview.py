@@ -1,6 +1,6 @@
 from textual.widgets import MarkdownViewer
 
-from schooltools_tui.sequence import Sequence
+from schooltools_tui.curriculum.sequence import Sequence
 
 
 class SequencePreview(MarkdownViewer):

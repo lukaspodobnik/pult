@@ -1,0 +1,1 @@
+"""Lehrplan- und Sequenzmodelle."""

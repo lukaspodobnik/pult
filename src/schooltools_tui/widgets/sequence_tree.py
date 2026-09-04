@@ -1,8 +1,8 @@
 from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
-from schooltools_tui.sequence import Sequence, sequence_sort_key
-from schooltools_tui.subject import Subject
+from schooltools_tui.curriculum.sequence import Sequence, sequence_sort_key
+from schooltools_tui.school.subject import Subject
 
 
 class SequenceTree(Tree[Sequence | None]):
