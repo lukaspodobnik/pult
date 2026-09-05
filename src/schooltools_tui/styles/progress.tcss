@@ -121,3 +121,20 @@ AddExtraLessonScreen #add-extra-lesson-actions Button {
 SetActiveSequenceScreen #set-active-sequence-actions Button {
     margin-left: 1;
 }
+
+LessonProgressBar {
+    width: 1fr;
+    height: 1;
+
+    & > .lesson-progress-bar--completed {
+        color: $success;
+    }
+
+    & > .lesson-progress-bar--skipped {
+        color: $warning;
+    }
+
+    & > .lesson-progress-bar--open {
+        color: $surface-lighten-2;
+    }
+}
