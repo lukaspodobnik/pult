@@ -30,6 +30,7 @@ from schooltools_tui.progress.commands import (
 from schooltools_tui.progress.queries import (
     PlannedLesson,
     get_available_next_sequences,
+    get_class_progress_summary,
     get_next_lesson,
     get_next_planned_lesson,
     get_next_planned_lesson_for_class,
@@ -160,9 +161,39 @@ class MainScreen(SchooltoolsScreen[None]):
         await self.switch_view(HomeView(timetable_entries, subjects, periods))
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
+        config = self.app_config
+        try:
+            sequences = load_sequence_library(config.root)
+            progress = load_class_progress(
+                config.root,
+                config.active_school_year,
+                school_class.id,
+            )
+            validate_class_progress(progress, school_class, sequences)
+            timetable_entries = load_timetable(
+                get_timetable_path(config.root, config.active_school_year)
+            )
+            subjects = load_subjects(config.root)
+            progress_summaries = get_class_progress_summary(
+                progress,
+                sequences,
+                timetable_entries,
+                school_class,
+                get_school_year_start(config.active_school_year),
+            )
+        except (OSError, KeyError, StopIteration, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+
         self.active_school_class_id = school_class.id
         self.refresh_bindings()
-        await self.switch_view(SchoolClassView(school_class))
+        await self.switch_view(
+            SchoolClassView(
+                school_class,
+                subjects,
+                progress_summaries,
+            )
+        )
 
     def check_action(
         self,
