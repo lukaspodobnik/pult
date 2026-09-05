@@ -214,6 +214,35 @@ SchoolClassView .subject-progress-bar {
     margin-bottom: 1;
 }
 
+SchoolClassView .lesson-capacity {
+    height: auto;
+    color: $foreground-muted;
+}
+
+SchoolClassView .available-periods {
+    width: 1fr;
+    height: auto;
+}
+
+SchoolClassView .lesson-balance {
+    width: auto;
+    height: auto;
+    text-align: right;
+    text-style: bold;
+}
+
+SchoolClassView .lesson-balance.positive {
+    color: $success;
+}
+
+SchoolClassView .lesson-balance.negative {
+    color: $error;
+}
+
+SchoolClassView .lesson-balance.neutral {
+    color: $foreground-muted;
+}
+
 SchoolClassView .sequence-progress {
     height: auto;
     margin-top: 1;

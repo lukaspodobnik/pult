@@ -60,12 +60,21 @@ class SubjectProgressSummary:
     completed_lesson_count: int
     skipped_lesson_count: int
     total_lesson_count: int
+    available_period_count: int
     next_planned_lesson: PlannedLesson | None
     sequences: tuple[SequenceProgressSummary, ...]
 
     @property
     def progressed_lesson_count(self) -> int:
         return self.completed_lesson_count + self.skipped_lesson_count
+
+    @property
+    def remaining_lesson_count(self) -> int:
+        return self.total_lesson_count - self.progressed_lesson_count
+
+    @property
+    def lesson_balance(self) -> int:
+        return self.available_period_count - self.remaining_lesson_count
 
 
 def get_class_progress_summary(
@@ -159,6 +168,14 @@ def get_class_progress_summary(
                 ),
                 total_lesson_count=sum(
                     sequence.total_lesson_count for sequence in sequence_summaries
+                ),
+                available_period_count=count_available_scheduled_occurrences(
+                    progress,
+                    timetable_entries,
+                    school_class.id,
+                    subject_id,
+                    school_calendar,
+                    [*school_closures, *class_closures],
                 ),
                 next_planned_lesson=next_lessons_by_subject_id.get(subject_id),
                 sequences=tuple(sequence_summaries),
@@ -287,31 +304,16 @@ def get_next_scheduled_occurrence(
     school_calendar: SchoolCalendar,
     local_closures: list[Closure],
 ) -> tuple[date, int] | None:
-    matching_entries = [
-        entry
-        for entry in timetable_entries
-        if entry.subject_id == subject_id
-        and entry.school_class_id == school_class_id
-    ]
-
-    scheduled_entries = [
-        entry
-        for entry in progress.entries
-        if entry.subject_id == subject_id
-        and entry.origin is TeachingOrigin.SCHEDULED
-    ]
-
-    last_occurrence = max(
-        scheduled_entries,
-        key=lambda entry: (entry.date, entry.period),
-        default=None,
+    matching_entries = _get_matching_timetable_entries(
+        timetable_entries,
+        school_class_id,
+        subject_id,
     )
-
-    if last_occurrence is None:
-        after = (school_calendar.first_school_day, 0)
-    else:
-        assert last_occurrence.period is not None
-        after = (last_occurrence.date, last_occurrence.period)
+    after = _get_last_scheduled_occurrence(
+        progress,
+        subject_id,
+        school_calendar,
+    )
 
     candidate_date = max(after[0], school_calendar.first_school_day)
 
@@ -342,6 +344,78 @@ def get_next_scheduled_occurrence(
         candidate_date += timedelta(days=1)
 
     return None
+
+
+def count_available_scheduled_occurrences(
+    progress: ClassProgress,
+    timetable_entries: list[TimetableEntry],
+    school_class_id: str,
+    subject_id: str,
+    school_calendar: SchoolCalendar,
+    local_closures: list[Closure],
+) -> int:
+    """Count unprocessed timetable occurrences through the end of the year."""
+    matching_entries = _get_matching_timetable_entries(
+        timetable_entries,
+        school_class_id,
+        subject_id,
+    )
+    after = _get_last_scheduled_occurrence(
+        progress,
+        subject_id,
+        school_calendar,
+    )
+    candidate_date = max(after[0], school_calendar.first_school_day)
+    available_count = 0
+
+    while candidate_date <= school_calendar.last_school_day:
+        if is_school_day(school_calendar, candidate_date, local_closures):
+            weekday = WEEKDAYS[candidate_date.weekday()]
+            available_count += sum(
+                (candidate_date, entry.period) > after
+                for entry in matching_entries
+                if entry.weekday == weekday
+            )
+        candidate_date += timedelta(days=1)
+
+    return available_count
+
+
+def _get_matching_timetable_entries(
+    timetable_entries: list[TimetableEntry],
+    school_class_id: str,
+    subject_id: str,
+) -> list[TimetableEntry]:
+    return [
+        entry
+        for entry in timetable_entries
+        if entry.subject_id == subject_id
+        and entry.school_class_id == school_class_id
+    ]
+
+
+def _get_last_scheduled_occurrence(
+    progress: ClassProgress,
+    subject_id: str,
+    school_calendar: SchoolCalendar,
+) -> tuple[date, int]:
+    scheduled_entries = [
+        entry
+        for entry in progress.entries
+        if entry.subject_id == subject_id
+        and entry.origin is TeachingOrigin.SCHEDULED
+    ]
+    last_occurrence = max(
+        scheduled_entries,
+        key=lambda entry: (entry.date, entry.period),
+        default=None,
+    )
+
+    if last_occurrence is None:
+        return school_calendar.first_school_day, 0
+
+    assert last_occurrence.period is not None
+    return last_occurrence.date, last_occurrence.period
 
 
 def get_next_planned_lessons_for_class(

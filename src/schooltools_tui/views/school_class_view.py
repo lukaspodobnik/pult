@@ -80,6 +80,23 @@ class SubjectProgressBlock(Vertical):
             classes="subject-progress-bar",
         )
 
+        balance = self.summary.lesson_balance
+        balance_class = (
+            "positive" if balance > 0 else "negative" if balance < 0 else "neutral"
+        )
+        period_label = (
+            "Stunde" if self.summary.available_period_count == 1 else "Stunden"
+        )
+        with Horizontal(classes="lesson-capacity"):
+            yield Static(
+                f"Verfügbar: {self.summary.available_period_count} {period_label}",
+                classes="available-periods",
+            )
+            yield Static(
+                f"Differenz: {balance:+d}",
+                classes=f"lesson-balance {balance_class}",
+            )
+
         for sequence in self.summary.sequences:
             yield SequenceProgressBlock(sequence)
 
