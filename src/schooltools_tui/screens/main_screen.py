@@ -53,6 +53,7 @@ from schooltools_tui.screens.add_extra_lesson_screen import (
 from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
 from schooltools_tui.screens.confirm_undo_screen import ConfirmUndoScreen
 from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
+from schooltools_tui.screens.edit_closures_screen import EditClosuresScreen
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.select_next_sequence_screen import (
     SelectNextSequenceScreen,
@@ -757,6 +758,11 @@ class MainScreen(SchooltoolsScreen[None]):
                 self.app.push_screen(
                     EditTimetableScreen(), self.timetable_edit_finished
                 )
+            case "edit-closures":
+                self.app.push_screen(
+                    EditClosuresScreen(),
+                    self.closures_edited,
+                )
 
     def classes_edited(self, _: None) -> None:
         self.refresh_view_picker()
@@ -764,3 +770,6 @@ class MainScreen(SchooltoolsScreen[None]):
     async def timetable_edit_finished(self, _: None) -> None:
         if self.query(HomeView):
             await self.show_home_view()
+
+    async def closures_edited(self, _: None) -> None:
+        await self.refresh_current_view()

@@ -1,7 +1,7 @@
 import re
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -288,6 +288,27 @@ def is_school_day(
         target_date,
         (*calendar.closures, *local_closures),
     )
+
+
+def has_school_day(
+    calendar: SchoolCalendar,
+    start: date,
+    end: date,
+    local_closures: Iterable[Closure] = (),
+) -> bool:
+    if type(start) is not date or type(end) is not date:
+        raise TypeError("Start und Ende müssen Datumswerte ohne Uhrzeit sein.")
+    if end < start:
+        raise ValueError("Das Ende darf nicht vor dem Start liegen.")
+
+    local_closures = tuple(local_closures)
+    candidate = start
+    while candidate <= end:
+        if is_school_day(calendar, candidate, local_closures):
+            return True
+        candidate += timedelta(days=1)
+
+    return False
 
 
 def _load_local_closures(path: Path, year: str) -> list[Closure]:

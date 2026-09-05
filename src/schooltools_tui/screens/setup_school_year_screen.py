@@ -5,12 +5,17 @@ from textual.widgets import Footer, Header, Label, OptionList
 from textual.widgets.option_list import Option
 
 from schooltools_tui.initialization.school_year import initialize_school_year
-from schooltools_tui.school.school_year import get_school_year_options
+from schooltools_tui.school.school_year import (
+    get_likely_school_year,
+    get_school_year_options,
+)
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 
 
 class SchoolYearSetupScreen(SchooltoolsScreen[str]):
     def compose(self) -> ComposeResult:
+        school_year_options = get_school_year_options(self.app_config.root)
+
         yield Header()
 
         with Vertical(id="school-year-setup-form"):
@@ -22,7 +27,7 @@ class SchoolYearSetupScreen(SchooltoolsScreen[str]):
             yield OptionList(
                 *[
                     Option(label, id=f"year-{year}")
-                    for label, year in get_school_year_options()
+                    for label, year in school_year_options
                 ],
                 id="school-years",
             )
@@ -31,7 +36,11 @@ class SchoolYearSetupScreen(SchooltoolsScreen[str]):
 
     def on_mount(self) -> None:
         option_list = self.query_one("#school-years", OptionList)
-        option_list.highlighted = 1
+        school_year_options = get_school_year_options(self.app_config.root)
+        selected_school_year = get_likely_school_year(school_year_options)
+        option_list.highlighted = [
+            year for _, year in school_year_options
+        ].index(selected_school_year)
         option_list.focus()
 
     @on(OptionList.OptionSelected, "#school-years")
@@ -42,6 +51,10 @@ class SchoolYearSetupScreen(SchooltoolsScreen[str]):
 
         year = option_id.removeprefix("year-")
 
-        initialize_school_year(self.app_config.root, year)
+        try:
+            initialize_school_year(self.app_config.root, year)
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
 
         self.dismiss(year)

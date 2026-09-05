@@ -1,6 +1,9 @@
 from pathlib import Path
 
-from schooltools_tui.school.calendar import create_empty_school_closures
+from schooltools_tui.school.calendar import (
+    create_empty_school_closures,
+    load_school_calendar,
+)
 from schooltools_tui.school.timetable import (
     create_empty_timetable,
     get_timetable_path,
@@ -12,6 +15,7 @@ SCHOOL_YEAR_DIRECTORIES = (
 
 
 def initialize_school_year(root: Path, year: str) -> None:
+    load_school_calendar(root, year)
     school_year_path = root / "school-years" / year
 
     for relative_path in SCHOOL_YEAR_DIRECTORIES:

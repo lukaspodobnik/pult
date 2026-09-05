@@ -4,7 +4,10 @@ from pathlib import Path
 
 from schooltools_tui.config import AppConfig, save_app_config
 from schooltools_tui.initialization.school_year import initialize_school_year
-from schooltools_tui.school.calendar import CALENDARS_DIRECTORY_NAME
+from schooltools_tui.school.calendar import (
+    CALENDARS_DIRECTORY_NAME,
+    CalendarFileError,
+)
 from schooltools_tui.school.period import PERIODS_FILE_NAME as periods_file
 from schooltools_tui.school.subject import SUBJECTS_FILE_NAME as subject_file
 
@@ -54,7 +57,7 @@ def initialize_schooltools(root: str, editor: str, year: str) -> AppConfig:
         _create_default_files(root_path)
         _create_default_directories(root_path)
         initialize_school_year(root_path, year)
-    except OSError as error:
+    except (OSError, CalendarFileError) as error:
         raise SetupError(
             f"Das Datenverzeichnis konnte nicht initialisiert werden: {error}"
         ) from error

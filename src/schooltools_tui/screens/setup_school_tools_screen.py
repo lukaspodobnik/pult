@@ -11,12 +11,16 @@ from schooltools_tui.initialization import (
     SetupError,
     initialize_schooltools,
 )
-from schooltools_tui.school.school_year import get_school_year_options
+from schooltools_tui.school.school_year import (
+    get_likely_school_year,
+    get_school_year_options,
+)
 
 
 class SetupScreen(Screen[AppConfig]):
     def compose(self) -> ComposeResult:
         school_year_options = get_school_year_options()
+        selected_school_year = get_likely_school_year(school_year_options)
 
         yield Header()
 
@@ -51,7 +55,7 @@ class SetupScreen(Screen[AppConfig]):
 
             yield Select(
                 school_year_options,
-                value=school_year_options[1][1],
+                value=selected_school_year,
                 allow_blank=False,
                 id="school-year",
             )

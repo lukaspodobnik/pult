@@ -34,5 +34,6 @@ class ManagementPicker(OptionList):
             Option("Klassen", id="edit-classes"),
             Option("Sequenzbibliothek", id="sequence-library"),
             Option("Stundenplan", id="edit-timetable"),
+            Option("Ausfälle", id="edit-closures"),
             id=id,
         )

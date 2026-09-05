@@ -1,0 +1,64 @@
+AddClosureScreen,
+ConfirmClosureDeletionScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+AddClosureScreen #add-closure-dialog,
+ConfirmClosureDeletionScreen #confirm-closure-deletion-dialog {
+    width: 68;
+    height: auto;
+    padding: 2 3;
+    background: $surface;
+    border: round $primary;
+}
+
+AddClosureScreen #add-closure-title,
+ConfirmClosureDeletionScreen #confirm-closure-deletion-title,
+EditClosuresScreen #edit-closures-title {
+    height: 3;
+    content-align: center middle;
+    color: $text-accent;
+    text-style: bold;
+}
+
+AddClosureScreen .closure-field-label {
+    height: 2;
+    margin-top: 1;
+    color: $foreground-muted;
+}
+
+AddClosureScreen #closure-scope {
+    width: 1fr;
+}
+
+AddClosureScreen #add-closure-actions,
+ConfirmClosureDeletionScreen #confirm-closure-deletion-actions,
+EditClosuresScreen #edit-closures-actions {
+    height: auto;
+    margin-top: 1;
+    align-horizontal: right;
+}
+
+AddClosureScreen #add-closure-actions Button,
+ConfirmClosureDeletionScreen #confirm-closure-deletion-actions Button,
+EditClosuresScreen #edit-closures-actions Button {
+    margin-left: 1;
+}
+
+ConfirmClosureDeletionScreen #confirm-closure-deletion-message {
+    height: auto;
+    margin: 1 0;
+    text-align: center;
+}
+
+EditClosuresScreen #edit-closures-screen {
+    height: 1fr;
+    padding: 1 2;
+}
+
+EditClosuresScreen #closures {
+    height: 1fr;
+    min-height: 8;
+    border: round $primary;
+}
