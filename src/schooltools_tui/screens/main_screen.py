@@ -23,6 +23,7 @@ from schooltools_tui.progress.commands import (
     continue_lesson,
     set_active_sequence,
     skip_lesson,
+    undo_last_entry,
 )
 from schooltools_tui.progress.queries import (
     PlannedLesson,
@@ -63,6 +64,7 @@ class MainScreen(SchooltoolsScreen[None]):
         ("s", "skip_next_lesson", "Stunde überspringen"),
         ("c", "continue_next_lesson", "Lesson fortsetzen"),
         ("a", "cancel_next_lesson", "Ausfall eintragen"),
+        ("p", "undo_last_entry", "Letzten Eintrag zurücknehmen"),
     ]
 
     def __init__(self) -> None:
@@ -135,6 +137,7 @@ class MainScreen(SchooltoolsScreen[None]):
 
     async def show_home_view(self) -> None:
         self.active_school_class_id = None
+        self.refresh_bindings()
         config = self.app_config
         path = get_timetable_path(config.root, config.active_school_year)
         timetable_entries = load_timetable(path)
@@ -144,7 +147,17 @@ class MainScreen(SchooltoolsScreen[None]):
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
         self.active_school_class_id = school_class.id
+        self.refresh_bindings()
         await self.switch_view(SchoolClassView(school_class))
+
+    def check_action(
+        self,
+        action: str,
+        parameters: tuple[object, ...],
+    ) -> bool | None:
+        if action == "undo_last_entry":
+            return self.active_school_class_id is not None
+        return super().check_action(action, parameters)
 
     async def refresh_current_view(self) -> None:
         if self.active_school_class_id is None:
@@ -341,6 +354,31 @@ class MainScreen(SchooltoolsScreen[None]):
             )
 
         self.app.push_screen(CancelLessonScreen(), cancellation_entered)
+
+    async def action_undo_last_entry(self) -> None:
+        if self.active_school_class_id is None:
+            return
+
+        config = self.app_config
+        school_class = self.school_classes_by_id[self.active_school_class_id]
+        try:
+            sequences = load_sequence_library(config.root)
+            progress = load_class_progress(
+                config.root,
+                config.active_school_year,
+                school_class.id,
+            )
+            updated_progress = undo_last_entry(progress)
+            await self.save_progress_and_refresh(
+                school_class,
+                updated_progress,
+                sequences,
+            )
+        except (OSError, KeyError, ProgressCommandError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+
+        self.notify(f"{school_class.id}: Letzten Eintrag zurückgenommen.")
 
     async def handle_lesson_progress_result(
         self,
