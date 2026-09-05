@@ -36,3 +36,37 @@ SequenceLibraryScreen #sequence-preview {
 SequenceLibraryScreen #sequence-preview-placeholder {
     color: $foreground-muted;
 }
+
+SelectNextSequenceScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+SelectNextSequenceScreen #select-next-sequence-dialog {
+    width: 72;
+    height: auto;
+    padding: 2 3;
+    background: $surface;
+    border: round $primary;
+}
+
+SelectNextSequenceScreen #select-next-sequence-title {
+    height: 3;
+    content-align: center middle;
+    color: $text-accent;
+    text-style: bold;
+}
+
+SelectNextSequenceScreen #next-sequence {
+    margin-top: 1;
+}
+
+SelectNextSequenceScreen #select-next-sequence-actions {
+    height: auto;
+    margin-top: 1;
+    align-horizontal: right;
+}
+
+SelectNextSequenceScreen #select-next-sequence-actions Button {
+    margin-left: 1;
+}

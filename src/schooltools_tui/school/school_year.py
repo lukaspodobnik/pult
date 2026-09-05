@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 
@@ -10,3 +10,8 @@ def get_school_year_options() -> list[tuple[str, str]]:
         (f"{year}-{year + 1}", f"{year}-{year + 1}")
         for year in range(start_year - 1, start_year + 2)
     ]
+
+
+def get_school_year_start(year: str) -> date:
+    start_year = int(year.split("-", maxsplit=1)[0])
+    return date(start_year, 8, 1)

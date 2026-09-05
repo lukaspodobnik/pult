@@ -10,7 +10,11 @@ from schooltools_tui.progress.class_progress import (
     TeachingLogEntry,
     TeachingOrigin,
 )
-from schooltools_tui.progress.queries import PlannedLesson, get_next_lesson
+from schooltools_tui.progress.queries import (
+    PlannedLesson,
+    get_next_lesson,
+    get_suggested_next_sequence,
+)
 
 
 class ProgressCommandError(ValueError):
@@ -262,13 +266,12 @@ def _progress_lesson(
     )
     if next_lesson is not None:
         state = LessonCompletionState.CONTINUES_SEQUENCE
-    elif _has_available_sequence(
+    elif get_suggested_next_sequence(
         new_progress,
         sequences,
         planned_lesson.subject_id,
         planned_lesson.grade_level,
-        planned_lesson.sequence_id,
-    ):
+    ) is not None:
         state = LessonCompletionState.NEEDS_NEXT_SEQUENCE
     else:
         state = LessonCompletionState.COMPLETES_SUBJECT
@@ -336,36 +339,6 @@ def _get_active_sequence(
             f"Für das Fach '{subject_id}' ist keine Sequenz aktiv."
         )
     return active_sequence
-
-
-def _has_available_sequence(
-    progress: ClassProgress,
-    sequences: list[Sequence],
-    subject_id: str,
-    grade_level: int,
-    completed_sequence_id: str,
-) -> bool:
-    for sequence in sequences:
-        if (
-            sequence.grade_level != grade_level
-            or sequence.subject_id != subject_id
-            or sequence.id == completed_sequence_id
-            or not sequence.lessons
-        ):
-            continue
-
-        progressed_lesson_ids = _get_progressed_lesson_ids(
-            progress,
-            subject_id,
-            sequence.id,
-        )
-        if any(
-            lesson.id not in progressed_lesson_ids
-            for lesson in sequence.lessons
-        ):
-            return True
-
-    return False
 
 
 def _get_progressed_lesson_ids(
