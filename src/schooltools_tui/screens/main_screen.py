@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import ClassVar
 
 from textual import on
@@ -14,12 +15,15 @@ from schooltools_tui.progress.class_progress import (
     validate_class_progress,
 )
 from schooltools_tui.progress.commands import (
+    CompleteLessonResult,
     LessonCompletionState,
     ProgressCommandError,
     complete_lesson,
     set_active_sequence,
+    skip_lesson,
 )
 from schooltools_tui.progress.queries import (
+    PlannedLesson,
     get_available_next_sequences,
     get_next_planned_lesson,
     get_next_planned_lesson_for_class,
@@ -42,9 +46,18 @@ from schooltools_tui.views.school_class_view import SchoolClassView
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
 
 
+@dataclass(frozen=True)
+class PlannedLessonContext:
+    school_class: SchoolClass
+    progress: ClassProgress
+    planned_lesson: PlannedLesson
+    sequences: list[Sequence]
+
+
 class MainScreen(SchooltoolsScreen[None]):
     BINDINGS: ClassVar = [
         ("n", "complete_next_lesson", "Stunde abschließen"),
+        ("s", "skip_next_lesson", "Stunde überspringen"),
     ]
 
     def __init__(self) -> None:
@@ -153,7 +166,7 @@ class MainScreen(SchooltoolsScreen[None]):
         )
         await self.refresh_current_view()
 
-    async def action_complete_next_lesson(self) -> None:
+    def load_planned_lesson_context(self) -> PlannedLessonContext | None:
         config = self.app_config
         year = config.active_school_year
 
@@ -167,8 +180,6 @@ class MainScreen(SchooltoolsScreen[None]):
                 get_timetable_path(config.root, year)
             )
             school_year_start = get_school_year_start(year)
-            progress: ClassProgress | None = None
-
             if self.active_school_class_id is None:
                 progresses_by_class_id = {
                     school_class.id: load_class_progress(
@@ -185,10 +196,11 @@ class MainScreen(SchooltoolsScreen[None]):
                     school_classes,
                     school_year_start,
                 )
-                if planned_lesson is not None:
-                    progress = progresses_by_class_id[
-                        planned_lesson.school_class_id
-                    ]
+                progress = (
+                    progresses_by_class_id[planned_lesson.school_class_id]
+                    if planned_lesson is not None
+                    else None
+                )
             else:
                 school_class = self.school_classes_by_id[
                     self.active_school_class_id
@@ -205,26 +217,79 @@ class MainScreen(SchooltoolsScreen[None]):
                     school_class,
                     school_year_start,
                 )
-
-            if planned_lesson is None:
-                self.notify(
-                    "Es gibt keine offene geplante Stunde.",
-                    severity="warning",
-                )
-                return
-
-            assert progress is not None
-            school_class = self.school_classes_by_id[
-                planned_lesson.school_class_id
-            ]
-            result = complete_lesson(
-                progress,
-                planned_lesson,
-                sequences,
-            )
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
+            return None
+
+        if planned_lesson is None or progress is None:
+            self.notify(
+                "Es gibt keine offene geplante Stunde.",
+                severity="warning",
+            )
+            return None
+
+        school_class = self.school_classes_by_id[
+            planned_lesson.school_class_id
+        ]
+        return PlannedLessonContext(
+            school_class=school_class,
+            progress=progress,
+            planned_lesson=planned_lesson,
+            sequences=sequences,
+        )
+
+    async def action_complete_next_lesson(self) -> None:
+        context = self.load_planned_lesson_context()
+        if context is None:
             return
+
+        try:
+            result = complete_lesson(
+                context.progress,
+                context.planned_lesson,
+                context.sequences,
+            )
+        except ProgressCommandError as error:
+            self.notify(str(error), severity="error")
+            return
+
+        await self.handle_lesson_progress_result(
+            context,
+            result,
+            action_description="abgeschlossen",
+        )
+
+    async def action_skip_next_lesson(self) -> None:
+        context = self.load_planned_lesson_context()
+        if context is None:
+            return
+
+        try:
+            result = skip_lesson(
+                context.progress,
+                context.planned_lesson,
+                context.sequences,
+            )
+        except ProgressCommandError as error:
+            self.notify(str(error), severity="error")
+            return
+
+        await self.handle_lesson_progress_result(
+            context,
+            result,
+            action_description="übersprungen",
+        )
+
+    async def handle_lesson_progress_result(
+        self,
+        context: PlannedLessonContext,
+        result: CompleteLessonResult,
+        *,
+        action_description: str,
+    ) -> None:
+        school_class = context.school_class
+        planned_lesson = context.planned_lesson
+        sequences = context.sequences
 
         if result.state is LessonCompletionState.NEEDS_NEXT_SEQUENCE:
             available_sequences = get_available_next_sequences(
@@ -264,7 +329,7 @@ class MainScreen(SchooltoolsScreen[None]):
 
                 self.notify(
                     f"{school_class.id}: '{planned_lesson.lesson.title}' "
-                    "abgeschlossen und nächste Sequenz aktiviert."
+                    f"{action_description} und nächste Sequenz aktiviert."
                 )
 
             self.app.push_screen(
@@ -288,12 +353,14 @@ class MainScreen(SchooltoolsScreen[None]):
 
         if result.state is LessonCompletionState.COMPLETES_SUBJECT:
             self.notify(
-                f"{school_class.id}: '{planned_lesson.lesson.title}' abgeschlossen; "
+                f"{school_class.id}: '{planned_lesson.lesson.title}' "
+                f"{action_description}; "
                 "das Fach ist vollständig abgeschlossen."
             )
         else:
             self.notify(
-                f"{school_class.id}: '{planned_lesson.lesson.title}' abgeschlossen."
+                f"{school_class.id}: '{planned_lesson.lesson.title}' "
+                f"{action_description}."
             )
 
     @on(OptionList.OptionSelected, "#management-picker")
