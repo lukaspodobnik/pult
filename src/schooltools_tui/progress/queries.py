@@ -184,3 +184,35 @@ def get_next_planned_lesson_for_class(
         school_year_start,
     )
     return planned_lessons[0] if planned_lessons else None
+
+
+def get_next_planned_lesson(
+    progresses_by_class_id: dict[str, ClassProgress],
+    sequences: list[Sequence],
+    timetable_entries: list[TimetableEntry],
+    school_classes: list[SchoolClass],
+    school_year_start: date,
+) -> PlannedLesson | None:
+    planned_lessons = []
+
+    for school_class in school_classes:
+        planned_lesson = get_next_planned_lesson_for_class(
+            progresses_by_class_id[school_class.id],
+            sequences,
+            timetable_entries,
+            school_class,
+            school_year_start,
+        )
+        
+        planned_lessons.append(planned_lesson)
+
+    return min(
+        planned_lessons,
+        key=lambda planned_lesson: (
+            planned_lesson.date,
+            planned_lesson.period,
+            planned_lesson.school_class_id,
+            planned_lesson.subject_id,
+        ),
+        default=None,
+    )
