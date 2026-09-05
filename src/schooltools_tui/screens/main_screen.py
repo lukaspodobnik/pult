@@ -1,5 +1,7 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import ClassVar
+from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
@@ -31,6 +33,7 @@ from schooltools_tui.progress.queries import (
     PlannedLesson,
     get_available_next_sequences,
     get_class_progress_summary,
+    get_home_dashboard_summary,
     get_next_lesson,
     get_next_planned_lesson,
     get_next_planned_lesson_for_class,
@@ -161,11 +164,74 @@ class MainScreen(SchooltoolsScreen[None]):
         self.active_school_class_id = None
         self.refresh_bindings()
         config = self.app_config
-        path = get_timetable_path(config.root, config.active_school_year)
-        timetable_entries = load_timetable(path)
-        periods = load_periods(config.root)
-        subjects = load_subjects(config.root)
-        await self.switch_view(HomeView(timetable_entries, subjects, periods))
+        year = config.active_school_year
+        try:
+            timetable_entries = load_timetable(
+                get_timetable_path(config.root, year)
+            )
+            periods = load_periods(config.root)
+            subjects = load_subjects(config.root)
+            sequences = load_sequence_library(config.root)
+            school_classes = load_school_classes(config.root, year)
+            progresses_by_class_id = {
+                school_class.id: load_class_progress(
+                    config.root,
+                    year,
+                    school_class.id,
+                )
+                for school_class in school_classes
+            }
+            for school_class in school_classes:
+                validate_class_progress(
+                    progresses_by_class_id[school_class.id],
+                    school_class,
+                    sequences,
+                )
+            school_calendar = load_school_calendar(config.root, year)
+            school_closures = load_school_closures(config.root, year)
+            class_closures_by_class_id = {
+                school_class.id: load_class_closures(
+                    config.root,
+                    year,
+                    school_class.id,
+                )
+                for school_class in school_classes
+            }
+            dashboard = get_home_dashboard_summary(
+                datetime.now(ZoneInfo("Europe/Berlin")),
+                progresses_by_class_id,
+                sequences,
+                timetable_entries,
+                periods,
+                school_classes,
+                school_calendar,
+                school_closures,
+                class_closures_by_class_id,
+            )
+        except (OSError, KeyError, StopIteration, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+
+        self.school_classes_by_id = {
+            school_class.id: school_class for school_class in school_classes
+        }
+        await self.switch_view(
+            HomeView(
+                timetable_entries,
+                subjects,
+                periods,
+                sequences,
+                dashboard,
+            )
+        )
+
+    @on(HomeView.DashboardRefreshRequested)
+    async def refresh_home_dashboard(
+        self,
+        _: HomeView.DashboardRefreshRequested,
+    ) -> None:
+        if self.active_school_class_id is None:
+            await self.show_home_view()
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
         config = self.app_config

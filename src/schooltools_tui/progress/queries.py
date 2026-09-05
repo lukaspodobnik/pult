@@ -41,6 +41,7 @@ class PlannedLesson:
 
 @dataclass(frozen=True)
 class SchoolYearProgressSummary:
+    school_year: str
     elapsed_day_count: int
     total_day_count: int
 
@@ -54,6 +55,7 @@ class SchoolYearProgressSummary:
 @dataclass(frozen=True)
 class DailyTimetableEntry:
     timetable_entry: TimetableEntry
+    grade_level: int
     log_entry: TeachingLogEntry | None
     planned_lesson: PlannedLesson | None
     is_time_highlighted: bool
@@ -103,6 +105,7 @@ def get_school_year_progress(
         ).days + 1
 
     return SchoolYearProgressSummary(
+        school_year=school_calendar.school_year,
         elapsed_day_count=elapsed_day_count,
         total_day_count=total_day_count,
     )
@@ -185,17 +188,21 @@ def get_daily_schedule(
         )
         if planned_lesson.date == current_date
     }
-    highlighted_occurrence = _get_time_highlighted_occurrence(
+    highlighted_occurrence = get_time_highlighted_occurrence(
         entries_for_today,
         periods,
         current_datetime,
     )
+    school_classes_by_id = {
+        school_class.id: school_class for school_class in school_classes
+    }
 
     return DailyScheduleSummary(
         date=current_date,
         timetable_entries=tuple(
             DailyTimetableEntry(
                 timetable_entry=entry,
+                grade_level=school_classes_by_id[entry.school_class_id].grade_level,
                 log_entry=logged_entries_by_occurrence.get(
                     (entry.school_class_id, entry.period)
                 ),
@@ -276,7 +283,7 @@ def _get_daily_additional_entries(
     return tuple(entries)
 
 
-def _get_time_highlighted_occurrence(
+def get_time_highlighted_occurrence(
     timetable_entries: list[TimetableEntry],
     periods: list[Period],
     current_datetime: datetime,

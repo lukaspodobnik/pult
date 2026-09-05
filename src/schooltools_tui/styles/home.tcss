@@ -19,12 +19,177 @@ MainScreen #content {
     padding: 1 2;
 }
 
+HomeView {
+    width: 1fr;
+    height: 1fr;
+}
+
+HomeView #school-year-progress {
+    height: 3;
+    padding: 0 1;
+    margin-bottom: 1;
+    align-vertical: middle;
+    background: $surface;
+    border: round $primary;
+}
+
+HomeView #school-year-progress-label {
+    width: 20;
+    height: 1;
+    text-style: bold;
+}
+
+HomeView #school-year-progress-bar {
+    width: 1fr;
+    height: 1;
+}
+
+HomeView #school-year-progress-bar Bar {
+    width: 1fr;
+}
+
+HomeView #school-year-progress-percentage {
+    width: 7;
+    height: 1;
+    text-align: right;
+    color: $text-accent;
+    text-style: bold;
+}
+
+HomeView #home-dashboard-content {
+    height: 1fr;
+}
+
+HomeView .dashboard-panel {
+    background: $surface;
+    border: round $primary;
+}
+
+HomeView .dashboard-heading {
+    height: 2;
+    padding: 0 1;
+    color: $text-accent;
+    text-style: bold;
+    content-align-vertical: middle;
+}
+
+HomeView #timetable-panel {
+    width: 1fr;
+    height: 1fr;
+    margin-right: 1;
+}
+
 MainScreen #schedule {
     height: 1fr;
     min-height: 10;
-    padding: 1 2;
-    background: $surface;
-    border: round $primary;
+    padding: 0 1 1 1;
+    border: none;
+}
+
+HomeView #home-dashboard-sidebar {
+    width: 40;
+    height: 1fr;
+}
+
+HomeView #next-planned-lesson {
+    height: auto;
+    min-height: 8;
+    padding: 0 1 1 1;
+    margin-bottom: 1;
+}
+
+HomeView .next-lesson-heading,
+HomeView .next-lesson-sequence,
+HomeView .next-lesson-name,
+HomeView .next-lesson-occurrence,
+HomeView .dashboard-empty {
+    height: auto;
+}
+
+HomeView .next-lesson-heading,
+HomeView .next-lesson-name {
+    text-style: bold;
+}
+
+HomeView .next-lesson-sequence,
+HomeView .next-lesson-occurrence,
+HomeView .dashboard-empty {
+    color: $foreground-muted;
+}
+
+HomeView #daily-schedule {
+    height: 1fr;
+    min-height: 7;
+}
+
+HomeView #daily-schedule-entries {
+    height: 1fr;
+    padding: 0 1 1 1;
+}
+
+HomeView .daily-schedule-row,
+HomeView .daily-additional-row {
+    height: auto;
+    min-height: 2;
+    padding: 0 1;
+    margin-bottom: 1;
+}
+
+HomeView .daily-schedule-row.time-highlighted {
+    background: $primary 25%;
+    border-left: thick $primary;
+    text-style: bold;
+}
+
+HomeView .day-status {
+    width: 3;
+    height: 1;
+    text-align: center;
+    text-style: bold;
+}
+
+HomeView .daily-schedule-row.completed .day-status {
+    color: $success;
+}
+
+HomeView .daily-schedule-row.continued .day-status {
+    color: $accent;
+}
+
+HomeView .daily-schedule-row.cancelled .day-status {
+    color: $error;
+}
+
+HomeView .daily-additional-row .day-status {
+    color: $accent;
+}
+
+HomeView .day-period {
+    width: 4;
+    height: 1;
+    text-align: right;
+    margin-right: 1;
+}
+
+HomeView .day-entry-content {
+    width: 1fr;
+    height: auto;
+}
+
+HomeView .day-entry-heading,
+HomeView .day-entry-lesson {
+    height: auto;
+}
+
+HomeView .day-entry-lesson {
+    color: $foreground-muted;
+}
+
+HomeView .daily-additional-heading {
+    height: 2;
+    margin-top: 1;
+    color: $foreground-muted;
+    text-style: bold;
 }
 
 EditTimetableScreen #edit-timetable-screen {
