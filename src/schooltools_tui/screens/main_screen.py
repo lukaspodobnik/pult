@@ -166,17 +166,18 @@ class MainScreen(SchooltoolsScreen[None]):
             timetable_entries = load_timetable(
                 get_timetable_path(config.root, year)
             )
-            progresses_by_class_id = {
-                school_class.id: load_class_progress(
-                    config.root,
-                    year,
-                    school_class.id,
-                )
-                for school_class in school_classes
-            }
             school_year_start = get_school_year_start(year)
+            progress: ClassProgress | None = None
 
             if self.active_school_class_id is None:
+                progresses_by_class_id = {
+                    school_class.id: load_class_progress(
+                        config.root,
+                        year,
+                        school_class.id,
+                    )
+                    for school_class in school_classes
+                }
                 planned_lesson = get_next_planned_lesson(
                     progresses_by_class_id,
                     sequences,
@@ -184,12 +185,21 @@ class MainScreen(SchooltoolsScreen[None]):
                     school_classes,
                     school_year_start,
                 )
+                if planned_lesson is not None:
+                    progress = progresses_by_class_id[
+                        planned_lesson.school_class_id
+                    ]
             else:
                 school_class = self.school_classes_by_id[
                     self.active_school_class_id
                 ]
+                progress = load_class_progress(
+                    config.root,
+                    year,
+                    school_class.id,
+                )
                 planned_lesson = get_next_planned_lesson_for_class(
-                    progresses_by_class_id[school_class.id],
+                    progress,
                     sequences,
                     timetable_entries,
                     school_class,
@@ -203,11 +213,12 @@ class MainScreen(SchooltoolsScreen[None]):
                 )
                 return
 
+            assert progress is not None
             school_class = self.school_classes_by_id[
                 planned_lesson.school_class_id
             ]
             result = complete_lesson(
-                progresses_by_class_id[school_class.id],
+                progress,
                 planned_lesson,
                 sequences,
             )
