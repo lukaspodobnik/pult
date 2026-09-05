@@ -18,7 +18,9 @@ from schooltools_tui.progress.commands import (
     CompleteLessonResult,
     LessonCompletionState,
     ProgressCommandError,
+    add_extra_lesson,
     cancel_scheduled_lesson,
+    complete_additional_lesson,
     complete_lesson,
     continue_lesson,
     set_active_sequence,
@@ -28,6 +30,7 @@ from schooltools_tui.progress.commands import (
 from schooltools_tui.progress.queries import (
     PlannedLesson,
     get_available_next_sequences,
+    get_next_lesson,
     get_next_planned_lesson,
     get_next_planned_lesson_for_class,
     get_suggested_next_sequence,
@@ -38,6 +41,10 @@ from schooltools_tui.school.school_year import get_school_year_start
 from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.school.timetable import get_timetable_path, load_timetable
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.screens.add_extra_lesson_screen import (
+    AddExtraLessonScreen,
+    ExtraLessonFormResult,
+)
 from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
 from schooltools_tui.screens.confirm_undo_screen import ConfirmUndoScreen
 from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
@@ -66,6 +73,7 @@ class MainScreen(SchooltoolsScreen[None]):
         ("c", "continue_next_lesson", "Lesson fortsetzen"),
         ("a", "cancel_next_lesson", "Ausfall eintragen"),
         ("p", "undo_last_entry", "Letzten Eintrag zurücknehmen"),
+        ("z", "add_extra_lesson", "Zusatzunterricht"),
     ]
 
     def __init__(self) -> None:
@@ -273,7 +281,9 @@ class MainScreen(SchooltoolsScreen[None]):
             return
 
         await self.handle_lesson_progress_result(
-            context,
+            context.school_class,
+            context.planned_lesson.lesson.title,
+            context.sequences,
             result,
             action_description="abgeschlossen",
         )
@@ -294,7 +304,9 @@ class MainScreen(SchooltoolsScreen[None]):
             return
 
         await self.handle_lesson_progress_result(
-            context,
+            context.school_class,
+            context.planned_lesson.lesson.title,
+            context.sequences,
             result,
             action_description="übersprungen",
         )
@@ -356,6 +368,107 @@ class MainScreen(SchooltoolsScreen[None]):
 
         self.app.push_screen(CancelLessonScreen(), cancellation_entered)
 
+    def action_add_extra_lesson(self) -> None:
+        config = self.app_config
+        try:
+            school_classes = load_school_classes(
+                config.root,
+                config.active_school_year,
+            )
+            subjects = load_subjects(config.root)
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+
+        if not school_classes:
+            self.notify(
+                "Für Zusatzunterricht muss zuerst eine Klasse angelegt werden.",
+                severity="warning",
+            )
+            return
+
+        school_classes_by_id = {
+            school_class.id: school_class for school_class in school_classes
+        }
+
+        async def extra_lesson_entered(
+            form_result: ExtraLessonFormResult | None,
+        ) -> None:
+            if form_result is None:
+                return
+
+            try:
+                school_class = school_classes_by_id[form_result.school_class_id]
+                sequences = load_sequence_library(config.root)
+                progress = load_class_progress(
+                    config.root,
+                    config.active_school_year,
+                    school_class.id,
+                )
+
+                if form_result.completes_next_lesson:
+                    lesson = get_next_lesson(
+                        progress,
+                        sequences,
+                        form_result.subject_id,
+                        school_class.grade_level,
+                    )
+                    if lesson is None:
+                        self.notify(
+                            "Für dieses Fach gibt es keine offene Lesson.",
+                            severity="warning",
+                        )
+                        return
+
+                    result = complete_additional_lesson(
+                        progress,
+                        form_result.subject_id,
+                        school_class.grade_level,
+                        form_result.date,
+                        sequences,
+                        form_result.comment,
+                    )
+                    await self.handle_lesson_progress_result(
+                        school_class,
+                        lesson.title,
+                        sequences,
+                        result,
+                        action_description="im Zusatzunterricht abgeschlossen",
+                    )
+                    return
+
+                updated_progress = add_extra_lesson(
+                    progress,
+                    form_result.subject_id,
+                    form_result.date,
+                    form_result.comment,
+                )
+                await self.save_progress_and_refresh(
+                    school_class,
+                    updated_progress,
+                    sequences,
+                )
+            except (
+                OSError,
+                KeyError,
+                ProgressCommandError,
+                StopIteration,
+                ValueError,
+            ) as error:
+                self.notify(str(error), severity="error")
+                return
+
+            self.notify(f"{school_class.id}: Zusatzunterricht eingetragen.")
+
+        self.app.push_screen(
+            AddExtraLessonScreen(
+                school_classes,
+                subjects,
+                fixed_school_class_id=self.active_school_class_id,
+            ),
+            extra_lesson_entered,
+        )
+
     async def action_undo_last_entry(self) -> None:
         if self.active_school_class_id is None:
             return
@@ -404,15 +517,13 @@ class MainScreen(SchooltoolsScreen[None]):
 
     async def handle_lesson_progress_result(
         self,
-        context: PlannedLessonContext,
+        school_class: SchoolClass,
+        lesson_title: str,
+        sequences: list[Sequence],
         result: CompleteLessonResult,
         *,
         action_description: str,
     ) -> None:
-        school_class = context.school_class
-        planned_lesson = context.planned_lesson
-        sequences = context.sequences
-
         if result.state is LessonCompletionState.NEEDS_NEXT_SEQUENCE:
             available_sequences = get_available_next_sequences(
                 result.progress,
@@ -450,7 +561,7 @@ class MainScreen(SchooltoolsScreen[None]):
                     return
 
                 self.notify(
-                    f"{school_class.id}: '{planned_lesson.lesson.title}' "
+                    f"{school_class.id}: '{lesson_title}' "
                     f"{action_description} und nächste Sequenz aktiviert."
                 )
 
@@ -475,13 +586,13 @@ class MainScreen(SchooltoolsScreen[None]):
 
         if result.state is LessonCompletionState.COMPLETES_SUBJECT:
             self.notify(
-                f"{school_class.id}: '{planned_lesson.lesson.title}' "
+                f"{school_class.id}: '{lesson_title}' "
                 f"{action_description}; "
                 "das Fach ist vollständig abgeschlossen."
             )
         else:
             self.notify(
-                f"{school_class.id}: '{planned_lesson.lesson.title}' "
+                f"{school_class.id}: '{lesson_title}' "
                 f"{action_description}."
             )
 

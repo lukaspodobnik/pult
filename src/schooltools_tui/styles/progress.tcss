@@ -1,5 +1,6 @@
 CancelLessonScreen,
-ConfirmUndoScreen {
+ConfirmUndoScreen,
+AddExtraLessonScreen {
     align: center middle;
     background: $background 60%;
 }
@@ -20,6 +21,15 @@ ConfirmUndoScreen #confirm-undo-dialog {
     border: round $primary;
 }
 
+AddExtraLessonScreen #add-extra-lesson-dialog {
+    width: 72;
+    height: auto;
+    max-height: 95%;
+    padding: 2 3;
+    background: $surface;
+    border: round $primary;
+}
+
 CancelLessonScreen #cancel-lesson-title {
     height: 3;
     content-align: center middle;
@@ -28,6 +38,13 @@ CancelLessonScreen #cancel-lesson-title {
 }
 
 ConfirmUndoScreen #confirm-undo-title {
+    height: 3;
+    content-align: center middle;
+    color: $text-accent;
+    text-style: bold;
+}
+
+AddExtraLessonScreen #add-extra-lesson-title {
     height: 3;
     content-align: center middle;
     color: $text-accent;
@@ -57,10 +74,24 @@ ConfirmUndoScreen #confirm-undo-actions {
     align-horizontal: right;
 }
 
+AddExtraLessonScreen #complete-next-extra-lesson {
+    margin-top: 1;
+}
+
+AddExtraLessonScreen #add-extra-lesson-actions {
+    height: auto;
+    margin-top: 1;
+    align-horizontal: right;
+}
+
 CancelLessonScreen #cancel-lesson-actions Button {
     margin-left: 1;
 }
 
 ConfirmUndoScreen #confirm-undo-actions Button {
+    margin-left: 1;
+}
+
+AddExtraLessonScreen #add-extra-lesson-actions Button {
     margin-left: 1;
 }

@@ -136,20 +136,40 @@ def add_extra_lesson(
 
 def complete_additional_lesson(
     old_progress: ClassProgress,
-    planned_lesson: PlannedLesson,
-    sequences: list[Sequence],
+    subject_id: str,
+    grade_level: int,
     entry_date: date,
+    sequences: list[Sequence],
     comment: str = "",
 ) -> CompleteLessonResult:
-    return _progress_lesson(
+    active_sequence = _get_active_sequence(old_progress, subject_id)
+    lesson = get_next_lesson(
         old_progress,
-        planned_lesson,
         sequences,
-        action=TeachingAction.COMPLETED,
-        origin=TeachingOrigin.ADDITIONAL,
-        entry_date=entry_date,
-        period=None,
-        comment=comment,
+        subject_id,
+        grade_level,
+    )
+    if lesson is None:
+        raise ProgressCommandError("Die aktive Sequenz ist bereits abgeschlossen.")
+
+    new_progress = _append_entry(
+        old_progress,
+        TeachingLogEntry(
+            date=entry_date,
+            subject_id=subject_id,
+            sequence_id=active_sequence.sequence_id,
+            action=TeachingAction.COMPLETED,
+            origin=TeachingOrigin.ADDITIONAL,
+            lesson_id=lesson.id,
+            period=None,
+            comment=comment,
+        ),
+    )
+    return _build_completion_result(
+        new_progress,
+        sequences,
+        subject_id,
+        grade_level,
     )
 
 
@@ -258,28 +278,42 @@ def _progress_lesson(
         ),
     )
 
-    next_lesson = get_next_lesson(
+    return _build_completion_result(
         new_progress,
         sequences,
         planned_lesson.subject_id,
         planned_lesson.grade_level,
     )
+
+
+def _build_completion_result(
+    progress: ClassProgress,
+    sequences: list[Sequence],
+    subject_id: str,
+    grade_level: int,
+) -> CompleteLessonResult:
+    next_lesson = get_next_lesson(
+        progress,
+        sequences,
+        subject_id,
+        grade_level,
+    )
     if next_lesson is not None:
         state = LessonCompletionState.CONTINUES_SEQUENCE
     elif get_suggested_next_sequence(
-        new_progress,
+        progress,
         sequences,
-        planned_lesson.subject_id,
-        planned_lesson.grade_level,
+        subject_id,
+        grade_level,
     ) is not None:
         state = LessonCompletionState.NEEDS_NEXT_SEQUENCE
     else:
         state = LessonCompletionState.COMPLETES_SUBJECT
 
     return CompleteLessonResult(
-        progress=new_progress,
+        progress=progress,
         state=state,
-        subject_id=planned_lesson.subject_id,
+        subject_id=subject_id,
     )
 
 
