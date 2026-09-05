@@ -39,6 +39,7 @@ from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.school.timetable import get_timetable_path, load_timetable
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
+from schooltools_tui.screens.confirm_undo_screen import ConfirmUndoScreen
 from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.select_next_sequence_screen import (
@@ -368,17 +369,38 @@ class MainScreen(SchooltoolsScreen[None]):
                 config.active_school_year,
                 school_class.id,
             )
-            updated_progress = undo_last_entry(progress)
-            await self.save_progress_and_refresh(
-                school_class,
-                updated_progress,
-                sequences,
-            )
-        except (OSError, KeyError, ProgressCommandError, ValueError) as error:
+        except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
             return
 
-        self.notify(f"{school_class.id}: Letzten Eintrag zurückgenommen.")
+        if not progress.entries:
+            self.notify(
+                "Es gibt keinen Protokolleintrag zum Zurücknehmen.",
+                severity="warning",
+            )
+            return
+
+        async def undo_confirmed(confirmed: bool) -> None:
+            if not confirmed:
+                return
+
+            try:
+                updated_progress = undo_last_entry(progress)
+                await self.save_progress_and_refresh(
+                    school_class,
+                    updated_progress,
+                    sequences,
+                )
+            except (OSError, ProgressCommandError, ValueError) as error:
+                self.notify(str(error), severity="error")
+                return
+
+            self.notify(f"{school_class.id}: Letzten Eintrag zurückgenommen.")
+
+        self.app.push_screen(
+            ConfirmUndoScreen(school_class.id),
+            undo_confirmed,
+        )
 
     async def handle_lesson_progress_result(
         self,
