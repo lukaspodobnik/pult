@@ -52,6 +52,10 @@ from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.select_next_sequence_screen import (
     SelectNextSequenceScreen,
 )
+from schooltools_tui.screens.set_active_sequence_screen import (
+    ActiveSequenceFormResult,
+    SetActiveSequenceScreen,
+)
 from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
@@ -74,6 +78,7 @@ class MainScreen(SchooltoolsScreen[None]):
         ("a", "cancel_next_lesson", "Ausfall eintragen"),
         ("p", "undo_last_entry", "Letzten Eintrag zurücknehmen"),
         ("z", "add_extra_lesson", "Zusatzunterricht"),
+        ("w", "change_active_sequence", "Sequenz wechseln"),
     ]
 
     def __init__(self) -> None:
@@ -164,7 +169,7 @@ class MainScreen(SchooltoolsScreen[None]):
         action: str,
         parameters: tuple[object, ...],
     ) -> bool | None:
-        if action == "undo_last_entry":
+        if action in {"undo_last_entry", "change_active_sequence"}:
             return self.active_school_class_id is not None
         return super().check_action(action, parameters)
 
@@ -513,6 +518,80 @@ class MainScreen(SchooltoolsScreen[None]):
         self.app.push_screen(
             ConfirmUndoScreen(school_class.id),
             undo_confirmed,
+        )
+
+    def action_change_active_sequence(self) -> None:
+        if self.active_school_class_id is None:
+            return
+
+        config = self.app_config
+        school_class = self.school_classes_by_id[self.active_school_class_id]
+        try:
+            progress = load_class_progress(
+                config.root,
+                config.active_school_year,
+                school_class.id,
+            )
+            sequences = load_sequence_library(config.root)
+            subjects = load_subjects(config.root)
+            has_available_sequence = any(
+                get_available_next_sequences(
+                    progress,
+                    sequences,
+                    subject_id,
+                    school_class.grade_level,
+                )
+                for subject_id in school_class.subject_ids
+            )
+        except (OSError, KeyError, StopIteration, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+
+        if not has_available_sequence:
+            self.notify(
+                "Für diese Klasse gibt es keine weitere offene Sequenz.",
+                severity="warning",
+            )
+            return
+
+        subjects_by_id = {subject.id: subject for subject in subjects}
+
+        async def active_sequence_selected(
+            form_result: ActiveSequenceFormResult | None,
+        ) -> None:
+            if form_result is None:
+                return
+
+            try:
+                updated_progress = set_active_sequence(
+                    progress,
+                    form_result.subject_id,
+                    form_result.sequence_id,
+                    school_class.grade_level,
+                    sequences,
+                )
+                await self.save_progress_and_refresh(
+                    school_class,
+                    updated_progress,
+                    sequences,
+                )
+            except (OSError, ProgressCommandError, ValueError) as error:
+                self.notify(str(error), severity="error")
+                return
+
+            self.notify(
+                f"{school_class.id}: Aktive Sequenz für "
+                f"'{subjects_by_id[form_result.subject_id].name}' gewechselt."
+            )
+
+        self.app.push_screen(
+            SetActiveSequenceScreen(
+                school_class,
+                progress,
+                sequences,
+                subjects,
+            ),
+            active_sequence_selected,
         )
 
     async def handle_lesson_progress_result(
