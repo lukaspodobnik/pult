@@ -1,0 +1,121 @@
+from pathlib import Path
+
+import pytest
+
+from schooltools_tui.config import AppConfig
+from schooltools_tui.curriculum.sequence import load_sequence_library
+from schooltools_tui.initialization.school_class import (
+    SchoolClassSetupError,
+    initialize_school_class,
+)
+from schooltools_tui.initialization.school_year import initialize_school_year
+from schooltools_tui.initialization.schooltools import SetupError, initialize_schooltools
+from schooltools_tui.progress.class_progress import load_class_progress
+from schooltools_tui.school.calendar import (
+    get_class_closures_path,
+    get_school_closures_path,
+    load_class_closures,
+    load_school_closures,
+)
+from schooltools_tui.school.school_class import SchoolClass, get_school_class_path
+from schooltools_tui.school.timetable import get_timetable_path, load_timetable
+
+
+def test_full_initialization_copies_defaults_without_real_config(
+    tmp_path, monkeypatch
+):
+    saved = []
+    monkeypatch.setattr(
+        "schooltools_tui.initialization.schooltools.save_app_config",
+        saved.append,
+    )
+
+    config = initialize_schooltools(str(tmp_path), "nvim", "2026-2027")
+
+    assert config == AppConfig(tmp_path, "nvim", "2026-2027")
+    assert saved == [config]
+    assert (tmp_path / "subjects.toml").is_file()
+    assert (tmp_path / "periods.toml").is_file()
+    assert (tmp_path / "calendars" / "2026-2027.toml").is_file()
+    assert len(load_sequence_library(tmp_path)) > 100
+    assert load_timetable(get_timetable_path(tmp_path, "2026-2027")) == []
+    assert load_school_closures(tmp_path, "2026-2027") == []
+
+
+def test_initialization_preserves_existing_default_file(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "schooltools_tui.initialization.schooltools.save_app_config",
+        lambda config: None,
+    )
+    marker = "[[subjects]]\nid = 'custom'\n"
+    (tmp_path / "subjects.toml").write_text(marker)
+    initialize_schooltools(str(tmp_path), "nvim", "2026-2027")
+    assert (tmp_path / "subjects.toml").read_text() == marker
+
+
+def test_school_year_requires_existing_calendar(tmp_path):
+    with pytest.raises(FileNotFoundError):
+        initialize_school_year(tmp_path, "2026-2027")
+
+
+def test_school_year_initialization_is_idempotent(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "schooltools_tui.initialization.schooltools.save_app_config",
+        lambda config: None,
+    )
+    initialize_schooltools(str(tmp_path), "nvim", "2026-2027")
+    initialize_school_year(tmp_path, "2026-2027")
+    assert get_school_closures_path(tmp_path, "2026-2027").is_file()
+
+
+def test_class_initialization_creates_all_class_files(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "schooltools_tui.initialization.schooltools.save_app_config",
+        lambda config: None,
+    )
+    initialize_schooltools(str(tmp_path), "nvim", "2026-2027")
+    school_class = SchoolClass("5A", 5, ["mathematik"])
+    initialize_school_class(tmp_path, "2026-2027", school_class)
+
+    assert get_school_class_path(tmp_path, "2026-2027", "5A").is_file()
+    assert get_class_closures_path(tmp_path, "2026-2027", "5A").is_file()
+    assert load_class_closures(tmp_path, "2026-2027", "5A") == []
+    progress = load_class_progress(tmp_path, "2026-2027", "5A")
+    assert progress.active_sequences[0].subject_id == "mathematik"
+
+
+def test_duplicate_class_is_rejected(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "schooltools_tui.initialization.schooltools.save_app_config",
+        lambda config: None,
+    )
+    initialize_schooltools(str(tmp_path), "nvim", "2026-2027")
+    school_class = SchoolClass("5A", 5, ["mathematik"])
+    initialize_school_class(tmp_path, "2026-2027", school_class)
+    with pytest.raises(SchoolClassSetupError):
+        initialize_school_class(tmp_path, "2026-2027", school_class)
+
+
+def test_illegal_subject_for_grade_is_rejected(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "schooltools_tui.initialization.schooltools.save_app_config",
+        lambda config: None,
+    )
+    initialize_schooltools(str(tmp_path), "nvim", "2026-2027")
+    with pytest.raises(SchoolClassSetupError):
+        initialize_school_class(
+            tmp_path,
+            "2026-2027",
+            SchoolClass("5A", 5, ["informatik-ntg"]),
+        )
+
+
+@pytest.mark.parametrize("root, editor, year", [("", "nvim", "2026-2027"), ("x", "", "2026-2027"), ("x", "nvim", "")])
+def test_setup_requires_all_values(tmp_path, monkeypatch, root, editor, year):
+    monkeypatch.setattr(
+        "schooltools_tui.initialization.schooltools.save_app_config",
+        lambda config: None,
+    )
+    actual_root = root if not root else str(tmp_path / root)
+    with pytest.raises(SetupError):
+        initialize_schooltools(actual_root, editor, year)
