@@ -18,7 +18,9 @@ from schooltools_tui.progress.commands import (
     CompleteLessonResult,
     LessonCompletionState,
     ProgressCommandError,
+    cancel_scheduled_lesson,
     complete_lesson,
+    continue_lesson,
     set_active_sequence,
     skip_lesson,
 )
@@ -35,6 +37,7 @@ from schooltools_tui.school.school_year import get_school_year_start
 from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.school.timetable import get_timetable_path, load_timetable
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
 from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.select_next_sequence_screen import (
@@ -58,6 +61,8 @@ class MainScreen(SchooltoolsScreen[None]):
     BINDINGS: ClassVar = [
         ("n", "complete_next_lesson", "Stunde abschließen"),
         ("s", "skip_next_lesson", "Stunde überspringen"),
+        ("c", "continue_next_lesson", "Lesson fortsetzen"),
+        ("a", "cancel_next_lesson", "Ausfall eintragen"),
     ]
 
     def __init__(self) -> None:
@@ -279,6 +284,63 @@ class MainScreen(SchooltoolsScreen[None]):
             result,
             action_description="übersprungen",
         )
+
+    async def action_continue_next_lesson(self) -> None:
+        context = self.load_planned_lesson_context()
+        if context is None:
+            return
+
+        try:
+            progress = continue_lesson(
+                context.progress,
+                context.planned_lesson,
+                context.sequences,
+            )
+            await self.save_progress_and_refresh(
+                context.school_class,
+                progress,
+                context.sequences,
+            )
+        except (OSError, ProgressCommandError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+
+        self.notify(
+            f"{context.school_class.id}: "
+            f"'{context.planned_lesson.lesson.title}' wird fortgesetzt."
+        )
+
+    def action_cancel_next_lesson(self) -> None:
+        context = self.load_planned_lesson_context()
+        if context is None:
+            return
+
+        async def cancellation_entered(comment: str | None) -> None:
+            if comment is None:
+                return
+
+            try:
+                progress = cancel_scheduled_lesson(
+                    context.progress,
+                    context.planned_lesson,
+                    context.sequences,
+                    comment,
+                )
+                await self.save_progress_and_refresh(
+                    context.school_class,
+                    progress,
+                    context.sequences,
+                )
+            except (OSError, ProgressCommandError, ValueError) as error:
+                self.notify(str(error), severity="error")
+                return
+
+            self.notify(
+                f"{context.school_class.id}: Ausfall von "
+                f"'{context.planned_lesson.lesson.title}' eingetragen."
+            )
+
+        self.app.push_screen(CancelLessonScreen(), cancellation_entered)
 
     async def handle_lesson_progress_result(
         self,
