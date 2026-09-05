@@ -63,6 +63,7 @@ from schooltools_tui.screens.set_active_sequence_screen import (
     SetActiveSequenceScreen,
 )
 from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
+from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
@@ -85,6 +86,7 @@ class MainScreen(SchooltoolsScreen[None]):
         ("p", "undo_last_entry", "Letzten Eintrag zurücknehmen"),
         ("z", "add_extra_lesson", "Zusatzunterricht"),
         ("w", "change_active_sequence", "Sequenz wechseln"),
+        ("l", "show_teaching_log", "Unterrichtsprotokoll"),
     ]
 
     def __init__(self) -> None:
@@ -220,7 +222,11 @@ class MainScreen(SchooltoolsScreen[None]):
         action: str,
         parameters: tuple[object, ...],
     ) -> bool | None:
-        if action in {"undo_last_entry", "change_active_sequence"}:
+        if action in {
+            "undo_last_entry",
+            "change_active_sequence",
+            "show_teaching_log",
+        }:
             return self.active_school_class_id is not None
         return super().check_action(action, parameters)
 
@@ -662,6 +668,14 @@ class MainScreen(SchooltoolsScreen[None]):
             active_sequence_selected,
         )
 
+    def action_show_teaching_log(self) -> None:
+        if self.active_school_class_id is None:
+            return
+
+        self.app.push_screen(
+            TeachingLogScreen(self.active_school_class_id),
+        )
+
     async def handle_lesson_progress_result(
         self,
         school_class: SchoolClass,
@@ -763,6 +777,8 @@ class MainScreen(SchooltoolsScreen[None]):
                     EditClosuresScreen(),
                     self.closures_edited,
                 )
+            case "teaching-log":
+                self.app.push_screen(TeachingLogScreen())
 
     def classes_edited(self, _: None) -> None:
         self.refresh_view_picker()

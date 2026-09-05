@@ -17,6 +17,7 @@ class SchooltoolsApp(App):
         "styles/sequences.tcss",
         "styles/setup.tcss",
         "styles/school_year_setup.tcss",
+        "styles/teaching_log.tcss",
     ]
 
     TITLE = "Schooltools"
