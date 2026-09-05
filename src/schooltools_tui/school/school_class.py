@@ -9,6 +9,7 @@ CLASS_FILE_NAME = Path("class.toml")
 
 
 def get_grade_level_from_school_class_id(school_class_id: str) -> int:
+    """Lies die führende Jahrgangsstufe aus einer Klassenbezeichnung."""
     match = re.match(r"[0-9]+", school_class_id.strip())
     if match is None:
         raise ValueError("Die Klassenbezeichnung muss mit einer Zahl beginnen.")
@@ -50,6 +51,7 @@ class SchoolClass:
 
 
 def school_class_sort_key(school_class: SchoolClass) -> tuple[int, str]:
+    """Sortiere Klassen numerisch nach Jahrgang und anschließend nach Suffix."""
     match = re.fullmatch(r"([0-9]+)(.*)", school_class.id)
     assert match is not None
 
@@ -58,10 +60,12 @@ def school_class_sort_key(school_class: SchoolClass) -> tuple[int, str]:
 
 
 def get_school_class_path(root: Path, year: str, school_class_id: str) -> Path:
+    """Gib den kanonischen Pfad der Klassendatei zurück."""
     return root / "school-years" / year / "classes" / school_class_id / CLASS_FILE_NAME
 
 
 def load_school_class(root: Path, year: str, school_class_id: str) -> SchoolClass:
+    """Lade eine einzelne Klasse aus dem gewählten Schuljahr."""
     path = get_school_class_path(root, year, school_class_id)
     data = load_toml(path)
 
@@ -73,6 +77,7 @@ def load_school_class(root: Path, year: str, school_class_id: str) -> SchoolClas
 
 
 def load_school_classes(root: Path, year: str) -> list[SchoolClass]:
+    """Lade alle Klassen eines Schuljahres in natürlicher Reihenfolge."""
     classes_directory = root / "school-years" / year / "classes"
 
     school_classes = []
@@ -93,6 +98,7 @@ def load_school_classes(root: Path, year: str) -> list[SchoolClass]:
 
 
 def save_school_class(root: Path, year: str, school_class: SchoolClass) -> None:
+    """Speichere die Stammdaten einer Klasse im bestehenden Klassenverzeichnis."""
     data = {
         "id": school_class.id,
         "grade_level": school_class.grade_level,
@@ -104,6 +110,7 @@ def save_school_class(root: Path, year: str, school_class: SchoolClass) -> None:
 
 
 def delete_school_class(root: Path, year: str, school_class_id: str) -> None:
+    """Lösche das vollständige Verzeichnis einer Klasse einschließlich Protokoll."""
     class_directory = get_school_class_path(root, year, school_class_id).parent
     if not class_directory.exists():
         raise FileNotFoundError(f"Die Klasse '{school_class_id}' existiert nicht.")

@@ -63,6 +63,7 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
         self.open_sequence_in_editor(event.node)
 
     def open_sequence_in_editor(self, node: TreeNode[Sequence | None]) -> None:
+        """Öffne eine Sequenz im konfigurierten Editor und lade sie danach neu."""
         sequence = node.data
         if sequence is None:
             return

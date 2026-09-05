@@ -15,6 +15,7 @@ SCHOOL_YEAR_DIRECTORIES = (
 
 
 def initialize_school_year(root: Path, year: str) -> None:
+    """Lege ein Schuljahr samt leerem Stundenplan und schulweiten Ausfällen an."""
     load_school_calendar(root, year)
     school_year_path = root / "school-years" / year
 

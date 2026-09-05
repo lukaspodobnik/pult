@@ -40,6 +40,7 @@ def complete_lesson(
     sequences: list[Sequence],
     comment: str = "",
 ) -> CompleteLessonResult:
+    """Schließe die nächste Lesson ab und verbrauche ihren Stundenplantermin."""
     return _progress_lesson(
         old_progress,
         planned_lesson,
@@ -58,6 +59,7 @@ def skip_lesson(
     sequences: list[Sequence],
     comment: str = "",
 ) -> CompleteLessonResult:
+    """Überspringe die nächste Lesson, ohne einen Stundenplantermin zu verbrauchen."""
     return _progress_lesson(
         old_progress,
         planned_lesson,
@@ -76,6 +78,7 @@ def continue_lesson(
     sequences: list[Sequence],
     comment: str = "",
 ) -> ClassProgress:
+    """Verbrauche den Termin, lasse die aktuelle Lesson aber weiterhin offen."""
     _validate_planned_lesson(old_progress, planned_lesson, sequences)
     return _append_entry(
         old_progress,
@@ -98,6 +101,7 @@ def cancel_scheduled_lesson(
     sequences: list[Sequence],
     comment: str = "",
 ) -> ClassProgress:
+    """Protokolliere einen spontanen Ausfall, ohne die Lesson abzuschließen."""
     _validate_planned_lesson(old_progress, planned_lesson, sequences)
     return _append_entry(
         old_progress,
@@ -120,6 +124,7 @@ def add_extra_lesson(
     entry_date: date,
     comment: str = "",
 ) -> ClassProgress:
+    """Protokolliere Zusatzunterricht, der keine geplante Lesson abschließt."""
     active_sequence = _get_active_sequence(old_progress, subject_id)
     return _append_entry(
         old_progress,
@@ -142,6 +147,7 @@ def complete_additional_lesson(
     sequences: list[Sequence],
     comment: str = "",
 ) -> CompleteLessonResult:
+    """Schließe die nächste Lesson in einem zusätzlichen Unterrichtstermin ab."""
     active_sequence = _get_active_sequence(old_progress, subject_id)
     lesson = get_next_lesson(
         old_progress,
@@ -174,6 +180,7 @@ def complete_additional_lesson(
 
 
 def undo_last_entry(progress: ClassProgress) -> ClassProgress:
+    """Entferne den zuletzt angelegten Protokolleintrag und korrigiere die Sequenz."""
     if not progress.entries:
         raise ProgressCommandError("Es gibt keinen Protokolleintrag zum Zurücknehmen.")
 
@@ -203,6 +210,7 @@ def set_active_sequence(
     grade_level: int,
     sequences: list[Sequence],
 ) -> ClassProgress:
+    """Aktiviere eine andere noch nicht abgeschlossene Sequenz eines Fachs."""
     current = _get_active_sequence(progress, subject_id)
     if current.sequence_id == sequence_id:
         raise ProgressCommandError("Diese Sequenz ist bereits aktiv.")

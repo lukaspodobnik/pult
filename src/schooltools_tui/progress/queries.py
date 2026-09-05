@@ -89,7 +89,7 @@ def get_school_year_progress(
     school_calendar: SchoolCalendar,
     current_date: date,
 ) -> SchoolYearProgressSummary:
-    """Return elapsed calendar days, including weekends and closures."""
+    """Berechne den vergangenen Anteil des Schuljahres aus allen Kalendertagen."""
     total_day_count = (
         school_calendar.last_school_day
         - school_calendar.first_school_day
@@ -122,7 +122,7 @@ def get_daily_schedule(
     school_closures: list[Closure],
     class_closures_by_class_id: dict[str, list[Closure]],
 ) -> DailyScheduleSummary:
-    """Return today's timetable with log state and a time-based highlight."""
+    """Berechne heutige Termine samt Protokollstatus und Zeitmarkierung."""
     current_date = current_datetime.date()
     additional_entries = _get_daily_additional_entries(
         current_date,
@@ -233,7 +233,7 @@ def get_home_dashboard_summary(
     school_closures: list[Closure],
     class_closures_by_class_id: dict[str, list[Closure]],
 ) -> HomeDashboardSummary:
-    """Return all backend data required by the home dashboard."""
+    """Fasse Schuljahr, nächste Lesson und Tagesplan für das Dashboard zusammen."""
     return HomeDashboardSummary(
         school_year_progress=get_school_year_progress(
             school_calendar,
@@ -288,6 +288,7 @@ def get_time_highlighted_occurrence(
     periods: list[Period],
     current_datetime: datetime,
 ) -> tuple[str, str, int] | None:
+    """Bestimme den laufenden oder zeitlich nächsten Termin des Tages."""
     periods_by_number = {period.number: period for period in periods}
     current_time = current_datetime.time()
 
@@ -356,7 +357,7 @@ def get_class_progress_summary(
     school_closures: list[Closure],
     class_closures: list[Closure],
 ) -> tuple[SubjectProgressSummary, ...]:
-    """Return the curriculum progress needed to render a class view."""
+    """Berechne Fortschritt, Stundenbilanz und nächste Lesson pro Fach."""
     relevant_sequences = [
         sequence
         for sequence in sequences
@@ -461,6 +462,7 @@ def get_next_lesson(
     subject_id: str,
     grade_level: int,
 ) -> Lesson | None:
+    """Gib die erste weder abgeschlossene noch übersprungene Lesson zurück."""
     active_sequence = next(
         active
         for active in progress.active_sequences
@@ -496,6 +498,7 @@ def get_suggested_next_sequence(
     subject_id: str,
     grade_level: int,
 ) -> Sequence | None:
+    """Schlage die nächste offene Sequenz gemäß Lehrplanreihenfolge vor."""
     active_sequence = next(
         active
         for active in progress.active_sequences
@@ -532,6 +535,7 @@ def get_available_next_sequences(
     subject_id: str,
     grade_level: int,
 ) -> list[Sequence]:
+    """Gib alle nicht abgeschlossenen alternativen Sequenzen eines Fachs zurück."""
     active_sequence = next(
         active
         for active in progress.active_sequences
@@ -574,6 +578,7 @@ def get_next_scheduled_occurrence(
     school_calendar: SchoolCalendar,
     local_closures: list[Closure],
 ) -> tuple[date, int] | None:
+    """Finde den ersten unverbrauchten Unterrichtstermin bis Schuljahresende."""
     matching_entries = _get_matching_timetable_entries(
         timetable_entries,
         school_class_id,
@@ -624,7 +629,7 @@ def count_available_scheduled_occurrences(
     school_calendar: SchoolCalendar,
     local_closures: list[Closure],
 ) -> int:
-    """Count unprocessed timetable occurrences through the end of the year."""
+    """Zähle unverbrauchte, kalenderbereinigte Termine bis Schuljahresende."""
     matching_entries = _get_matching_timetable_entries(
         timetable_entries,
         school_class_id,
@@ -697,6 +702,7 @@ def get_next_planned_lessons_for_class(
     school_closures: list[Closure],
     class_closures: list[Closure],
 ) -> list[PlannedLesson]:
+    """Berechne für jedes Fach einer Klasse die nächste geplante Lesson."""
     planned_lessons = []
 
     for subject_id in school_class.subject_ids:
@@ -757,6 +763,7 @@ def get_next_planned_lesson_for_class(
     school_closures: list[Closure],
     class_closures: list[Closure],
 ) -> PlannedLesson | None:
+    """Gib die zeitlich nächste geplante Lesson einer Klasse zurück."""
     planned_lessons = get_next_planned_lessons_for_class(
         progress,
         sequences,
@@ -778,6 +785,7 @@ def get_next_planned_lesson(
     school_closures: list[Closure],
     class_closures_by_class_id: dict[str, list[Closure]],
 ) -> PlannedLesson | None:
+    """Gib die global nächste geplante Lesson über alle Klassen zurück."""
     planned_lessons = []
 
     for school_class in school_classes:

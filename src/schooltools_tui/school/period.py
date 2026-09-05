@@ -29,6 +29,7 @@ class Period:
 
 
 def load_periods(root: Path) -> list[Period]:
+    """Lade, sortiere und validiere die konfigurierten Unterrichtszeiten."""
     data = load_toml(root / PERIODS_FILE_NAME)
     periods = data.get("periods")
 
@@ -50,6 +51,7 @@ def load_periods(root: Path) -> list[Period]:
 
 
 def save_periods(root: Path, periods: list[Period]) -> None:
+    """Speichere chronologisch sortierte, überschneidungsfreie Unterrichtszeiten."""
     if len(periods) == 0:
         raise ValueError("Es muss mindestens eine Unterrichtsstunde existieren.")
 
@@ -70,6 +72,7 @@ def save_periods(root: Path, periods: list[Period]) -> None:
 
 
 def get_period_at(periods: list[Period], current_time: time) -> Period | None:
+    """Gib die zum angegebenen Zeitpunkt laufende Schulstunde zurück."""
     return next(
         (
             period
@@ -119,4 +122,3 @@ def _validate_periods(periods: list[Period]) -> None:
     for previous, current in pairwise(periods):
         if previous.end > current.start:
             raise PeriodsFileError("Unterrichtsstunden dürfen sich nicht überschneiden.")
-

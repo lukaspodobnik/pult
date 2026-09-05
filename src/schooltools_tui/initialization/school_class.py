@@ -24,6 +24,7 @@ class SchoolClassSetupError(ValueError):
 
 
 def initialize_school_class(root: Path, year: str, school_class: SchoolClass) -> None:
+    """Lege eine neue Klasse mit Startsequenzen, Fortschritt und Ausfalldatei an."""
     class_directory = get_school_class_path(root, year, school_class.id).parent
 
     if class_directory.exists():

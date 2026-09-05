@@ -14,6 +14,7 @@ class SequenceTree(Tree[Sequence | None]):
         self.root.expand()
 
     def populate(self, sequences: list[Sequence], subjects: list[Subject]) -> None:
+        """Befülle den Baum nach Fach, Jahrgangsstufe, Kapitel und Sequenz."""
         self.root.remove_children()
 
         subjects_by_id = {

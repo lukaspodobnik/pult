@@ -379,6 +379,7 @@ def get_current_timetable_position(
     periods: list[Period],
     current_datetime: datetime,
 ) -> tuple[str | None, int | None]:
+    """Bestimme Wochentag und laufende Schulstunde für das Tabellenhighlight."""
     weekday_index = current_datetime.weekday()
     current_weekday = (
         WEEKDAYS[weekday_index][0]

@@ -14,6 +14,7 @@ from schooltools_tui.school.calendar import (
 def get_school_year_options(
     root: Path | None = None,
 ) -> list[tuple[str, str]]:
+    """Erzeuge Select-Optionen ausschließlich aus vorhandenen gültigen Kalendern."""
     calendar_directory = (
         root / CALENDARS_DIRECTORY_NAME
         if root is not None
@@ -42,6 +43,7 @@ def get_school_year_options(
 def get_likely_school_year(
     school_year_options: list[tuple[str, str]],
 ) -> str:
+    """Wähle das wahrscheinlich aktuelle oder zeitlich nächstgelegene Schuljahr."""
     if not school_year_options:
         raise ValueError("Es ist kein Schuljahreskalender verfügbar.")
 

@@ -14,6 +14,7 @@ class AppConfig:
 
 
 def load_app_config() -> AppConfig | None:
+    """Lade die globale App-Konfiguration oder gib bei fehlender Datei None zurück."""
     try:
         data = load_toml(APP_CONFIG_PATH)
     except FileNotFoundError:
@@ -30,6 +31,7 @@ def load_app_config() -> AppConfig | None:
     )
 
 def save_app_config(app_config: AppConfig) -> None:
+    """Speichere die vollständige globale App-Konfiguration."""
     data: dict[str, Any] = {
         "root": str(app_config.root),
         "editor": app_config.editor,

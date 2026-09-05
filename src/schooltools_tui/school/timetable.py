@@ -22,10 +22,12 @@ class TimetableEntry:
 
 
 def get_timetable_path(root: Path, year: str) -> Path:
+    """Gib den Pfad des Stundenplans eines Schuljahres zurück."""
     return root / "school-years" / year / "timetable.csv"
 
 
 def create_empty_timetable(path: Path) -> None:
+    """Lege einen leeren Stundenplan an, ohne eine vorhandene Datei zu ersetzen."""
     if path.exists():
         if not path.is_file():
             raise IsADirectoryError(f"Der Stundenplan-Pfad ist keine Datei: {path}")
@@ -36,6 +38,7 @@ def create_empty_timetable(path: Path) -> None:
 
 
 def load_timetable(path: Path) -> list[TimetableEntry]:
+    """Lade alle Einträge eines Stundenplans aus CSV."""
     rows = load_csv(path)
 
     entries = []
@@ -54,6 +57,7 @@ def load_timetable(path: Path) -> list[TimetableEntry]:
 
 
 def save_timetable(path: Path, entries: list[TimetableEntry]) -> None:
+    """Ersetze den Stundenplan durch die übergebenen Einträge."""
     rows = []
     for entry in entries:
         row = {
@@ -70,6 +74,7 @@ def save_timetable(path: Path, entries: list[TimetableEntry]) -> None:
 
 
 def save_timetable_entry(path: Path, entry: TimetableEntry) -> None:
+    """Speichere einen Eintrag und ersetze eine vorhandene Belegung desselben Slots."""
     entries = load_timetable(path)
     entries_by_slot = {
         (existing_entry.weekday, existing_entry.period): existing_entry
@@ -80,6 +85,7 @@ def save_timetable_entry(path: Path, entry: TimetableEntry) -> None:
 
 
 def delete_timetable_entry(path: Path, weekday: str, period: int) -> None:
+    """Entferne die Belegung eines Wochentags und einer Schulstunde."""
     entries = load_timetable(path)
     remaining_entries = [
         entry
@@ -92,6 +98,7 @@ def delete_timetable_entry(path: Path, weekday: str, period: int) -> None:
 def delete_timetable_entries_for_school_class(
     path: Path, school_class_id: str
 ) -> None:
+    """Entferne sämtliche Stundenplaneinträge einer Klasse."""
     entries = load_timetable(path)
     remaining_entries = [
         entry for entry in entries if entry.school_class_id != school_class_id

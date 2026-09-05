@@ -18,6 +18,7 @@ class SequenceFileError(ValueError):
 
 
 def validate_id(value: str, field_name: str) -> str:
+    """Normalisiere eine interne ID und lehne unerlaubte Zeichen ab."""
     value = value.strip().lower()
 
     if not ID_PATTERN.fullmatch(value):
@@ -30,6 +31,7 @@ def validate_id(value: str, field_name: str) -> str:
 
 
 def validate_curriculum_section_id(value: str, field_name: str) -> str:
+    """Normalisiere und validiere eine Lehrplanabschnitts-ID wie ``M5 1.1``."""
     value = " ".join(value.strip().upper().split())
 
     if not CURRICULUM_SECTION_ID_PATTERN.fullmatch(value):
@@ -126,6 +128,7 @@ class Sequence:
 def sequence_sort_key(
     sequence: Sequence,
 ) -> tuple[str, tuple[int, ...], str]:
+    """Erzeuge einen Sortierschlüssel gemäß der Lehrplanreihenfolge."""
     prefix, section = sequence.curriculum_section_id.split(" ", maxsplit=1)
     return (
         prefix,
@@ -139,6 +142,7 @@ def get_sequence_directory(
     grade_level: int,
     subject_id: str,
 ) -> Path:
+    """Gib das Sequenzverzeichnis einer Jahrgangsstufe und eines Fachs zurück."""
     if not 5 <= grade_level <= 13:
         raise ValueError("Die Jahrgangsstufe muss zwischen 5 und 13 liegen.")
 
@@ -152,6 +156,7 @@ def get_sequence_path(
     subject_id: str,
     sequence_id: str,
 ) -> Path:
+    """Gib den kanonischen Pfad einer Sequenzdatei zurück."""
     sequence_id = validate_id(sequence_id, "Die Sequenz-ID")
     return get_sequence_directory(root, grade_level, subject_id) / (
         sequence_id + SEQUENCE_FILE_SUFFIX
@@ -164,6 +169,7 @@ def load_sequence(
     subject_id: str,
     sequence_id: str,
 ) -> Sequence:
+    """Lade und validiere eine Sequenz einschließlich ihres Ablageorts."""
     path = get_sequence_path(root, grade_level, subject_id, sequence_id)
 
     try:
@@ -210,12 +216,14 @@ def load_sequences(
     grade_level: int,
     subject_id: str,
 ) -> list[Sequence]:
+    """Lade alle Sequenzen eines Fachs in einer Jahrgangsstufe."""
     directory = get_sequence_directory(root, grade_level, subject_id)
     paths = sorted(directory.glob(f"*{SEQUENCE_FILE_SUFFIX}"))
     return [load_sequence(root, grade_level, subject_id, path.stem) for path in paths]
 
 
 def load_sequence_library(root: Path) -> list[Sequence]:
+    """Lade und validiere die vollständige Sequenzbibliothek."""
     library_directory = root / SEQUENCES_DIRECTORY_NAME
     grade_directories: list[tuple[int, Path]] = []
 
@@ -251,6 +259,7 @@ def load_sequence_library(root: Path) -> list[Sequence]:
 
 
 def save_sequence(root: Path, sequence: Sequence) -> None:
+    """Speichere eine Sequenz am aus ihren IDs abgeleiteten Pfad."""
     path = get_sequence_path(
         root,
         sequence.grade_level,

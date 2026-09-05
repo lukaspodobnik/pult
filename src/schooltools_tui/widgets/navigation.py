@@ -10,6 +10,7 @@ class ViewPicker(OptionList):
         school_classes: list[SchoolClass],
         highlighted_option_id: str | None = None,
     ) -> None:
+        """Ersetze die Navigation und erhalte nach Möglichkeit das Highlight."""
         self.clear_options()
 
         options = [Option("Home", id="home")]

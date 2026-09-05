@@ -34,6 +34,7 @@ DEFAULT_DIRECTORIES = (
 
 
 def initialize_schooltools(root: str, editor: str, year: str) -> AppConfig:
+    """Initialisiere Datenverzeichnis und Schuljahr und speichere danach die Config."""
     root = root.strip()
     editor = editor.strip()
     year = year.strip()

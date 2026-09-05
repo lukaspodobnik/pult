@@ -32,6 +32,7 @@ class SchooltoolsApp(App):
         self.app_config: AppConfig | None = None
 
     def require_config(self) -> AppConfig:
+        """Gib die geladene Config zurück oder melde einen ungültigen App-Zustand."""
         if self.app_config is None:
             raise RuntimeError("AppConfig wurde vor abschluss des Setups angefordert.")
 
@@ -43,6 +44,7 @@ class SchooltoolsApp(App):
         self.show_initial_screen()
 
     def show_initial_screen(self) -> None:
+        """Öffne abhängig vom Vorhandensein der Config Setup oder Hauptansicht."""
         if self.app_config is None:
             self.push_screen(
                 SetupScreen(),

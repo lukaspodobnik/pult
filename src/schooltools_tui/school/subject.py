@@ -57,6 +57,7 @@ class Subject:
 
 
 def load_subjects(root: Path) -> list[Subject]:
+    """Lade und validiere die feste Fächerliste einschließlich Jahrgangsstufen."""
     path = root / SUBJECTS_FILE_NAME
     data = load_toml(path)
 

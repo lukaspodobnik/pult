@@ -155,12 +155,14 @@ class MainScreen(SchooltoolsScreen[None]):
         )
 
     async def switch_view(self, view: Widget) -> None:
+        """Ersetze ausschließlich den Inhaltsbereich durch die übergebene View."""
         content = self.query_one("#content", Container)
 
         await content.remove_children()
         await content.mount(view)
 
     async def show_home_view(self) -> None:
+        """Lade alle Dashboarddaten neu und zeige anschließend die HomeView."""
         self.active_school_class_id = None
         self.refresh_bindings()
         config = self.app_config
@@ -234,6 +236,7 @@ class MainScreen(SchooltoolsScreen[None]):
             await self.show_home_view()
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
+        """Lade und validiere alle Daten für die Ansicht einer Klasse."""
         config = self.app_config
         try:
             sequences = load_sequence_library(config.root)
@@ -297,6 +300,7 @@ class MainScreen(SchooltoolsScreen[None]):
         return super().check_action(action, parameters)
 
     async def refresh_current_view(self) -> None:
+        """Baue die momentan aktive Home- oder Klassenansicht vollständig neu."""
         if self.active_school_class_id is None:
             await self.show_home_view()
             return
@@ -311,6 +315,7 @@ class MainScreen(SchooltoolsScreen[None]):
         progress: ClassProgress,
         sequences: list[Sequence],
     ) -> None:
+        """Validiere und speichere Fortschritt und aktualisiere danach die View."""
         config = self.app_config
         validate_class_progress(progress, school_class, sequences)
         save_class_progress(
@@ -322,6 +327,7 @@ class MainScreen(SchooltoolsScreen[None]):
         await self.refresh_current_view()
 
     def load_planned_lesson_context(self) -> PlannedLessonContext | None:
+        """Lade den Kontext für die nächste globale oder klassenbezogene Lesson."""
         config = self.app_config
         year = config.active_school_year
 
@@ -751,6 +757,7 @@ class MainScreen(SchooltoolsScreen[None]):
         *,
         action_description: str,
     ) -> None:
+        """Speichere ein Command-Ergebnis oder fordere zuerst eine Folgesequenz an."""
         if result.state is LessonCompletionState.NEEDS_NEXT_SEQUENCE:
             available_sequences = get_available_next_sequences(
                 result.progress,

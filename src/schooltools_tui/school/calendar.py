@@ -115,6 +115,7 @@ class SchoolCalendar:
 
 
 def validate_school_year(year: str) -> str:
+    """Normalisiere ein Schuljahr im Format ``2026-2027`` und validiere es."""
     if not isinstance(year, str):
         raise TypeError("Das Schuljahr muss ein Text sein.")
 
@@ -131,11 +132,13 @@ def validate_school_year(year: str) -> str:
 
 
 def get_school_calendar_path(root: Path, year: str) -> Path:
+    """Gib den Pfad des offiziellen Kalenders eines Schuljahres zurück."""
     year = validate_school_year(year)
     return root / CALENDARS_DIRECTORY_NAME / f"{year}{CALENDAR_FILE_SUFFIX}"
 
 
 def get_school_closures_path(root: Path, year: str) -> Path:
+    """Gib den Pfad der schulweiten lokalen Ausfälle zurück."""
     year = validate_school_year(year)
     return (
         root
@@ -150,12 +153,14 @@ def get_class_closures_path(
     year: str,
     school_class_id: str,
 ) -> Path:
+    """Gib den Pfad der lokalen Ausfälle einer Klasse zurück."""
     year = validate_school_year(year)
     class_directory = get_school_class_path(root, year, school_class_id).parent
     return class_directory / CLOSURES_FILE_NAME
 
 
 def load_school_calendar(root: Path, year: str) -> SchoolCalendar:
+    """Lade und validiere den offiziellen Kalender eines Schuljahres."""
     path = get_school_calendar_path(root, year)
 
     try:
@@ -195,6 +200,7 @@ def load_school_calendar(root: Path, year: str) -> SchoolCalendar:
 
 
 def save_school_calendar(root: Path, calendar: SchoolCalendar) -> None:
+    """Speichere einen validierten offiziellen Schulkalender."""
     data: dict[str, Any] = {
         "school_year": calendar.school_year,
         "first_school_day": calendar.first_school_day,
@@ -208,6 +214,7 @@ def save_school_calendar(root: Path, calendar: SchoolCalendar) -> None:
 
 
 def load_school_closures(root: Path, year: str) -> list[Closure]:
+    """Lade die schulweiten lokalen Ausfälle eines Schuljahres."""
     return _load_local_closures(get_school_closures_path(root, year), year)
 
 
@@ -216,6 +223,7 @@ def load_class_closures(
     year: str,
     school_class_id: str,
 ) -> list[Closure]:
+    """Lade die lokalen Ausfälle einer einzelnen Klasse."""
     return _load_local_closures(
         get_class_closures_path(root, year, school_class_id),
         year,
@@ -227,6 +235,7 @@ def save_school_closures(
     year: str,
     closures: list[Closure],
 ) -> None:
+    """Speichere die schulweiten lokalen Ausfälle eines Schuljahres."""
     _save_local_closures(get_school_closures_path(root, year), year, closures)
 
 
@@ -236,6 +245,7 @@ def save_class_closures(
     school_class_id: str,
     closures: list[Closure],
 ) -> None:
+    """Speichere die lokalen Ausfälle einer einzelnen Klasse."""
     _save_local_closures(
         get_class_closures_path(root, year, school_class_id),
         year,
@@ -244,6 +254,7 @@ def save_class_closures(
 
 
 def create_empty_school_closures(root: Path, year: str) -> None:
+    """Lege die schulweite Ausfalldatei an, falls sie noch nicht existiert."""
     _create_empty_local_closures(get_school_closures_path(root, year), year)
 
 
@@ -252,6 +263,7 @@ def create_empty_class_closures(
     year: str,
     school_class_id: str,
 ) -> None:
+    """Lege die Ausfalldatei einer Klasse an, falls sie noch nicht existiert."""
     _create_empty_local_closures(
         get_class_closures_path(root, year, school_class_id),
         year,
@@ -262,6 +274,7 @@ def is_date_closed(
     target_date: date,
     closures: Iterable[Closure],
 ) -> bool:
+    """Prüfe, ob ein Datum in mindestens einem Ausfallzeitraum liegt."""
     if type(target_date) is not date:
         raise TypeError("Das zu prüfende Datum muss ein Datum ohne Uhrzeit sein.")
 
@@ -275,6 +288,7 @@ def is_school_day(
     target_date: date,
     local_closures: Iterable[Closure] = (),
 ) -> bool:
+    """Prüfe Unterrichtszeitraum, Wochenende und offizielle sowie lokale Ausfälle."""
     if type(target_date) is not date:
         raise TypeError("Das zu prüfende Datum muss ein Datum ohne Uhrzeit sein.")
 
@@ -296,6 +310,7 @@ def has_school_day(
     end: date,
     local_closures: Iterable[Closure] = (),
 ) -> bool:
+    """Prüfe, ob ein inklusiver Datumsbereich mindestens einen Schultag enthält."""
     if type(start) is not date or type(end) is not date:
         raise TypeError("Start und Ende müssen Datumswerte ohne Uhrzeit sein.")
     if end < start:

@@ -8,22 +8,26 @@ import tomli_w
 
 
 def load_toml(path: Path) -> dict[str, Any]:
+    """Lade eine TOML-Datei; eine fehlende Datei wird nicht abgefangen."""
     with path.open("rb") as file:
         return tomllib.load(file)
 
 
 def save_toml(path: Path, data: dict[str, Any]) -> None:
+    """Speichere TOML-Daten, ohne das Elternverzeichnis anzulegen."""
     with path.open("wb") as file:
         tomli_w.dump(data, file)
 
 
 def load_csv(path: Path) -> list[dict[str, str]]:
+    """Lade alle Zeilen einer CSV-Datei als String-Dictionaries."""
     with path.open("r", newline="") as file:
         reader = csv.DictReader(file)
         return list(reader)
 
 
 def save_csv(path: Path, fieldnames: tuple[str, ...], rows: Iterable[dict[str, str]]) -> None:
+    """Ersetze eine CSV-Datei durch die übergebenen Zeilen und Spalten."""
     with path.open("w", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()

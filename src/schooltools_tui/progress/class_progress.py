@@ -201,6 +201,7 @@ def validate_class_progress(
     school_class: SchoolClass,
     sequences: list[Sequence],
 ) -> None:
+    """Prüfe den Fortschritt gegen Klasse, Fächer und Sequenzbibliothek."""
     expected_subject_ids = set(school_class.subject_ids)
     active_subject_ids = {
         active_sequence.subject_id
@@ -294,6 +295,7 @@ def get_class_progress_path(
     year: str,
     school_class_id: str,
 ) -> Path:
+    """Gib den kanonischen Pfad des Unterrichtsprotokolls einer Klasse zurück."""
     class_directory = get_school_class_path(root, year, school_class_id).parent
     return class_directory / CLASS_PROGRESS_FILE_NAME
 
@@ -303,6 +305,7 @@ def load_class_progress(
     year: str,
     school_class_id: str,
 ) -> ClassProgress:
+    """Lade das Protokoll einer Klasse und validiere dessen Dateiformat."""
     path = get_class_progress_path(root, year, school_class_id)
 
     try:
@@ -333,6 +336,7 @@ def save_class_progress(
     school_class_id: str,
     progress: ClassProgress,
 ) -> None:
+    """Speichere aktive Sequenzen und Unterrichtsprotokoll einer Klasse."""
     data: dict[str, Any] = {
         "active_sequences": [
             {
