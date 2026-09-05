@@ -4,6 +4,7 @@ from pathlib import Path
 
 from schooltools_tui.config import AppConfig, save_app_config
 from schooltools_tui.initialization.school_year import initialize_school_year
+from schooltools_tui.school.calendar import CALENDARS_DIRECTORY_NAME
 from schooltools_tui.school.period import PERIODS_FILE_NAME as periods_file
 from schooltools_tui.school.subject import SUBJECTS_FILE_NAME as subject_file
 
@@ -14,6 +15,7 @@ class SetupError(Exception):
 
 INITIAL_DIRECTORIES = (
     Path("sequences"),
+    CALENDARS_DIRECTORY_NAME,
     Path("school-years"),
 )
 
@@ -24,6 +26,7 @@ DEFAULT_FILES = (
 
 DEFAULT_DIRECTORIES = (
     Path("sequences"),
+    CALENDARS_DIRECTORY_NAME,
 )
 
 
@@ -97,8 +100,6 @@ def _create_default_directories(root_path: Path) -> None:
     for relative_path in DEFAULT_DIRECTORIES:
         source = defaults.joinpath(*relative_path.parts)
 
-        # Die Sequenzvorlagen werden schrittweise ergänzt. Bis die erste
-        # Vorlage existiert, gibt es im installierten Paket noch keinen Ordner.
         if not source.is_dir():
             continue
 

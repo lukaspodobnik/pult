@@ -1,5 +1,9 @@
 from pathlib import Path
 
+from schooltools_tui.curriculum.sequence import (
+    load_sequence_library,
+    sequence_sort_key,
+)
 from schooltools_tui.progress.class_progress import (
     ActiveSequence,
     ClassProgress,
@@ -11,7 +15,7 @@ from schooltools_tui.school.school_class import (
     get_school_class_path,
     save_school_class,
 )
-from schooltools_tui.curriculum.sequence import load_sequence_library, sequence_sort_key
+from schooltools_tui.school.calendar import create_empty_class_closures
 from schooltools_tui.school.subject import load_subjects
 
 
@@ -73,3 +77,4 @@ def initialize_school_class(root: Path, year: str, school_class: SchoolClass) ->
     class_directory.mkdir(parents=True, exist_ok=True)
     save_school_class(root, year, school_class)
     save_class_progress(root, year, school_class.id, class_progress)
+    create_empty_class_closures(root, year, school_class.id)

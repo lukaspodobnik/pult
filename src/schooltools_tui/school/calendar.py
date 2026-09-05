@@ -243,6 +243,21 @@ def save_class_closures(
     )
 
 
+def create_empty_school_closures(root: Path, year: str) -> None:
+    _create_empty_local_closures(get_school_closures_path(root, year), year)
+
+
+def create_empty_class_closures(
+    root: Path,
+    year: str,
+    school_class_id: str,
+) -> None:
+    _create_empty_local_closures(
+        get_class_closures_path(root, year, school_class_id),
+        year,
+    )
+
+
 def is_date_closed(
     target_date: date,
     closures: Iterable[Closure],
@@ -291,6 +306,15 @@ def _load_local_closures(path: Path, year: str) -> list[Closure]:
         ) from error
 
     return sorted(closures, key=_closure_sort_key)
+
+
+def _create_empty_local_closures(path: Path, year: str) -> None:
+    if path.exists():
+        if not path.is_file():
+            raise IsADirectoryError(f"Der Ausfall-Pfad ist keine Datei: {path}")
+        return
+
+    _save_local_closures(path, year, [])
 
 
 def _save_local_closures(

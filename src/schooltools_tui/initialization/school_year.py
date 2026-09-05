@@ -1,7 +1,10 @@
-
 from pathlib import Path
 
-from schooltools_tui.school.timetable import create_empty_timetable, get_timetable_path
+from schooltools_tui.school.calendar import create_empty_school_closures
+from schooltools_tui.school.timetable import (
+    create_empty_timetable,
+    get_timetable_path,
+)
 
 SCHOOL_YEAR_DIRECTORIES = (
     Path("classes"),
@@ -16,3 +19,4 @@ def initialize_school_year(root: Path, year: str) -> None:
         directory.mkdir(parents=True, exist_ok=True)
 
     create_empty_timetable(get_timetable_path(root, year))
+    create_empty_school_closures(root, year)
