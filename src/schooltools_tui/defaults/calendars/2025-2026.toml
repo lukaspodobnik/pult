@@ -1,0 +1,70 @@
+# Quellen:
+# https://www.km.bayern.de/termine/ferien-und-feiertage
+# https://www.stmi.bayern.de/staat-und-verfassung/feiertage/
+#
+# start und end werden einschließlich interpretiert.
+# Feiertage innerhalb von Ferien oder an Wochenenden werden nicht wiederholt.
+
+school_year = "2025-2026"
+first_school_day = 2025-09-16
+last_school_day = 2026-07-31
+
+[[closures]]
+name = "Tag der Deutschen Einheit"
+kind = "public-holiday"
+start = 2025-10-03
+end = 2025-10-03
+
+[[closures]]
+name = "Herbstferien"
+kind = "school-holiday"
+start = 2025-11-03
+end = 2025-11-07
+
+[[closures]]
+name = "Buß- und Bettag"
+kind = "school-holiday"
+start = 2025-11-19
+end = 2025-11-19
+
+[[closures]]
+name = "Weihnachtsferien"
+kind = "school-holiday"
+start = 2025-12-22
+end = 2026-01-05
+
+[[closures]]
+name = "Heilige Drei Könige"
+kind = "public-holiday"
+start = 2026-01-06
+end = 2026-01-06
+
+[[closures]]
+name = "Frühjahrsferien"
+kind = "school-holiday"
+start = 2026-02-16
+end = 2026-02-20
+
+[[closures]]
+name = "Osterferien"
+kind = "school-holiday"
+start = 2026-03-30
+end = 2026-04-10
+
+[[closures]]
+name = "Tag der Arbeit"
+kind = "public-holiday"
+start = 2026-05-01
+end = 2026-05-01
+
+[[closures]]
+name = "Christi Himmelfahrt"
+kind = "public-holiday"
+start = 2026-05-14
+end = 2026-05-14
+
+[[closures]]
+name = "Pfingstferien"
+kind = "school-holiday"
+start = 2026-05-26
+end = 2026-06-05

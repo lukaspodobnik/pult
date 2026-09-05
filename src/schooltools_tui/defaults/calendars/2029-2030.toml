@@ -1,0 +1,70 @@
+# Quellen:
+# https://www.km.bayern.de/termine/ferien-und-feiertage
+# https://www.stmi.bayern.de/staat-und-verfassung/feiertage/
+#
+# start und end werden einschließlich interpretiert.
+# Feiertage innerhalb von Ferien oder an Wochenenden werden nicht wiederholt.
+
+school_year = "2029-2030"
+first_school_day = 2029-09-11
+last_school_day = 2030-07-26
+
+[[closures]]
+name = "Tag der Deutschen Einheit"
+kind = "public-holiday"
+start = 2029-10-03
+end = 2029-10-03
+
+[[closures]]
+name = "Herbstferien"
+kind = "school-holiday"
+start = 2029-10-29
+end = 2029-11-02
+
+[[closures]]
+name = "Buß- und Bettag"
+kind = "school-holiday"
+start = 2029-11-21
+end = 2029-11-21
+
+[[closures]]
+name = "Weihnachtsferien"
+kind = "school-holiday"
+start = 2029-12-24
+end = 2030-01-04
+
+[[closures]]
+name = "Frühjahrsferien"
+kind = "school-holiday"
+start = 2030-03-04
+end = 2030-03-08
+
+[[closures]]
+name = "Osterferien"
+kind = "school-holiday"
+start = 2030-04-15
+end = 2030-04-26
+
+[[closures]]
+name = "Tag der Arbeit"
+kind = "public-holiday"
+start = 2030-05-01
+end = 2030-05-01
+
+[[closures]]
+name = "Christi Himmelfahrt"
+kind = "public-holiday"
+start = 2030-05-30
+end = 2030-05-30
+
+[[closures]]
+name = "Pfingstmontag"
+kind = "public-holiday"
+start = 2030-06-10
+end = 2030-06-10
+
+[[closures]]
+name = "Pfingstferien"
+kind = "school-holiday"
+start = 2030-06-11
+end = 2030-06-21
