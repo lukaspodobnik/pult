@@ -24,6 +24,7 @@ WEEKDAYS = (
 @dataclass(frozen=True)
 class PlannedLesson:
     school_class_id: str
+    grade_level: int
     subject_id: str
     sequence_id: str
     lesson: Lesson
@@ -32,7 +33,10 @@ class PlannedLesson:
 
 
 def get_next_lesson(
-    progress: ClassProgress, sequences: list[Sequence], subject_id: str
+    progress: ClassProgress,
+    sequences: list[Sequence],
+    subject_id: str,
+    grade_level: int,
 ) -> Lesson | None:
     active_sequence = next(
         active
@@ -43,7 +47,8 @@ def get_next_lesson(
     sequence = next(
         sequence
         for sequence in sequences
-        if sequence.subject_id == subject_id
+        if sequence.grade_level == grade_level
+        and sequence.subject_id == subject_id
         and sequence.id == active_sequence.sequence_id
     )
 
@@ -128,7 +133,12 @@ def get_next_planned_lessons_for_class(
     planned_lessons = []
 
     for subject_id in school_class.subject_ids:
-        lesson = get_next_lesson(progress, sequences, subject_id)
+        lesson = get_next_lesson(
+            progress,
+            sequences,
+            subject_id,
+            school_class.grade_level,
+        )
         if lesson is None:
             continue
 
@@ -151,6 +161,7 @@ def get_next_planned_lessons_for_class(
         planned_lessons.append(
             PlannedLesson(
                 school_class_id=school_class.id,
+                grade_level=school_class.grade_level,
                 subject_id=subject_id,
                 sequence_id=active_sequence.sequence_id,
                 lesson=lesson,
@@ -203,8 +214,8 @@ def get_next_planned_lesson(
             school_class,
             school_year_start,
         )
-        
-        planned_lessons.append(planned_lesson)
+        if planned_lesson is not None:
+            planned_lessons.append(planned_lesson)
 
     return min(
         planned_lessons,
