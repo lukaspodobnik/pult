@@ -36,9 +36,13 @@ from schooltools_tui.progress.queries import (
     get_next_planned_lesson_for_class,
     get_suggested_next_sequence,
 )
+from schooltools_tui.school.calendar import (
+    load_class_closures,
+    load_school_calendar,
+    load_school_closures,
+)
 from schooltools_tui.school.period import load_periods
 from schooltools_tui.school.school_class import SchoolClass, load_school_classes
-from schooltools_tui.school.school_year import get_school_year_start
 from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.school.timetable import get_timetable_path, load_timetable
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
@@ -174,12 +178,27 @@ class MainScreen(SchooltoolsScreen[None]):
                 get_timetable_path(config.root, config.active_school_year)
             )
             subjects = load_subjects(config.root)
+            school_calendar = load_school_calendar(
+                config.root,
+                config.active_school_year,
+            )
+            school_closures = load_school_closures(
+                config.root,
+                config.active_school_year,
+            )
+            class_closures = load_class_closures(
+                config.root,
+                config.active_school_year,
+                school_class.id,
+            )
             progress_summaries = get_class_progress_summary(
                 progress,
                 sequences,
                 timetable_entries,
                 school_class,
-                get_school_year_start(config.active_school_year),
+                school_calendar,
+                school_closures,
+                class_closures,
             )
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(str(error), severity="error")
@@ -242,10 +261,19 @@ class MainScreen(SchooltoolsScreen[None]):
             timetable_entries = load_timetable(
                 get_timetable_path(config.root, year)
             )
-            school_year_start = get_school_year_start(year)
+            school_calendar = load_school_calendar(config.root, year)
+            school_closures = load_school_closures(config.root, year)
             if self.active_school_class_id is None:
                 progresses_by_class_id = {
                     school_class.id: load_class_progress(
+                        config.root,
+                        year,
+                        school_class.id,
+                    )
+                    for school_class in school_classes
+                }
+                class_closures_by_class_id = {
+                    school_class.id: load_class_closures(
                         config.root,
                         year,
                         school_class.id,
@@ -257,7 +285,9 @@ class MainScreen(SchooltoolsScreen[None]):
                     sequences,
                     timetable_entries,
                     school_classes,
-                    school_year_start,
+                    school_calendar,
+                    school_closures,
+                    class_closures_by_class_id,
                 )
                 progress = (
                     progresses_by_class_id[planned_lesson.school_class_id]
@@ -278,7 +308,13 @@ class MainScreen(SchooltoolsScreen[None]):
                     sequences,
                     timetable_entries,
                     school_class,
-                    school_year_start,
+                    school_calendar,
+                    school_closures,
+                    load_class_closures(
+                        config.root,
+                        year,
+                        school_class.id,
+                    ),
                 )
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")

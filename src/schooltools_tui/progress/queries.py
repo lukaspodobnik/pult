@@ -7,6 +7,11 @@ from schooltools_tui.progress.class_progress import (
     TeachingAction,
     TeachingOrigin,
 )
+from schooltools_tui.school.calendar import (
+    Closure,
+    SchoolCalendar,
+    is_school_day,
+)
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.timetable import TimetableEntry
 
@@ -68,7 +73,9 @@ def get_class_progress_summary(
     sequences: list[Sequence],
     timetable_entries: list[TimetableEntry],
     school_class: SchoolClass,
-    school_year_start: date,
+    school_calendar: SchoolCalendar,
+    school_closures: list[Closure],
+    class_closures: list[Closure],
 ) -> tuple[SubjectProgressSummary, ...]:
     """Return the curriculum progress needed to render a class view."""
     relevant_sequences = [
@@ -86,7 +93,9 @@ def get_class_progress_summary(
             sequences,
             timetable_entries,
             school_class,
-            school_year_start,
+            school_calendar,
+            school_closures,
+            class_closures,
         )
     }
     active_sequence_ids_by_subject_id = {
@@ -275,7 +284,8 @@ def get_next_scheduled_occurrence(
     timetable_entries: list[TimetableEntry],
     school_class_id: str,
     subject_id: str,
-    school_year_start: date,
+    school_calendar: SchoolCalendar,
+    local_closures: list[Closure],
 ) -> tuple[date, int] | None:
     matching_entries = [
         entry
@@ -298,14 +308,22 @@ def get_next_scheduled_occurrence(
     )
 
     if last_occurrence is None:
-        after = (school_year_start, 0)
+        after = (school_calendar.first_school_day, 0)
     else:
         assert last_occurrence.period is not None
         after = (last_occurrence.date, last_occurrence.period)
 
-    candidate_date = after[0]
+    candidate_date = max(after[0], school_calendar.first_school_day)
 
-    for _ in range(8):
+    while candidate_date <= school_calendar.last_school_day:
+        if not is_school_day(
+            school_calendar,
+            candidate_date,
+            local_closures,
+        ):
+            candidate_date += timedelta(days=1)
+            continue
+
         weekday = WEEKDAYS[candidate_date.weekday()]
         weekday_entries = sorted(
             (
@@ -331,7 +349,9 @@ def get_next_planned_lessons_for_class(
     sequences: list[Sequence],
     timetable_entries: list[TimetableEntry],
     school_class: SchoolClass,
-    school_year_start: date,
+    school_calendar: SchoolCalendar,
+    school_closures: list[Closure],
+    class_closures: list[Closure],
 ) -> list[PlannedLesson]:
     planned_lessons = []
 
@@ -350,7 +370,8 @@ def get_next_planned_lessons_for_class(
             timetable_entries,
             school_class.id,
             subject_id,
-            school_year_start,
+            school_calendar,
+            [*school_closures, *class_closures],
         )
         if occurrence is None:
             continue
@@ -388,14 +409,18 @@ def get_next_planned_lesson_for_class(
     sequences: list[Sequence],
     timetable_entries: list[TimetableEntry],
     school_class: SchoolClass,
-    school_year_start: date,
+    school_calendar: SchoolCalendar,
+    school_closures: list[Closure],
+    class_closures: list[Closure],
 ) -> PlannedLesson | None:
     planned_lessons = get_next_planned_lessons_for_class(
         progress,
         sequences,
         timetable_entries,
         school_class,
-        school_year_start,
+        school_calendar,
+        school_closures,
+        class_closures,
     )
     return planned_lessons[0] if planned_lessons else None
 
@@ -405,7 +430,9 @@ def get_next_planned_lesson(
     sequences: list[Sequence],
     timetable_entries: list[TimetableEntry],
     school_classes: list[SchoolClass],
-    school_year_start: date,
+    school_calendar: SchoolCalendar,
+    school_closures: list[Closure],
+    class_closures_by_class_id: dict[str, list[Closure]],
 ) -> PlannedLesson | None:
     planned_lessons = []
 
@@ -415,7 +442,9 @@ def get_next_planned_lesson(
             sequences,
             timetable_entries,
             school_class,
-            school_year_start,
+            school_calendar,
+            school_closures,
+            class_closures_by_class_id[school_class.id],
         )
         if planned_lesson is not None:
             planned_lessons.append(planned_lesson)
