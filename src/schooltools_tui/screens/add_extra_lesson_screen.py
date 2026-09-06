@@ -22,9 +22,7 @@ class ExtraLessonFormResult:
     completes_next_lesson: bool
 
 
-class AddExtraLessonScreen(
-    SchooltoolsModalScreen[ExtraLessonFormResult | None]
-):
+class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None]):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
 
     def __init__(

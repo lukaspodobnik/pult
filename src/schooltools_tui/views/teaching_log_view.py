@@ -73,8 +73,7 @@ class TeachingLogEntryBlock(Vertical):
             yield Static(lesson_title, classes="teaching-log-lesson")
 
         yield Static(
-            f"{ACTION_LABELS[self.entry.action]} · "
-            f"{ORIGIN_LABELS[self.entry.origin]}",
+            f"{ACTION_LABELS[self.entry.action]} · {ORIGIN_LABELS[self.entry.origin]}",
             classes="teaching-log-kind",
         )
 

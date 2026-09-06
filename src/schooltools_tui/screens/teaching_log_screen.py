@@ -48,8 +48,7 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
                 config.active_school_year,
             )
             self.school_classes_by_id = {
-                school_class.id: school_class
-                for school_class in self.school_classes
+                school_class.id: school_class for school_class in self.school_classes
             }
             self.subjects = load_subjects(config.root)
             self.sequences = load_sequence_library(config.root)

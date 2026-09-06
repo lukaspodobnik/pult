@@ -22,7 +22,12 @@ from schooltools_tui.progress.class_progress import (
     save_class_progress,
     validate_class_progress,
 )
-from schooltools_tui.school.period import Period, PeriodsFileError, load_periods, save_periods
+from schooltools_tui.school.period import (
+    Period,
+    PeriodsFileError,
+    load_periods,
+    save_periods,
+)
 from schooltools_tui.school.school_class import (
     SchoolClass,
     get_school_class_path,
@@ -131,9 +136,14 @@ def test_class_progress_roundtrip(tmp_path, school_class, sequences):
         (ActiveSequence("mathematik", "sequence-1"),),
         (
             TeachingLogEntry(
-                date(2026, 9, 7), "mathematik", "sequence-1",
-                TeachingAction.COMPLETED, TeachingOrigin.SCHEDULED,
-                "Erledigt", "lesson-1", 1,
+                date(2026, 9, 7),
+                "mathematik",
+                "sequence-1",
+                TeachingAction.COMPLETED,
+                TeachingOrigin.SCHEDULED,
+                "Erledigt",
+                "lesson-1",
+                1,
             ),
         ),
     )
@@ -146,8 +156,13 @@ def test_class_progress_roundtrip(tmp_path, school_class, sequences):
 def test_progress_rejects_duplicate_scheduled_occurrence():
     entries = tuple(
         TeachingLogEntry(
-            date(2026, 9, 7), "mathematik", "sequence-1", action,
-            TeachingOrigin.SCHEDULED, lesson_id="lesson-1", period=1,
+            date(2026, 9, 7),
+            "mathematik",
+            "sequence-1",
+            action,
+            TeachingOrigin.SCHEDULED,
+            lesson_id="lesson-1",
+            period=1,
         )
         for action in (TeachingAction.CONTINUED, TeachingAction.COMPLETED)
     )

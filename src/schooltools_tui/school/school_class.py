@@ -42,9 +42,7 @@ class SchoolClass:
             raise ValueError("Die Jahrgangsstufe muss zwischen 5 und 13 liegen.")
 
         if self.grade_level != id_grade_level:
-            raise ValueError(
-                "Die Jahrgangsstufe muss zur Klassenbezeichnung passen."
-            )
+            raise ValueError("Die Jahrgangsstufe muss zur Klassenbezeichnung passen.")
 
         if not self.subject_ids:
             raise ValueError("Es muss mindestens ein Fach gewählt werden.")

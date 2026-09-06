@@ -153,9 +153,7 @@ class AddClosureScreen(SchooltoolsModalScreen[ClosureFormResult | None]):
             closure.end,
             local_closures,
         ):
-            raise ValueError(
-                "Der Zeitraum enthält keinen verfügbaren Unterrichtstag."
-            )
+            raise ValueError("Der Zeitraum enthält keinen verfügbaren Unterrichtstag.")
 
     def _get_default_date(self) -> date:
         config = self.app_config
@@ -302,8 +300,7 @@ class EditClosuresScreen(SchooltoolsScreen[None]):
         entries.sort(key=self._entry_sort_key)
 
         self.entries_by_option_id = {
-            f"closure-{index}": entry
-            for index, entry in enumerate(entries)
+            f"closure-{index}": entry for index, entry in enumerate(entries)
         }
         option_list = self.query_one("#closures", OptionList)
         option_list.clear_options()
@@ -312,9 +309,7 @@ class EditClosuresScreen(SchooltoolsScreen[None]):
             for option_id, entry in self.entries_by_option_id.items()
         )
 
-        self.selected_option_id = (
-            next(iter(self.entries_by_option_id), None)
-        )
+        self.selected_option_id = next(iter(self.entries_by_option_id), None)
         has_entries = bool(self.entries_by_option_id)
         self.query_one("#delete-closure", Button).disabled = not has_entries
         if has_entries:
@@ -399,7 +394,7 @@ class EditClosuresScreen(SchooltoolsScreen[None]):
 
         entry = self.entries_by_option_id[self.selected_option_id]
 
-        def deletion_confirmed(confirmed: bool) -> None:
+        def deletion_confirmed(confirmed: bool | None) -> None:
             if confirmed:
                 self._delete_closure(entry)
 

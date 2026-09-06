@@ -14,9 +14,7 @@ from schooltools_tui.widgets.lesson_progress_bar import LessonProgressBar
 class SequenceProgressBlock(Vertical):
     def __init__(self, summary: SequenceProgressSummary) -> None:
         classes = (
-            "sequence-progress active"
-            if summary.is_active
-            else "sequence-progress"
+            "sequence-progress active" if summary.is_active else "sequence-progress"
         )
         super().__init__(classes=classes)
         self.summary = summary
@@ -121,8 +119,7 @@ class SubjectProgressBlock(Vertical):
             classes="next-lesson-title",
         )
         yield Static(
-            f"{planned_lesson.date:%d.%m.%Y} · "
-            f"{planned_lesson.period}. Stunde",
+            f"{planned_lesson.date:%d.%m.%Y} · {planned_lesson.period}. Stunde",
             classes="next-lesson-date",
         )
 

@@ -6,9 +6,7 @@ from typing import Any
 from schooltools_tui.storage import load_toml, save_toml
 
 ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
-CURRICULUM_SECTION_ID_PATTERN = re.compile(
-    r"[A-ZÄÖÜ]+[0-9]+ [0-9]+(?:\.[0-9]+)*"
-)
+CURRICULUM_SECTION_ID_PATTERN = re.compile(r"[A-ZÄÖÜ]+[0-9]+ [0-9]+(?:\.[0-9]+)*")
 SEQUENCES_DIRECTORY_NAME = Path("sequences")
 SEQUENCE_FILE_SUFFIX = ".toml"
 
@@ -251,9 +249,7 @@ def load_sequence_library(root: Path) -> list[Sequence]:
             path for path in grade_directory.iterdir() if path.is_dir()
         )
         for subject_directory in subject_directories:
-            sequences.extend(
-                load_sequences(root, grade_level, subject_directory.name)
-            )
+            sequences.extend(load_sequences(root, grade_level, subject_directory.name))
 
     return sequences
 

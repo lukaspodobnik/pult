@@ -88,16 +88,12 @@ def delete_timetable_entry(path: Path, weekday: str, period: int) -> None:
     """Entferne die Belegung eines Wochentags und einer Schulstunde."""
     entries = load_timetable(path)
     remaining_entries = [
-        entry
-        for entry in entries
-        if (entry.weekday, entry.period) != (weekday, period)
+        entry for entry in entries if (entry.weekday, entry.period) != (weekday, period)
     ]
     save_timetable(path, remaining_entries)
 
 
-def delete_timetable_entries_for_school_class(
-    path: Path, school_class_id: str
-) -> None:
+def delete_timetable_entries_for_school_class(path: Path, school_class_id: str) -> None:
     """Entferne sämtliche Stundenplaneinträge einer Klasse."""
     entries = load_timetable(path)
     remaining_entries = [

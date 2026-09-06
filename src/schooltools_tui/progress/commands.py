@@ -240,13 +240,8 @@ def set_active_sequence(
         subject_id,
         sequence_id,
     )
-    if all(
-        lesson.id in progressed_lesson_ids
-        for lesson in selected_sequence.lessons
-    ):
-        raise ProgressCommandError(
-            "Die ausgewählte Sequenz ist bereits abgeschlossen."
-        )
+    if all(lesson.id in progressed_lesson_ids for lesson in selected_sequence.lessons):
+        raise ProgressCommandError("Die ausgewählte Sequenz ist bereits abgeschlossen.")
 
     active_sequences = tuple(
         ActiveSequence(subject_id, sequence_id)
@@ -308,12 +303,15 @@ def _build_completion_result(
     )
     if next_lesson is not None:
         state = LessonCompletionState.CONTINUES_SEQUENCE
-    elif get_suggested_next_sequence(
-        progress,
-        sequences,
-        subject_id,
-        grade_level,
-    ) is not None:
+    elif (
+        get_suggested_next_sequence(
+            progress,
+            sequences,
+            subject_id,
+            grade_level,
+        )
+        is not None
+    ):
         state = LessonCompletionState.NEEDS_NEXT_SEQUENCE
     else:
         state = LessonCompletionState.COMPLETES_SUBJECT

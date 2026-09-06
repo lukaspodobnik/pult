@@ -96,13 +96,16 @@ def test_additional_completion_progresses_lesson(empty_progress, sequences):
     assert get_next_lesson(result.progress, sequences, "mathematik", 5).id == "lesson-2"
 
 
-def test_last_lesson_requests_next_sequence(
-    empty_progress, planned_lesson, sequences
-):
+def test_last_lesson_requests_next_sequence(empty_progress, planned_lesson, sequences):
     first = complete_lesson(empty_progress, planned_lesson, sequences).progress
     second_plan = PlannedLesson(
-        "5A", 5, "mathematik", "sequence-1", sequences[0].lessons[1],
-        date(2026, 9, 7), 2,
+        "5A",
+        5,
+        "mathematik",
+        "sequence-1",
+        sequences[0].lessons[1],
+        date(2026, 9, 7),
+        2,
     )
 
     result = complete_lesson(first, second_plan, sequences)
@@ -114,13 +117,23 @@ def test_last_lesson_of_only_sequence_completes_subject(
     empty_progress, planned_lesson, sequences
 ):
     one_lesson = Sequence(
-        "only", "M5 1", "mathematik", 5, "Einzig", 1,
+        "only",
+        "M5 1",
+        "mathematik",
+        5,
+        "Einzig",
+        1,
         [Lesson("only-lesson", "Ende", [], "")],
     )
     progress = ClassProgress((ActiveSequence("mathematik", "only"),), ())
     plan = PlannedLesson(
-        "5A", 5, "mathematik", "only", one_lesson.lessons[0],
-        date(2026, 9, 7), 1,
+        "5A",
+        5,
+        "mathematik",
+        "only",
+        one_lesson.lessons[0],
+        date(2026, 9, 7),
+        1,
     )
 
     result = complete_lesson(progress, plan, [one_lesson])

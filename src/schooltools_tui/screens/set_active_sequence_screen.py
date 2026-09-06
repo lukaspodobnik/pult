@@ -23,9 +23,7 @@ class ActiveSequenceFormResult:
     sequence_id: str
 
 
-class SetActiveSequenceScreen(
-    SchooltoolsModalScreen[ActiveSequenceFormResult | None]
-):
+class SetActiveSequenceScreen(SchooltoolsModalScreen[ActiveSequenceFormResult | None]):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
 
     def __init__(

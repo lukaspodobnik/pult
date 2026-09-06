@@ -8,7 +8,7 @@ from textual.message import Message
 from textual.widgets import DataTable, ProgressBar, Static
 
 from schooltools_tui.curriculum.sequence import Sequence
-from schooltools_tui.progress.class_progress import TeachingAction, TeachingLogEntry
+from schooltools_tui.progress.class_progress import TeachingAction
 from schooltools_tui.progress.queries import (
     DailyAdditionalEntry,
     DailyTimetableEntry,
@@ -75,7 +75,9 @@ class DailyScheduleRow(Horizontal):
     def compose(self) -> ComposeResult:
         entry = self.daily_entry.timetable_entry
         yield Static(
-            ACTION_ICONS.get(self.daily_entry.action, " "),
+            ACTION_ICONS.get(self.daily_entry.action, " ")
+            if self.daily_entry.action is not None
+            else " ",
             classes="day-status",
         )
         yield Static(f"{entry.period}.", classes="day-period")
@@ -157,8 +159,7 @@ class HomeView(Vertical):
             for sequence in sequences
         }
         self.timetable_entries_by_slot = {
-            (entry.weekday, entry.period): entry
-            for entry in timetable_entries
+            (entry.weekday, entry.period): entry for entry in timetable_entries
         }
         self.current_time_position: tuple[str | None, int | None] | None = None
         self._refresh_requested = False
@@ -273,9 +274,7 @@ class HomeView(Vertical):
         for period in self.periods:
             cells = []
             for weekday, _ in WEEKDAYS:
-                entry = self.timetable_entries_by_slot.get(
-                    (weekday, period.number)
-                )
+                entry = self.timetable_entries_by_slot.get((weekday, period.number))
                 if entry is None:
                     content = "--"
                 else:
@@ -382,9 +381,7 @@ def get_current_timetable_position(
     """Bestimme Wochentag und laufende Schulstunde für das Tabellenhighlight."""
     weekday_index = current_datetime.weekday()
     current_weekday = (
-        WEEKDAYS[weekday_index][0]
-        if weekday_index < len(WEEKDAYS)
-        else None
+        WEEKDAYS[weekday_index][0] if weekday_index < len(WEEKDAYS) else None
     )
     current_period = (
         get_period_at(periods, current_datetime.time())

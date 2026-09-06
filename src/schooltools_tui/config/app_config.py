@@ -6,6 +6,7 @@ from schooltools_tui.storage import load_toml, save_toml
 
 APP_CONFIG_PATH = Path.home() / ".config" / "schooltools-tui" / "config.toml"
 
+
 @dataclass
 class AppConfig:
     root: Path
@@ -29,6 +30,7 @@ def load_app_config() -> AppConfig | None:
         editor=data["editor"],
         active_school_year=data["active_school_year"],
     )
+
 
 def save_app_config(app_config: AppConfig) -> None:
     """Speichere die vollständige globale App-Konfiguration."""

@@ -30,9 +30,7 @@ def test_weekend_holiday_and_local_closure_are_not_school_days(
 ):
     assert not is_school_day(school_calendar, date(2026, 9, 12))
     assert not is_school_day(school_calendar, date(2026, 9, 14))
-    assert not is_school_day(
-        school_calendar, date(2026, 9, 9), [local_closure]
-    )
+    assert not is_school_day(school_calendar, date(2026, 9, 9), [local_closure])
     assert is_school_day(school_calendar, date(2026, 9, 10))
 
 
@@ -59,7 +57,9 @@ def test_has_school_day_handles_multi_day_closure(school_calendar):
 def test_calendar_roundtrip(tmp_path, school_calendar):
     (tmp_path / "calendars").mkdir()
     save_school_calendar(tmp_path, school_calendar)
-    assert load_school_calendar(tmp_path, school_calendar.school_year) == school_calendar
+    assert (
+        load_school_calendar(tmp_path, school_calendar.school_year) == school_calendar
+    )
 
 
 def test_local_closures_roundtrip_sorted(tmp_path):
@@ -71,7 +71,8 @@ def test_local_closures_roundtrip_sorted(tmp_path):
     ]
     save_school_closures(tmp_path, "2026-2027", closures)
     assert [item.name for item in load_school_closures(tmp_path, "2026-2027")] == [
-        "Früher", "Später"
+        "Früher",
+        "Später",
     ]
 
 
@@ -87,8 +88,10 @@ def test_official_closure_is_rejected_in_local_file(tmp_path):
     path = tmp_path / "school-years" / "2026-2027"
     path.mkdir(parents=True)
     closure = Closure(
-        "Feiertag", ClosureKind.PUBLIC_HOLIDAY,
-        date(2026, 10, 3), date(2026, 10, 3),
+        "Feiertag",
+        ClosureKind.PUBLIC_HOLIDAY,
+        date(2026, 10, 3),
+        date(2026, 10, 3),
     )
     with pytest.raises(ValueError):
         save_school_closures(tmp_path, "2026-2027", [closure])
@@ -103,10 +106,6 @@ def test_invalid_local_closure_file_raises_domain_error(tmp_path):
 
 
 def test_calendar_rejects_local_closures():
-    closure = Closure(
-        "Lokal", ClosureKind.LOCAL, date(2026, 9, 8), date(2026, 9, 8)
-    )
+    closure = Closure("Lokal", ClosureKind.LOCAL, date(2026, 9, 8), date(2026, 9, 8))
     with pytest.raises(ValueError):
-        SchoolCalendar(
-            "2026-2027", date(2026, 9, 7), date(2027, 7, 30), (closure,)
-        )
+        SchoolCalendar("2026-2027", date(2026, 9, 7), date(2027, 7, 30), (closure,))

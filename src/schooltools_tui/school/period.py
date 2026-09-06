@@ -74,11 +74,7 @@ def save_periods(root: Path, periods: list[Period]) -> None:
 def get_period_at(periods: list[Period], current_time: time) -> Period | None:
     """Gib die zum angegebenen Zeitpunkt laufende Schulstunde zurück."""
     return next(
-        (
-            period
-            for period in periods
-            if period.start <= current_time < period.end
-        ),
+        (period for period in periods if period.start <= current_time < period.end),
         None,
     )
 
@@ -121,4 +117,6 @@ def _validate_periods(periods: list[Period]) -> None:
 
     for previous, current in pairwise(periods):
         if previous.end > current.start:
-            raise PeriodsFileError("Unterrichtsstunden dürfen sich nicht überschneiden.")
+            raise PeriodsFileError(
+                "Unterrichtsstunden dürfen sich nicht überschneiden."
+            )

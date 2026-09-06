@@ -26,7 +26,9 @@ def load_csv(path: Path) -> list[dict[str, str]]:
         return list(reader)
 
 
-def save_csv(path: Path, fieldnames: tuple[str, ...], rows: Iterable[dict[str, str]]) -> None:
+def save_csv(
+    path: Path, fieldnames: tuple[str, ...], rows: Iterable[dict[str, str]]
+) -> None:
     """Ersetze eine CSV-Datei durch die übergebenen Zeilen und Spalten."""
     with path.open("w", newline="") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)

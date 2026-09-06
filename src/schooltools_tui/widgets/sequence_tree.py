@@ -17,16 +17,15 @@ class SequenceTree(Tree[Sequence | None]):
         """Befülle den Baum nach Fach, Jahrgangsstufe, Kapitel und Sequenz."""
         self.root.remove_children()
 
-        subjects_by_id = {
-            subject.id: subject
-            for subject in subjects
-        }
+        subjects_by_id = {subject.id: subject for subject in subjects}
         unknown_subject_ids = {
             sequence.subject_id for sequence in sequences
         } - subjects_by_id.keys()
         if unknown_subject_ids:
             subject_ids = ", ".join(sorted(unknown_subject_ids))
-            raise ValueError(f"Unbekannte Fach-IDs in der Sequenzbibliothek: {subject_ids}")
+            raise ValueError(
+                f"Unbekannte Fach-IDs in der Sequenzbibliothek: {subject_ids}"
+            )
 
         sequences_by_subject: dict[str, list[Sequence]] = {}
         for sequence in sequences:

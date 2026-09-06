@@ -9,9 +9,7 @@ from schooltools_tui.school.timetable import (
     get_timetable_path,
 )
 
-SCHOOL_YEAR_DIRECTORIES = (
-    Path("classes"),
-)
+SCHOOL_YEAR_DIRECTORIES = (Path("classes"),)
 
 
 def initialize_school_year(root: Path, year: str) -> None:

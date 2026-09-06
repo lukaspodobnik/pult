@@ -2,6 +2,24 @@
 
 Eine persönliche TUI zur Planung und Begleitung des Schulalltags.
 
+## Entwicklung
+
+Mit `uv sync` werden die App und die Entwicklungswerkzeuge installiert.
+Mit installiertem `just` führt `just check` alle vier Prüfungen unten
+nacheinander aus. Beim ersten Fehler stoppt die Prüfung; Dateien werden
+dabei nicht automatisch korrigiert.
+
+```bash
+uv run schooltools-tui       # App starten
+uv run pytest               # Tests ausführen
+uv run ruff check .          # Code und Imports prüfen
+uv run ruff format --check . # Formatierung prüfen
+uv run pyright              # Typen im Anwendungscode prüfen
+```
+
+Automatische Bereinigung: `uv run ruff check . --fix`, danach
+`uv run ruff format .`. Ruff prüft auch die Tests; Pyright prüft `src`.
+
 ## Geplanter Funktionsumfang für Version 1
 
 ### Einrichtung und Verwaltung

@@ -48,11 +48,11 @@ from schooltools_tui.school.period import load_periods
 from schooltools_tui.school.school_class import SchoolClass, load_school_classes
 from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.school.timetable import get_timetable_path, load_timetable
-from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.add_extra_lesson_screen import (
     AddExtraLessonScreen,
     ExtraLessonFormResult,
 )
+from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
 from schooltools_tui.screens.confirm_undo_screen import ConfirmUndoScreen
 from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
@@ -61,11 +61,11 @@ from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.select_next_sequence_screen import (
     SelectNextSequenceScreen,
 )
+from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
 from schooltools_tui.screens.set_active_sequence_screen import (
     ActiveSequenceFormResult,
     SetActiveSequenceScreen,
 )
-from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
 from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
@@ -168,9 +168,7 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         year = config.active_school_year
         try:
-            timetable_entries = load_timetable(
-                get_timetable_path(config.root, year)
-            )
+            timetable_entries = load_timetable(get_timetable_path(config.root, year))
             periods = load_periods(config.root)
             subjects = load_subjects(config.root)
             sequences = load_sequence_library(config.root)
@@ -337,9 +335,7 @@ class MainScreen(SchooltoolsScreen[None]):
                 school_class.id: school_class for school_class in school_classes
             }
             sequences = load_sequence_library(config.root)
-            timetable_entries = load_timetable(
-                get_timetable_path(config.root, year)
-            )
+            timetable_entries = load_timetable(get_timetable_path(config.root, year))
             school_calendar = load_school_calendar(config.root, year)
             school_closures = load_school_closures(config.root, year)
             if self.active_school_class_id is None:
@@ -374,9 +370,7 @@ class MainScreen(SchooltoolsScreen[None]):
                     else None
                 )
             else:
-                school_class = self.school_classes_by_id[
-                    self.active_school_class_id
-                ]
+                school_class = self.school_classes_by_id[self.active_school_class_id]
                 progress = load_class_progress(
                     config.root,
                     year,
@@ -406,9 +400,7 @@ class MainScreen(SchooltoolsScreen[None]):
             )
             return None
 
-        school_class = self.school_classes_by_id[
-            planned_lesson.school_class_id
-        ]
+        school_class = self.school_classes_by_id[planned_lesson.school_class_id]
         return PlannedLessonContext(
             school_class=school_class,
             progress=progress,
@@ -644,7 +636,7 @@ class MainScreen(SchooltoolsScreen[None]):
             )
             return
 
-        async def undo_confirmed(confirmed: bool) -> None:
+        async def undo_confirmed(confirmed: bool | None) -> None:
             if not confirmed:
                 return
 
@@ -825,10 +817,7 @@ class MainScreen(SchooltoolsScreen[None]):
                 "das Fach ist vollständig abgeschlossen."
             )
         else:
-            self.notify(
-                f"{school_class.id}: '{lesson_title}' "
-                f"{action_description}."
-            )
+            self.notify(f"{school_class.id}: '{lesson_title}' {action_description}.")
 
     @on(OptionList.OptionSelected, "#management-picker")
     def management_picker_selected(self, event: OptionList.OptionSelected) -> None:

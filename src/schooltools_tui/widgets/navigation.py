@@ -15,9 +15,7 @@ class ViewPicker(OptionList):
 
         options = [Option("Home", id="home")]
         for school_class in school_classes:
-            options.append(
-                Option(school_class.id, id=f"class-{school_class.id}")
-            )
+            options.append(Option(school_class.id, id=f"class-{school_class.id}"))
 
         self.add_options(options)
 

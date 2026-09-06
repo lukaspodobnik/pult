@@ -13,8 +13,8 @@ from schooltools_tui.school.calendar import (
     SchoolCalendar,
     is_school_day,
 )
-from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.period import Period
+from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.timetable import TimetableEntry
 
 WEEKDAYS = (
@@ -91,8 +91,7 @@ def get_school_year_progress(
 ) -> SchoolYearProgressSummary:
     """Berechne den vergangenen Anteil des Schuljahres aus allen Kalendertagen."""
     total_day_count = (
-        school_calendar.last_school_day
-        - school_calendar.first_school_day
+        school_calendar.last_school_day - school_calendar.first_school_day
     ).days + 1
 
     if current_date < school_calendar.first_school_day:
@@ -100,9 +99,7 @@ def get_school_year_progress(
     elif current_date > school_calendar.last_school_day:
         elapsed_day_count = total_day_count
     else:
-        elapsed_day_count = (
-            current_date - school_calendar.first_school_day
-        ).days + 1
+        elapsed_day_count = (current_date - school_calendar.first_school_day).days + 1
 
     return SchoolYearProgressSummary(
         school_year=school_calendar.school_year,
@@ -270,8 +267,7 @@ def _get_daily_additional_entries(
         DailyAdditionalEntry(school_class_id, entry)
         for school_class_id, progress in progresses_by_class_id.items()
         for entry in progress.entries
-        if entry.date == current_date
-        and entry.origin is TeachingOrigin.ADDITIONAL
+        if entry.date == current_date and entry.origin is TeachingOrigin.ADDITIONAL
     ]
     entries.sort(
         key=lambda item: (
@@ -396,16 +392,12 @@ def get_class_progress_summary(
                 continue
 
             completed_lesson_count = sum(
-                progressed_actions_by_lesson.get(
-                    (subject_id, sequence.id, lesson.id)
-                )
+                progressed_actions_by_lesson.get((subject_id, sequence.id, lesson.id))
                 is TeachingAction.COMPLETED
                 for lesson in sequence.lessons
             )
             skipped_lesson_count = sum(
-                progressed_actions_by_lesson.get(
-                    (subject_id, sequence.id, lesson.id)
-                )
+                progressed_actions_by_lesson.get((subject_id, sequence.id, lesson.id))
                 is TeachingAction.SKIPPED
                 for lesson in sequence.lessons
             )
@@ -420,8 +412,7 @@ def get_class_progress_summary(
                     skipped_lesson_count=skipped_lesson_count,
                     total_lesson_count=len(sequence.lessons),
                     is_active=(
-                        active_sequence_ids_by_subject_id.get(subject_id)
-                        == sequence.id
+                        active_sequence_ids_by_subject_id.get(subject_id) == sequence.id
                     ),
                 )
             )
@@ -430,12 +421,10 @@ def get_class_progress_summary(
             SubjectProgressSummary(
                 subject_id=subject_id,
                 completed_lesson_count=sum(
-                    sequence.completed_lesson_count
-                    for sequence in sequence_summaries
+                    sequence.completed_lesson_count for sequence in sequence_summaries
                 ),
                 skipped_lesson_count=sum(
-                    sequence.skipped_lesson_count
-                    for sequence in sequence_summaries
+                    sequence.skipped_lesson_count for sequence in sequence_summaries
                 ),
                 total_lesson_count=sum(
                     sequence.total_lesson_count for sequence in sequence_summaries
@@ -557,13 +546,9 @@ def get_available_next_sequences(
             for entry in progress.entries
             if entry.subject_id == subject_id
             and entry.sequence_id == sequence.id
-            and entry.action
-            in {TeachingAction.COMPLETED, TeachingAction.SKIPPED}
+            and entry.action in {TeachingAction.COMPLETED, TeachingAction.SKIPPED}
         }
-        if any(
-            lesson.id not in progressed_lesson_ids
-            for lesson in sequence.lessons
-        ):
+        if any(lesson.id not in progressed_lesson_ids for lesson in sequence.lessons):
             available_sequences.append(sequence)
 
     available_sequences.sort(key=sequence_sort_key)
@@ -603,11 +588,7 @@ def get_next_scheduled_occurrence(
 
         weekday = WEEKDAYS[candidate_date.weekday()]
         weekday_entries = sorted(
-            (
-                entry
-                for entry in matching_entries
-                if entry.weekday == weekday
-            ),
+            (entry for entry in matching_entries if entry.weekday == weekday),
             key=lambda entry: entry.period,
         )
 
@@ -664,8 +645,7 @@ def _get_matching_timetable_entries(
     return [
         entry
         for entry in timetable_entries
-        if entry.subject_id == subject_id
-        and entry.school_class_id == school_class_id
+        if entry.subject_id == subject_id and entry.school_class_id == school_class_id
     ]
 
 
@@ -677,8 +657,7 @@ def _get_last_scheduled_occurrence(
     scheduled_entries = [
         entry
         for entry in progress.entries
-        if entry.subject_id == subject_id
-        and entry.origin is TeachingOrigin.SCHEDULED
+        if entry.subject_id == subject_id and entry.origin is TeachingOrigin.SCHEDULED
     ]
     last_occurrence = max(
         scheduled_entries,

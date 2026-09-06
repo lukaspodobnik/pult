@@ -14,8 +14,8 @@ from schooltools_tui.school.school_class import (
     SchoolClass,
     get_grade_level_from_school_class_id,
 )
-from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 from schooltools_tui.school.subject import Subject, load_subjects
+from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 
 
 class SchoolClassSetupScreen(SchooltoolsModalScreen[None]):

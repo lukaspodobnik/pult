@@ -10,12 +10,12 @@ from schooltools_tui.progress.class_progress import (
     save_class_progress,
     validate_class_progress,
 )
+from schooltools_tui.school.calendar import create_empty_class_closures
 from schooltools_tui.school.school_class import (
     SchoolClass,
     get_school_class_path,
     save_school_class,
 )
-from schooltools_tui.school.calendar import create_empty_class_closures
 from schooltools_tui.school.subject import load_subjects
 
 
@@ -28,9 +28,7 @@ def initialize_school_class(root: Path, year: str, school_class: SchoolClass) ->
     class_directory = get_school_class_path(root, year, school_class.id).parent
 
     if class_directory.exists():
-        raise SchoolClassSetupError(
-            f"Die Klasse '{school_class.id}' existiert schon."
-        )
+        raise SchoolClassSetupError(f"Die Klasse '{school_class.id}' existiert schon.")
 
     subjects_by_id = {subject.id: subject for subject in load_subjects(root)}
     sequences = load_sequence_library(root)

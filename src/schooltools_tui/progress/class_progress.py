@@ -168,8 +168,7 @@ class ClassProgress:
             raise TypeError("Protokolleinträge müssen als Tupel angegeben werden.")
 
         subject_ids = [
-            active_sequence.subject_id
-            for active_sequence in self.active_sequences
+            active_sequence.subject_id for active_sequence in self.active_sequences
         ]
         if len(subject_ids) != len(set(subject_ids)):
             raise ValueError("Pro Fach darf nur eine Sequenz aktiv sein.")
@@ -187,8 +186,7 @@ class ClassProgress:
         progressed_lessons = [
             (entry.subject_id, entry.sequence_id, entry.lesson_id)
             for entry in self.entries
-            if entry.action
-            in {TeachingAction.COMPLETED, TeachingAction.SKIPPED}
+            if entry.action in {TeachingAction.COMPLETED, TeachingAction.SKIPPED}
         ]
         if len(progressed_lessons) != len(set(progressed_lessons)):
             raise ValueError(
@@ -204,8 +202,7 @@ def validate_class_progress(
     """Prüfe den Fortschritt gegen Klasse, Fächer und Sequenzbibliothek."""
     expected_subject_ids = set(school_class.subject_ids)
     active_subject_ids = {
-        active_sequence.subject_id
-        for active_sequence in progress.active_sequences
+        active_sequence.subject_id for active_sequence in progress.active_sequences
     }
     if active_subject_ids != expected_subject_ids:
         missing_subject_ids = sorted(expected_subject_ids - active_subject_ids)
@@ -244,9 +241,7 @@ def validate_class_progress(
                 f"{school_class.grade_level}. Jahrgangsstufe nicht."
             )
 
-    progressed_entries_by_sequence: dict[
-        tuple[str, str], list[TeachingLogEntry]
-    ] = {}
+    progressed_entries_by_sequence: dict[tuple[str, str], list[TeachingLogEntry]] = {}
     for entry in progress.entries:
         if entry.subject_id not in expected_subject_ids:
             raise ClassProgressValidationError(
@@ -345,10 +340,7 @@ def save_class_progress(
             }
             for active_sequence in progress.active_sequences
         ],
-        "entries": [
-            _serialize_teaching_log_entry(entry)
-            for entry in progress.entries
-        ],
+        "entries": [_serialize_teaching_log_entry(entry) for entry in progress.entries],
     }
     save_toml(get_class_progress_path(root, year, school_class_id), data)
 
@@ -439,9 +431,7 @@ def _optional_string(data: dict[str, Any], key: str) -> str | None:
 
 def _optional_integer(data: dict[str, Any], key: str) -> int | None:
     value = data.get(key)
-    if value is not None and (
-        isinstance(value, bool) or not isinstance(value, int)
-    ):
+    if value is not None and (isinstance(value, bool) or not isinstance(value, int)):
         raise TypeError(f"'{key}' muss eine ganze Zahl sein.")
     return value
 

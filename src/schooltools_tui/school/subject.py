@@ -67,7 +67,9 @@ def load_subjects(root: Path) -> list[Subject]:
         raise SubjectFileError("Die Fächerdatei muss eine Liste 'subjects' enthalten.")
 
     if len(subjects) == 0:
-        raise SubjectFileError("Die Liste 'subjects' in der Fächerdatei darf nicht leer sein.")
+        raise SubjectFileError(
+            "Die Liste 'subjects' in der Fächerdatei darf nicht leer sein."
+        )
 
     try:
         loaded_subjects = [

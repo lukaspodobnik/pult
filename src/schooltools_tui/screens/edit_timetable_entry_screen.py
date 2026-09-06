@@ -8,9 +8,9 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Input, Label, Select
 
 from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 from schooltools_tui.school.subject import Subject
 from schooltools_tui.school.timetable import TimetableEntry
+from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 
 
 class TimetableEditAction(Enum):
@@ -24,9 +24,7 @@ class TimetableEditResult:
     entry: TimetableEntry
 
 
-class EditTimetabelEntryScreen(
-    SchooltoolsModalScreen[TimetableEditResult | None]
-):
+class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None]):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
 
     def __init__(

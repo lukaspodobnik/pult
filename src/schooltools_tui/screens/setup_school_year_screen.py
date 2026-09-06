@@ -38,9 +38,9 @@ class SchoolYearSetupScreen(SchooltoolsScreen[str]):
         option_list = self.query_one("#school-years", OptionList)
         school_year_options = get_school_year_options(self.app_config.root)
         selected_school_year = get_likely_school_year(school_year_options)
-        option_list.highlighted = [
-            year for _, year in school_year_options
-        ].index(selected_school_year)
+        option_list.highlighted = [year for _, year in school_year_options].index(
+            selected_school_year
+        )
         option_list.focus()
 
     @on(OptionList.OptionSelected, "#school-years")

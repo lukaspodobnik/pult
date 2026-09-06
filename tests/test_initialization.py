@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from schooltools_tui.config import AppConfig
@@ -9,7 +7,10 @@ from schooltools_tui.initialization.school_class import (
     initialize_school_class,
 )
 from schooltools_tui.initialization.school_year import initialize_school_year
-from schooltools_tui.initialization.schooltools import SetupError, initialize_schooltools
+from schooltools_tui.initialization.schooltools import (
+    SetupError,
+    initialize_schooltools,
+)
 from schooltools_tui.progress.class_progress import load_class_progress
 from schooltools_tui.school.calendar import (
     get_class_closures_path,
@@ -21,9 +22,7 @@ from schooltools_tui.school.school_class import SchoolClass, get_school_class_pa
 from schooltools_tui.school.timetable import get_timetable_path, load_timetable
 
 
-def test_full_initialization_copies_defaults_without_real_config(
-    tmp_path, monkeypatch
-):
+def test_full_initialization_copies_defaults_without_real_config(tmp_path, monkeypatch):
     saved = []
     monkeypatch.setattr(
         "schooltools_tui.initialization.schooltools.save_app_config",
@@ -110,7 +109,10 @@ def test_illegal_subject_for_grade_is_rejected(tmp_path, monkeypatch):
         )
 
 
-@pytest.mark.parametrize("root, editor, year", [("", "nvim", "2026-2027"), ("x", "", "2026-2027"), ("x", "nvim", "")])
+@pytest.mark.parametrize(
+    "root, editor, year",
+    [("", "nvim", "2026-2027"), ("x", "", "2026-2027"), ("x", "nvim", "")],
+)
 def test_setup_requires_all_values(tmp_path, monkeypatch, root, editor, year):
     monkeypatch.setattr(
         "schooltools_tui.initialization.schooltools.save_app_config",

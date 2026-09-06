@@ -4,8 +4,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from schooltools_tui.school.calendar import (
-    CALENDARS_DIRECTORY_NAME,
     CALENDAR_FILE_SUFFIX,
+    CALENDARS_DIRECTORY_NAME,
     load_school_calendar,
     validate_school_year,
 )

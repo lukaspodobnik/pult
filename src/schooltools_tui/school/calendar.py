@@ -140,12 +140,7 @@ def get_school_calendar_path(root: Path, year: str) -> Path:
 def get_school_closures_path(root: Path, year: str) -> Path:
     """Gib den Pfad der schulweiten lokalen Ausfälle zurück."""
     year = validate_school_year(year)
-    return (
-        root
-        / SCHOOL_YEARS_DIRECTORY_NAME
-        / year
-        / CLOSURES_FILE_NAME
-    )
+    return root / SCHOOL_YEARS_DIRECTORY_NAME / year / CLOSURES_FILE_NAME
 
 
 def get_class_closures_path(
@@ -186,9 +181,7 @@ def load_school_calendar(root: Path, year: str) -> SchoolCalendar:
             ),
         )
     except (KeyError, TypeError, ValueError) as error:
-        raise CalendarFileError(
-            f"Ungültige Kalenderdatei '{path}': {error}"
-        ) from error
+        raise CalendarFileError(f"Ungültige Kalenderdatei '{path}': {error}") from error
 
     expected_year = validate_school_year(year)
     if calendar.school_year != expected_year:
@@ -278,9 +271,7 @@ def is_date_closed(
     if type(target_date) is not date:
         raise TypeError("Das zu prüfende Datum muss ein Datum ohne Uhrzeit sein.")
 
-    return any(
-        closure.start <= target_date <= closure.end for closure in closures
-    )
+    return any(closure.start <= target_date <= closure.end for closure in closures)
 
 
 def is_school_day(
@@ -337,9 +328,7 @@ def _load_local_closures(path: Path, year: str) -> list[Closure]:
         ]
         _validate_local_closures(closures, year)
     except (KeyError, TypeError, ValueError) as error:
-        raise ClosuresFileError(
-            f"Ungültige Ausfalldatei '{path}': {error}"
-        ) from error
+        raise ClosuresFileError(f"Ungültige Ausfalldatei '{path}': {error}") from error
 
     return sorted(closures, key=_closure_sort_key)
 
@@ -366,9 +355,7 @@ def _save_local_closures(
     _validate_local_closures(closures, year)
     sorted_closures = sorted(closures, key=_closure_sort_key)
     data: dict[str, Any] = {
-        "closures": [
-            _serialize_closure(closure) for closure in sorted_closures
-        ]
+        "closures": [_serialize_closure(closure) for closure in sorted_closures]
     }
     save_toml(path, data)
 
@@ -405,9 +392,7 @@ def _validate_local_closures(
 ) -> None:
     closures = tuple(closures)
     if any(closure.kind is not ClosureKind.LOCAL for closure in closures):
-        raise ValueError(
-            "Lokale Ausfalldateien dürfen nur lokale Ausfälle enthalten."
-        )
+        raise ValueError("Lokale Ausfalldateien dürfen nur lokale Ausfälle enthalten.")
     _validate_closures(closures, year)
 
 

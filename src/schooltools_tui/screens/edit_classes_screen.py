@@ -10,15 +10,15 @@ from schooltools_tui.school.school_class import (
     delete_school_class,
     load_school_classes,
 )
+from schooltools_tui.school.timetable import (
+    delete_timetable_entries_for_school_class,
+    get_timetable_path,
+)
 from schooltools_tui.screens.base_screen import (
     SchooltoolsModalScreen,
     SchooltoolsScreen,
 )
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
-from schooltools_tui.school.timetable import (
-    delete_timetable_entries_for_school_class,
-    get_timetable_path,
-)
 
 
 class ConfirmClassDeletionScreen(SchooltoolsModalScreen[bool]):
@@ -95,9 +95,7 @@ class EditClassesScreen(SchooltoolsScreen[None]):
 
     def refresh_classes(self) -> None:
         config = self.app_config
-        school_classes = load_school_classes(
-            config.root, config.active_school_year
-        )
+        school_classes = load_school_classes(config.root, config.active_school_year)
         option_list = self.query_one("#school-classes", OptionList)
         option_list.clear_options()
         option_list.add_options(
@@ -105,9 +103,7 @@ class EditClassesScreen(SchooltoolsScreen[None]):
             for school_class in school_classes
         )
 
-        self.selected_school_class_id = (
-            school_classes[0].id if school_classes else None
-        )
+        self.selected_school_class_id = school_classes[0].id if school_classes else None
         self.query_one("#delete-school-class", Button).disabled = not school_classes
 
         if school_classes:
@@ -115,9 +111,7 @@ class EditClassesScreen(SchooltoolsScreen[None]):
             option_list.focus()
 
     @on(OptionList.OptionHighlighted, "#school-classes")
-    def school_class_highlighted(
-        self, event: OptionList.OptionHighlighted
-    ) -> None:
+    def school_class_highlighted(self, event: OptionList.OptionHighlighted) -> None:
         self.selected_school_class_id = event.option_id
 
     @on(Button.Pressed, "#create-school-class")
@@ -143,7 +137,7 @@ class EditClassesScreen(SchooltoolsScreen[None]):
             self.school_class_deletion_confirmed,
         )
 
-    def school_class_deletion_confirmed(self, confirmed: bool) -> None:
+    def school_class_deletion_confirmed(self, confirmed: bool | None) -> None:
         if not confirmed or self.selected_school_class_id is None:
             return
 
