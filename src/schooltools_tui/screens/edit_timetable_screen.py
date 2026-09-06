@@ -20,7 +20,7 @@ from schooltools_tui.screens.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
-from schooltools_tui.views.home_view import WEEKDAYS
+from schooltools_tui.widgets.dashboard.labels import WEEKDAYS
 
 
 class EditTimetableScreen(SchooltoolsScreen[None]):
