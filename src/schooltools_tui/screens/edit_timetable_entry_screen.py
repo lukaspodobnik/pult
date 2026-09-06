@@ -118,7 +118,12 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
             return
 
         subject_select = self.query_one("#subject", Select)
-        subject_select.set_options(self.get_subject_options(str(event.value)))
+        selected_subject = subject_select.value
+        options = self.get_subject_options(str(event.value))
+        subject_select.set_options(options)
+        # Auch beim Mounten kommt Changed; eine weiterhin gültige Auswahl behalten.
+        if selected_subject in {subject_id for _, subject_id in options}:
+            subject_select.value = selected_subject
 
     @on(Button.Pressed, "#save-timetable-entry")
     def save_timetable_entry(self) -> None:
