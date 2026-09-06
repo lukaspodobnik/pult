@@ -142,7 +142,8 @@ class MainScreen(SchooltoolsScreen[None]):
         """Merke die Auswahl; erst nach einer kurzen Ruhephase wird sie aufgebaut."""
         self._pending_view_id = event.option_id
         self._schedule_view_change()
-        self.refresh_bindings()
+        # Die Befehlssperre wird von check_action bei jeder Eingabe geprüft.
+        # Den Footer erst nach dem Wechsel aktualisieren, nicht pro Pfeiltaste.
 
     def _schedule_view_change(self) -> None:
         if self._view_timer is not None:
@@ -193,7 +194,6 @@ class MainScreen(SchooltoolsScreen[None]):
     async def show_home_view(self) -> None:
         """Lade alle Dashboarddaten neu und zeige anschließend die HomeView."""
         self.active_school_class_id = None
-        self.refresh_bindings()
         config = self.app_config
         try:
             data = load_planning_data(config, sequences=self.sequence_library)
@@ -233,6 +233,8 @@ class MainScreen(SchooltoolsScreen[None]):
             )
         await self.switch_view(view)
         view.refresh_time_highlight()
+        if self._pending_view_id is None:
+            self.refresh_bindings()
 
     @on(HomeView.DashboardRefreshRequested)
     async def refresh_home_dashboard(
@@ -265,7 +267,6 @@ class MainScreen(SchooltoolsScreen[None]):
             return
 
         self.active_school_class_id = school_class.id
-        self.refresh_bindings()
         views = self.query(SchoolClassView)
         if views:
             view = views.first()
@@ -273,6 +274,8 @@ class MainScreen(SchooltoolsScreen[None]):
         else:
             view = SchoolClassView(school_class, subjects, progress_summaries)
         await self.switch_view(view)
+        if self._pending_view_id is None:
+            self.refresh_bindings()
 
     def check_action(
         self,

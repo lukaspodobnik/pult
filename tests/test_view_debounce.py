@@ -1,4 +1,5 @@
 import asyncio
+from unittest.mock import AsyncMock, Mock
 
 from test_ui_integration import prepare_root
 from textual.screen import Screen
@@ -36,9 +37,17 @@ def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypa
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.3)
             screen = app.screen
+            for _ in range(20):
+                if screen._pending_view_id is None:
+                    break
+                await pilot.pause(0.05)
             picker = screen.query_one(ViewPicker)
             home = screen.query_one(HomeView)
             assert builds == ["home"]
+            refresh_bindings = Mock(wraps=screen.refresh_bindings)
+            monkeypatch.setattr(screen, "refresh_bindings", refresh_bindings)
+            complete = AsyncMock()
+            monkeypatch.setattr(screen, "action_complete_next_lesson", complete)
             for i in range(20):
                 picker.highlighted = 1 if i % 2 == 0 else 2
             await pilot.pause(0.02)
@@ -46,10 +55,17 @@ def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypa
             assert screen.query_one(HomeView) is home
             assert builds == ["home"]
             assert screen.check_action("complete_next_lesson", ()) is None
+            assert refresh_bindings.call_count == 0
+            # Auch ohne Footer-Neuaufbau blockiert Textual die tatsächliche Aktion.
+            await app.run_action("complete_next_lesson", default_namespace=screen)
+            complete.assert_not_awaited()
             await pilot.pause(0.3)
             assert builds == ["home", "5B"]
             assert screen.active_school_class_id == "5B"
             assert screen._pending_view_id is None
+            assert refresh_bindings.call_count == 1
+            await app.run_action("complete_next_lesson", default_namespace=screen)
+            complete.assert_awaited_once()
 
             picker.highlighted = 1
             await pilot.pause(0.02)

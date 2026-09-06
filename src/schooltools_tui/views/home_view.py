@@ -50,7 +50,7 @@ class HomeView(Vertical):
         sequences: list[Sequence],
         dashboard: HomeDashboardSummary,
     ) -> None:
-        """Behalte die View; baue vorerst nur bei Datenänderungen ihren Inhalt neu."""
+        """Reiche neue Daten an die bestehenden Dashboard-Widgets weiter."""
         subjects_by_id = {subject.id: subject for subject in subjects}
         sequences_by_key = {
             (sequence.grade_level, sequence.subject_id, sequence.id): sequence
@@ -72,9 +72,24 @@ class HomeView(Vertical):
         self._refresh_requested = False
         self._updating = True
         try:
-            await self.recompose()
+            self.query_one(SchoolYearProgress).update_data(
+                dashboard.school_year_progress
+            )
+            self.query_one(TimetablePanel).update_data(
+                timetable_entries, subjects_by_id, periods
+            )
+            self.query_one(NextLessonPanel).update_data(
+                dashboard.next_planned_lesson,
+                dashboard.daily_schedule.date,
+                subjects_by_id,
+                sequences_by_key,
+            )
+            await self.query_one(DailySchedulePanel).update_data(
+                dashboard.daily_schedule, subjects_by_id, sequences_by_key
+            )
         finally:
             self._updating = False
+        self.refresh_time_highlight()
 
     def compose(self) -> ComposeResult:
         yield SchoolYearProgress(self.dashboard.school_year_progress)

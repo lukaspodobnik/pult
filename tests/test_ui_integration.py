@@ -158,7 +158,14 @@ def test_class_view_log_binding_preselects_current_class(tmp_path, monkeypatch):
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
             app.screen.query_one(ViewPicker).highlighted = 1
-            await pilot.pause()
+            # Der Befehl ist bis zum abgeschlossenen Ansichtswechsel gesperrt.
+            for _ in range(20):
+                await pilot.pause(0.05)
+                if (
+                    app.screen.active_school_class_id == "5A"
+                    and app.screen._pending_view_id is None
+                ):
+                    break
             await pilot.press("l")
             await pilot.pause()
             assert isinstance(app.screen, TeachingLogScreen)

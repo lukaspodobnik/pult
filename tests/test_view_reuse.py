@@ -31,6 +31,10 @@ def test_views_are_reused_and_hidden_home_does_not_steal_selection(
             await pilot.pause(0.2)
             screen = app.screen
             switcher = screen.query_one(ContentSwitcher)
+            for _ in range(20):
+                if isinstance(switcher.visible_content, HomeView):
+                    break
+                await pilot.pause(0.05)
             home = screen.query_one(HomeView)
             timetable = home.query_one(TimetablePanel)
             assert len(switcher.children) == 1
@@ -60,7 +64,7 @@ def test_views_are_reused_and_hidden_home_does_not_steal_selection(
             await screen.show_home_view()
             assert screen.query_one(HomeView) is home
             assert home.timetable_entries == entries
-            assert home.query_one(TimetablePanel) is not timetable
+            assert home.query_one(TimetablePanel) is timetable
             assert "5A" in str(home.query_one(DataTable).get_cell("1", "monday"))
             assert len(switcher.children) == 2
 

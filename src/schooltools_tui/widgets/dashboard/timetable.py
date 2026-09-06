@@ -36,6 +36,51 @@ class TimetablePanel(Vertical):
         yield Static("STUNDENPLAN", classes="dashboard-heading")
         yield TimetableDataTable(id="schedule", cursor_type="none")
 
+    def update_data(
+        self,
+        timetable_entries: list[TimetableEntry],
+        subjects_by_id: dict[str, Subject],
+        periods: list[Period],
+    ) -> None:
+        """Aktualisiere Zellen; ändere die Tabellenstruktur nur bei neuen Stundenzeilen."""
+        old_numbers = [period.number for period in self.periods]
+        self.periods = periods
+        self.subjects_by_id = subjects_by_id
+        self.timetable_entries_by_slot = {
+            (entry.weekday, entry.period): entry for entry in timetable_entries
+        }
+        table = self.query_one(DataTable)
+        position = self.current_time_position or (None, None)
+        if old_numbers != [period.number for period in periods] or not table.columns:
+            table.clear(columns=True)
+            self.populate_timetable(*position)
+            return
+        for period in periods:
+            for weekday, _ in WEEKDAYS:
+                cell = self._cell(weekday, period.number, *position)
+                if table.get_cell(str(period.number), weekday) != cell:
+                    table.update_cell(
+                        str(period.number), weekday, cell, update_width=True
+                    )
+
+    def _cell(
+        self,
+        weekday: str,
+        period: int,
+        current_weekday: str | None,
+        current_period: int | None,
+    ) -> Text:
+        entry = self.timetable_entries_by_slot.get((weekday, period))
+        content = "--"
+        if entry is not None:
+            subject = self.subjects_by_id[entry.subject_id]
+            content = f"{entry.school_class_id}-{subject.short_name} {entry.room}"
+        return self.get_highlighted_text(
+            content,
+            is_current_row=period == current_period,
+            is_current_column=weekday == current_weekday,
+        )
+
     def refresh_time_highlight(self, current_datetime: datetime) -> None:
         """Baue die Tabelle nur bei veränderter Zeitmarkierung neu auf."""
         position = get_current_timetable_position(self.periods, current_datetime)
@@ -62,24 +107,10 @@ class TimetablePanel(Vertical):
             )
 
         for period in self.periods:
-            cells = []
-            for weekday, _ in WEEKDAYS:
-                entry = self.timetable_entries_by_slot.get((weekday, period.number))
-                if entry is None:
-                    content = "--"
-                else:
-                    subject = self.subjects_by_id[entry.subject_id]
-                    content = (
-                        f"{entry.school_class_id}-{subject.short_name} {entry.room}"
-                    )
-
-                cells.append(
-                    self.get_highlighted_text(
-                        content,
-                        is_current_row=period.number == current_period,
-                        is_current_column=weekday == current_weekday,
-                    )
-                )
+            cells = [
+                self._cell(weekday, period.number, current_weekday, current_period)
+                for weekday, _ in WEEKDAYS
+            ]
 
             row_label = self.get_highlighted_text(
                 str(period.number),

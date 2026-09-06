@@ -15,6 +15,19 @@ class SchoolYearProgress(Horizontal):
         super().__init__(id="school-year-progress")
         self.progress_summary = progress
 
+    def update_data(self, progress: SchoolYearProgressSummary) -> None:
+        """Aktualisiere die Jahresanzeige und den bestehenden Balken."""
+        self.progress_summary = progress
+        self.query_one("#school-year-progress-label", Static).update(
+            f"Schuljahr {format_school_year(progress.school_year)}"
+        )
+        self.query_one(ProgressBar).update(
+            total=progress.total_day_count, progress=progress.elapsed_day_count
+        )
+        self.query_one("#school-year-progress-percentage", Static).update(
+            f"{progress.percentage} %"
+        )
+
     def compose(self) -> ComposeResult:
         progress = self.progress_summary
         yield Static(

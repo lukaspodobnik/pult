@@ -35,32 +35,57 @@ class NextLessonPanel(Vertical):
 
     def compose(self) -> ComposeResult:
         yield Static(NEXT_LESSON_LABEL.upper(), classes="dashboard-heading")
+        for name, text in self._texts().items():
+            widget = Static(text, classes=name)
+            widget.display = bool(text)
+            yield widget
+
+    def update_data(
+        self,
+        planned_lesson: PlannedLesson | None,
+        today: date,
+        subjects_by_id: dict[str, Subject],
+        sequences_by_key: dict[tuple[int, str, str], Sequence],
+    ) -> None:
+        """Aktualisiere die festen Textfelder einschließlich des Leerzustands."""
+        self.planned_lesson = planned_lesson
+        self.today = today
+        self.subjects_by_id = subjects_by_id
+        self.sequences_by_key = sequences_by_key
+        for name, text in self._texts().items():
+            widget = self.query_one(f".{name}", Static)
+            widget.update(text)
+            widget.display = bool(text)
+
+    def _texts(self) -> dict[str, str]:
+        texts: dict[str, str] = dict.fromkeys(
+            (
+                "dashboard-empty",
+                "next-lesson-heading",
+                "next-lesson-sequence",
+                "next-lesson-name",
+                "next-lesson-occurrence",
+            ),
+            "",
+        )
         planned_lesson = self.planned_lesson
         if planned_lesson is None:
-            yield Static(
-                NO_NEXT_LESSON,
-                classes="dashboard-empty",
-            )
-            return
+            texts["dashboard-empty"] = NO_NEXT_LESSON
+            return texts
 
         subject = self.subjects_by_id[planned_lesson.subject_id]
         sequence = self._get_sequence(planned_lesson)
-        yield Static(
-            f"{planned_lesson.school_class_id} · {subject.name}",
-            classes="next-lesson-heading",
+        texts["next-lesson-heading"] = (
+            f"{planned_lesson.school_class_id} · {subject.name}"
         )
-        yield Static(
-            f"{sequence.curriculum_section_id} · {sequence.title}",
-            classes="next-lesson-sequence",
+        texts["next-lesson-sequence"] = (
+            f"{sequence.curriculum_section_id} · {sequence.title}"
         )
-        yield Static(
-            planned_lesson.lesson.title or UNTITLED_LESSON,
-            classes="next-lesson-name",
+        texts["next-lesson-name"] = planned_lesson.lesson.title or UNTITLED_LESSON
+        texts["next-lesson-occurrence"] = self._format_planned_occurrence(
+            planned_lesson
         )
-        yield Static(
-            self._format_planned_occurrence(planned_lesson),
-            classes="next-lesson-occurrence",
-        )
+        return texts
 
     def _get_sequence(self, planned_lesson: PlannedLesson) -> Sequence:
         return self.sequences_by_key[

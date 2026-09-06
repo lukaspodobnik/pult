@@ -62,8 +62,35 @@ class DailyScheduleRow(Horizontal):
                 classes="day-entry-heading",
             )
             lesson_title = self._get_lesson_title()
-            if lesson_title is not None:
-                yield Static(lesson_title, classes="day-entry-lesson")
+            lesson = Static(lesson_title or "", classes="day-entry-lesson")
+            lesson.display = lesson_title is not None
+            yield lesson
+
+    def update_data(
+        self,
+        daily_entry: DailyTimetableEntry,
+        subjects_by_id: dict[str, Subject],
+        sequences_by_key: dict[tuple[int, str, str], Sequence],
+    ) -> None:
+        """Ersetze Daten und Status einer bestehenden Tageszeile."""
+        self.daily_entry = daily_entry
+        self.subjects_by_id = subjects_by_id
+        self.sequences_by_key = sequences_by_key
+        for action in TeachingAction:
+            self.set_class(daily_entry.action == action, action.value)
+        self.set_class(daily_entry.is_time_highlighted, "time-highlighted")
+        entry = daily_entry.timetable_entry
+        self.query_one(".day-status", Static).update(
+            ACTION_ICONS.get(daily_entry.action, " ") if daily_entry.action else " "
+        )
+        self.query_one(".day-period", Static).update(f"{entry.period}.")
+        self.query_one(".day-entry-heading", Static).update(
+            f"{entry.school_class_id} · {subjects_by_id[entry.subject_id].short_name}"
+        )
+        title = self._get_lesson_title()
+        lesson = self.query_one(".day-entry-lesson", Static)
+        lesson.update(title or "")
+        lesson.display = title is not None
 
     def _get_lesson_title(self) -> str | None:
         if self.daily_entry.planned_lesson is not None:
@@ -105,11 +132,23 @@ class DailyAdditionalRow(Horizontal):
                 "· Zusatzunterricht",
                 classes="day-entry-heading",
             )
-            if self.entry.log_entry.comment:
-                yield Static(
-                    self.entry.log_entry.comment,
-                    classes="day-entry-lesson",
-                )
+            comment = Static(self.entry.log_entry.comment, classes="day-entry-lesson")
+            comment.display = bool(self.entry.log_entry.comment)
+            yield comment
+
+    def update_data(
+        self, entry: DailyAdditionalEntry, subjects_by_id: dict[str, Subject]
+    ) -> None:
+        """Aktualisiere einen Zusatztermin einschließlich optionalem Kommentar."""
+        self.entry = entry
+        self.subjects_by_id = subjects_by_id
+        self.query_one(".day-entry-heading", Static).update(
+            f"{entry.school_class_id} · "
+            f"{subjects_by_id[entry.log_entry.subject_id].short_name} · Zusatzunterricht"
+        )
+        comment = self.query_one(".day-entry-lesson", Static)
+        comment.update(entry.log_entry.comment)
+        comment.display = bool(entry.log_entry.comment)
 
 
 class DailySchedulePanel(Vertical):
@@ -133,11 +172,11 @@ class DailySchedulePanel(Vertical):
             classes="dashboard-heading",
         )
         with VerticalScroll(id="daily-schedule-entries"):
-            if not daily_schedule.timetable_entries:
-                yield Static(
-                    "Heute ist kein Unterricht geplant.",
-                    classes="dashboard-empty",
-                )
+            empty = Static(
+                "Heute ist kein Unterricht geplant.", classes="dashboard-empty"
+            )
+            empty.display = not daily_schedule.timetable_entries
+            yield empty
             for entry in daily_schedule.timetable_entries:
                 yield DailyScheduleRow(
                     entry,
@@ -145,13 +184,59 @@ class DailySchedulePanel(Vertical):
                     self.sequences_by_key,
                 )
 
-            if daily_schedule.additional_entries:
-                yield Static(
-                    "WEITERE EINTRÄGE",
-                    classes="daily-additional-heading",
+            heading = Static("WEITERE EINTRÄGE", classes="daily-additional-heading")
+            heading.display = bool(daily_schedule.additional_entries)
+            yield heading
+            for entry in daily_schedule.additional_entries:
+                yield DailyAdditionalRow(entry, self.subjects_by_id)
+
+    async def update_data(
+        self,
+        daily_schedule: DailyScheduleSummary,
+        subjects_by_id: dict[str, Subject],
+        sequences_by_key: dict[tuple[int, str, str], Sequence],
+    ) -> None:
+        """Verwende Tageszeilen wieder und passe nur deren Anzahl an."""
+        changed_day = self.daily_schedule.date != daily_schedule.date
+        self.daily_schedule = daily_schedule
+        self.subjects_by_id = subjects_by_id
+        self.sequences_by_key = sequences_by_key
+        self.query_one(".dashboard-heading", Static).update(
+            f"HEUTE · {WEEKDAY_NAMES[daily_schedule.date.weekday()].upper()}"
+        )
+        content = self.query_one("#daily-schedule-entries", VerticalScroll)
+        self.query_one(
+            ".dashboard-empty"
+        ).display = not daily_schedule.timetable_entries
+        heading = self.query_one(".daily-additional-heading")
+        heading.display = bool(daily_schedule.additional_entries)
+        rows = list(self.query(DailyScheduleRow))
+        for row, entry in zip(rows, daily_schedule.timetable_entries):
+            row.update_data(entry, subjects_by_id, sequences_by_key)
+        for row in rows[len(daily_schedule.timetable_entries) :]:
+            await row.remove()
+        if len(daily_schedule.timetable_entries) > len(rows):
+            await content.mount(
+                *(
+                    DailyScheduleRow(e, subjects_by_id, sequences_by_key)
+                    for e in daily_schedule.timetable_entries[len(rows) :]
+                ),
+                before=heading,
+            )
+        additional_rows = list(self.query(DailyAdditionalRow))
+        for row, entry in zip(additional_rows, daily_schedule.additional_entries):
+            row.update_data(entry, subjects_by_id)
+        for row in additional_rows[len(daily_schedule.additional_entries) :]:
+            await row.remove()
+        if len(daily_schedule.additional_entries) > len(additional_rows):
+            await content.mount(
+                *(
+                    DailyAdditionalRow(e, subjects_by_id)
+                    for e in daily_schedule.additional_entries[len(additional_rows) :]
                 )
-                for entry in daily_schedule.additional_entries:
-                    yield DailyAdditionalRow(entry, self.subjects_by_id)
+            )
+        if changed_day:
+            content.scroll_home(animate=False)
 
     def refresh_time_highlight(
         self, periods: list[Period], current_datetime: datetime
