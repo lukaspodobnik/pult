@@ -232,7 +232,7 @@ def set_active_sequence(
 
     if not selected_sequence.lessons:
         raise ProgressCommandError(
-            "Die ausgewählte Sequenz enthält noch keine Lessons."
+            "Die ausgewählte Sequenz enthält noch keine geplanten Stunden."
         )
 
     progressed_lesson_ids = _get_progressed_lesson_ids(
@@ -331,7 +331,7 @@ def _validate_planned_lesson(
     active_sequence = _get_active_sequence(progress, planned_lesson.subject_id)
     if active_sequence.sequence_id != planned_lesson.sequence_id:
         raise ProgressCommandError(
-            "Die geplante Lesson gehört nicht zur aktiven Sequenz."
+            "Die geplante Stunde gehört nicht zur aktiven Sequenz."
         )
 
     expected_lesson = get_next_lesson(
@@ -345,7 +345,7 @@ def _validate_planned_lesson(
 
     if expected_lesson.id != planned_lesson.lesson.id:
         raise ProgressCommandError(
-            "Nur die nächste offene Lesson kann bearbeitet werden."
+            "Nur die nächste offene geplante Stunde kann bearbeitet werden."
         )
 
 

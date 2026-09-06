@@ -80,7 +80,7 @@ class MainScreen(SchooltoolsScreen[None]):
     BINDINGS: ClassVar = [
         ("n", "complete_next_lesson", "Stunde abschließen"),
         ("s", "skip_next_lesson", "Stunde überspringen"),
-        ("c", "continue_next_lesson", "Lesson fortsetzen"),
+        ("c", "continue_next_lesson", "Stunde fortsetzen"),
         ("a", "cancel_next_lesson", "Ausfall eintragen"),
         ("p", "undo_last_entry", "Letzten Eintrag zurücknehmen"),
         ("z", "add_extra_lesson", "Zusatzunterricht"),
@@ -460,7 +460,7 @@ class MainScreen(SchooltoolsScreen[None]):
                     )
                     if lesson is None:
                         self.notify(
-                            "Für dieses Fach gibt es keine offene Lesson.",
+                            "Für dieses Fach gibt es keine offene geplante Stunde.",
                             severity="warning",
                         )
                         return

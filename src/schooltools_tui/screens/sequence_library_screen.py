@@ -119,6 +119,7 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
             return
 
         node.data = updated_sequence
+        node.set_label(updated_sequence.title)
 
         preview = self.query_one("#sequence-preview", SequencePreview)
         preview.show_sequence(updated_sequence)

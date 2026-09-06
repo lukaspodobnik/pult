@@ -7,6 +7,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Input, Label, Select
 
+from schooltools_tui.presentation import WEEKDAYS
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.subject import Subject
 from schooltools_tui.school.timetable import TimetableEntry
@@ -43,6 +44,7 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
         self.subjects_by_id = {subject.id: subject for subject in subjects}
 
     def compose(self) -> ComposeResult:
+        weekday_labels: dict[str, str] = dict(WEEKDAYS)
         selected_class_id = (
             self.entry.school_class_id
             if self.entry is not None
@@ -55,7 +57,7 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
 
         with Vertical(id="edit-timetable-dialog"):
             yield Label(
-                f"{self.weekday}, {self.period}. Stunde",
+                f"{weekday_labels[self.weekday]}, {self.period}. Stunde",
                 id="edit-timetable-title",
             )
 

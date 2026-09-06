@@ -132,13 +132,13 @@ class TeachingLogEntry:
         if self.action is TeachingAction.SKIPPED:
             if self.origin is not TeachingOrigin.NONE:
                 raise ValueError(
-                    "Das Überspringen einer Lesson darf keinen Termin verbuchen."
+                    "Das Überspringen einer geplanten Stunde darf keinen Termin verbuchen."
                 )
             return
 
         if self.origin is TeachingOrigin.NONE:
             raise ValueError(
-                "Nur das Überspringen einer Lesson darf ohne Unterrichtstermin erfolgen."
+                "Nur das Überspringen einer geplanten Stunde darf ohne Unterrichtstermin erfolgen."
             )
 
         if (
@@ -190,7 +190,7 @@ class ClassProgress:
         ]
         if len(progressed_lessons) != len(set(progressed_lessons)):
             raise ValueError(
-                "Eine Lesson darf nur einmal abgeschlossen oder übersprungen werden."
+                "Eine geplante Stunde darf nur einmal abgeschlossen oder übersprungen werden."
             )
 
 
@@ -262,7 +262,7 @@ def validate_class_progress(
             lesson.id for lesson in sequence.lessons
         }:
             raise ClassProgressValidationError(
-                f"Die Lesson '{entry.lesson_id}' existiert in der Sequenz "
+                f"Die geplante Stunde '{entry.lesson_id}' existiert in der Sequenz "
                 f"'{entry.sequence_id}' nicht."
             )
 
@@ -281,7 +281,7 @@ def validate_class_progress(
         if actual_lesson_ids != expected_lesson_ids:
             raise ClassProgressValidationError(
                 f"Der Fortschritt der Sequenz '{sequence.id}' muss ihrer "
-                "Lesson-Reihenfolge ohne Lücken entsprechen."
+                "Stundenreihenfolge ohne Lücken entsprechen."
             )
 
 

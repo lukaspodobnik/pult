@@ -9,7 +9,7 @@ class SequencePreview(MarkdownViewer):
     can_focus_children = False
 
     def __init__(self, *, id: str | None) -> None:
-        super().__init__("Wähle eine Sequnz.", show_table_of_contents=False, id=id)
+        super().__init__("Wähle eine Sequenz.", show_table_of_contents=False, id=id)
 
     def show_sequence(self, sequence: Sequence) -> None:
         """Ersetze die Vorschau durch die formatierte Darstellung einer Sequenz."""

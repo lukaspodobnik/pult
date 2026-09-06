@@ -83,7 +83,7 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
             )
 
             yield Checkbox(
-                "Nächste Sequenz-Lesson abschließen",
+                "Nächste geplante Stunde abschließen",
                 id="complete-next-extra-lesson",
             )
 

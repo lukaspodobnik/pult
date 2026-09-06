@@ -89,9 +89,9 @@ class LessonProgressBar(Widget, can_focus=False):
     @staticmethod
     def _validate_counts(completed: int, skipped: int, total: int) -> None:
         counts = {
-            "Abgeschlossene Lessons": completed,
-            "Übersprungene Lessons": skipped,
-            "Gesamtzahl der Lessons": total,
+            "Abgeschlossene Stunden": completed,
+            "Übersprungene Stunden": skipped,
+            "Gesamtzahl der Stunden": total,
         }
         for description, value in counts.items():
             if isinstance(value, bool) or not isinstance(value, int):
@@ -101,6 +101,6 @@ class LessonProgressBar(Widget, can_focus=False):
 
         if completed + skipped > total:
             raise ValueError(
-                "Abgeschlossene und übersprungene Lessons dürfen zusammen "
+                "Abgeschlossene und übersprungene Stunden dürfen zusammen "
                 "nicht größer als die Gesamtzahl sein."
             )
