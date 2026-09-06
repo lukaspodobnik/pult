@@ -57,26 +57,28 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
             return
 
         picker = self.query_one("#teaching-log-class-picker", OptionList)
-        picker.add_options(
-            Option(school_class.id, id=f"class-{school_class.id}")
-            for school_class in self.school_classes
-        )
-        picker.focus()
+        # Die initiale Auswahl wird unten genau einmal ausdrücklich angezeigt.
+        with self.prevent(OptionList.OptionHighlighted):
+            picker.add_options(
+                Option(school_class.id, id=f"class-{school_class.id}")
+                for school_class in self.school_classes
+            )
+            picker.focus()
 
-        if not self.school_classes:
-            await self._show_empty_state("Es wurden noch keine Klassen angelegt.")
-            return
+            if not self.school_classes:
+                await self._show_empty_state("Es wurden noch keine Klassen angelegt.")
+                return
 
-        selected_id = (
-            self.initial_school_class_id
-            if self.initial_school_class_id in self.school_classes_by_id
-            else self.school_classes[0].id
-        )
-        picker.highlighted = next(
-            index
-            for index, school_class in enumerate(self.school_classes)
-            if school_class.id == selected_id
-        )
+            selected_id = (
+                self.initial_school_class_id
+                if self.initial_school_class_id in self.school_classes_by_id
+                else self.school_classes[0].id
+            )
+            picker.highlighted = next(
+                index
+                for index, school_class in enumerate(self.school_classes)
+                if school_class.id == selected_id
+            )
         await self.show_teaching_log(self.school_classes_by_id[selected_id])
 
     @on(OptionList.OptionHighlighted, "#teaching-log-class-picker")

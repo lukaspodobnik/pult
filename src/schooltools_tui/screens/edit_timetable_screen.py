@@ -81,18 +81,17 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
             cells = []
             for weekday, _ in WEEKDAYS:
                 entry = self.entries_by_slot.get((weekday, period.number))
-                if entry is None:
-                    cells.append("--")
-                    continue
-
-                subject = self.subjects_by_id[entry.subject_id]
-                cells.append(
-                    f"{entry.school_class_id}-{subject.short_name} {entry.room}"
-                )
+                cells.append(self._format_entry(entry))
 
             table.add_row(*cells, key=str(period.number), label=str(period.number))
 
         table.move_cursor(row=cursor.row, column=cursor.column)
+
+    def _format_entry(self, entry: TimetableEntry | None) -> str:
+        if entry is None:
+            return "--"
+        subject = self.subjects_by_id[entry.subject_id]
+        return f"{entry.school_class_id}-{subject.short_name} {entry.room}"
 
     @on(DataTable.CellSelected, "#edit-schedule")
     def edit_timetable_slot(self, event: DataTable.CellSelected) -> None:
@@ -127,8 +126,14 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         else:
             self.entries_by_slot.pop(slot, None)
 
-        self.populate_timetable()
-        self.query_one("#edit-schedule", DataTable).focus()
+        table = self.query_one("#edit-schedule", DataTable)
+        table.update_cell(
+            str(slot[1]),
+            slot[0],
+            self._format_entry(self.entries_by_slot.get(slot)),
+            update_width=True,
+        )
+        table.focus()
 
     @on(Button.Pressed, "#save-timetable")
     def save_changes(self) -> None:

@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
+from textual.timer import Timer
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Label, OptionList
 
@@ -77,6 +78,7 @@ class PlannedLessonContext:
 
 
 class MainScreen(SchooltoolsScreen[None]):
+    VIEW_DEBOUNCE_SECONDS: ClassVar[float] = 0.06
     BINDINGS: ClassVar = [
         ("n", "complete_next_lesson", "Stunde abschließen"),
         ("s", "skip_next_lesson", "Stunde überspringen"),
@@ -92,6 +94,8 @@ class MainScreen(SchooltoolsScreen[None]):
         super().__init__()
         self.school_classes_by_id: dict[str, SchoolClass] = {}
         self.active_school_class_id: str | None = None
+        self._pending_view_id: str | None = None
+        self._view_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -135,20 +139,50 @@ class MainScreen(SchooltoolsScreen[None]):
         }
 
     @on(OptionList.OptionHighlighted, "#view-picker")
-    async def view_picker_highlighted(
-        self, event: OptionList.OptionHighlighted
-    ) -> None:
-        option_id = event.option_id
-        if option_id is None:
-            return
+    def view_picker_highlighted(self, event: OptionList.OptionHighlighted) -> None:
+        """Merke die Auswahl; erst nach einer kurzen Ruhephase wird sie aufgebaut."""
+        self._pending_view_id = event.option_id
+        self._schedule_view_change()
+        self.refresh_bindings()
 
-        if option_id == "home":
-            await self.show_home_view()
-            return
+    def _schedule_view_change(self) -> None:
+        if self._view_timer is not None:
+            self._view_timer.stop()
+            self._view_timer = None
+        if self._pending_view_id is not None:
+            self._view_timer = self.set_timer(
+                self.VIEW_DEBOUNCE_SECONDS, self._show_pending_view
+            )
 
-        await self.show_school_class_view(
-            self.school_classes_by_id[option_id.removeprefix("class-")]
-        )
+    async def _show_pending_view(self) -> None:
+        self._view_timer = None
+        option_id = self._pending_view_id
+        if option_id is None or self.app.screen is not self:
+            return
+        try:
+            if option_id == "home":
+                await self.show_home_view()
+            else:
+                school_class = self.school_classes_by_id.get(
+                    option_id.removeprefix("class-")
+                )
+                if school_class is not None:
+                    await self.show_school_class_view(school_class)
+        finally:
+            self._pending_view_id = None
+            self.refresh_bindings()
+
+    def on_screen_suspend(self) -> None:
+        if self._view_timer is not None:
+            self._view_timer.stop()
+            self._view_timer = None
+
+    def on_screen_resume(self) -> None:
+        self._schedule_view_change()
+
+    def on_unmount(self) -> None:
+        if self._view_timer is not None:
+            self._view_timer.stop()
 
     async def switch_view(self, view: Widget) -> None:
         """Ersetze ausschließlich den Inhaltsbereich durch die übergebene View."""
@@ -237,6 +271,12 @@ class MainScreen(SchooltoolsScreen[None]):
         action: str,
         parameters: tuple[object, ...],
     ) -> bool | None:
+        if self._pending_view_id is not None and any(
+            (binding[1] if isinstance(binding, tuple) else binding.action) == action
+            for binding in self.BINDINGS
+        ):
+            # Während Highlight und Ansicht auseinanderliegen, keine falsche Klasse ändern.
+            return None
         if action in {
             "undo_last_entry",
             "change_active_sequence",
