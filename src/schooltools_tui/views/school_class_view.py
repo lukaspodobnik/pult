@@ -2,6 +2,12 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Static
 
+from schooltools_tui.presentation import (
+    NEXT_LESSON_LABEL,
+    NO_NEXT_LESSON,
+    UNTITLED_LESSON,
+    format_date,
+)
 from schooltools_tui.progress.queries import (
     SequenceProgressSummary,
     SubjectProgressSummary,
@@ -99,11 +105,11 @@ class SubjectProgressBlock(Vertical):
             yield SequenceProgressBlock(sequence)
 
     def _compose_next_lesson(self) -> ComposeResult:
-        yield Static("Nächste Stunde", classes="next-lesson-label")
+        yield Static(NEXT_LESSON_LABEL, classes="next-lesson-label")
         planned_lesson = self.summary.next_planned_lesson
         if planned_lesson is None:
             yield Static(
-                "Keine offene geplante Stunde",
+                NO_NEXT_LESSON,
                 classes="next-lesson-empty",
             )
             return
@@ -113,13 +119,13 @@ class SubjectProgressBlock(Vertical):
             for sequence in self.summary.sequences
             if sequence.sequence_id == planned_lesson.sequence_id
         )
-        lesson_title = planned_lesson.lesson.title or "Noch ohne Titel"
+        lesson_title = planned_lesson.lesson.title or UNTITLED_LESSON
         yield Static(
             f"{sequence.curriculum_section_id} · {lesson_title}",
             classes="next-lesson-title",
         )
         yield Static(
-            f"{planned_lesson.date:%d.%m.%Y} · {planned_lesson.period}. Stunde",
+            f"{format_date(planned_lesson.date)} · {planned_lesson.period}. Stunde",
             classes="next-lesson-date",
         )
 

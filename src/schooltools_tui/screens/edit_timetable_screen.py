@@ -5,6 +5,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Header, Label
 
+from schooltools_tui.presentation import WEEKDAYS
 from schooltools_tui.school.period import Period, load_periods
 from schooltools_tui.school.school_class import SchoolClass, load_school_classes
 from schooltools_tui.school.subject import Subject, load_subjects
@@ -20,7 +21,6 @@ from schooltools_tui.screens.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
-from schooltools_tui.widgets.dashboard.labels import WEEKDAYS
 
 
 class EditTimetableScreen(SchooltoolsScreen[None]):

@@ -5,6 +5,7 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Static
 
 from schooltools_tui.curriculum.sequence import Sequence
+from schooltools_tui.presentation import UNTITLED_LESSON, WEEKDAY_NAMES
 from schooltools_tui.progress.class_progress import TeachingAction
 from schooltools_tui.progress.queries import (
     DailyAdditionalEntry,
@@ -14,8 +15,6 @@ from schooltools_tui.progress.queries import (
 )
 from schooltools_tui.school.period import Period
 from schooltools_tui.school.subject import Subject
-
-from .labels import WEEKDAY_NAMES
 
 ACTION_ICONS = {
     TeachingAction.COMPLETED: "✓",
@@ -68,7 +67,7 @@ class DailyScheduleRow(Horizontal):
 
     def _get_lesson_title(self) -> str | None:
         if self.daily_entry.planned_lesson is not None:
-            return self.daily_entry.planned_lesson.lesson.title or "Lesson ohne Titel"
+            return self.daily_entry.planned_lesson.lesson.title or UNTITLED_LESSON
 
         log_entry = self.daily_entry.log_entry
         if log_entry is None or log_entry.lesson_id is None:
@@ -84,7 +83,7 @@ class DailyScheduleRow(Horizontal):
         lesson = next(
             lesson for lesson in sequence.lessons if lesson.id == log_entry.lesson_id
         )
-        return lesson.title or "Lesson ohne Titel"
+        return lesson.title or UNTITLED_LESSON
 
 
 class DailyAdditionalRow(Horizontal):

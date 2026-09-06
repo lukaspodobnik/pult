@@ -5,12 +5,16 @@ from textual.containers import Vertical
 from textual.widgets import Static
 
 from schooltools_tui.curriculum.sequence import Sequence
+from schooltools_tui.presentation import (
+    NEXT_LESSON_LABEL,
+    NO_NEXT_LESSON,
+    UNTITLED_LESSON,
+    format_date,
+)
 from schooltools_tui.progress.queries import (
     PlannedLesson,
 )
 from schooltools_tui.school.subject import Subject
-
-from .labels import WEEKDAY_NAMES
 
 
 class NextLessonPanel(Vertical):
@@ -30,11 +34,11 @@ class NextLessonPanel(Vertical):
         self.sequences_by_key = sequences_by_key
 
     def compose(self) -> ComposeResult:
-        yield Static("NÄCHSTE GEPLANTE LESSON", classes="dashboard-heading")
+        yield Static(NEXT_LESSON_LABEL.upper(), classes="dashboard-heading")
         planned_lesson = self.planned_lesson
         if planned_lesson is None:
             yield Static(
-                "Keine offene geplante Lesson",
+                NO_NEXT_LESSON,
                 classes="dashboard-empty",
             )
             return
@@ -50,7 +54,7 @@ class NextLessonPanel(Vertical):
             classes="next-lesson-sequence",
         )
         yield Static(
-            planned_lesson.lesson.title or "Lesson ohne Titel",
+            planned_lesson.lesson.title or UNTITLED_LESSON,
             classes="next-lesson-name",
         )
         yield Static(
@@ -68,9 +72,8 @@ class NextLessonPanel(Vertical):
         ]
 
     def _format_planned_occurrence(self, planned_lesson: PlannedLesson) -> str:
-        weekday = WEEKDAY_NAMES[planned_lesson.date.weekday()]
         occurrence = (
-            f"{weekday}, {planned_lesson.date:%d.%m.%Y} · "
+            f"{format_date(planned_lesson.date, with_weekday=True)} · "
             f"{planned_lesson.period}. Stunde"
         )
         today = self.today

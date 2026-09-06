@@ -8,6 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, VerticalScroll
 from textual.widgets import Button, Checkbox, Input, Label, Select
 
+from schooltools_tui.presentation import DATE_INPUT_HINT, format_date, parse_date
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.subject import Subject
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
@@ -70,8 +71,8 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
 
             yield Label("Datum", classes="field-label")
             yield Input(
-                value=datetime.now(ZoneInfo("Europe/Berlin")).date().isoformat(),
-                placeholder="JJJJ-MM-TT",
+                value=format_date(datetime.now(ZoneInfo("Europe/Berlin")).date()),
+                placeholder=DATE_INPUT_HINT,
                 id="extra-date",
             )
 
@@ -126,11 +127,9 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
             return
 
         try:
-            entry_date = date.fromisoformat(
-                self.query_one("#extra-date", Input).value.strip()
-            )
-        except ValueError:
-            self.notify("Bitte gib das Datum als JJJJ-MM-TT an.", severity="warning")
+            entry_date = parse_date(self.query_one("#extra-date", Input).value.strip())
+        except ValueError as error:
+            self.notify(str(error), severity="warning")
             return
 
         comment = self.query_one("#extra-comment", Input).value.strip()

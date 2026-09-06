@@ -1,6 +1,7 @@
 from textual.widgets import MarkdownViewer
 
 from schooltools_tui.curriculum.sequence import Sequence
+from schooltools_tui.presentation import UNTITLED_LESSON
 
 
 class SequencePreview(MarkdownViewer):
@@ -33,7 +34,7 @@ class SequencePreview(MarkdownViewer):
         lines.extend(["", "## Unterrichtsstunden"])
 
         for index, lesson in enumerate(sequence.lessons, start=1):
-            title = lesson.title or "Noch ohne Titel"
+            title = lesson.title or UNTITLED_LESSON
             lines.extend(
                 [
                     "",

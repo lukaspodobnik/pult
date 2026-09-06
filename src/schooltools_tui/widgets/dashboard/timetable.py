@@ -5,11 +5,10 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import DataTable, Static
 
+from schooltools_tui.presentation import WEEKDAYS
 from schooltools_tui.school.period import Period, get_period_at
 from schooltools_tui.school.subject import Subject
 from schooltools_tui.school.timetable import TimetableEntry
-
-from .labels import WEEKDAYS
 
 
 class TimetableDataTable(DataTable):

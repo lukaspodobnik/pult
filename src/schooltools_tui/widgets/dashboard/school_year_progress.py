@@ -2,6 +2,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widgets import ProgressBar, Static
 
+from schooltools_tui.presentation import format_school_year
 from schooltools_tui.progress.queries import (
     SchoolYearProgressSummary,
 )
@@ -17,7 +18,7 @@ class SchoolYearProgress(Horizontal):
     def compose(self) -> ComposeResult:
         progress = self.progress_summary
         yield Static(
-            f"Schuljahr {self._format_school_year(progress.school_year)}",
+            f"Schuljahr {format_school_year(progress.school_year)}",
             id="school-year-progress-label",
         )
         progress_bar = ProgressBar(
@@ -32,8 +33,3 @@ class SchoolYearProgress(Horizontal):
             f"{progress.percentage} %",
             id="school-year-progress-percentage",
         )
-
-    @staticmethod
-    def _format_school_year(school_year: str) -> str:
-        start_year, end_year = school_year.split("-")
-        return f"{start_year}/{end_year[-2:]}"

@@ -3,6 +3,7 @@ from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Static
 
 from schooltools_tui.curriculum.sequence import Sequence
+from schooltools_tui.presentation import UNTITLED_LESSON, format_date
 from schooltools_tui.progress.class_progress import (
     TeachingAction,
     TeachingLogEntry,
@@ -10,16 +11,6 @@ from schooltools_tui.progress.class_progress import (
 )
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.subject import Subject
-
-WEEKDAY_NAMES = (
-    "Montag",
-    "Dienstag",
-    "Mittwoch",
-    "Donnerstag",
-    "Freitag",
-    "Samstag",
-    "Sonntag",
-)
 
 ACTION_LABELS = {
     TeachingAction.COMPLETED: "Abgeschlossen",
@@ -49,7 +40,6 @@ class TeachingLogEntryBlock(Vertical):
         self.sequence = sequence
 
     def compose(self) -> ComposeResult:
-        weekday = WEEKDAY_NAMES[self.entry.date.weekday()]
         occurrence = (
             f"{self.entry.period}. Stunde"
             if self.entry.period is not None
@@ -57,7 +47,7 @@ class TeachingLogEntryBlock(Vertical):
         )
         with Horizontal(classes="teaching-log-date-row"):
             yield Static(
-                f"{weekday}, {self.entry.date:%d.%m.%Y}",
+                format_date(self.entry.date, with_weekday=True),
                 classes="teaching-log-date",
             )
             yield Static(occurrence, classes="teaching-log-period")
@@ -92,7 +82,7 @@ class TeachingLogEntryBlock(Vertical):
             for lesson in self.sequence.lessons
             if lesson.id == self.entry.lesson_id
         )
-        return lesson.title or "Lesson ohne Titel"
+        return lesson.title or UNTITLED_LESSON
 
 
 class TeachingLogView(VerticalScroll):

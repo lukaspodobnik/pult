@@ -3,6 +3,7 @@ from importlib.resources import files
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from schooltools_tui.presentation import format_school_year
 from schooltools_tui.school.calendar import (
     CALENDAR_FILE_SUFFIX,
     CALENDARS_DIRECTORY_NAME,
@@ -37,7 +38,7 @@ def get_school_year_options(
         except (OSError, TypeError, ValueError):
             continue
 
-    return [(year, year) for year in sorted(set(school_years))]
+    return [(format_school_year(year), year) for year in sorted(set(school_years))]
 
 
 def get_likely_school_year(

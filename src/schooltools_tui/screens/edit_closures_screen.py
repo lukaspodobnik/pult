@@ -17,6 +17,7 @@ from textual.widgets import (
 )
 from textual.widgets.option_list import Option
 
+from schooltools_tui.presentation import DATE_INPUT_HINT, format_date, parse_date
 from schooltools_tui.school.calendar import (
     Closure,
     ClosureKind,
@@ -58,7 +59,7 @@ class AddClosureScreen(SchooltoolsModalScreen[ClosureFormResult | None]):
         self.school_classes = school_classes
 
     def compose(self) -> ComposeResult:
-        default_date = self._get_default_date().isoformat()
+        default_date = format_date(self._get_default_date())
         scope_options = [("Gesamte Schule", SCHOOL_SCOPE)]
         scope_options.extend(
             (school_class.id, CLASS_SCOPE_PREFIX + school_class.id)
@@ -82,13 +83,13 @@ class AddClosureScreen(SchooltoolsModalScreen[ClosureFormResult | None]):
             yield Label("Startdatum", classes="closure-field-label")
             yield Input(
                 value=default_date,
-                placeholder="JJJJ-MM-TT",
+                placeholder=DATE_INPUT_HINT,
                 id="closure-start",
             )
             yield Label("Enddatum", classes="closure-field-label")
             yield Input(
                 value=default_date,
-                placeholder="JJJJ-MM-TT",
+                placeholder=DATE_INPUT_HINT,
                 id="closure-end",
             )
 
@@ -108,11 +109,11 @@ class AddClosureScreen(SchooltoolsModalScreen[ClosureFormResult | None]):
             closure = Closure(
                 name=self.query_one("#closure-name", Input).value,
                 kind=ClosureKind.LOCAL,
-                start=self._parse_date(
+                start=parse_date(
                     self.query_one("#closure-start", Input).value,
                     "Das Startdatum",
                 ),
-                end=self._parse_date(
+                end=parse_date(
                     self.query_one("#closure-end", Input).value,
                     "Das Enddatum",
                 ),
@@ -186,15 +187,6 @@ class AddClosureScreen(SchooltoolsModalScreen[ClosureFormResult | None]):
         if scope.startswith(CLASS_SCOPE_PREFIX):
             return scope.removeprefix(CLASS_SCOPE_PREFIX)
         raise ValueError("Die Reichweite des Ausfalls ist ungültig.")
-
-    @staticmethod
-    def _parse_date(value: str, description: str) -> date:
-        try:
-            return date.fromisoformat(value.strip())
-        except ValueError as error:
-            raise ValueError(
-                f"{description} muss dem Format JJJJ-MM-TT entsprechen."
-            ) from error
 
     @on(Button.Pressed, "#cancel-closure")
     def cancel_closure(self) -> None:
@@ -330,9 +322,9 @@ class EditClosuresScreen(SchooltoolsScreen[None]):
     @staticmethod
     def _format_entry(entry: ClosureListEntry) -> str:
         closure = entry.closure
-        date_text = f"{closure.start:%d.%m.%Y}"
+        date_text = format_date(closure.start)
         if closure.end != closure.start:
-            date_text += f" – {closure.end:%d.%m.%Y}"
+            date_text += f" – {format_date(closure.end)}"
         scope = entry.school_class_id or "Schulweit"
         return f"{date_text:<25} {scope:<12} {closure.name}"
 
