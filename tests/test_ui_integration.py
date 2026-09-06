@@ -2,6 +2,9 @@ import asyncio
 import shutil
 from pathlib import Path
 
+import pytest
+from textual.widgets import Input, OptionList, Select
+
 from schooltools_tui.app import SchooltoolsApp
 from schooltools_tui.config import AppConfig
 from schooltools_tui.initialization.school_class import initialize_school_class
@@ -13,6 +16,50 @@ from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
+
+
+@pytest.mark.parametrize("scope", ["school", "class:5A"])
+def test_closure_modals_create_cancel_and_delete(tmp_path, monkeypatch, scope):
+    from schooltools_tui.screens.add_closure_screen import AddClosureScreen
+    from schooltools_tui.screens.confirm_closure_deletion_screen import (
+        ConfirmClosureDeletionScreen,
+    )
+    from schooltools_tui.screens.edit_closures_screen import EditClosuresScreen
+
+    config = prepare_root(tmp_path)
+    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+
+    async def run():
+        app = SchooltoolsApp()
+        async with app.run_test(size=(140, 42)) as pilot:
+            await pilot.pause()
+            await app.push_screen(EditClosuresScreen())
+            await pilot.pause()
+            screen = app.screen
+            screen.action_create_closure()
+            await pilot.pause()
+            modal = app.screen
+            assert isinstance(modal, AddClosureScreen)
+            assert "." in modal.query_one("#closure-start", Input).value
+            modal.query_one("#closure-name", Input).value = "Wandertag"
+            modal.query_one("#closure-scope", Select).value = scope
+            modal.submit_closure()
+            await pilot.pause()
+            assert app.screen is screen
+            assert screen.query_one("#closures", OptionList).option_count == 1
+            screen.action_delete_closure()
+            await pilot.pause()
+            assert isinstance(app.screen, ConfirmClosureDeletionScreen)
+            app.screen.action_cancel()
+            await pilot.pause()
+            assert screen.query_one("#closures", OptionList).option_count == 1
+            screen.action_delete_closure()
+            await pilot.pause()
+            app.screen.confirm_deletion()
+            await pilot.pause()
+            assert screen.query_one("#closures", OptionList).option_count == 0
+
+    asyncio.run(run())
 
 
 def prepare_root(root: Path) -> AppConfig:
