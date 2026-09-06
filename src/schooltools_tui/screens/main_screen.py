@@ -5,10 +5,10 @@ from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import Footer, Header, Label, OptionList
+from textual.widgets import ContentSwitcher, Footer, Header, Label, OptionList
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -108,8 +108,7 @@ class MainScreen(SchooltoolsScreen[None]):
                 yield Label("VERWALTUNG", id="management-label")
                 yield ManagementPicker(id="management-picker")
 
-            with Container(id="content"):
-                pass
+            yield ContentSwitcher(id="content")
 
         yield Footer()
 
@@ -185,11 +184,11 @@ class MainScreen(SchooltoolsScreen[None]):
             self._view_timer.stop()
 
     async def switch_view(self, view: Widget) -> None:
-        """Ersetze ausschließlich den Inhaltsbereich durch die übergebene View."""
-        content = self.query_one("#content", Container)
-
-        await content.remove_children()
-        await content.mount(view)
+        """Binde eine View einmal ein und schalte anschließend nur ihre Sichtbarkeit."""
+        content = self.query_one("#content", ContentSwitcher)
+        if not view.is_mounted:
+            await content.add_content(view, id=type(view).__name__)
+        content.current = view.id
 
     async def show_home_view(self) -> None:
         """Lade alle Dashboarddaten neu und zeige anschließend die HomeView."""
@@ -218,22 +217,29 @@ class MainScreen(SchooltoolsScreen[None]):
         self.school_classes_by_id = {
             school_class.id: school_class for school_class in data.school_classes
         }
-        await self.switch_view(
-            HomeView(
+        views = self.query(HomeView)
+        if views:
+            view = views.first()
+            await view.update_data(
                 data.timetable_entries,
                 subjects,
                 periods,
                 data.sequences,
                 dashboard,
             )
-        )
+        else:
+            view = HomeView(
+                data.timetable_entries, subjects, periods, data.sequences, dashboard
+            )
+        await self.switch_view(view)
+        view.refresh_time_highlight()
 
     @on(HomeView.DashboardRefreshRequested)
     async def refresh_home_dashboard(
         self,
         _: HomeView.DashboardRefreshRequested,
     ) -> None:
-        if self.active_school_class_id is None:
+        if self.app.screen is self and self.active_school_class_id is None:
             await self.show_home_view()
 
     async def show_school_class_view(self, school_class: SchoolClass) -> None:
@@ -260,13 +266,13 @@ class MainScreen(SchooltoolsScreen[None]):
 
         self.active_school_class_id = school_class.id
         self.refresh_bindings()
-        await self.switch_view(
-            SchoolClassView(
-                school_class,
-                subjects,
-                progress_summaries,
-            )
-        )
+        views = self.query(SchoolClassView)
+        if views:
+            view = views.first()
+            await view.update_data(school_class, subjects, progress_summaries)
+        else:
+            view = SchoolClassView(school_class, subjects, progress_summaries)
+        await self.switch_view(view)
 
     def check_action(
         self,
@@ -288,7 +294,7 @@ class MainScreen(SchooltoolsScreen[None]):
         return super().check_action(action, parameters)
 
     async def refresh_current_view(self) -> None:
-        """Baue die momentan aktive Home- oder Klassenansicht vollständig neu."""
+        """Aktualisiere die Daten der momentan aktiven Home- oder Klassenansicht."""
         if self.active_school_class_id is None:
             await self.show_home_view()
             return
@@ -790,8 +796,7 @@ class MainScreen(SchooltoolsScreen[None]):
         self.refresh_view_picker()
 
     async def timetable_edit_finished(self, _: None) -> None:
-        if self.query(HomeView):
-            await self.show_home_view()
+        await self.refresh_current_view()
 
     async def closures_edited(self, _: None) -> None:
         await self.refresh_current_view()

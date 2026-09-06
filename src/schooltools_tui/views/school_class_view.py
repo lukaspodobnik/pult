@@ -153,6 +153,25 @@ class SchoolClassView(Vertical):
         self.subjects_by_id = {subject.id: subject for subject in subjects}
         self.progress_summaries = progress_summaries
 
+    async def update_data(
+        self,
+        school_class: SchoolClass,
+        subjects: list[Subject],
+        progress_summaries: tuple[SubjectProgressSummary, ...],
+    ) -> None:
+        """Behalte die View; ersetze ihren Inhalt bei Klassen- oder Datenänderungen."""
+        subjects_by_id = {subject.id: subject for subject in subjects}
+        if (
+            self.school_class == school_class
+            and self.subjects_by_id == subjects_by_id
+            and self.progress_summaries == progress_summaries
+        ):
+            return
+        self.school_class = school_class
+        self.subjects_by_id = subjects_by_id
+        self.progress_summaries = progress_summaries
+        await self.recompose()
+
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="school-class-content"):
             yield Static(self.school_class.id, id="school-class-title")

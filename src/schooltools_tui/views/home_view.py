@@ -40,6 +40,41 @@ class HomeView(Vertical):
         }
         self.timetable_entries = timetable_entries
         self._refresh_requested = False
+        self._updating = False
+
+    async def update_data(
+        self,
+        timetable_entries: list[TimetableEntry],
+        subjects: list[Subject],
+        periods: list[Period],
+        sequences: list[Sequence],
+        dashboard: HomeDashboardSummary,
+    ) -> None:
+        """Behalte die View; baue vorerst nur bei Datenänderungen ihren Inhalt neu."""
+        subjects_by_id = {subject.id: subject for subject in subjects}
+        sequences_by_key = {
+            (sequence.grade_level, sequence.subject_id, sequence.id): sequence
+            for sequence in sequences
+        }
+        if (
+            self.timetable_entries == timetable_entries
+            and self.subjects_by_id == subjects_by_id
+            and self.periods == periods
+            and self.sequences_by_key == sequences_by_key
+            and self.dashboard == dashboard
+        ):
+            return
+        self.timetable_entries = timetable_entries
+        self.subjects_by_id = subjects_by_id
+        self.periods = periods
+        self.sequences_by_key = sequences_by_key
+        self.dashboard = dashboard
+        self._refresh_requested = False
+        self._updating = True
+        try:
+            await self.recompose()
+        finally:
+            self._updating = False
 
     def compose(self) -> ComposeResult:
         yield SchoolYearProgress(self.dashboard.school_year_progress)
@@ -65,6 +100,8 @@ class HomeView(Vertical):
         self.set_interval(30, self.refresh_time_highlight)
 
     def refresh_time_highlight(self) -> None:
+        if self._updating or not self.display or self.app.screen is not self.screen:
+            return
         current_datetime = datetime.now(ZoneInfo("Europe/Berlin"))
         if current_datetime.date() != self.dashboard.daily_schedule.date:
             if not self._refresh_requested:
