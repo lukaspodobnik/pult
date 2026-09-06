@@ -9,10 +9,9 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widget import Widget
 from textual.widgets import Footer, Header, Label, OptionList
 
-from schooltools_tui.curriculum.sequence import Sequence, load_sequence_library
+from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
     ClassProgress,
-    load_class_progress,
     save_class_progress,
     validate_class_progress,
 )
@@ -36,18 +35,11 @@ from schooltools_tui.progress.queries import (
     get_home_dashboard_summary,
     get_next_lesson,
     get_next_planned_lesson,
-    get_next_planned_lesson_for_class,
     get_suggested_next_sequence,
-)
-from schooltools_tui.school.calendar import (
-    load_class_closures,
-    load_school_calendar,
-    load_school_closures,
 )
 from schooltools_tui.school.period import load_periods
 from schooltools_tui.school.school_class import SchoolClass, load_school_classes
 from schooltools_tui.school.subject import load_subjects
-from schooltools_tui.school.timetable import get_timetable_path, load_timetable
 from schooltools_tui.screens.add_extra_lesson_screen import (
     AddExtraLessonScreen,
     ExtraLessonFormResult,
@@ -67,6 +59,10 @@ from schooltools_tui.screens.set_active_sequence_screen import (
     SetActiveSequenceScreen,
 )
 from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
+from schooltools_tui.services.progress import (
+    load_class_progress_data,
+    load_planning_data,
+)
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
@@ -166,61 +162,34 @@ class MainScreen(SchooltoolsScreen[None]):
         self.active_school_class_id = None
         self.refresh_bindings()
         config = self.app_config
-        year = config.active_school_year
         try:
-            timetable_entries = load_timetable(get_timetable_path(config.root, year))
+            data = load_planning_data(config)
             periods = load_periods(config.root)
             subjects = load_subjects(config.root)
-            sequences = load_sequence_library(config.root)
-            school_classes = load_school_classes(config.root, year)
-            progresses_by_class_id = {
-                school_class.id: load_class_progress(
-                    config.root,
-                    year,
-                    school_class.id,
-                )
-                for school_class in school_classes
-            }
-            for school_class in school_classes:
-                validate_class_progress(
-                    progresses_by_class_id[school_class.id],
-                    school_class,
-                    sequences,
-                )
-            school_calendar = load_school_calendar(config.root, year)
-            school_closures = load_school_closures(config.root, year)
-            class_closures_by_class_id = {
-                school_class.id: load_class_closures(
-                    config.root,
-                    year,
-                    school_class.id,
-                )
-                for school_class in school_classes
-            }
             dashboard = get_home_dashboard_summary(
                 datetime.now(ZoneInfo("Europe/Berlin")),
-                progresses_by_class_id,
-                sequences,
-                timetable_entries,
+                data.progresses_by_class_id,
+                data.sequences,
+                data.timetable_entries,
                 periods,
-                school_classes,
-                school_calendar,
-                school_closures,
-                class_closures_by_class_id,
+                data.school_classes,
+                data.school_calendar,
+                data.school_closures,
+                data.class_closures_by_class_id,
             )
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(str(error), severity="error")
             return
 
         self.school_classes_by_id = {
-            school_class.id: school_class for school_class in school_classes
+            school_class.id: school_class for school_class in data.school_classes
         }
         await self.switch_view(
             HomeView(
-                timetable_entries,
+                data.timetable_entries,
                 subjects,
                 periods,
-                sequences,
+                data.sequences,
                 dashboard,
             )
         )
@@ -237,38 +206,17 @@ class MainScreen(SchooltoolsScreen[None]):
         """Lade und validiere alle Daten für die Ansicht einer Klasse."""
         config = self.app_config
         try:
-            sequences = load_sequence_library(config.root)
-            progress = load_class_progress(
-                config.root,
-                config.active_school_year,
-                school_class.id,
-            )
-            validate_class_progress(progress, school_class, sequences)
-            timetable_entries = load_timetable(
-                get_timetable_path(config.root, config.active_school_year)
-            )
+            data = load_planning_data(config, school_class.id)
+            school_class = data.school_classes[0]
             subjects = load_subjects(config.root)
-            school_calendar = load_school_calendar(
-                config.root,
-                config.active_school_year,
-            )
-            school_closures = load_school_closures(
-                config.root,
-                config.active_school_year,
-            )
-            class_closures = load_class_closures(
-                config.root,
-                config.active_school_year,
-                school_class.id,
-            )
             progress_summaries = get_class_progress_summary(
-                progress,
-                sequences,
-                timetable_entries,
+                data.progresses_by_class_id[school_class.id],
+                data.sequences,
+                data.timetable_entries,
                 school_class,
-                school_calendar,
-                school_closures,
-                class_closures,
+                data.school_calendar,
+                data.school_closures,
+                data.class_closures_by_class_id[school_class.id],
             )
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(str(error), severity="error")
@@ -327,68 +275,26 @@ class MainScreen(SchooltoolsScreen[None]):
     def load_planned_lesson_context(self) -> PlannedLessonContext | None:
         """Lade den Kontext für die nächste globale oder klassenbezogene Lesson."""
         config = self.app_config
-        year = config.active_school_year
 
         try:
-            school_classes = load_school_classes(config.root, year)
-            self.school_classes_by_id = {
-                school_class.id: school_class for school_class in school_classes
-            }
-            sequences = load_sequence_library(config.root)
-            timetable_entries = load_timetable(get_timetable_path(config.root, year))
-            school_calendar = load_school_calendar(config.root, year)
-            school_closures = load_school_closures(config.root, year)
-            if self.active_school_class_id is None:
-                progresses_by_class_id = {
-                    school_class.id: load_class_progress(
-                        config.root,
-                        year,
-                        school_class.id,
-                    )
-                    for school_class in school_classes
-                }
-                class_closures_by_class_id = {
-                    school_class.id: load_class_closures(
-                        config.root,
-                        year,
-                        school_class.id,
-                    )
-                    for school_class in school_classes
-                }
-                planned_lesson = get_next_planned_lesson(
-                    progresses_by_class_id,
-                    sequences,
-                    timetable_entries,
-                    school_classes,
-                    school_calendar,
-                    school_closures,
-                    class_closures_by_class_id,
-                )
-                progress = (
-                    progresses_by_class_id[planned_lesson.school_class_id]
-                    if planned_lesson is not None
-                    else None
-                )
-            else:
-                school_class = self.school_classes_by_id[self.active_school_class_id]
-                progress = load_class_progress(
-                    config.root,
-                    year,
-                    school_class.id,
-                )
-                planned_lesson = get_next_planned_lesson_for_class(
-                    progress,
-                    sequences,
-                    timetable_entries,
-                    school_class,
-                    school_calendar,
-                    school_closures,
-                    load_class_closures(
-                        config.root,
-                        year,
-                        school_class.id,
-                    ),
-                )
+            data = load_planning_data(config, self.active_school_class_id)
+            self.school_classes_by_id.update(
+                {school_class.id: school_class for school_class in data.school_classes}
+            )
+            planned_lesson = get_next_planned_lesson(
+                data.progresses_by_class_id,
+                data.sequences,
+                data.timetable_entries,
+                data.school_classes,
+                data.school_calendar,
+                data.school_closures,
+                data.class_closures_by_class_id,
+            )
+            progress = (
+                data.progresses_by_class_id[planned_lesson.school_class_id]
+                if planned_lesson is not None
+                else None
+            )
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
             return None
@@ -405,7 +311,7 @@ class MainScreen(SchooltoolsScreen[None]):
             school_class=school_class,
             progress=progress,
             planned_lesson=planned_lesson,
-            sequences=sequences,
+            sequences=data.sequences,
         )
 
     async def action_complete_next_lesson(self) -> None:
@@ -542,12 +448,8 @@ class MainScreen(SchooltoolsScreen[None]):
 
             try:
                 school_class = school_classes_by_id[form_result.school_class_id]
-                sequences = load_sequence_library(config.root)
-                progress = load_class_progress(
-                    config.root,
-                    config.active_school_year,
-                    school_class.id,
-                )
+                data = load_class_progress_data(config, school_class)
+                sequences, progress = data.sequences, data.progress
 
                 if form_result.completes_next_lesson:
                     lesson = get_next_lesson(
@@ -619,12 +521,8 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         school_class = self.school_classes_by_id[self.active_school_class_id]
         try:
-            sequences = load_sequence_library(config.root)
-            progress = load_class_progress(
-                config.root,
-                config.active_school_year,
-                school_class.id,
-            )
+            data = load_class_progress_data(config, school_class)
+            sequences, progress = data.sequences, data.progress
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
             return
@@ -665,12 +563,8 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         school_class = self.school_classes_by_id[self.active_school_class_id]
         try:
-            progress = load_class_progress(
-                config.root,
-                config.active_school_year,
-                school_class.id,
-            )
-            sequences = load_sequence_library(config.root)
+            data = load_class_progress_data(config, school_class)
+            sequences, progress = data.sequences, data.progress
             subjects = load_subjects(config.root)
             has_available_sequence = any(
                 get_available_next_sequences(
