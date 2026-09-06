@@ -5,6 +5,7 @@ from textual.app import App
 from schooltools_tui.config import AppConfig, load_app_config
 from schooltools_tui.screens.main_screen import MainScreen
 from schooltools_tui.screens.setup_school_tools_screen import SetupScreen
+from schooltools_tui.services.sequence_library import SequenceLibrary
 
 
 class SchooltoolsApp(App):
@@ -30,6 +31,7 @@ class SchooltoolsApp(App):
     def __init__(self) -> None:
         super().__init__()
         self.app_config: AppConfig | None = None
+        self.sequence_library: SequenceLibrary | None = None
 
     def require_config(self) -> AppConfig:
         """Gib die geladene Config zurück oder melde einen ungültigen App-Zustand."""
@@ -37,6 +39,15 @@ class SchooltoolsApp(App):
             raise RuntimeError("AppConfig wurde vor abschluss des Setups angefordert.")
 
         return self.app_config
+
+    def require_sequence_library(self) -> SequenceLibrary:
+        """Gib den gemeinsamen Bibliothekscache der laufenden App zurück."""
+        if self.sequence_library is None:
+            raise RuntimeError(
+                "SequenceLibrary wurde vor Abschluss des Setups angefordert."
+            )
+
+        return self.sequence_library
 
     def on_mount(self) -> None:
         self.theme = "gruvbox"
@@ -52,6 +63,11 @@ class SchooltoolsApp(App):
             )
             return
 
+        if (
+            self.sequence_library is None
+            or self.sequence_library.root != self.app_config.root
+        ):
+            self.sequence_library = SequenceLibrary(self.app_config.root)
         self.push_screen(MainScreen())
 
     def on_setup_complete(self, app_config: AppConfig | None) -> None:
