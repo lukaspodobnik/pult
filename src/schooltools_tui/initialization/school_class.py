@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from schooltools_tui.curriculum.sequence import (
+    Sequence,
     load_sequence_library,
     sequence_sort_key,
 )
@@ -23,7 +24,13 @@ class SchoolClassSetupError(ValueError):
     """Fehler beim anlegen einer Klasse."""
 
 
-def initialize_school_class(root: Path, year: str, school_class: SchoolClass) -> None:
+def initialize_school_class(
+    root: Path,
+    year: str,
+    school_class: SchoolClass,
+    *,
+    sequences: list[Sequence] | None = None,
+) -> None:
     """Lege eine neue Klasse mit Startsequenzen, Fortschritt und Ausfalldatei an."""
     class_directory = get_school_class_path(root, year, school_class.id).parent
 
@@ -31,7 +38,8 @@ def initialize_school_class(root: Path, year: str, school_class: SchoolClass) ->
         raise SchoolClassSetupError(f"Die Klasse '{school_class.id}' existiert schon.")
 
     subjects_by_id = {subject.id: subject for subject in load_subjects(root)}
-    sequences = load_sequence_library(root)
+    if sequences is None:
+        sequences = load_sequence_library(root)
 
     for subject_id in school_class.subject_ids:
         subject = subjects_by_id.get(subject_id)

@@ -116,7 +116,11 @@ def test_highlighting_class_switches_to_class_view(tmp_path, monkeypatch):
             await pilot.pause()
             picker = app.screen.query_one(ViewPicker)
             picker.highlighted = 1
-            await pilot.pause()
+            # Ein leerer Event-Queue bedeutet nicht, dass der Debounce-Timer ablief.
+            for _ in range(20):
+                await pilot.pause(0.05)
+                if app.screen.query(SchoolClassView):
+                    break
             assert app.screen.query_one(SchoolClassView).school_class.id == "5A"
 
     asyncio.run(run())

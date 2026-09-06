@@ -8,7 +8,12 @@ import pytest
 from test_ui_integration import prepare_root
 
 from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.curriculum.sequence import get_sequence_path, save_sequence
+from schooltools_tui.curriculum.sequence import (
+    SequenceFileError,
+    get_sequence_path,
+    load_sequence_library,
+    save_sequence,
+)
 from schooltools_tui.screens.main_screen import MainScreen
 from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
 from schooltools_tui.storage import save_toml
@@ -21,6 +26,11 @@ from schooltools_tui.widgets.sequence_tree import SequenceTree
 def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_result):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    library_loader = Mock(wraps=load_sequence_library)
+    monkeypatch.setattr(
+        "schooltools_tui.services.sequence_library.load_sequence_library",
+        library_loader,
+    )
 
     async def run():
         app = SchooltoolsApp()
@@ -45,6 +55,8 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
 
             nodes = list(leaves(tree.root))
             assert len(nodes) == 116
+            # Home und Bibliotheksbaum teilen denselben ersten Ladevorgang.
+            library_loader.assert_called_once_with(config.root)
             node = nodes[0]
             original = node.data
             updated = replace(original, title="Geänderter Sequenzplan")
@@ -82,6 +94,8 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             await pilot.pause()
             assert app.screen is screen
             if editor_result == "saved":
+                assert updated in screen.sequence_library
+                assert library_loader.call_count == 2
                 assert node.data == updated
                 assert node.label.plain == updated.title
                 notifications.assert_not_called()
@@ -94,6 +108,12 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             else:
                 assert node.data == original
                 assert notifications.call_args.kwargs["severity"] == "error"
+                if editor_result == "invalid":
+                    with pytest.raises(SequenceFileError):
+                        _ = screen.sequence_library
+                else:
+                    assert original in screen.sequence_library
+                    assert library_loader.call_count == 1
             # Erst nach dem Rendern schließen; keine Markdown-Tasks beim Shutdown abbrechen.
             await pilot.press("escape")
             await pilot.pause()

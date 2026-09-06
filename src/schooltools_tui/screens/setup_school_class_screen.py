@@ -81,7 +81,10 @@ class SchoolClassSetupScreen(SchooltoolsModalScreen[None]):
 
         try:
             initialize_school_class(
-                self.app_config.root, self.app_config.active_school_year, school_class
+                self.app_config.root,
+                self.app_config.active_school_year,
+                school_class,
+                sequences=self.sequence_library,
             )
         except SchoolClassSetupError as error:
             self.notify(str(error), severity="error")

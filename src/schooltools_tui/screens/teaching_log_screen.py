@@ -6,7 +6,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Footer, Header, Label, OptionList
 from textual.widgets.option_list import Option
 
-from schooltools_tui.curriculum.sequence import Sequence, load_sequence_library
+from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
     load_class_progress,
     validate_class_progress,
@@ -51,7 +51,7 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
                 school_class.id: school_class for school_class in self.school_classes
             }
             self.subjects = load_subjects(config.root)
-            self.sequences = load_sequence_library(config.root)
+            self.sequences = self.sequence_library
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
             return

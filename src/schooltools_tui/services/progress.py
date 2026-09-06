@@ -1,4 +1,4 @@
-"""Lade frische Fortschrittsdaten ohne UI-Abhängigkeiten oder eigenen Cache."""
+"""Lade frische Fortschrittsdaten mit optional geteilter Sequenzbibliothek."""
 
 from dataclasses import dataclass
 
@@ -50,7 +50,7 @@ def load_class_progress_data(
 ) -> ClassProgressData:
     """Lade und validiere den Fortschritt einer Klasse gegen die Bibliothek.
 
-    Bereits geladene Sequenzen können innerhalb eines Ladevorgangs geteilt werden.
+    Bereits geladene Sequenzen, etwa aus dem App-Cache, können übergeben werden.
     Datei- und Validierungsfehler werden an den Aufrufer weitergegeben.
     """
     if sequences is None:
@@ -65,17 +65,20 @@ def load_class_progress_data(
 def load_planning_data(
     config: AppConfig,
     school_class_id: str | None = None,
+    *,
+    sequences: list[Sequence] | None = None,
 ) -> PlanningData:
     """Lade Planungsdaten für alle Klassen oder nur für die angegebene Klasse.
 
     Bei Klassenwahl werden nur deren Protokoll und lokale Ausfälle geladen.
-    Die Bibliothek wird pro Aufruf einmal geladen; Berechnungen bleiben in Queries.
+    Übergebene Sequenzen werden wiederverwendet, sonst wird die Bibliothek geladen.
     """
     classes = load_school_classes(config.root, config.active_school_year)
     if school_class_id is not None:
         classes_by_id = {school_class.id: school_class for school_class in classes}
         classes = [classes_by_id[school_class_id]]
-    sequences = load_sequence_library(config.root)
+    if sequences is None:
+        sequences = load_sequence_library(config.root)
     progresses = {
         school_class.id: load_class_progress_data(
             config, school_class, sequences=sequences

@@ -67,14 +67,27 @@ def test_school_year_initialization_is_idempotent(tmp_path, monkeypatch):
     assert get_school_closures_path(tmp_path, "2026-2027").is_file()
 
 
-def test_class_initialization_creates_all_class_files(tmp_path, monkeypatch):
+@pytest.mark.parametrize("reuse_library", [False, True])
+def test_class_initialization_creates_all_class_files(
+    tmp_path, monkeypatch, reuse_library
+):
     monkeypatch.setattr(
         "schooltools_tui.initialization.schooltools.save_app_config",
         lambda config: None,
     )
     initialize_schooltools(str(tmp_path), "nvim", "2026-2027")
     school_class = SchoolClass("5A", 5, ["mathematik"])
-    initialize_school_class(tmp_path, "2026-2027", school_class)
+    sequences = load_sequence_library(tmp_path) if reuse_library else None
+    if reuse_library:
+
+        def unexpected_load(root):
+            pytest.fail("Die übergebene Bibliothek muss wiederverwendet werden.")
+
+        monkeypatch.setattr(
+            "schooltools_tui.initialization.school_class.load_sequence_library",
+            unexpected_load,
+        )
+    initialize_school_class(tmp_path, "2026-2027", school_class, sequences=sequences)
 
     assert get_school_class_path(tmp_path, "2026-2027", "5A").is_file()
     assert get_class_closures_path(tmp_path, "2026-2027", "5A").is_file()

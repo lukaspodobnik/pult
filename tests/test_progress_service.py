@@ -66,6 +66,13 @@ def test_class_progress_can_reuse_loaded_library(loaders, school_class, sequence
     mocks["load_sequence_library"].assert_not_called()
 
 
+def test_planning_can_reuse_cached_library(loaders, sequences):
+    config, mocks = loaders
+    data = service.load_planning_data(config, sequences=sequences)
+    assert data.sequences is sequences
+    mocks["load_sequence_library"].assert_not_called()
+
+
 def test_loading_propagates_file_errors(loaders, school_class):
     config, mocks = loaders
     mocks["load_class_progress"].side_effect = FileNotFoundError("Missing progress")

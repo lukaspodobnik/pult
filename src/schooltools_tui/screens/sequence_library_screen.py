@@ -13,7 +13,6 @@ from schooltools_tui.curriculum.sequence import (
     SequenceFileError,
     get_sequence_path,
     load_sequence,
-    load_sequence_library,
 )
 from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
@@ -39,7 +38,7 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
 
     def on_mount(self) -> None:
         config = self.app_config
-        sequences = load_sequence_library(config.root)
+        sequences = self.sequence_library
         subjects = load_subjects(config.root)
 
         tree = self.query_one("#sequence-tree", SequenceTree)
@@ -94,6 +93,9 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
                 severity="error",
             )
             return
+
+        # Auch bei ungültigen Änderungen dürfen spätere Aufrufe keine alten Daten nutzen.
+        self.schooltools_app.require_sequence_library().invalidate()
 
         if result.returncode != 0:
             self.notify(

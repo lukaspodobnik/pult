@@ -197,7 +197,7 @@ class MainScreen(SchooltoolsScreen[None]):
         self.refresh_bindings()
         config = self.app_config
         try:
-            data = load_planning_data(config)
+            data = load_planning_data(config, sequences=self.sequence_library)
             periods = load_periods(config.root)
             subjects = load_subjects(config.root)
             dashboard = get_home_dashboard_summary(
@@ -240,7 +240,9 @@ class MainScreen(SchooltoolsScreen[None]):
         """Lade und validiere alle Daten für die Ansicht einer Klasse."""
         config = self.app_config
         try:
-            data = load_planning_data(config, school_class.id)
+            data = load_planning_data(
+                config, school_class.id, sequences=self.sequence_library
+            )
             school_class = data.school_classes[0]
             subjects = load_subjects(config.root)
             progress_summaries = get_class_progress_summary(
@@ -317,7 +319,9 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
 
         try:
-            data = load_planning_data(config, self.active_school_class_id)
+            data = load_planning_data(
+                config, self.active_school_class_id, sequences=self.sequence_library
+            )
             self.school_classes_by_id.update(
                 {school_class.id: school_class for school_class in data.school_classes}
             )
@@ -488,7 +492,9 @@ class MainScreen(SchooltoolsScreen[None]):
 
             try:
                 school_class = school_classes_by_id[form_result.school_class_id]
-                data = load_class_progress_data(config, school_class)
+                data = load_class_progress_data(
+                    config, school_class, sequences=self.sequence_library
+                )
                 sequences, progress = data.sequences, data.progress
 
                 if form_result.completes_next_lesson:
@@ -561,7 +567,9 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         school_class = self.school_classes_by_id[self.active_school_class_id]
         try:
-            data = load_class_progress_data(config, school_class)
+            data = load_class_progress_data(
+                config, school_class, sequences=self.sequence_library
+            )
             sequences, progress = data.sequences, data.progress
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
@@ -603,7 +611,9 @@ class MainScreen(SchooltoolsScreen[None]):
         config = self.app_config
         school_class = self.school_classes_by_id[self.active_school_class_id]
         try:
-            data = load_class_progress_data(config, school_class)
+            data = load_class_progress_data(
+                config, school_class, sequences=self.sequence_library
+            )
             sequences, progress = data.sequences, data.progress
             subjects = load_subjects(config.root)
             has_available_sequence = any(
