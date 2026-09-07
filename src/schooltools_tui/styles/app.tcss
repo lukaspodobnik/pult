@@ -172,6 +172,22 @@ OptionList {
     background: $background;
 }
 
+EditClassesScreen #school-classes,
+EditClosuresScreen #closures {
+    background-tint: transparent;
+    outline: none;
+}
+
+EditClassesScreen #school-classes > .option-list--option-highlighted,
+EditClosuresScreen #closures > .option-list--option-highlighted {
+    text-style: none;
+}
+
+EditClassesScreen #school-classes:focus > .option-list--option-highlighted,
+EditClosuresScreen #closures:focus > .option-list--option-highlighted {
+    text-style: bold;
+}
+
 SchooltoolsFooter FooterKey {
     margin-right: 1;
 }

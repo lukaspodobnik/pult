@@ -41,6 +41,8 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
 
         tree = self.query_one("#sequence-tree", SequenceTree)
         tree.populate(sequences, subjects)
+        tree.focus()
+        tree.move_cursor(tree.root.children[0] if tree.root.children else None)
 
     def action_close(self) -> None:
         self.dismiss()

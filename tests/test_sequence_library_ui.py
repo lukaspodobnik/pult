@@ -65,6 +65,8 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             await pilot.press("tab")
             assert app.focused is tree
             assert not tree.show_root
+            assert app.focused is tree
+            assert tree.cursor_node is tree.root.children[0]
             assert all(not node.is_expanded for node in tree.root.children)
 
             def leaves(node):

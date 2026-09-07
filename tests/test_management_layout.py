@@ -45,5 +45,18 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
             if screen_type is not EditTimetableScreen:
                 assert buttons[0].region.x == actions.region.x
                 assert str(buttons[-1].label) == "Zurück"
+                content.focus()
+                await pilot.pause()
+                border = content.styles.border
+                assert content.styles.background_tint.a == 0
+                assert content.get_component_rich_style(
+                    "option-list--option-highlighted"
+                ).bold
+                buttons[0].focus()
+                await pilot.pause()
+                assert content.styles.border == border
+                assert not content.get_component_rich_style(
+                    "option-list--option-highlighted"
+                ).bold
 
     asyncio.run(run())
