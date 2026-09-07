@@ -40,8 +40,19 @@ def test_class_subject_options_and_selection_survive_refresh(tmp_path, monkeypat
             assert picker.get_option_at_index(0).id == "home"
             assert (
                 str(picker.get_option_at_index(1).prompt)
-                == "5A · " + subjects["mathematik"].short_name
+                == "5A     · " + subjects["mathematik"].short_name
             )
+            assert {
+                str(picker.get_option_at_index(index).prompt).index("·")
+                for index in range(1, picker.option_count)
+            } == {7}
+            picker.focus()
+            await pilot.press("down")
+            await settled()
+            assert picker.highlighted == 1
+            await pilot.press("up")
+            await settled()
+            assert picker.highlighted == 0
             assert list(picker.class_subjects_by_option_id.values()) == [
                 ("5A", "mathematik"),
                 ("9B-NTG", "informatik-ntg"),

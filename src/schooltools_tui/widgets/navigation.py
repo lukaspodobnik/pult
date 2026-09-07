@@ -1,5 +1,6 @@
 import json
 
+from rich.cells import cell_len
 from rich.text import Text
 from textual.widgets import OptionList
 from textual.widgets.option_list import Option
@@ -22,9 +23,13 @@ class ViewPicker(OptionList):
     ) -> None:
         """Ersetze die Navigation und erhalte nach Möglichkeit das Highlight."""
         subjects_by_id = {subject.id: subject for subject in subjects}
+        class_width = max((cell_len(c.id) for c in school_classes), default=0)
         targets: dict[str, tuple[str, str]] = {}
         options = [Option("Home", id="home")]
         for school_class in sorted(school_classes, key=school_class_sort_key):
+            class_label = school_class.id + " " * (
+                class_width - cell_len(school_class.id)
+            )
             for subject_id in sorted(
                 school_class.subject_ids,
                 key=lambda value: (subjects_by_id[value].name.casefold(), value),
@@ -36,7 +41,7 @@ class ViewPicker(OptionList):
                 options.append(
                     Option(
                         Text(
-                            f"{school_class.id} · {subjects_by_id[subject_id].short_name}",
+                            f"{class_label} · {subjects_by_id[subject_id].short_name}",
                             no_wrap=True,
                             overflow="ellipsis",
                         ),
@@ -46,7 +51,8 @@ class ViewPicker(OptionList):
 
         self.clear_options()
         self.class_subjects_by_option_id = targets
-        self.add_options(options)
+        # None zeichnet eine Trennlinie, ohne eine auswählbare Option anzulegen.
+        self.add_options([options[0], None, *options[1:]] if targets else options)
 
         option_ids = [option.id for option in options]
         self.highlighted = (
