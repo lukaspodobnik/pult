@@ -9,6 +9,8 @@ class SequenceTree(Tree[Sequence | None]):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__("Sequenzen", id=id)
         self.show_root = False
+        self.guide_depth = 2
+        self.border_title = "SEQUENZBIBLIOTHEK"
 
     def on_mount(self) -> None:
         self.root.expand()
@@ -71,7 +73,7 @@ class SequenceTree(Tree[Sequence | None]):
 
         for sequence in sorted_sequences:
             if sequence.chapter_id is None:
-                grade_node.add(sequence.title, data=sequence)
+                grade_node.add_leaf(sequence.title, data=sequence)
                 continue
 
             chapter_node = chapter_nodes.get(sequence.chapter_id)
@@ -83,4 +85,4 @@ class SequenceTree(Tree[Sequence | None]):
                 )
                 chapter_nodes[sequence.chapter_id] = chapter_node
 
-            chapter_node.add(sequence.title, data=sequence)
+            chapter_node.add_leaf(sequence.title, data=sequence)

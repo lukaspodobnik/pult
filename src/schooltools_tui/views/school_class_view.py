@@ -1,9 +1,8 @@
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.widgets import Static
+from textual.widgets import Rule, Static
 
 from schooltools_tui.presentation import (
-    NEXT_LESSON_LABEL,
     NO_NEXT_LESSON,
     UNTITLED_LESSON,
     format_date,
@@ -82,46 +81,69 @@ class SubjectProgressBlock(Vertical):
         self.summary = summary
 
     def compose(self) -> ComposeResult:
-        yield Static(self.subject.name.upper(), classes="subject-title")
-        yield from self._compose_next_lesson()
-
-        with Horizontal(classes="progress-heading subject-progress-heading"):
-            yield Static("Gesamt", classes="progress-title")
-            yield Static(
-                f"{self.summary.progressed_lesson_count} / "
-                f"{self.summary.total_lesson_count}",
-                classes="progress-count",
+        with Vertical(classes="subject-overview"):
+            yield Static(self._total_label, classes="total-label")
+            yield LessonProgressBar(
+                self.summary.completed_lesson_count,
+                self.summary.skipped_lesson_count,
+                self.summary.total_lesson_count,
+                classes="subject-progress-bar",
             )
+        with Horizontal(classes="class-dashboard"):
+            sequences = VerticalScroll(classes="sequence-list")
+            sequences.border_title = "SEQUENZEN"
+            sequences.can_focus = False
+            with sequences:
+                for sequence in self.summary.sequences:
+                    yield SequenceProgressBlock(sequence)
+            with Vertical(classes="class-details"):
+                next_lesson = VerticalScroll(classes="class-next-lesson")
+                next_lesson.border_title = "NÄCHSTE STUNDE"
+                next_lesson.can_focus = False
+                with next_lesson:
+                    yield from self._compose_next_lesson()
+                capacity = Vertical(classes="lesson-capacity")
+                capacity.border_title = "STUNDENBILANZ"
+                with capacity:
+                    with Vertical(classes="capacity-summary"):
+                        yield from self._compose_capacity()
 
-        yield LessonProgressBar(
-            self.summary.completed_lesson_count,
-            self.summary.skipped_lesson_count,
-            self.summary.total_lesson_count,
-            classes="subject-progress-bar",
+    @property
+    def _total_label(self) -> str:
+        return (
+            f"{self.summary.completed_lesson_count} abgeschlossen · "
+            f"{self.summary.skipped_lesson_count} übersprungen · "
+            f"{self.summary.total_lesson_count} gesamt"
         )
 
+    def _compose_capacity(self) -> ComposeResult:
         balance = self.summary.lesson_balance
         balance_class = (
             "positive" if balance > 0 else "negative" if balance < 0 else "neutral"
         )
-        period_label = (
-            "Stunde" if self.summary.available_period_count == 1 else "Stunden"
-        )
-        with Horizontal(classes="lesson-capacity"):
-            yield Static(
-                f"Verfügbar: {self.summary.available_period_count} {period_label}",
-                classes="available-periods",
-            )
-            yield Static(
-                f"Differenz: {balance:+d}",
-                classes=f"lesson-balance {balance_class}",
-            )
-
-        for sequence in self.summary.sequences:
-            yield SequenceProgressBlock(sequence)
+        for label, value, classes in (
+            (
+                "Noch benötigt",
+                str(self.summary.remaining_lesson_count),
+                "remaining-lessons",
+            ),
+            (
+                "Verfügbar",
+                str(self.summary.available_period_count),
+                "available-periods",
+            ),
+            ("Differenz", f"{balance:+d}", f"lesson-balance {balance_class}"),
+        ):
+            row_classes = "capacity-row"
+            if classes.startswith("lesson-balance"):
+                row_classes += " capacity-result"
+            with Horizontal(classes=row_classes):
+                yield Static(label, classes="capacity-label")
+                yield Static(value, classes=f"capacity-value {classes}")
+            if classes == "available-periods":
+                yield Rule(classes="capacity-divider")
 
     def _compose_next_lesson(self) -> ComposeResult:
-        yield Static(NEXT_LESSON_LABEL, classes="next-lesson-label")
         for name, text in self._next_lesson_texts().items():
             classes = name
             if name in {"next-lesson-tasks", "next-lesson-notes"}:
@@ -135,6 +157,7 @@ class SubjectProgressBlock(Vertical):
             (
                 "next-lesson-empty",
                 "next-lesson-title",
+                "next-lesson-sequence",
                 "next-lesson-date",
                 "next-lesson-tasks",
                 "next-lesson-notes",
@@ -152,6 +175,7 @@ class SubjectProgressBlock(Vertical):
             if sequence.sequence_id == planned_lesson.sequence_id
         )
         lesson_title = planned_lesson.lesson.title or UNTITLED_LESSON
+        texts["next-lesson-sequence"] = sequence.title
         texts["next-lesson-title"] = (
             f"{sequence.curriculum_section_id} · {lesson_title}"
         )
@@ -174,25 +198,24 @@ class SubjectProgressBlock(Vertical):
             return
         self.subject = subject
         self.summary = summary
-        self.query_one(".subject-title", Static).update(subject.name.upper())
         for name, text in self._next_lesson_texts().items():
             widget = self.query_one(f".{name}", Static)
             widget.update(text)
             widget.display = bool(text)
-        self.query_one(".subject-progress-heading .progress-count", Static).update(
-            f"{summary.progressed_lesson_count} / {summary.total_lesson_count}"
+        self.query_one(".total-label", Static).update(self._total_label)
+        self.query_one(".remaining-lessons", Static).update(
+            str(summary.remaining_lesson_count)
         )
         self.query_one(".subject-progress-bar", LessonProgressBar).update_counts(
             summary.completed_lesson_count,
             summary.skipped_lesson_count,
             summary.total_lesson_count,
         )
-        count = summary.available_period_count
         self.query_one(".available-periods", Static).update(
-            f"Verfügbar: {count} {'Stunde' if count == 1 else 'Stunden'}"
+            str(summary.available_period_count)
         )
         balance = self.query_one(".lesson-balance", Static)
-        balance.update(f"Differenz: {summary.lesson_balance:+d}")
+        balance.update(f"{summary.lesson_balance:+d}")
         for name, enabled in (
             ("positive", summary.lesson_balance > 0),
             ("negative", summary.lesson_balance < 0),
@@ -205,7 +228,7 @@ class SubjectProgressBlock(Vertical):
         for block in blocks[len(summary.sequences) :]:
             await block.remove()
         if len(summary.sequences) > len(blocks):
-            await self.mount(
+            await self.query_one(".sequence-list").mount(
                 *(SequenceProgressBlock(s) for s in summary.sequences[len(blocks) :])
             )
 
@@ -243,7 +266,6 @@ class SchoolClassView(Vertical):
         self.subjects_by_id = subjects_by_id
         self.progress_summaries = progress_summaries
         content = self.query_one("#school-class-content", VerticalScroll)
-        self.query_one("#school-class-title", Static).update(school_class.id)
         blocks = list(content.query(SubjectProgressBlock))
         for block, summary in zip(blocks, progress_summaries):
             await block.update_data(subjects_by_id[summary.subject_id], summary)
@@ -258,10 +280,21 @@ class SchoolClassView(Vertical):
             )
         if changed_selection:
             content.scroll_home(animate=False)
+            for panel in self.query(VerticalScroll):
+                panel.scroll_home(animate=False)
+        self._update_titles()
+
+    def on_mount(self) -> None:
+        self._update_titles()
+
+    def _update_titles(self) -> None:
+        for block in self.query(SubjectProgressBlock):
+            block.query_one(
+                ".subject-overview"
+            ).border_title = f"{self.school_class.id} · {block.subject.name}"
 
     def compose(self) -> ComposeResult:
         with VerticalScroll(id="school-class-content"):
-            yield Static(self.school_class.id, id="school-class-title")
             for summary in self.progress_summaries:
                 yield SubjectProgressBlock(
                     self.subjects_by_id[summary.subject_id],

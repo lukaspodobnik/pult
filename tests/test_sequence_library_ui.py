@@ -44,6 +44,15 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             screen = app.screen
             assert isinstance(screen, SequenceLibraryScreen)
             tree = screen.query_one(SequenceTree)
+            preview = screen.query_one(SequencePreview)
+            assert not screen.query("Header")
+            assert tree.guide_depth == 2
+            assert tree.border_title == "SEQUENZBIBLIOTHEK"
+            assert (tree.region.y, tree.region.bottom) == (
+                preview.region.y,
+                preview.region.bottom,
+            )
+            assert set(screen.focus_chain) == {tree, preview}
             assert not tree.show_root
             assert all(not node.is_expanded for node in tree.root.children)
 
@@ -55,6 +64,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
 
             nodes = list(leaves(tree.root))
             assert len(nodes) == 116
+            assert all(not node.allow_expand for node in nodes)
             # Home und Bibliotheksbaum teilen denselben ersten Ladevorgang.
             library_loader.assert_called_once_with(config.root)
             node = nodes[0]

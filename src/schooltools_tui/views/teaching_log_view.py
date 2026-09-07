@@ -112,16 +112,6 @@ class TeachingLogView(VerticalScroll):
         self.scroll_end(animate=False)
 
     def compose(self) -> ComposeResult:
-        subject_label = (
-            f" · {self.subjects_by_id[self.subject_id].name}"
-            if self.subject_id is not None
-            else ""
-        )
-        yield Static(
-            f"Unterrichtsprotokoll{subject_label} · {self.school_class.id}",
-            classes="teaching-log-title",
-        )
-
         if not self.entries:
             yield Static(
                 "Für dieses Fach gibt es noch keine Protokolleinträge."

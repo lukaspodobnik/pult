@@ -170,6 +170,22 @@ def test_modals_and_log_keep_subject_scope(multi_class_config):
             assert {
                 e.subject_id for e in app.screen.query_one(TeachingLogView).entries
             } == {"informatik-ntg"}
+            picker = app.screen.query_one("#teaching-log-class-picker")
+            content = app.screen.query_one("#teaching-log-content")
+            assert not app.screen.query("Header")
+            assert app.screen.query_one("#teaching-log-navigation").region.width == 28
+            assert (picker.region.y, picker.region.bottom) == (
+                content.region.y,
+                content.region.bottom,
+            )
+            targets = list(picker.class_subjects_by_option_id.values())
+            assert targets[picker.highlighted] == ("9B", "informatik-ntg")
+            picker.highlighted = targets.index(("9B", "mathematik"))
+            await pilot.pause()
+            assert {
+                e.subject_id for e in app.screen.query_one(TeachingLogView).entries
+            } == {"mathematik"}
+            assert content.border_title == "Unterrichtsprotokoll · 9B · Mathematik"
             await pilot.press("escape")
             await main.action_undo_last_entry()
             await pilot.pause()

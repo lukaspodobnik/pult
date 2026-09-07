@@ -301,6 +301,9 @@ class MainScreen(SchooltoolsScreen[None]):
         else:
             view = SchoolClassView(school_class, subjects, progress_summaries)
         await self.switch_view(view)
+        view.query_one(".class-next-lesson").styles.height = self.query_one(
+            ViewPicker
+        ).styles.height
         if self._pending_view_id is None:
             self.refresh_bindings()
 

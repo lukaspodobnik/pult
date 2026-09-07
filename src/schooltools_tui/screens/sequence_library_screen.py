@@ -5,7 +5,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Footer, Header, Label, Tree
+from textual.widgets import Footer, Tree
 from textual.widgets.tree import TreeNode
 
 from schooltools_tui.curriculum.sequence import (
@@ -24,11 +24,8 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
     BINDINGS: ClassVar = [("escape", "close", "Zurück")]
 
     def compose(self) -> ComposeResult:
-        yield Header()
-
         with Horizontal(id="sequence-library"):
             with Vertical(id="sequence-navigation"):
-                yield Label("SEQUENZBIBLIOTHEK", id="sequence-navigation-title")
                 yield SequenceTree(id="sequence-tree")
 
             with Container(id="sequence-content"):

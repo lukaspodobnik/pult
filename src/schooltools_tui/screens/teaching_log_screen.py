@@ -3,8 +3,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Footer, Header, Label, OptionList
-from textual.widgets.option_list import Option
+from textual.widgets import Footer, Label, OptionList
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -15,6 +14,7 @@ from schooltools_tui.school.school_class import SchoolClass, load_school_classes
 from schooltools_tui.school.subject import Subject, load_subjects
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.views.teaching_log_view import TeachingLogView
+from schooltools_tui.widgets.navigation import ViewPicker
 
 
 class TeachingLogScreen(SchooltoolsScreen[None]):
@@ -35,14 +35,15 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
         self.sequences: list[Sequence] = []
 
     def compose(self) -> ComposeResult:
-        yield Header()
-
         with Horizontal(id="teaching-log-screen"):
             with Vertical(id="teaching-log-navigation"):
-                yield Label("KLASSEN", id="teaching-log-navigation-title")
-                yield OptionList(id="teaching-log-class-picker")
+                picker = ViewPicker(id="teaching-log-class-picker")
+                picker.border_title = "KLASSEN"
+                yield picker
 
-            yield Container(id="teaching-log-content")
+            content = Container(id="teaching-log-content")
+            content.border_title = "Unterrichtsprotokoll"
+            yield content
 
         yield Footer()
 
@@ -53,32 +54,20 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
                 config.root,
                 config.active_school_year,
             )
-            if self.subject_id is not None:
-                self.school_classes = [
-                    c for c in self.school_classes if self.subject_id in c.subject_ids
-                ]
             self.school_classes_by_id = {
                 school_class.id: school_class for school_class in self.school_classes
             }
             self.subjects = load_subjects(config.root)
-            if self.subject_id is not None:
-                subject_name = next(
-                    s.name for s in self.subjects if s.id == self.subject_id
-                )
-                self.query_one("#teaching-log-navigation-title", Label).update(
-                    f"KLASSEN · {subject_name}"
-                )
             self.sequences = self.sequence_library
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
             return
 
-        picker = self.query_one("#teaching-log-class-picker", OptionList)
+        picker = self.query_one("#teaching-log-class-picker", ViewPicker)
         # Die initiale Auswahl wird unten genau einmal ausdrücklich angezeigt.
         with self.prevent(OptionList.OptionHighlighted):
-            picker.add_options(
-                Option(school_class.id, id=f"class-{school_class.id}")
-                for school_class in self.school_classes
+            picker.refresh_options(
+                self.school_classes, self.subjects, include_home=False
             )
             picker.focus()
 
@@ -91,11 +80,20 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
                 if self.initial_school_class_id in self.school_classes_by_id
                 else self.school_classes[0].id
             )
+            targets = list(picker.class_subjects_by_option_id.values())
             picker.highlighted = next(
-                index
-                for index, school_class in enumerate(self.school_classes)
-                if school_class.id == selected_id
+                (
+                    index
+                    for index, (class_id, subject_id) in enumerate(targets)
+                    if class_id == selected_id and subject_id == self.subject_id
+                ),
+                next(
+                    index
+                    for index, (class_id, _) in enumerate(targets)
+                    if class_id == selected_id
+                ),
             )
+            self.subject_id = targets[picker.highlighted][1]
         await self.show_teaching_log(self.school_classes_by_id[selected_id])
 
     @on(OptionList.OptionHighlighted, "#teaching-log-class-picker")
@@ -106,7 +104,10 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
         if event.option_id is None:
             return
 
-        school_class_id = event.option_id.removeprefix("class-")
+        picker = self.query_one("#teaching-log-class-picker", ViewPicker)
+        school_class_id, self.subject_id = picker.class_subjects_by_option_id[
+            event.option_id
+        ]
         school_class = self.school_classes_by_id.get(school_class_id)
         if school_class is not None:
             await self.show_teaching_log(school_class)
@@ -125,6 +126,10 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
             return
 
         content = self.query_one("#teaching-log-content", Container)
+        subject = next(s for s in self.subjects if s.id == self.subject_id)
+        content.border_title = (
+            f"Unterrichtsprotokoll · {school_class.id} · {subject.name}"
+        )
         await content.remove_children()
         await content.mount(
             TeachingLogView(

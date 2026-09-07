@@ -10,10 +10,12 @@ class SequencePreview(MarkdownViewer):
 
     def __init__(self, *, id: str | None) -> None:
         super().__init__("Wähle eine Sequenz.", show_table_of_contents=False, id=id)
+        self.border_title = "VORSCHAU"
 
     def show_sequence(self, sequence: Sequence) -> None:
         """Ersetze die Vorschau durch die formatierte Darstellung einer Sequenz."""
         self.document.update(self.render_sequence(sequence))
+        self.border_title = sequence.title
         self.scroll_home(animate=False)
 
     @staticmethod

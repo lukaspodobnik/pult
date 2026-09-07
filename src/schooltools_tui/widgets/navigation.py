@@ -20,12 +20,14 @@ class ViewPicker(OptionList):
         school_classes: list[SchoolClass],
         subjects: list[Subject],
         highlighted_option_id: str | None = None,
+        *,
+        include_home: bool = True,
     ) -> None:
         """Ersetze die Navigation und erhalte nach Möglichkeit das Highlight."""
         subjects_by_id = {subject.id: subject for subject in subjects}
         class_width = max((cell_len(c.id) for c in school_classes), default=0)
         targets: dict[str, tuple[str, str]] = {}
-        options = [Option("Home", id="home")]
+        options = [Option("Home", id="home")] if include_home else []
         for school_class in sorted(school_classes, key=school_class_sort_key):
             class_label = school_class.id + " " * (
                 class_width - cell_len(school_class.id)
@@ -52,7 +54,9 @@ class ViewPicker(OptionList):
         self.clear_options()
         self.class_subjects_by_option_id = targets
         # None zeichnet eine Trennlinie, ohne eine auswählbare Option anzulegen.
-        self.add_options([options[0], None, *options[1:]] if targets else options)
+        self.add_options(
+            [options[0], None, *options[1:]] if include_home and targets else options
+        )
 
         option_ids = [option.id for option in options]
         self.highlighted = (

@@ -145,34 +145,65 @@ SchoolClassView {
 
 SchoolClassView #school-class-content {
     height: 1fr;
-    padding: 0 1 2 1;
-}
-
-SchoolClassView #school-class-title {
-    height: 3;
-    content-align-vertical: middle;
-    color: $text-accent;
-    text-style: bold;
 }
 
 SchoolClassView .subject-progress {
-    height: auto;
-    margin-bottom: 2;
-    padding: 1 2;
+    height: 1fr;
+    min-height: 34;
+    min-width: 120;
+}
+
+SchoolClassView .subject-overview,
+SchoolClassView .sequence-list,
+SchoolClassView .class-next-lesson,
+SchoolClassView .lesson-capacity {
     background: $surface;
     border: round $primary;
+    border-title-color: $text-accent;
+    padding: 0 1;
 }
 
-SchoolClassView .subject-title {
-    height: 2;
-    color: $text-accent;
-    text-style: bold;
+SchoolClassView .subject-overview {
+    height: 4;
+    margin-bottom: 1;
 }
 
-SchoolClassView .next-lesson-label {
+SchoolClassView .total-label {
     height: 1;
+}
+
+SchoolClassView .class-dashboard {
+    height: 1fr;
+}
+
+SchoolClassView .sequence-list {
+    width: 3fr;
+    height: 1fr;
+    margin-right: 1;
+}
+
+SchoolClassView .class-details {
+    width: 2fr;
+    height: 1fr;
+}
+
+SchoolClassView .class-next-lesson {
+    height: 1fr;
+}
+
+SchoolClassView .lesson-capacity {
+    height: 1fr;
+    min-height: 7;
     margin-top: 1;
-    color: $foreground-muted;
+}
+
+SchoolClassView .next-lesson-sequence {
+    height: auto;
+    margin-bottom: 1;
+}
+
+SchoolClassView .next-lesson-details {
+    margin-top: 1;
 }
 
 SchoolClassView .next-lesson-title {
@@ -189,13 +220,12 @@ SchoolClassView .empty-sequence-hint {
 }
 
 SchoolClassView .progress-heading {
-    height: auto;
-    margin-top: 1;
+    height: 1;
 }
 
 SchoolClassView .progress-title {
     width: 1fr;
-    height: auto;
+    height: 1;
 }
 
 SchoolClassView .progress-count {
@@ -205,29 +235,39 @@ SchoolClassView .progress-count {
     text-align: right;
 }
 
-SchoolClassView .subject-progress-heading {
-    margin-top: 2;
+SchoolClassView .capacity-row {
+    height: 1;
+}
+
+SchoolClassView .capacity-summary {
+    height: 1fr;
+    padding-top: 1;
+}
+
+SchoolClassView .capacity-result {
+    height: 1fr;
     text-style: bold;
 }
 
-SchoolClassView .subject-progress-bar {
-    margin-bottom: 1;
-}
-
-SchoolClassView .lesson-capacity {
-    height: auto;
+SchoolClassView .capacity-divider {
+    height: 1;
+    margin: 0;
     color: $foreground-muted;
 }
 
-SchoolClassView .available-periods {
+SchoolClassView .capacity-label {
     width: 1fr;
-    height: auto;
+    height: 1fr;
+    content-align: left middle;
+}
+
+SchoolClassView .capacity-value {
+    width: 8;
+    height: 1fr;
+    content-align: right middle;
 }
 
 SchoolClassView .lesson-balance {
-    width: auto;
-    height: auto;
-    text-align: right;
     text-style: bold;
 }
 
@@ -245,10 +285,16 @@ SchoolClassView .lesson-balance.neutral {
 
 SchoolClassView .sequence-progress {
     height: auto;
-    margin-top: 1;
-    padding-left: 1;
+    margin-bottom: 1;
 }
 
 SchoolClassView .sequence-progress.active {
     color: $text-accent;
+    margin: 1 0;
+    padding: 1 0;
+}
+
+SchoolClassView .sequence-progress.active .progress-heading,
+SchoolClassView .sequence-progress.active .progress-title {
+    height: auto;
 }

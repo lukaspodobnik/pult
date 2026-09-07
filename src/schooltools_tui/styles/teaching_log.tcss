@@ -3,40 +3,31 @@ TeachingLogScreen #teaching-log-screen {
 }
 
 TeachingLogScreen #teaching-log-navigation {
-    width: 20;
+    width: 28;
+    padding: 1;
     height: 1fr;
     background: $panel;
 }
 
-TeachingLogScreen #teaching-log-navigation-title {
-    height: 3;
-    padding: 1 2;
-    color: $text-accent;
-    text-style: bold;
-}
-
 TeachingLogScreen #teaching-log-class-picker {
     height: 1fr;
-    border: none;
+    border: round $primary;
+    border-title-color: $text-accent;
     background: $panel;
 }
 
 TeachingLogScreen #teaching-log-content {
     width: 1fr;
     height: 1fr;
+    margin: 1 2;
+    border: round $primary;
+    border-title-color: $text-accent;
 }
 
 TeachingLogView {
     width: 1fr;
     height: 1fr;
-    padding: 0 2 2 2;
-}
-
-TeachingLogView .teaching-log-title {
-    height: 3;
-    content-align-vertical: middle;
-    color: $text-accent;
-    text-style: bold;
+    padding: 1 2;
 }
 
 TeachingLogView .teaching-log-entry {

@@ -169,8 +169,8 @@ def test_class_view_log_binding_preselects_current_class(tmp_path, monkeypatch):
             await pilot.press("l")
             await pilot.pause()
             assert isinstance(app.screen, TeachingLogScreen)
-            title = app.screen.query_one(".teaching-log-title").render().plain
-            assert title.endswith("5A")
+            title = app.screen.query_one("#teaching-log-content").border_title
+            assert title == "Unterrichtsprotokoll · 5A · Mathematik"
             await pilot.press("escape")
             assert isinstance(app.screen, MainScreen)
 
