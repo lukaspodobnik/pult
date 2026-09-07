@@ -18,6 +18,30 @@ class TimetableDataTable(DataTable):
 class TimetablePanel(Vertical):
     """Zeige den Stundenplan ohne Cursor mit Tages- und Stundenmarkierung."""
 
+    COMPONENT_CLASSES = {"timetable--period", "timetable--current"}
+    DEFAULT_CSS = """
+    TimetablePanel > .timetable--period {
+        background: $surface;
+        background-tint: $accent 8%;
+        text-style: none;
+    }
+    TimetablePanel > .timetable--current {
+        background: $surface;
+        background-tint: $accent 20%;
+        text-style: none;
+    }
+    """
+
+    def notify_style_update(self) -> None:
+        super().notify_style_update()
+        if self.is_mounted:
+            self.call_after_refresh(self._refresh_table_styles)
+
+    def _refresh_table_styles(self) -> None:
+        table = self.query_one(DataTable)
+        table.clear(columns=True)
+        self.populate_timetable(*(self.current_time_position or (None, None)))
+
     def __init__(
         self,
         timetable_entries: list[TimetableEntry],
@@ -88,6 +112,16 @@ class TimetablePanel(Vertical):
         if entry is not None:
             subject = self.subjects_by_id[entry.subject_id]
             content = f"{entry.school_class_id} · {subject.short_name}\n{entry.room}"
+        if period == current_period:
+            row_index = next(
+                i for i, item in enumerate(self.periods) if item.number == period
+            )
+            height = 2 if row_index >= len(self.periods) - 2 else 3
+            lines = content.splitlines()
+            content = "\n".join(
+                (lines[i] if i < len(lines) else "").ljust(self._column_width)
+                for i in range(height)
+            )
         return self.get_highlighted_text(
             content,
             is_current_row=period == current_period,
@@ -116,7 +150,6 @@ class TimetablePanel(Vertical):
             )
             header = self.get_highlighted_text(
                 label.center(self._column_width),
-                is_current_column=weekday == current_weekday,
             )
             header.append("\n" + "─" * self._column_width, style="dim")
             table.add_column(
@@ -129,18 +162,23 @@ class TimetablePanel(Vertical):
             height = 2 if row_index >= len(self.periods) - 2 else 3
             cells = []
             for index, (weekday, _) in enumerate(WEEKDAYS):
-                cells.append(Text("\n".join(["│"] * height), style="dim"))
+                separator = self.get_highlighted_text(
+                    "\n".join(["│"] * height),
+                    is_current_row=period.number == current_period,
+                )
+                separator.stylize("dim")
+                cells.append(separator)
                 cells.append(
                     self._cell(weekday, period.number, current_weekday, current_period)
                 )
 
             row_label = self.get_highlighted_text(
-                str(period.number).center(12),
+                f"{period.number}. Std.".center(12),
                 is_current_row=period.number == current_period,
             )
-            row_label.append(
-                f"\n{period.start:%H:%M}–{period.end:%H:%M} ", style="dim"
-            )
+            row_label.append(f"\n{period.start:%H:%M}–{period.end:%H:%M} ", style="dim")
+            if height > 2:
+                row_label.append("\n" + " " * 12)
             table.add_row(
                 *cells,
                 key=str(period.number),
@@ -148,22 +186,22 @@ class TimetablePanel(Vertical):
                 height=height,
             )
 
-    @staticmethod
     def get_highlighted_text(
+        self,
         content: str,
         *,
         is_current_row: bool = False,
         is_current_column: bool = False,
     ) -> Text:
-        styles = []
-        if is_current_column:
-            styles.append("bold")
+        text = Text(content, no_wrap=True, overflow="ellipsis")
+        component = None
         if is_current_row:
-            styles.append("underline")
-        if is_current_row and is_current_column:
-            styles.append("reverse")
-
-        return Text(content, style=" ".join(styles), no_wrap=True, overflow="ellipsis")
+            component = (
+                "timetable--current" if is_current_column else "timetable--period"
+            )
+        if component is not None:
+            text.style = self.get_component_rich_style(component)
+        return text
 
 
 def get_current_timetable_position(

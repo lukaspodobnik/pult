@@ -71,15 +71,30 @@ def test_dashboard_widgets_and_time_updates(
             assert table.row_count == len(periods)
             assert not table.can_focus
             assert table.cursor_type == "none"
-            assert str(table.get_cell("1", "monday")) == "5A · Ma\n101"
-            assert "reverse" in str(table.get_cell("1", "monday").style)
+            assert [
+                line.rstrip()
+                for line in str(table.get_cell("1", "monday")).splitlines()
+            ][:2] == ["5A · Ma", "101"]
+            panel = app.query_one(TimetablePanel)
+            current_style = panel.get_component_rich_style("timetable--current")
+            row_style = panel.get_component_rich_style("timetable--period")
+            assert current_style.bgcolor != row_style.bgcolor
+            assert table.get_cell("1", "monday").style == current_style
+            assert table.get_cell("1", "tuesday").style == row_style
+            assert (
+                not current_style.bold
+                and not current_style.underline
+                and not current_style.reverse
+            )
+            assert "1. Std." in str(table.ordered_rows[0].label)
             rows = list(app.query_one(DailySchedulePanel).query(DailyScheduleRow))
             assert [row.has_class("time-highlighted") for row in rows] == [True, False]
 
             Clock.current = datetime(2026, 9, 7, 8, 55)
             view.refresh_time_highlight()
             assert [row.has_class("time-highlighted") for row in rows] == [False, True]
-            assert "reverse" in str(table.get_cell("2", "monday").style)
+            assert table.get_cell("2", "monday").style == current_style
+            assert table.get_cell("1", "monday").style == ""
             view.refresh_time_highlight()
             assert table.row_count == len(periods)
 

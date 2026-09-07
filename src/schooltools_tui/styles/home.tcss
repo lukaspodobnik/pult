@@ -62,7 +62,7 @@ HomeView DataTable > .datatable--fixed,
 HomeView DataTable > .datatable--header-hover {
     background: $surface;
     color: $foreground;
-    text-style: bold;
+    text-style: none;
 }
 
 HomeView #school-year-progress {
