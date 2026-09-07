@@ -89,12 +89,20 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             )
             table = timetable.query_one(DataTable)
             assert [row.height for row in table.rows.values()] == [3] * (
-                len(periods) - 1
-            ) + [2]
+                len(periods) - 2
+            ) + [2, 2]
             assert (
                 str(table.get_cell(str(periods[0].number), "separator-1")) == "│\n│\n│"
             )
             assert timetable.region.height == len(periods) * 3 + 2
+            assert table.header_height == 2
+            assert "─" in str(
+                table.columns[
+                    next(k for k in table.columns if k.value == "monday")
+                ].label
+            )
+            assert "│" in str(table.get_cell("1", "separator-0"))
+            assert "08:00–08:45" in str(table.ordered_rows[0].label)
             assert timetable.region.x == next_lesson.region.x
             assert timetable.region.width == next_lesson.region.width
             assert next_lesson.region.y > timetable.region.bottom

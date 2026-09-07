@@ -36,12 +36,14 @@ class TimetablePanel(Vertical):
         self.current_time_position: tuple[str | None, int | None] | None = None
 
     def compose(self) -> ComposeResult:
-        yield TimetableDataTable(id="schedule", cursor_type="none")
+        yield TimetableDataTable(
+            id="schedule", cursor_type="none", cell_padding=0, header_height=2
+        )
 
     def on_resize(self) -> None:
         if not self.is_mounted:
             return
-        width = max(6, (self.content_size.width - 18) // 5 - 2)
+        width = max(6, (self.content_size.width - 2 - 12 - 5) // 5)
         if width != self._column_width:
             self._column_width = width
             table = self.query_one(DataTable)
@@ -55,7 +57,7 @@ class TimetablePanel(Vertical):
         periods: list[Period],
     ) -> None:
         """Aktualisiere Zellen; ändere die Tabellenstruktur nur bei neuen Stundenzeilen."""
-        old_numbers = [period.number for period in self.periods]
+        old_periods = self.periods
         self.periods = periods
         self.styles.height = max(0, len(periods) * 3 - 1) + 3
         self.subjects_by_id = subjects_by_id
@@ -64,7 +66,7 @@ class TimetablePanel(Vertical):
         }
         table = self.query_one(DataTable)
         position = self.current_time_position or (None, None)
-        if old_numbers != [period.number for period in periods] or not table.columns:
+        if old_periods != periods or not table.columns:
             table.clear(columns=True)
             self.populate_timetable(*position)
             return
@@ -109,32 +111,35 @@ class TimetablePanel(Vertical):
         table = self.query_one("#schedule", DataTable)
 
         for index, (weekday, label) in enumerate(WEEKDAYS):
-            if index:
-                table.add_column(
-                    Text("│", style="dim"), key=f"separator-{index}", width=1
-                )
             table.add_column(
-                self.get_highlighted_text(
-                    label,
-                    is_current_column=weekday == current_weekday,
-                ),
+                Text("│\n┼", style="dim"), key=f"separator-{index}", width=1
+            )
+            header = self.get_highlighted_text(
+                label.center(self._column_width),
+                is_current_column=weekday == current_weekday,
+            )
+            header.append("\n" + "─" * self._column_width, style="dim")
+            table.add_column(
+                header,
                 key=weekday,
                 width=self._column_width,
             )
 
         for row_index, period in enumerate(self.periods):
-            height = 2 if row_index == len(self.periods) - 1 else 3
+            height = 2 if row_index >= len(self.periods) - 2 else 3
             cells = []
             for index, (weekday, _) in enumerate(WEEKDAYS):
-                if index:
-                    cells.append(Text("\n".join(["│"] * height), style="dim"))
+                cells.append(Text("\n".join(["│"] * height), style="dim"))
                 cells.append(
                     self._cell(weekday, period.number, current_weekday, current_period)
                 )
 
             row_label = self.get_highlighted_text(
-                str(period.number),
+                str(period.number).center(12),
                 is_current_row=period.number == current_period,
+            )
+            row_label.append(
+                f"\n{period.start:%H:%M}–{period.end:%H:%M} ", style="dim"
             )
             table.add_row(
                 *cells,
