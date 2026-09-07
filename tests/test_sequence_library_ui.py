@@ -7,33 +7,33 @@ from unittest.mock import Mock
 import pytest
 from test_ui_integration import prepare_root
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.curriculum.sequence import (
+from pult.app import PultApp
+from pult.curriculum.sequence import (
     SequenceFileError,
     get_sequence_path,
     load_sequence_library,
     save_sequence,
 )
-from schooltools_tui.screens.main_screen import MainScreen
-from schooltools_tui.screens.sequence_library_screen import SequenceLibraryScreen
-from schooltools_tui.storage import save_toml
-from schooltools_tui.widgets.navigation import ManagementPicker
-from schooltools_tui.widgets.sequence_preview import SequencePreview
-from schooltools_tui.widgets.sequence_tree import SequenceTree
+from pult.screens.main_screen import MainScreen
+from pult.screens.sequence_library_screen import SequenceLibraryScreen
+from pult.storage import save_toml
+from pult.widgets.navigation import ManagementPicker
+from pult.widgets.sequence_preview import SequencePreview
+from pult.widgets.sequence_tree import SequenceTree
 
 
 @pytest.mark.parametrize("editor_result", ["saved", "invalid", "missing"])
 def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_result):
     config = prepare_root(tmp_path)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     library_loader = Mock(wraps=load_sequence_library)
     monkeypatch.setattr(
-        "schooltools_tui.services.sequence_library.load_sequence_library",
+        "pult.services.sequence_library.load_sequence_library",
         library_loader,
     )
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
             picker = app.screen.query_one(ManagementPicker)
@@ -110,7 +110,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
 
             # Nur den Editoraufruf ersetzen, nicht das globale subprocess-Modul.
             monkeypatch.setattr(
-                "schooltools_tui.screens.sequence_library_screen.subprocess",
+                "pult.screens.sequence_library_screen.subprocess",
                 SimpleNamespace(run=editor),
             )
             await pilot.press("enter")
@@ -122,12 +122,9 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
                 assert node.data == updated
                 assert node.label.plain == updated.title
                 notifications.assert_not_called()
-                headings = screen.query_one(SequencePreview).document.query(
-                    "MarkdownH1"
-                )
-                assert any(
-                    updated.title in heading.render().plain for heading in headings
-                )
+                preview = screen.query_one(SequencePreview)
+                assert preview.border_title == updated.title
+                assert not preview.document.query("MarkdownH1")
             else:
                 assert node.data == original
                 assert notifications.call_args.kwargs["severity"] == "error"

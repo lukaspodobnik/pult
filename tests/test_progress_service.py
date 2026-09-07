@@ -2,10 +2,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from schooltools_tui.config import AppConfig
-from schooltools_tui.progress.class_progress import ActiveSequence, ClassProgress
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.services import progress as service
+from pult.config import AppConfig
+from pult.progress.class_progress import ActiveSequence, ClassProgress
+from pult.school.school_class import SchoolClass
+from pult.services import progress as service
 
 
 @pytest.fixture

@@ -6,9 +6,9 @@ import pytest
 from test_ui_integration import prepare_root
 from textual.widgets import Input, Select
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.initialization.school_class import initialize_school_class
-from schooltools_tui.progress.class_progress import (
+from pult.app import PultApp
+from pult.initialization.school_class import initialize_school_class
+from pult.progress.class_progress import (
     ActiveSequence,
     ClassProgress,
     TeachingAction,
@@ -16,23 +16,23 @@ from schooltools_tui.progress.class_progress import (
     TeachingOrigin,
     load_class_progress,
 )
-from schooltools_tui.progress.commands import ProgressCommandError, undo_last_entry
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.school.timetable import (
+from pult.progress.commands import ProgressCommandError, undo_last_entry
+from pult.school.school_class import SchoolClass
+from pult.school.timetable import (
     TimetableEntry,
     get_timetable_path,
     save_timetable,
 )
-from schooltools_tui.screens.add_extra_lesson_screen import AddExtraLessonScreen
-from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
-from schooltools_tui.screens.set_active_sequence_screen import SetActiveSequenceScreen
-from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
-from schooltools_tui.views.school_class_view import (
+from pult.screens.add_extra_lesson_screen import AddExtraLessonScreen
+from pult.screens.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.set_active_sequence_screen import SetActiveSequenceScreen
+from pult.screens.teaching_log_screen import TeachingLogScreen
+from pult.views.school_class_view import (
     SchoolClassView,
     SubjectProgressBlock,
 )
-from schooltools_tui.views.teaching_log_view import TeachingLogView
-from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
+from pult.views.teaching_log_view import TeachingLogView
+from pult.widgets.navigation import ManagementPicker, ViewPicker
 
 
 @pytest.mark.parametrize("management_focused", [False, True])
@@ -40,7 +40,7 @@ def test_home_key_selects_home_and_focuses_view_picker(
     multi_class_config, management_focused
 ):
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             main = await ready(app, pilot)
             picker = main.query_one(ViewPicker)
@@ -64,7 +64,7 @@ def test_home_key_selects_home_and_focuses_view_picker(
 
 def test_management_focus_blocks_progress_commands(multi_class_config, monkeypatch):
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             main = await ready(app, pilot)
             await main.show_school_class_view(
@@ -114,7 +114,7 @@ def multi_class_config(tmp_path, monkeypatch):
             TimetableEntry("monday", 2, "9B", "informatik-ntg", "102"),
         ],
     )
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     return config
 
 
@@ -140,7 +140,7 @@ def test_planned_commands_use_selected_subject(multi_class_config, command, acti
     config = multi_class_config
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             main = await ready(app, pilot)
             assert (
@@ -184,7 +184,7 @@ def test_modals_and_log_keep_subject_scope(multi_class_config):
     config = multi_class_config
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             main = await ready(app, pilot)
             await main.show_school_class_view(
@@ -246,9 +246,12 @@ def test_modals_and_log_keep_subject_scope(multi_class_config):
             targets = list(picker.class_subjects_by_option_id.values())
             assert targets[picker.highlighted] == ("9B", "informatik-ntg")
             picker.highlighted = targets.index(("9B", "mathematik"))
-            await pilot.pause()
+            await pilot.pause(0.2)
             assert {
-                e.subject_id for e in app.screen.query_one(TeachingLogView).entries
+                e.subject_id
+                for v in app.screen.query(TeachingLogView)
+                if v.display
+                for e in v.entries
             } == {"mathematik"}
             assert content.border_title == "Unterrichtsprotokoll · 9B · Mathematik"
             await pilot.press("escape")

@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from schooltools_tui.school.calendar import (
+from pult.school.calendar import (
     CalendarFileError,
     Closure,
     ClosureKind,
@@ -16,7 +16,7 @@ from schooltools_tui.school.calendar import (
     save_school_closures,
     validate_school_year,
 )
-from schooltools_tui.storage import save_toml
+from pult.storage import save_toml
 
 
 @pytest.mark.parametrize("value", ["2026", "2026/2027", "2026-2028", "abc"])

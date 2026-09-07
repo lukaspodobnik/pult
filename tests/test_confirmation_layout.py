@@ -4,13 +4,13 @@ from datetime import date
 import pytest
 from textual.app import App
 
-from schooltools_tui.school.calendar import Closure, ClosureKind
-from schooltools_tui.screens.confirm_closure_deletion_screen import (
+from pult.school.calendar import Closure, ClosureKind
+from pult.screens.confirm_closure_deletion_screen import (
     ConfirmClosureDeletionScreen,
 )
-from schooltools_tui.screens.confirm_undo_screen import ConfirmUndoScreen
-from schooltools_tui.screens.edit_classes_screen import ConfirmClassDeletionScreen
-from schooltools_tui.services.closures import ScopedClosure
+from pult.screens.confirm_undo_screen import ConfirmUndoScreen
+from pult.screens.edit_classes_screen import ConfirmClassDeletionScreen
+from pult.services.closures import ScopedClosure
 
 
 @pytest.mark.parametrize("kind", ["class", "closure", "undo"])
@@ -35,7 +35,7 @@ def test_confirmation_layout_and_actions(kind):
         )
 
     class TestApp(App):
-        CSS_PATH = "../src/schooltools_tui/styles/app.tcss"
+        CSS_PATH = "../src/pult/styles/app.tcss"
 
     async def run():
         app = TestApp()

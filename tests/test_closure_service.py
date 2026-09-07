@@ -2,8 +2,8 @@ from datetime import date
 
 import pytest
 
-from schooltools_tui.config import AppConfig
-from schooltools_tui.school.calendar import (
+from pult.config import AppConfig
+from pult.school.calendar import (
     Closure,
     ClosureKind,
     load_class_closures,
@@ -12,7 +12,7 @@ from schooltools_tui.school.calendar import (
     save_school_calendar,
     save_school_closures,
 )
-from schooltools_tui.services.closures import (
+from pult.services.closures import (
     ScopedClosure,
     add_closure,
     delete_closure,

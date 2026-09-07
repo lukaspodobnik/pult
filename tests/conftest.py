@@ -2,22 +2,25 @@ from datetime import date, time
 
 import pytest
 
-from schooltools_tui.curriculum.sequence import Lesson, Sequence
-from schooltools_tui.progress.class_progress import ActiveSequence, ClassProgress
-from schooltools_tui.progress.queries import PlannedLesson
-from schooltools_tui.school.calendar import Closure, ClosureKind, SchoolCalendar
-from schooltools_tui.school.period import Period
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.school.subject import Subject
-from schooltools_tui.school.timetable import TimetableEntry
+from pult.curriculum.sequence import Lesson, Sequence
+from pult.progress.class_progress import ActiveSequence, ClassProgress
+from pult.progress.queries import PlannedLesson
+from pult.school.calendar import Closure, ClosureKind, SchoolCalendar
+from pult.school.period import Period
+from pult.school.school_class import SchoolClass
+from pult.school.subject import Subject
+from pult.school.timetable import TimetableEntry
 
 
 @pytest.fixture(autouse=True)
 def isolated_omarchy_palette(tmp_path, monkeypatch):
     """Tests lesen nie die Palette des tatsächlich laufenden Desktops."""
     monkeypatch.setattr(
-        "schooltools_tui.services.omarchy_theme.get_omarchy_palette_path",
+        "pult.services.omarchy_theme.get_omarchy_palette_path",
         lambda: tmp_path / "omarchy" / "colors.toml",
+    )
+    monkeypatch.setattr(
+        "pult.config.app_config.LEGACY_APP_CONFIG_PATH", tmp_path / "legacy-config.toml"
     )
 
 

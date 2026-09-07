@@ -2,13 +2,13 @@ import asyncio
 
 from textual.widgets import DataTable, Input, OptionList, Select, SelectionList, Tree
 
-from schooltools_tui.app import SchooltoolsApp
+from pult.app import PultApp
 
 
 def test_vim_keys_navigate_without_changing_text_input(monkeypatch):
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: None)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: None)
 
-    class NavigationApp(SchooltoolsApp):
+    class NavigationApp(PultApp):
         CSS_PATH = []
 
         def show_initial_screen(self):

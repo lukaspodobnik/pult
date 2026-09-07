@@ -2,8 +2,8 @@ from datetime import date
 
 import pytest
 
-from schooltools_tui.presentation import format_date, format_school_year, parse_date
-from schooltools_tui.school.school_year import get_school_year_options
+from pult.presentation import format_date, format_school_year, parse_date
+from pult.school.school_year import get_school_year_options
 
 
 def test_german_date_display_and_input():

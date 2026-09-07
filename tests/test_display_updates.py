@@ -6,25 +6,25 @@ import pytest
 from test_ui_integration import prepare_root
 from textual.widgets import Button, DataTable, Input, OptionList, Select
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.initialization.school_class import initialize_school_class
-from schooltools_tui.progress.class_progress import (
+from pult.app import PultApp
+from pult.initialization.school_class import initialize_school_class
+from pult.progress.class_progress import (
     TeachingAction,
     TeachingLogEntry,
     TeachingOrigin,
     load_class_progress,
     save_class_progress,
 )
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.school.timetable import TimetableEntry
-from schooltools_tui.screens.edit_timetable_entry_screen import (
+from pult.school.school_class import SchoolClass
+from pult.school.timetable import TimetableEntry
+from pult.screens.edit_timetable_entry_screen import (
     EditTimetabelEntryScreen,
     TimetableEditAction,
     TimetableEditResult,
 )
-from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
-from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
-from schooltools_tui.views.teaching_log_view import TeachingLogView
+from pult.screens.edit_timetable_screen import EditTimetableScreen
+from pult.screens.teaching_log_screen import TeachingLogScreen
+from pult.views.teaching_log_view import TeachingLogView
 
 
 def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
@@ -34,10 +34,10 @@ def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
         config.active_school_year,
         SchoolClass("9B", 9, ["mathematik", "informatik-ntg"]),
     )
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
             screen = EditTimetableScreen()
@@ -100,10 +100,10 @@ def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
 
 def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
             await app.push_screen(EditTimetableScreen())
@@ -181,7 +181,7 @@ def test_log_initial_build_once_and_scrolls_to_latest(
             class_id,
             replace(progress, entries=entries),
         )
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     calls = []
     original = TeachingLogScreen.show_teaching_log
 
@@ -192,7 +192,7 @@ def test_log_initial_build_once_and_scrolls_to_latest(
     monkeypatch.setattr(TeachingLogScreen, "show_teaching_log", track)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(100, 30)) as pilot:
             await pilot.pause()
             await app.push_screen(TeachingLogScreen(initial_class))
@@ -202,12 +202,25 @@ def test_log_initial_build_once_and_scrolls_to_latest(
             assert view.scroll_y == view.max_scroll_y > 0
             picker = app.screen.query_one("#teaching-log-class-picker", OptionList)
             picker.highlighted = 0 if initial_class == "5B" else 1
-            await pilot.pause()
+            await pilot.pause(0.2)
             assert calls == [
                 initial_class or "5A",
                 "5A" if initial_class == "5B" else "5B",
             ]
-            view = app.screen.query_one(TeachingLogView)
+            view = next(v for v in app.screen.query(TeachingLogView) if v.display)
+            for _ in range(40):
+                if view.max_scroll_y > 0:
+                    break
+                await pilot.pause(0.05)
             assert view.scroll_y == view.max_scroll_y > 0
+            cached_views = tuple(app.screen.query(TeachingLogView))
+            calls.clear()
+            # Schnelle Zwischenpositionen sollen keinen eigenen Aufbau auslösen.
+            for index in range(12):
+                picker.highlighted = index % 2
+                await asyncio.sleep(0)
+            await pilot.pause(0.2)
+            assert len(calls) <= 1
+            assert tuple(app.screen.query(TeachingLogView)) == cached_views
 
     asyncio.run(run())

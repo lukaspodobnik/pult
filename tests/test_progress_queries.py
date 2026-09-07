@@ -1,17 +1,17 @@
 from datetime import date, datetime
 
-from schooltools_tui.progress.class_progress import (
+from pult.progress.class_progress import (
     ClassProgress,
     TeachingAction,
     TeachingLogEntry,
     TeachingOrigin,
 )
-from schooltools_tui.progress.commands import (
+from pult.progress.commands import (
     complete_lesson,
     continue_lesson,
     skip_lesson,
 )
-from schooltools_tui.progress.queries import (
+from pult.progress.queries import (
     count_available_scheduled_occurrences,
     get_class_progress_summary,
     get_daily_schedule,
@@ -21,9 +21,9 @@ from schooltools_tui.progress.queries import (
     get_next_scheduled_occurrence,
     get_school_year_progress,
 )
-from schooltools_tui.school.calendar import Closure, ClosureKind
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.school.timetable import TimetableEntry
+from pult.school.calendar import Closure, ClosureKind
+from pult.school.school_class import SchoolClass
+from pult.school.timetable import TimetableEntry
 
 
 def test_next_lesson_ignores_continued_and_advances_past_skipped(

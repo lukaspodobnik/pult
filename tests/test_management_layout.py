@@ -4,10 +4,10 @@ import pytest
 from test_ui_integration import prepare_root
 from textual.widgets import Button
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.screens.edit_classes_screen import EditClassesScreen
-from schooltools_tui.screens.edit_closures_screen import EditClosuresScreen
-from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
+from pult.app import PultApp
+from pult.screens.edit_classes_screen import EditClassesScreen
+from pult.screens.edit_closures_screen import EditClosuresScreen
+from pult.screens.edit_timetable_screen import EditTimetableScreen
 
 
 @pytest.mark.parametrize(
@@ -20,17 +20,17 @@ from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 )
 def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
     config = prepare_root(tmp_path)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(206, 46)) as pilot:
             await pilot.pause()
             screen = screen_type()
             await app.push_screen(screen)
             await pilot.pause()
             assert not screen.query("Header")
-            footer = screen.query_one("SchooltoolsFooter")
+            footer = screen.query_one("PultFooter")
             assert footer.query_one(".quit-key").region.right == footer.region.right
             content = screen.query_one(selector)
             assert content.border_title == title

@@ -1,6 +1,6 @@
 from dataclasses import replace
 
-from schooltools_tui.widgets.sequence_preview import SequencePreview
+from pult.widgets.sequence_preview import SequencePreview
 
 
 def test_sequence_preview_structure_and_empty_state(sequences):

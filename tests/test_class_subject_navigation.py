@@ -3,26 +3,26 @@ from dataclasses import replace
 
 from test_ui_integration import prepare_root
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.initialization.school_class import initialize_school_class
-from schooltools_tui.progress.class_progress import (
+from pult.app import PultApp
+from pult.initialization.school_class import initialize_school_class
+from pult.progress.class_progress import (
     load_class_progress,
     save_class_progress,
 )
-from schooltools_tui.school.school_class import SchoolClass, save_school_class
-from schooltools_tui.school.subject import load_subjects
-from schooltools_tui.widgets.navigation import ViewPicker
+from pult.school.school_class import SchoolClass, save_school_class
+from pult.school.subject import load_subjects
+from pult.widgets.navigation import ViewPicker
 
 
 def test_class_subject_options_and_selection_survive_refresh(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     school_class = SchoolClass("9B-NTG", 9, ["mathematik", "informatik-ntg"])
     initialize_school_class(tmp_path, config.active_school_year, school_class)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     subjects = {s.id: s for s in load_subjects(tmp_path)}
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.3)
             screen = app.screen

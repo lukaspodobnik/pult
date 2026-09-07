@@ -7,9 +7,9 @@ import tomli_w
 from test_ui_integration import prepare_root
 from textual.widgets import Input
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
-from schooltools_tui.services.omarchy_theme import (
+from pult.app import PultApp
+from pult.screens.cancel_lesson_screen import CancelLessonScreen
+from pult.services.omarchy_theme import (
     OmarchyThemeWatcher,
     theme_from_palette,
 )
@@ -88,17 +88,17 @@ def test_live_theme_keeps_modal_input_and_focus(
     tmp_path, monkeypatch, palette, valid_at_start
 ):
     config = prepare_root(tmp_path)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     path = tmp_path / "omarchy" / "colors.toml"
     if valid_at_start:
         write_palette(path, palette)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
             assert (
-                app.theme.startswith("schooltools-omarchy-")
+                app.theme.startswith("pult-omarchy-")
                 if valid_at_start
                 else app.theme == "gruvbox"
             )
@@ -150,7 +150,7 @@ def test_live_theme_keeps_modal_input_and_focus(
                     [
                         name
                         for name in app.available_themes
-                        if name.startswith("schooltools-omarchy-")
+                        if name.startswith("pult-omarchy-")
                     ]
                 )
                 == 2

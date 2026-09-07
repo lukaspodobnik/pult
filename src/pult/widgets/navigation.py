@@ -1,0 +1,81 @@
+import json
+
+from rich.cells import cell_len
+from rich.text import Text
+from textual.widgets import OptionList
+from textual.widgets.option_list import Option
+
+from pult.school.school_class import SchoolClass, school_class_sort_key
+from pult.school.subject import Subject
+
+
+class ViewPicker(OptionList):
+    def __init__(self, *, id: str | None = None) -> None:
+        super().__init__(id=id)
+        self.border_title = "ANSICHTEN"
+        self.class_subjects_by_option_id: dict[str, tuple[str, str]] = {}
+
+    def refresh_options(
+        self,
+        school_classes: list[SchoolClass],
+        subjects: list[Subject],
+        highlighted_option_id: str | None = None,
+        *,
+        include_home: bool = True,
+    ) -> None:
+        """Ersetze die Navigation und erhalte nach Möglichkeit das Highlight."""
+        subjects_by_id = {subject.id: subject for subject in subjects}
+        class_width = max((cell_len(c.id) for c in school_classes), default=0)
+        targets: dict[str, tuple[str, str]] = {}
+        options = [Option("Übersicht", id="home")] if include_home else []
+        for school_class in sorted(school_classes, key=school_class_sort_key):
+            class_label = school_class.id + " " * (
+                class_width - cell_len(school_class.id)
+            )
+            for subject_id in sorted(
+                school_class.subject_ids,
+                key=lambda value: (subjects_by_id[value].name.casefold(), value),
+            ):
+                # JSON erzeugt stabile, eindeutige IDs auch bei Sonderzeichen.
+                # Die Auswahl wird über targets aufgelöst, nicht durch Textzerlegung.
+                option_id = json.dumps([school_class.id, subject_id])
+                targets[option_id] = (school_class.id, subject_id)
+                options.append(
+                    Option(
+                        Text(
+                            f"{class_label} · {subjects_by_id[subject_id].short_name}",
+                            no_wrap=True,
+                            overflow="ellipsis",
+                        ),
+                        id=option_id,
+                    )
+                )
+
+        self.clear_options()
+        self.class_subjects_by_option_id = targets
+        # None zeichnet eine Trennlinie, ohne eine auswählbare Option anzulegen.
+        self.add_options(
+            [options[0], None, *options[1:]] if include_home and targets else options
+        )
+
+        option_ids = [option.id for option in options]
+        self.highlighted = (
+            option_ids.index(highlighted_option_id)
+            if highlighted_option_id in option_ids
+            else 0
+        )
+
+
+class ManagementPicker(OptionList):
+    def __init__(self, *, id: str | None = None) -> None:
+        super().__init__(
+            Option("Sequenzen", id="sequence-library"),
+            Option("Ausfälle", id="edit-closures"),
+            Option("Protokoll", id="teaching-log"),
+            None,
+            Option("Stundenplan", id="edit-timetable"),
+            Option("Klassen", id="edit-classes"),
+            Option("Einstellungen", id="settings"),
+            id=id,
+        )
+        self.border_title = "VERWALTUNG"

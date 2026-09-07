@@ -6,20 +6,20 @@ from test_ui_integration import prepare_root
 from textual.events import MouseScrollDown
 from textual.widgets import DataTable, Header
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.school.calendar import load_school_calendar
-from schooltools_tui.school.period import load_periods
-from schooltools_tui.school.timetable import (
+from pult.app import PultApp
+from pult.school.calendar import load_school_calendar
+from pult.school.period import load_periods
+from pult.school.timetable import (
     TimetableEntry,
     get_timetable_path,
     save_timetable,
 )
-from schooltools_tui.views.home_view import HomeView
-from schooltools_tui.widgets.capped_text import CappedText
-from schooltools_tui.widgets.dashboard.daily_schedule import DailySchedulePanel
-from schooltools_tui.widgets.dashboard.next_lesson import NextLessonPanel
-from schooltools_tui.widgets.dashboard.timetable import TimetablePanel
-from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
+from pult.views.home_view import HomeView
+from pult.widgets.capped_text import CappedText
+from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
+from pult.widgets.dashboard.next_lesson import NextLessonPanel
+from pult.widgets.dashboard.timetable import TimetablePanel
+from pult.widgets.navigation import ManagementPicker, ViewPicker
 
 
 @pytest.mark.parametrize("size", [(206, 46), (180, 42), (241, 70)])
@@ -35,9 +35,9 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
         def now(cls, tz):
             return datetime.combine(first_day, time(8, 10), tzinfo=tz)
 
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
-    monkeypatch.setattr("schooltools_tui.screens.main_screen.datetime", Clock)
-    monkeypatch.setattr("schooltools_tui.views.home_view.datetime", Clock)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.screens.main_screen.datetime", Clock)
+    monkeypatch.setattr("pult.views.home_view.datetime", Clock)
     save_timetable(
         get_timetable_path(tmp_path, config.active_school_year),
         [
@@ -48,7 +48,7 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
     )
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=size) as pilot:
             await pilot.pause(0.4)
             for _ in range(40):
@@ -56,7 +56,7 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
                     break
                 await pilot.pause(0.05)
             home = app.screen.query_one(HomeView)
-            footer = app.screen.query_one("SchooltoolsFooter")
+            footer = app.screen.query_one("PultFooter")
             for _ in range(40):
                 if footer.query(".quit-key"):
                     break
@@ -72,9 +72,7 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert home.query_one("#school-year-progress").region.height == 4
             assert home.query_one("#school-year-progress-bar").region.height == 1
             assert not logo.can_focus
-            assert (
-                logo.region.bottom + 1 == app.screen.query_one(ViewPicker).region.y
-            )
+            assert logo.region.bottom + 1 == app.screen.query_one(ViewPicker).region.y
             timetable = home.query_one(TimetablePanel)
             next_lesson = home.query_one(NextLessonPanel)
             daily = home.query_one(DailySchedulePanel)

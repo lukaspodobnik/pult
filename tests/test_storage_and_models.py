@@ -2,7 +2,7 @@ from datetime import date, time
 
 import pytest
 
-from schooltools_tui.curriculum.sequence import (
+from pult.curriculum.sequence import (
     Lesson,
     Sequence,
     SequenceFileError,
@@ -10,7 +10,7 @@ from schooltools_tui.curriculum.sequence import (
     load_sequence,
     save_sequence,
 )
-from schooltools_tui.progress.class_progress import (
+from pult.progress.class_progress import (
     ActiveSequence,
     ClassProgress,
     ClassProgressFileError,
@@ -22,25 +22,25 @@ from schooltools_tui.progress.class_progress import (
     save_class_progress,
     validate_class_progress,
 )
-from schooltools_tui.school.period import (
+from pult.school.period import (
     Period,
     PeriodsFileError,
     load_periods,
     save_periods,
 )
-from schooltools_tui.school.school_class import (
+from pult.school.school_class import (
     SchoolClass,
     get_school_class_path,
     load_school_class,
     save_school_class,
 )
-from schooltools_tui.school.timetable import (
+from pult.school.timetable import (
     TimetableEntry,
     get_timetable_path,
     load_timetable,
     save_timetable,
 )
-from schooltools_tui.storage import load_toml, save_toml
+from pult.storage import load_toml, save_toml
 
 
 def test_load_toml_raises_for_missing_file(tmp_path):

@@ -4,18 +4,18 @@ from dataclasses import replace
 import pytest
 from test_ui_integration import prepare_root
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.school.timetable import (
+from pult.app import PultApp
+from pult.school.timetable import (
     TimetableEntry,
     get_timetable_path,
     save_timetable,
 )
-from schooltools_tui.screens.confirmation_screen import ConfirmationScreen
-from schooltools_tui.screens.edit_timetable_entry_screen import (
+from pult.screens.confirmation_screen import ConfirmationScreen
+from pult.screens.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
-from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
+from pult.screens.edit_timetable_screen import EditTimetableScreen
 
 
 @pytest.mark.parametrize(
@@ -24,14 +24,14 @@ from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 @pytest.mark.parametrize("escape", [True, False])
 def test_discard_only_asks_for_actual_changes(tmp_path, monkeypatch, change, escape):
     config = prepare_root(tmp_path)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     path = get_timetable_path(tmp_path, config.active_school_year)
     original = TimetableEntry("monday", 1, "5A", "mathematik", "101")
     save_timetable(path, [original])
     saved_bytes = path.read_bytes()
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
             screen = EditTimetableScreen()

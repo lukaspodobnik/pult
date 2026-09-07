@@ -2,9 +2,9 @@ from unittest.mock import Mock
 
 import pytest
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.config import AppConfig
-from schooltools_tui.services.sequence_library import SequenceLibrary
+from pult.app import PultApp
+from pult.config import AppConfig
+from pult.services.sequence_library import SequenceLibrary
 
 
 @pytest.mark.parametrize("empty", [False, True])
@@ -13,9 +13,7 @@ def test_library_loads_once_and_reloads_after_invalidation(
 ):
     loaded = [] if empty else sequences
     loader = Mock(return_value=loaded)
-    monkeypatch.setattr(
-        "schooltools_tui.services.sequence_library.load_sequence_library", loader
-    )
+    monkeypatch.setattr("pult.services.sequence_library.load_sequence_library", loader)
     library = SequenceLibrary(tmp_path)
     loader.assert_not_called()
     assert library.get_sequences() is loaded
@@ -28,9 +26,7 @@ def test_library_loads_once_and_reloads_after_invalidation(
 
 def test_failed_loading_can_be_retried(tmp_path, monkeypatch, sequences):
     loader = Mock(side_effect=[ValueError("Ungültige Datei"), sequences])
-    monkeypatch.setattr(
-        "schooltools_tui.services.sequence_library.load_sequence_library", loader
-    )
+    monkeypatch.setattr("pult.services.sequence_library.load_sequence_library", loader)
     library = SequenceLibrary(tmp_path)
     with pytest.raises(ValueError):
         library.get_sequences()
@@ -39,7 +35,7 @@ def test_failed_loading_can_be_retried(tmp_path, monkeypatch, sequences):
 
 @pytest.mark.parametrize("after_setup", [False, True])
 def test_app_initializes_and_shares_library(tmp_path, monkeypatch, after_setup):
-    app = SchooltoolsApp()
+    app = PultApp()
     monkeypatch.setattr(app, "push_screen", Mock())
     config = AppConfig(tmp_path, "true", "2026-2027")
     with pytest.raises(RuntimeError):

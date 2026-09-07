@@ -5,28 +5,28 @@ from datetime import datetime
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Static
 
-from schooltools_tui.progress.class_progress import (
+from pult.progress.class_progress import (
     TeachingAction,
     TeachingLogEntry,
     TeachingOrigin,
 )
-from schooltools_tui.progress.queries import (
+from pult.progress.queries import (
     DailyAdditionalEntry,
     get_class_progress_summary,
     get_home_dashboard_summary,
 )
-from schooltools_tui.views.home_view import HomeView
-from schooltools_tui.views.school_class_view import (
+from pult.views.home_view import HomeView
+from pult.views.school_class_view import (
     SchoolClassView,
     SequenceProgressBlock,
     SubjectProgressBlock,
 )
-from schooltools_tui.widgets.dashboard.daily_schedule import (
+from pult.widgets.dashboard.daily_schedule import (
     DailyAdditionalRow,
     DailyScheduleRow,
 )
-from schooltools_tui.widgets.dashboard.next_lesson import NextLessonPanel
-from schooltools_tui.widgets.lesson_progress_bar import LessonProgressBar
+from pult.widgets.dashboard.next_lesson import NextLessonPanel
+from pult.widgets.lesson_progress_bar import LessonProgressBar
 
 
 def test_class_updates_keep_blocks_and_clear_optional_content(
@@ -123,7 +123,7 @@ def test_dashboard_updates_preserve_widgets_and_resize_rows(
         def now(cls, tz):
             return datetime(2026, 9, 7, 8, 10, tzinfo=tz)
 
-    monkeypatch.setattr("schooltools_tui.views.home_view.datetime", Clock)
+    monkeypatch.setattr("pult.views.home_view.datetime", Clock)
     dashboard = get_home_dashboard_summary(
         datetime(2026, 9, 7, 8, 10),
         {school_class.id: empty_progress},

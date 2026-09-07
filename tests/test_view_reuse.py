@@ -3,17 +3,17 @@ import asyncio
 from test_ui_integration import prepare_root
 from textual.widgets import ContentSwitcher, DataTable
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.initialization.school_class import initialize_school_class
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.school.timetable import (
+from pult.app import PultApp
+from pult.initialization.school_class import initialize_school_class
+from pult.school.school_class import SchoolClass
+from pult.school.timetable import (
     TimetableEntry,
     get_timetable_path,
     save_timetable,
 )
-from schooltools_tui.views.home_view import HomeView
-from schooltools_tui.views.school_class_view import SchoolClassView
-from schooltools_tui.widgets.dashboard.timetable import TimetablePanel
+from pult.views.home_view import HomeView
+from pult.views.school_class_view import SchoolClassView
+from pult.widgets.dashboard.timetable import TimetablePanel
 
 
 def test_views_are_reused_and_hidden_home_does_not_steal_selection(
@@ -23,10 +23,10 @@ def test_views_are_reused_and_hidden_home_does_not_steal_selection(
     initialize_school_class(
         tmp_path, config.active_school_year, SchoolClass("5B", 5, ["mathematik"])
     )
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.2)
             screen = app.screen

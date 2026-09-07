@@ -4,30 +4,30 @@ from datetime import date
 import pytest
 from test_ui_integration import prepare_root
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.progress.class_progress import load_class_progress
-from schooltools_tui.school.school_class import load_school_classes
-from schooltools_tui.school.subject import load_subjects
-from schooltools_tui.screens.add_closure_screen import AddClosureScreen
-from schooltools_tui.screens.add_extra_lesson_screen import AddExtraLessonScreen
-from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
-from schooltools_tui.screens.edit_timetable_entry_screen import EditTimetabelEntryScreen
-from schooltools_tui.screens.select_next_sequence_screen import SelectNextSequenceScreen
-from schooltools_tui.screens.set_active_sequence_screen import SetActiveSequenceScreen
-from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
-from schooltools_tui.widgets.form_dialog import FormDialog
+from pult.app import PultApp
+from pult.progress.class_progress import load_class_progress
+from pult.school.school_class import load_school_classes
+from pult.school.subject import load_subjects
+from pult.screens.add_closure_screen import AddClosureScreen
+from pult.screens.add_extra_lesson_screen import AddExtraLessonScreen
+from pult.screens.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.edit_timetable_entry_screen import EditTimetabelEntryScreen
+from pult.screens.select_next_sequence_screen import SelectNextSequenceScreen
+from pult.screens.set_active_sequence_screen import SetActiveSequenceScreen
+from pult.screens.setup_school_class_screen import SchoolClassSetupScreen
+from pult.widgets.form_dialog import FormDialog
 
 
 @pytest.mark.parametrize("size", [(206, 46), (80, 24)])
 def test_form_frames_actions_and_focus(tmp_path, monkeypatch, size):
     config = prepare_root(tmp_path)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     classes = load_school_classes(tmp_path, config.active_school_year)
     subjects = load_subjects(tmp_path)
     progress = load_class_progress(tmp_path, config.active_school_year, "5A")
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=size) as pilot:
             await pilot.pause()
             sequences = [

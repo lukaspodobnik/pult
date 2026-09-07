@@ -1,4 +1,4 @@
-# Praxistest – Schooltools TUI v1
+# Praxistest – Pult TUI v1
 
 Datum: 6. September 2026
 Terminal / Fenstergröße: vollbild (normaler laptop)

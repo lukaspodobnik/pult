@@ -3,18 +3,18 @@ import asyncio
 import pytest
 from test_ui_integration import prepare_root
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.views.school_class_view import SchoolClassView
-from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
+from pult.app import PultApp
+from pult.views.school_class_view import SchoolClassView
+from pult.widgets.navigation import ManagementPicker, ViewPicker
 
 
 @pytest.mark.parametrize("size", [(206, 46), (180, 42), (241, 70)])
 def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
     config = prepare_root(tmp_path)
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=size) as pilot:
             await pilot.pause(0.3)
             picker = app.screen.query_one(ViewPicker)
@@ -26,7 +26,7 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
                 await pilot.pause(0.05)
             await pilot.pause()
             view = app.screen.query_one(SchoolClassView)
-            footer = app.screen.query_one("SchooltoolsFooter")
+            footer = app.screen.query_one("PultFooter")
             navigation_key = footer.query_one(".navigation-key")
             keys = list(footer.children)
             previous_key = keys[keys.index(navigation_key) - 2]
@@ -37,8 +37,11 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
             sequences = view.query_one(".sequence-list")
             details = view.query_one(".class-details")
             management = app.screen.query_one(ManagementPicker)
-            logo = app.screen.query_one("#logo-placeholder")
-            assert overview.region.y == logo.region.y
+            logo = app.screen.query_one("#app-logo")
+            assert overview.region.y == logo.region.y + 1
+            first_sequence = view.query_one(".sequence-progress")
+            assert first_sequence.styles.margin.top == 0
+            assert first_sequence.styles.padding.top == 0
             assert overview.region.height == 4
             assert "5A" in str(overview.border_title)
             assert "Mathematik" in str(overview.border_title)

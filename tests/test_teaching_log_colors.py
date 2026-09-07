@@ -5,17 +5,17 @@ from pathlib import Path
 from textual.app import App
 from textual.color import Color
 
-from schooltools_tui.progress.class_progress import (
+from pult.progress.class_progress import (
     TeachingAction,
     TeachingLogEntry,
     TeachingOrigin,
 )
-from schooltools_tui.views.teaching_log_view import TeachingLogView
-from schooltools_tui.widgets.lesson_progress_bar import LessonProgressBar
+from pult.views.teaching_log_view import TeachingLogView
+from pult.widgets.lesson_progress_bar import LessonProgressBar
 
 
 def test_log_colors_match_progress_and_follow_theme(school_class, subject, sequences):
-    styles = Path(__file__).parents[1] / "src/schooltools_tui/styles"
+    styles = Path(__file__).parents[1] / "src/pult/styles"
     entries = tuple(
         TeachingLogEntry(
             date(2026, 9, 7),

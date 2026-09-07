@@ -4,14 +4,14 @@ import pytest
 from test_ui_integration import prepare_root
 from textual.widgets import Input, Label
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.progress.class_progress import TeachingAction, load_class_progress
-from schooltools_tui.school.timetable import (
+from pult.app import PultApp
+from pult.progress.class_progress import TeachingAction, load_class_progress
+from pult.school.timetable import (
     TimetableEntry,
     get_timetable_path,
     save_timetable,
 )
-from schooltools_tui.screens.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.cancel_lesson_screen import CancelLessonScreen
 
 
 @pytest.mark.parametrize("from_home", [True, False])
@@ -23,10 +23,10 @@ def test_cancellation_shows_home_class_and_saves_same_target(
         get_timetable_path(tmp_path, config.active_school_year),
         [TimetableEntry("monday", 1, "5A", "mathematik", "101")],
     )
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.3)
             main = app.screen

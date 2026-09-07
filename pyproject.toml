@@ -1,7 +1,7 @@
 [project]
-name = "schooltools-tui"
+name = "pult"
 version = "0.1.0"
-description = "Add your description here"
+description = "Lokaler Unterrichtsplaner für das Terminal: Sequenzen, Stundenplan und Unterrichtsprotokoll."
 readme = "README.md"
 authors = [
     { name = "Lukas Podobnik", email = "lukas.podobnik@gmail.com" }
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-schooltools-tui = "schooltools_tui:main"
+pult = "pult:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]

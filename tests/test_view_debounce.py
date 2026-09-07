@@ -4,13 +4,13 @@ from unittest.mock import AsyncMock, Mock
 from test_ui_integration import prepare_root
 from textual.screen import Screen
 
-from schooltools_tui.app import SchooltoolsApp
-from schooltools_tui.initialization.school_class import initialize_school_class
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.screens.main_screen import MainScreen
-from schooltools_tui.views.home_view import HomeView
-from schooltools_tui.views.school_class_view import SchoolClassView
-from schooltools_tui.widgets.navigation import ViewPicker
+from pult.app import PultApp
+from pult.initialization.school_class import initialize_school_class
+from pult.school.school_class import SchoolClass
+from pult.screens.main_screen import MainScreen
+from pult.views.home_view import HomeView
+from pult.views.school_class_view import SchoolClassView
+from pult.widgets.navigation import ViewPicker
 
 
 def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypatch):
@@ -18,7 +18,7 @@ def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypa
     initialize_school_class(
         tmp_path, config.active_school_year, SchoolClass("5B", 5, ["mathematik"])
     )
-    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     # Genug Abstand für die Prüfung des Zustands vor Ablauf des Timers.
     monkeypatch.setattr(MainScreen, "VIEW_DEBOUNCE_SECONDS", 0.2)
     builds = []
@@ -33,7 +33,7 @@ def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypa
     monkeypatch.setattr(MainScreen, "switch_view", track)
 
     async def run():
-        app = SchooltoolsApp()
+        app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.3)
             screen = app.screen

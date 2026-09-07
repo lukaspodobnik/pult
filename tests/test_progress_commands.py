@@ -2,14 +2,14 @@ from datetime import date
 
 import pytest
 
-from schooltools_tui.curriculum.sequence import Lesson, Sequence
-from schooltools_tui.progress.class_progress import (
+from pult.curriculum.sequence import Lesson, Sequence
+from pult.progress.class_progress import (
     ActiveSequence,
     ClassProgress,
     TeachingAction,
     TeachingOrigin,
 )
-from schooltools_tui.progress.commands import (
+from pult.progress.commands import (
     LessonCompletionState,
     ProgressCommandError,
     add_extra_lesson,
@@ -21,7 +21,7 @@ from schooltools_tui.progress.commands import (
     skip_lesson,
     undo_last_entry,
 )
-from schooltools_tui.progress.queries import PlannedLesson, get_next_lesson
+from pult.progress.queries import PlannedLesson, get_next_lesson
 
 
 def test_complete_lesson_records_scheduled_completion(

@@ -4,15 +4,15 @@ from datetime import datetime
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable, ProgressBar
 
-from schooltools_tui.progress.queries import get_home_dashboard_summary
-from schooltools_tui.views.home_view import HomeView
-from schooltools_tui.widgets.dashboard.daily_schedule import (
+from pult.progress.queries import get_home_dashboard_summary
+from pult.views.home_view import HomeView
+from pult.widgets.dashboard.daily_schedule import (
     DailySchedulePanel,
     DailyScheduleRow,
 )
-from schooltools_tui.widgets.dashboard.next_lesson import NextLessonPanel
-from schooltools_tui.widgets.dashboard.school_year_progress import SchoolYearProgress
-from schooltools_tui.widgets.dashboard.timetable import TimetablePanel
+from pult.widgets.dashboard.next_lesson import NextLessonPanel
+from pult.widgets.dashboard.school_year_progress import SchoolYearProgress
+from pult.widgets.dashboard.timetable import TimetablePanel
 
 
 def test_dashboard_widgets_and_time_updates(
@@ -32,7 +32,7 @@ def test_dashboard_widgets_and_time_updates(
         def now(cls, tz):
             return cls.current.replace(tzinfo=tz)
 
-    monkeypatch.setattr("schooltools_tui.views.home_view.datetime", Clock)
+    monkeypatch.setattr("pult.views.home_view.datetime", Clock)
     dashboard = get_home_dashboard_summary(
         Clock.current,
         {school_class.id: empty_progress},
@@ -94,7 +94,8 @@ def test_dashboard_widgets_and_time_updates(
             view.refresh_time_highlight()
             assert [row.has_class("time-highlighted") for row in rows] == [False, True]
             assert table.get_cell("2", "monday").style == current_style
-            assert table.get_cell("1", "monday").style == ""
+            assert table.get_cell("1", "monday").style == row_style
+            assert table.get_cell("1", "tuesday").style == ""
             view.refresh_time_highlight()
             assert table.row_count == len(periods)
 

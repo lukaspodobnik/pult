@@ -4,10 +4,10 @@ import pytest
 from textual.app import App
 from textual.widgets import Select
 
-from schooltools_tui.school.school_class import SchoolClass
-from schooltools_tui.school.subject import Subject
-from schooltools_tui.school.timetable import TimetableEntry
-from schooltools_tui.screens.edit_timetable_entry_screen import (
+from pult.school.school_class import SchoolClass
+from pult.school.subject import Subject
+from pult.school.timetable import TimetableEntry
+from pult.screens.edit_timetable_entry_screen import (
     EditTimetabelEntryScreen,
     TimetableEditAction,
 )
