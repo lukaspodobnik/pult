@@ -7,7 +7,6 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import (
     Button,
-    Footer,
     OptionList,
     Static,
 )
@@ -32,6 +31,7 @@ from schooltools_tui.services.closures import (
     delete_closure,
     get_default_closure_date,
 )
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 
 
 class EditClosuresScreen(SchooltoolsScreen[None]):
@@ -64,7 +64,7 @@ class EditClosuresScreen(SchooltoolsScreen[None]):
                 yield Static(classes="action-spacer")
                 yield Button("Zurück", id="close-closure-management")
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     def on_mount(self) -> None:
         self.refresh_closures()

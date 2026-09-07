@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, Footer, OptionList, Static
+from textual.widgets import ContentSwitcher, OptionList, Static
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -68,6 +68,7 @@ from schooltools_tui.services.progress import (
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
 from schooltools_tui.widgets.dashboard.timetable import TimetablePanel
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
 
 
@@ -82,14 +83,14 @@ class PlannedLessonContext:
 class MainScreen(SchooltoolsScreen[None]):
     VIEW_DEBOUNCE_SECONDS: ClassVar[float] = 0.06
     BINDINGS: ClassVar = [
-        ("n", "complete_next_lesson", "Stunde abschließen"),
-        ("s", "skip_next_lesson", "Stunde überspringen"),
-        ("c", "continue_next_lesson", "Stunde fortsetzen"),
-        ("a", "cancel_next_lesson", "Ausfall eintragen"),
-        ("p", "undo_last_entry", "Letzten Eintrag zurücknehmen"),
+        ("n", "complete_next_lesson", "Abschließen"),
+        ("s", "skip_next_lesson", "Überspringen"),
+        ("c", "continue_next_lesson", "Fortsetzen"),
+        ("a", "cancel_next_lesson", "Ausfall"),
         ("z", "add_extra_lesson", "Zusatzunterricht"),
+        ("p", "undo_last_entry", "Rückgängig"),
+        ("l", "show_teaching_log", "Protokoll"),
         ("w", "change_active_sequence", "Sequenz wechseln"),
-        ("l", "show_teaching_log", "Unterrichtsprotokoll"),
     ]
 
     def __init__(self) -> None:
@@ -111,7 +112,7 @@ class MainScreen(SchooltoolsScreen[None]):
             content.can_focus_children = False
             yield content
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     def on_mount(self) -> None:
         self.refresh_view_picker()

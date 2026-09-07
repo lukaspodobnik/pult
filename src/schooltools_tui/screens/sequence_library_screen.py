@@ -5,7 +5,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Footer, Tree
+from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
 from schooltools_tui.curriculum.sequence import (
@@ -16,6 +16,7 @@ from schooltools_tui.curriculum.sequence import (
 )
 from schooltools_tui.school.subject import load_subjects
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 from schooltools_tui.widgets.sequence_preview import SequencePreview
 from schooltools_tui.widgets.sequence_tree import SequenceTree
 
@@ -31,7 +32,7 @@ class SequenceLibraryScreen(SchooltoolsScreen[None]):
             with Container(id="sequence-content"):
                 yield SequencePreview(id="sequence-preview")
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     def on_mount(self) -> None:
         config = self.app_config

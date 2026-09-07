@@ -3,7 +3,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, Footer, Label, OptionList, Static
+from textual.widgets import Button, Label, OptionList, Static
 from textual.widgets.option_list import Option
 
 from schooltools_tui.school.school_class import (
@@ -19,6 +19,7 @@ from schooltools_tui.screens.base_screen import (
     SchooltoolsScreen,
 )
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 
 
 class ConfirmClassDeletionScreen(SchooltoolsModalScreen[bool]):
@@ -84,7 +85,7 @@ class EditClassesScreen(SchooltoolsScreen[None]):
                 yield Static(classes="action-spacer")
                 yield Button("Zurück", id="close-class-management")
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     def on_mount(self) -> None:
         self.refresh_classes()

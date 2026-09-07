@@ -20,7 +20,19 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
             picker = app.screen.query_one(ViewPicker)
             picker.highlighted = 1
             await pilot.pause(0.3)
+            for _ in range(40):
+                if app.screen._pending_view_id is None:
+                    break
+                await pilot.pause(0.05)
+            await pilot.pause()
             view = app.screen.query_one(SchoolClassView)
+            footer = app.screen.query_one("SchooltoolsFooter")
+            navigation_key = footer.query_one(".navigation-key")
+            keys = list(footer.children)
+            previous_key = keys[keys.index(navigation_key) - 2]
+            assert footer.query_one(".navigation-spacer").region.width <= 8
+            assert navigation_key.region.x - previous_key.region.right <= 9
+            assert footer.query_one(".quit-key").region.right == footer.region.right
             overview = view.query_one(".subject-overview")
             sequences = view.query_one(".sequence-list")
             details = view.query_one(".class-details")

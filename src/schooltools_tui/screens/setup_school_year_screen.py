@@ -1,7 +1,7 @@
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import Footer, Header, Label, OptionList
+from textual.widgets import Header, Label, OptionList
 from textual.widgets.option_list import Option
 
 from schooltools_tui.initialization.school_year import initialize_school_year
@@ -10,6 +10,7 @@ from schooltools_tui.school.school_year import (
     get_school_year_options,
 )
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 
 
 class SchoolYearSetupScreen(SchooltoolsScreen[str]):
@@ -32,7 +33,7 @@ class SchoolYearSetupScreen(SchooltoolsScreen[str]):
                 id="school-years",
             )
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     def on_mount(self) -> None:
         option_list = self.query_one("#school-years", OptionList)

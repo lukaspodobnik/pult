@@ -3,7 +3,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Footer, Label, OptionList
+from textual.widgets import Label, OptionList
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -14,6 +14,7 @@ from schooltools_tui.school.school_class import SchoolClass, load_school_classes
 from schooltools_tui.school.subject import Subject, load_subjects
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
 from schooltools_tui.views.teaching_log_view import TeachingLogView
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 from schooltools_tui.widgets.navigation import ViewPicker
 
 
@@ -45,7 +46,7 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
             content.border_title = "Unterrichtsprotokoll"
             yield content
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     async def on_mount(self) -> None:
         config = self.app_config

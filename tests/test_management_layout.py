@@ -30,6 +30,8 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
             await app.push_screen(screen)
             await pilot.pause()
             assert not screen.query("Header")
+            footer = screen.query_one("SchooltoolsFooter")
+            assert footer.query_one(".quit-key").region.right == footer.region.right
             content = screen.query_one(selector)
             assert content.border_title == title
             assert content.region.x == 2

@@ -4,7 +4,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Input, Label, Select
+from textual.widgets import Button, Header, Input, Label, Select
 
 from schooltools_tui.config import AppConfig
 from schooltools_tui.initialization import (
@@ -15,6 +15,7 @@ from schooltools_tui.school.school_year import (
     get_likely_school_year,
     get_school_year_options,
 )
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 
 
 class SetupScreen(Screen[AppConfig]):
@@ -66,7 +67,7 @@ class SetupScreen(Screen[AppConfig]):
                 variant="primary",
             )
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     @on(Button.Pressed, "#submit-setup")
     def submit_setup(self) -> None:

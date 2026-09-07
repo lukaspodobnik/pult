@@ -5,7 +5,7 @@ from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, DataTable, Footer, Static
+from textual.widgets import Button, DataTable, Static
 
 from schooltools_tui.presentation import WEEKDAYS
 from schooltools_tui.school.period import Period, load_periods
@@ -23,6 +23,7 @@ from schooltools_tui.screens.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
+from schooltools_tui.widgets.footer import SchooltoolsFooter
 
 
 class EditableTimetable(DataTable):
@@ -64,7 +65,7 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
                     id="save-timetable",
                 )
 
-        yield Footer()
+        yield SchooltoolsFooter()
 
     def on_mount(self) -> None:
         config = self.app_config

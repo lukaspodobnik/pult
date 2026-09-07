@@ -11,6 +11,30 @@ Footer {
     background: $panel;
 }
 
+SchooltoolsFooter FooterKey {
+    margin-right: 1;
+}
+
+SchooltoolsFooter .footer-spacer {
+    width: 1fr;
+    height: 1;
+}
+
+SchooltoolsFooter .navigation-spacer {
+    max-width: 8;
+}
+
+SchooltoolsFooter FooterKey.quit-key {
+    dock: right;
+    margin-right: 0;
+    margin-left: 2;
+}
+
+SchooltoolsFooter FooterKey.balanced-quit {
+    dock: none;
+    margin-left: 0;
+}
+
 .management-actions {
     height: 1;
     margin-top: 1;
