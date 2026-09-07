@@ -48,3 +48,37 @@ App.-light-mode SequenceLibraryScreen #sequence-preview:focus {
     border: round $primary-darken-2;
     border-title-color: $primary-darken-2;
 }
+
+SequencePreview Markdown {
+    padding: 0;
+    background: transparent;
+}
+
+SequencePreview MarkdownHeader {
+    background: transparent;
+    color: $text-accent;
+    text-style: bold;
+    content-align: left middle;
+    margin: 1 0;
+}
+
+SequencePreview MarkdownHorizontalRule {
+    height: 1;
+    padding: 0;
+    margin: 1 0;
+    border-bottom: solid $foreground 18%;
+}
+
+SequencePreview MarkdownParagraph {
+    margin: 0 0 1 0;
+}
+
+SequencePreview MarkdownBulletList {
+    margin: 0 0 1 0;
+}
+
+SequencePreview MarkdownBlockQuote {
+    background: transparent;
+    border-left: solid $foreground 25%;
+    padding: 0 1;
+}

@@ -21,32 +21,26 @@ class SequencePreview(MarkdownViewer):
     @staticmethod
     def render_sequence(sequence: Sequence) -> str:
         """Formatiere eine Sequenz als Markdown für die Vorschau."""
-        lines = [
-            f"# {sequence.title}",
-            "",
-            f"**Lehrplanabschnitt:** {sequence.curriculum_section_id}",
-            "",
-        ]
-
+        metadata = f"Lehrplanabschnitt {sequence.curriculum_section_id}"
         if sequence.recommended_lesson_count is not None:
-            lines.append(
-                f"**Empfohlener Umfang:** {sequence.recommended_lesson_count} Stunden"
-            )
-
-        lines.extend(["", "## Unterrichtsstunden"])
+            count = sequence.recommended_lesson_count
+            metadata += f" · Richtwert: {count} {'Stunde' if count == 1 else 'Stunden'}"
+        lines = [metadata, ""]
 
         for index, lesson in enumerate(sequence.lessons, start=1):
+            if index > 1:
+                lines.extend(["", "---", ""])
             title = lesson.title or UNTITLED_LESSON
             lines.extend(
                 [
                     "",
-                    f"### {index}. {title}",
+                    f"## {index}. Stunde · {title}",
                     "",
                 ]
             )
 
             if lesson.tasks:
-                lines.append("**Aufgaben:**")
+                lines.extend(["**Aufgaben**", ""])
                 lines.extend(f"- {task}" for task in lesson.tasks)
             else:
                 lines.append("*Noch keine Aufgaben eingetragen.*")
@@ -55,7 +49,7 @@ class SequencePreview(MarkdownViewer):
                 lines.extend(
                     [
                         "",
-                        "**Notizen:**",
+                        "**Notizen**",
                         "",
                         lesson.notes,
                     ]
