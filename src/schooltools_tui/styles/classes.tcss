@@ -14,8 +14,7 @@ ConfirmClassDeletionScreen #confirm-class-deletion-dialog {
 }
 
 SchoolClassSetupScreen #school-class-setup-title,
-ConfirmClassDeletionScreen #confirm-class-deletion-title,
-EditClassesScreen #edit-classes-title {
+ConfirmClassDeletionScreen #confirm-class-deletion-title {
     height: 3;
     content-align: center middle;
     color: $text-accent;
@@ -28,16 +27,14 @@ SchoolClassSetupScreen #subjects {
 }
 
 SchoolClassSetupScreen #school-class-setup-actions,
-ConfirmClassDeletionScreen #confirm-class-deletion-actions,
-EditClassesScreen #edit-classes-actions {
+ConfirmClassDeletionScreen #confirm-class-deletion-actions {
     height: auto;
     margin-top: 1;
     align-horizontal: right;
 }
 
 SchoolClassSetupScreen #school-class-setup-actions Button,
-ConfirmClassDeletionScreen #confirm-class-deletion-actions Button,
-EditClassesScreen #edit-classes-actions Button {
+ConfirmClassDeletionScreen #confirm-class-deletion-actions Button {
     margin-left: 1;
 }
 
@@ -56,4 +53,5 @@ EditClassesScreen #school-classes {
     height: 1fr;
     min-height: 8;
     border: round $primary;
+    border-title-color: $text-accent;
 }

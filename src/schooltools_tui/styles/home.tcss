@@ -220,25 +220,10 @@ EditTimetableScreen #edit-timetable-screen {
     padding: 1 2;
 }
 
-EditTimetableScreen #edit-timetable-screen-title {
-    height: 3;
-    content-align-vertical: middle;
-    text-style: bold;
-}
-
 EditTimetableScreen #edit-schedule {
     height: 1fr;
     min-height: 10;
     background: $surface;
     border: round $primary;
-}
-
-EditTimetableScreen #edit-timetable-screen-actions {
-    height: auto;
-    margin-top: 1;
-    align-horizontal: right;
-}
-
-EditTimetableScreen #edit-timetable-screen-actions Button {
-    margin-left: 1;
+    border-title-color: $text-accent;
 }

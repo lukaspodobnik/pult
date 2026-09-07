@@ -3,7 +3,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, Footer, Header, Label, OptionList
+from textual.widgets import Button, Footer, Label, OptionList, Static
 from textual.widgets.option_list import Option
 
 from schooltools_tui.school.school_class import (
@@ -68,25 +68,21 @@ class EditClassesScreen(SchooltoolsScreen[None]):
         self.selected_school_class_id: str | None = None
 
     def compose(self) -> ComposeResult:
-        yield Header()
-
         with Vertical(id="edit-classes-screen"):
-            yield Label("Klassen verwalten", id="edit-classes-title")
-            yield OptionList(id="school-classes")
+            classes = OptionList(id="school-classes")
+            classes.border_title = "KLASSEN"
+            yield classes
 
-            with Horizontal(id="edit-classes-actions"):
-                yield Button("Zurück", id="close-class-management")
+            with Horizontal(id="edit-classes-actions", classes="management-actions"):
+                yield Button("Anlegen", variant="primary", id="create-school-class")
                 yield Button(
                     "Löschen",
                     variant="error",
                     id="delete-school-class",
                     disabled=True,
                 )
-                yield Button(
-                    "Anlegen",
-                    variant="primary",
-                    id="create-school-class",
-                )
+                yield Static(classes="action-spacer")
+                yield Button("Zurück", id="close-class-management")
 
         yield Footer()
 

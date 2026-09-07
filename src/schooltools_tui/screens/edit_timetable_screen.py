@@ -3,7 +3,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, DataTable, Footer, Header, Label
+from textual.widgets import Button, DataTable, Footer, Static
 
 from schooltools_tui.presentation import WEEKDAYS
 from schooltools_tui.school.period import Period, load_periods
@@ -38,13 +38,15 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         self.periods: list[Period] = []
 
     def compose(self) -> ComposeResult:
-        yield Header()
-
         with Vertical(id="edit-timetable-screen"):
-            yield Label("Stundenplan bearbeiten", id="edit-timetable-screen-title")
-            yield DataTable(id="edit-schedule", cursor_type="cell")
+            table = DataTable(id="edit-schedule", cursor_type="cell")
+            table.border_title = "STUNDENPLAN"
+            yield table
 
-            with Horizontal(id="edit-timetable-screen-actions"):
+            with Horizontal(
+                id="edit-timetable-screen-actions", classes="management-actions"
+            ):
+                yield Static(classes="action-spacer")
                 yield Button("Abbrechen", id="cancel-timetable-edit")
                 yield Button(
                     "Speichern",

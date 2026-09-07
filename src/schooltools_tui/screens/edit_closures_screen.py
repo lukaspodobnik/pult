@@ -8,9 +8,8 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import (
     Button,
     Footer,
-    Header,
-    Label,
     OptionList,
+    Static,
 )
 from textual.widgets.option_list import Option
 
@@ -49,25 +48,21 @@ class EditClosuresScreen(SchooltoolsScreen[None]):
         self.selected_option_id: str | None = None
 
     def compose(self) -> ComposeResult:
-        yield Header()
-
         with Vertical(id="edit-closures-screen"):
-            yield Label("Ausfälle verwalten", id="edit-closures-title")
-            yield OptionList(id="closures")
+            closures = OptionList(id="closures")
+            closures.border_title = "AUSFÄLLE"
+            yield closures
 
-            with Horizontal(id="edit-closures-actions"):
-                yield Button("Zurück", id="close-closure-management")
+            with Horizontal(id="edit-closures-actions", classes="management-actions"):
+                yield Button("Anlegen", variant="primary", id="create-closure")
                 yield Button(
                     "Löschen",
                     variant="error",
                     id="delete-closure",
                     disabled=True,
                 )
-                yield Button(
-                    "Anlegen",
-                    variant="primary",
-                    id="create-closure",
-                )
+                yield Static(classes="action-spacer")
+                yield Button("Zurück", id="close-closure-management")
 
         yield Footer()
 
