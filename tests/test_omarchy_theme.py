@@ -109,6 +109,16 @@ def test_live_theme_keeps_modal_input_and_focus(
             field.value = "Noch nicht gespeichert"
             field.focus()
             field.cursor_position = 5
+            cancel = modal.query_one("#abort-cancel-lesson")
+            save = modal.query_one("#save-cancelled-lesson")
+            assert cancel.styles.background == save.styles.background
+            assert cancel.styles.background.a > 0
+            save.focus()
+            await pilot.pause()
+            assert save.styles.background != cancel.styles.background
+            field.focus()
+            await pilot.pause()
+            field.cursor_position = 5
             write_palette(path, palette | {"accent": "#88c0d0", "mode": "light"})
             # Tatsächlichen App-Timer prüfen, nicht nur die Refresh-Methode.
             await pilot.pause(1.2)

@@ -5,7 +5,7 @@ MainScreen #main {
 MainScreen #navigation {
     width: 28;
     padding: 1 1;
-    background: $panel;
+    background: $background;
 }
 
 MainScreen #logo-placeholder {
@@ -37,6 +37,14 @@ HomeView {
     width: 1fr;
     height: 1fr;
     overflow: auto auto;
+}
+
+HomeView DataTable > .datatable--header,
+HomeView DataTable > .datatable--fixed,
+HomeView DataTable > .datatable--header-hover {
+    background: $surface;
+    color: $foreground;
+    text-style: bold;
 }
 
 HomeView #school-year-progress {

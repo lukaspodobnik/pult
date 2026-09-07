@@ -6,14 +6,14 @@ TeachingLogScreen #teaching-log-navigation {
     width: 28;
     padding: 1;
     height: 1fr;
-    background: $panel;
+    background: $background;
 }
 
 TeachingLogScreen #teaching-log-class-picker {
     height: 1fr;
     border: round $primary;
     border-title-color: $text-accent;
-    background: $panel;
+    background: $background;
 }
 
 TeachingLogScreen #teaching-log-content {

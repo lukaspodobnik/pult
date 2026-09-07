@@ -5,7 +5,7 @@ SequenceLibraryScreen #sequence-library {
 SequenceLibraryScreen #sequence-navigation {
     width: 36;
     padding: 1;
-    background: $panel;
+    background: $background;
 }
 
 SequenceLibraryScreen #sequence-tree {

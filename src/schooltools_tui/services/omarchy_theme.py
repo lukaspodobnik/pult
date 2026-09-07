@@ -59,8 +59,15 @@ def theme_from_palette(data: dict[str, Any]) -> Theme:
             "block-cursor-background": selection,
             "block-cursor-foreground": foreground,
             "block-cursor-text-style": "bold",
+            "block-cursor-blurred-background": selection,
+            "block-cursor-blurred-foreground": foreground,
+            "block-cursor-blurred-text-style": "none",
             "input-selection-background": selection,
             "footer-key-foreground": accent,
+            "footer-background": background,
+            "footer-key-background": background,
+            "footer-description-background": background,
+            "footer-item-background": background,
         },
     )
 

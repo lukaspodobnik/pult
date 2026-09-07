@@ -132,7 +132,44 @@ FormDialog #complete-next-extra-lesson {
 }
 
 Footer {
-    background: $panel;
+    background: $background;
+}
+
+Footer FooterKey,
+Footer FooterLabel,
+Footer .footer-key--key,
+Footer .footer-key--description {
+    background: $background;
+}
+
+Screen Button {
+    background: $foreground 12%;
+    color: $foreground;
+    text-style: none;
+}
+
+Screen Button.-error {
+    color: $error;
+}
+
+Screen Button:hover {
+    background: $foreground 20%;
+}
+
+Screen Button:focus {
+    background: $primary;
+    color: auto 100%;
+    text-style: bold;
+}
+
+Screen Button:disabled {
+    background: $foreground 6%;
+    color: $foreground-muted;
+    text-style: dim;
+}
+
+OptionList {
+    background: $background;
 }
 
 SchooltoolsFooter FooterKey {
