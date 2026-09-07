@@ -92,6 +92,7 @@ class MainScreen(SchooltoolsScreen[None]):
         ("p", "undo_last_entry", "Rückgängig"),
         ("l", "show_teaching_log", "Protokoll"),
         ("w", "change_active_sequence", "Sequenz wechseln"),
+        ("f2", "go_home", "Home"),
     ]
 
     def __init__(self) -> None:
@@ -118,6 +119,12 @@ class MainScreen(SchooltoolsScreen[None]):
     def on_mount(self) -> None:
         self.refresh_view_picker()
         self.query_one("#view-picker", ViewPicker).focus()
+
+    def action_go_home(self) -> None:
+        """Wähle Home aus und setze den Fokus zurück auf den Ansichtenpicker."""
+        picker = self.query_one("#view-picker", ViewPicker)
+        picker.highlighted = picker.get_option_index("home")
+        picker.focus()
 
     def refresh_view_picker(self) -> None:
         view_picker = self.query_one("#view-picker", ViewPicker)
@@ -314,6 +321,8 @@ class MainScreen(SchooltoolsScreen[None]):
         action: str,
         parameters: tuple[object, ...],
     ) -> bool | None:
+        if action == "go_home":
+            return True
         if isinstance(self.app.focused, ManagementPicker) and action in {
             "complete_next_lesson",
             "skip_next_lesson",

@@ -35,6 +35,33 @@ from schooltools_tui.views.teaching_log_view import TeachingLogView
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
 
 
+@pytest.mark.parametrize("management_focused", [False, True])
+def test_home_key_selects_home_and_focuses_view_picker(
+    multi_class_config, management_focused
+):
+    async def run():
+        app = SchooltoolsApp()
+        async with app.run_test(size=(140, 42)) as pilot:
+            main = await ready(app, pilot)
+            picker = main.query_one(ViewPicker)
+            picker.highlighted = 1
+            await ready(app, pilot)
+            assert main.active_school_class_id is not None
+            if management_focused:
+                main.query_one(ManagementPicker).focus()
+            await pilot.press("f2")
+            await ready(app, pilot)
+            assert app.focused is picker
+            assert picker.highlighted == picker.get_option_index("home")
+            assert main.active_school_class_id is None
+            # Auch bei bereits ausgewähltem Home den Fokus zurückholen.
+            main.query_one(ManagementPicker).focus()
+            await pilot.press("f2")
+            assert app.focused is picker
+
+    asyncio.run(run())
+
+
 def test_management_focus_blocks_progress_commands(multi_class_config, monkeypatch):
     async def run():
         app = SchooltoolsApp()
