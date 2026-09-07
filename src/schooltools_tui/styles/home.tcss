@@ -19,6 +19,24 @@ MainScreen #management-picker {
     height: 1fr;
     border: round $primary;
     border-title-color: $text-accent;
+    border-title-style: none;
+    background-tint: transparent;
+    outline: none;
+}
+
+MainScreen #view-picker:focus,
+MainScreen #management-picker:focus {
+    border: round $primary-lighten-2;
+    border-title-color: $primary-lighten-2;
+    border-title-style: bold;
+    background-tint: transparent;
+    outline: none;
+}
+
+App.-light-mode MainScreen #view-picker:focus,
+App.-light-mode MainScreen #management-picker:focus {
+    border: round $primary-darken-2;
+    border-title-color: $primary-darken-2;
 }
 
 MainScreen #management-picker {

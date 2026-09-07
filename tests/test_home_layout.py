@@ -119,6 +119,12 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             }
             await pilot.press("tab")
             assert isinstance(app.focused, ManagementPicker)
+            await pilot.pause()
+            assert management.styles.border.top[0] == "round"
+            assert views.styles.border.top[0] == "round"
+            assert management.styles.border.top[1] != views.styles.border.top[1]
+            assert management.styles.background_tint.a == 0
+            assert views.styles.background_tint.a == 0
             await pilot.press("tab")
             assert isinstance(app.focused, ViewPicker)
             await pilot.press("shift+tab")
