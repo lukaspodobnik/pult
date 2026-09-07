@@ -65,7 +65,7 @@ Automatische Bereinigung: `uv run ruff check . --fix`, danach
 - Häufige Aktionen mit möglichst wenigen Eingaben erreichen.
 - Fokus, Auswahl und mögliche Aktionen jederzeit klar darstellen.
 - Layout für unterschiedliche Terminalgrößen optimieren.
-- Farben und Erscheinungsbild an das aktuelle Omarchy-Theme anpassen.
+- Omarchy-Palette beim Start übernehmen und im Betrieb jede Sekunde auf Änderungen prüfen; bei vorübergehend ungültigen Dateien die letzten Farben behalten. Ohne verfügbare Palette zunächst Gruvbox verwenden.
 
 ## Datenspeicherung
 

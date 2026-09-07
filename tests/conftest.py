@@ -12,6 +12,15 @@ from schooltools_tui.school.subject import Subject
 from schooltools_tui.school.timetable import TimetableEntry
 
 
+@pytest.fixture(autouse=True)
+def isolated_omarchy_palette(tmp_path, monkeypatch):
+    """Tests lesen nie die Palette des tatsächlich laufenden Desktops."""
+    monkeypatch.setattr(
+        "schooltools_tui.services.omarchy_theme.get_omarchy_palette_path",
+        lambda: tmp_path / "omarchy" / "colors.toml",
+    )
+
+
 @pytest.fixture
 def subject() -> Subject:
     return Subject("mathematik", "Mathematik", "Ma", [5])
