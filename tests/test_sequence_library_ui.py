@@ -38,7 +38,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             await pilot.pause()
             picker = app.screen.query_one(ManagementPicker)
             picker.focus()
-            picker.highlighted = 1
+            picker.highlighted = picker.get_option_index("sequence-library")
             await pilot.press("enter")
             await pilot.pause()
             screen = app.screen

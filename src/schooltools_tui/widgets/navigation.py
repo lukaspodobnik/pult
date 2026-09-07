@@ -65,11 +65,12 @@ class ViewPicker(OptionList):
 class ManagementPicker(OptionList):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__(
-            Option("Klassen", id="edit-classes"),
             Option("Sequenzen", id="sequence-library"),
-            Option("Stundenplan", id="edit-timetable"),
             Option("Ausfälle", id="edit-closures"),
             Option("Protokoll", id="teaching-log"),
+            None,
+            Option("Stundenplan", id="edit-timetable"),
+            Option("Klassen", id="edit-classes"),
             id=id,
         )
         self.border_title = "VERWALTUNG"
