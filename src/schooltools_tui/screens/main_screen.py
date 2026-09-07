@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, Footer, Header, Label, OptionList
+from textual.widgets import ContentSwitcher, Footer, Header, OptionList
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -104,13 +104,12 @@ class MainScreen(SchooltoolsScreen[None]):
 
         with Horizontal(id="main"):
             with Vertical(id="navigation"):
-                yield Label("ANSICHTEN", id="view-label")
                 yield ViewPicker(id="view-picker")
-
-                yield Label("VERWALTUNG", id="management-label")
                 yield ManagementPicker(id="management-picker")
 
-            yield ContentSwitcher(id="content")
+            content = ContentSwitcher(id="content")
+            content.can_focus_children = False
+            yield content
 
         yield Footer()
 

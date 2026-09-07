@@ -71,7 +71,7 @@ def test_dashboard_widgets_and_time_updates(
             assert table.row_count == len(periods)
             assert not table.can_focus
             assert table.cursor_type == "none"
-            assert str(table.get_cell("1", "monday")) == "5A-Ma 101"
+            assert str(table.get_cell("1", "monday")) == "5A · Ma\n101"
             assert "reverse" in str(table.get_cell("1", "monday").style)
             rows = list(app.query_one(DailySchedulePanel).query(DailyScheduleRow))
             assert [row.has_class("time-highlighted") for row in rows] == [True, False]

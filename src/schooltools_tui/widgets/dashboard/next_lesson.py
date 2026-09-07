@@ -1,7 +1,7 @@
 from datetime import date
 
 from textual.app import ComposeResult
-from textual.containers import Vertical
+from textual.containers import VerticalScroll
 from textual.widgets import Static
 
 from schooltools_tui.curriculum.sequence import Sequence
@@ -15,9 +15,10 @@ from schooltools_tui.progress.queries import (
     PlannedLesson,
 )
 from schooltools_tui.school.subject import Subject
+from schooltools_tui.widgets.capped_text import CappedText
 
 
-class NextLessonPanel(Vertical):
+class NextLessonPanel(VerticalScroll, can_focus=False):
     """Zeige die nächste geplante Lesson und ihren Termin."""
 
     def __init__(
@@ -28,15 +29,22 @@ class NextLessonPanel(Vertical):
         sequences_by_key: dict[tuple[int, str, str], Sequence],
     ) -> None:
         super().__init__(id="next-planned-lesson", classes="dashboard-panel")
+        self.border_title = NEXT_LESSON_LABEL.upper()
         self.planned_lesson = planned_lesson
         self.today = today
         self.subjects_by_id = subjects_by_id
         self.sequences_by_key = sequences_by_key
 
     def compose(self) -> ComposeResult:
-        yield Static(NEXT_LESSON_LABEL.upper(), classes="dashboard-heading")
         for name, text in self._texts().items():
-            widget = Static(text, classes=name)
+            widget = (
+                CappedText(
+                    text, lines=2 if name == "next-lesson-name" else 1, classes=name
+                )
+                if name
+                in {"next-lesson-heading", "next-lesson-name", "next-lesson-sequence"}
+                else Static(text, classes=name, markup=False)
+            )
             widget.display = bool(text)
             yield widget
 
@@ -65,6 +73,8 @@ class NextLessonPanel(Vertical):
                 "next-lesson-sequence",
                 "next-lesson-name",
                 "next-lesson-occurrence",
+                "next-lesson-tasks",
+                "next-lesson-notes",
             ),
             "",
         )
@@ -85,6 +95,12 @@ class NextLessonPanel(Vertical):
         texts["next-lesson-occurrence"] = self._format_planned_occurrence(
             planned_lesson
         )
+        if planned_lesson.lesson.tasks:
+            texts["next-lesson-tasks"] = "Aufgaben: " + " · ".join(
+                planned_lesson.lesson.tasks
+            )
+        if planned_lesson.lesson.notes:
+            texts["next-lesson-notes"] = "Notizen: " + planned_lesson.lesson.notes
         return texts
 
     def _get_sequence(self, planned_lesson: PlannedLesson) -> Sequence:

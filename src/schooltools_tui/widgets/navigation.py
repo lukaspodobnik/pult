@@ -1,5 +1,6 @@
 import json
 
+from rich.text import Text
 from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
@@ -10,6 +11,7 @@ from schooltools_tui.school.subject import Subject
 class ViewPicker(OptionList):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__(id=id)
+        self.border_title = "ANSICHTEN"
         self.class_subjects_by_option_id: dict[str, tuple[str, str]] = {}
 
     def refresh_options(
@@ -33,7 +35,11 @@ class ViewPicker(OptionList):
                 targets[option_id] = (school_class.id, subject_id)
                 options.append(
                     Option(
-                        f"{school_class.id} · {subjects_by_id[subject_id].short_name}",
+                        Text(
+                            f"{school_class.id} · {subjects_by_id[subject_id].short_name}",
+                            no_wrap=True,
+                            overflow="ellipsis",
+                        ),
                         id=option_id,
                     )
                 )
@@ -54,9 +60,10 @@ class ManagementPicker(OptionList):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__(
             Option("Klassen", id="edit-classes"),
-            Option("Sequenzbibliothek", id="sequence-library"),
+            Option("Sequenzen", id="sequence-library"),
             Option("Stundenplan", id="edit-timetable"),
             Option("Ausfälle", id="edit-closures"),
-            Option("Unterrichtsprotokoll", id="teaching-log"),
+            Option("Protokoll", id="teaching-log"),
             id=id,
         )
+        self.border_title = "VERWALTUNG"

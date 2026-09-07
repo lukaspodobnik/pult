@@ -3,7 +3,7 @@ from datetime import datetime
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Vertical
-from textual.widgets import DataTable, Static
+from textual.widgets import DataTable
 
 from schooltools_tui.presentation import WEEKDAYS
 from schooltools_tui.school.period import Period, get_period_at
@@ -25,6 +25,9 @@ class TimetablePanel(Vertical):
         periods: list[Period],
     ) -> None:
         super().__init__(id="timetable-panel", classes="dashboard-panel")
+        self.border_title = "STUNDENPLAN"
+        self.styles.height = len(periods) * 2 + 3
+        self._column_width = 10
         self.periods = periods
         self.subjects_by_id = subjects_by_id
         self.timetable_entries_by_slot = {
@@ -33,8 +36,17 @@ class TimetablePanel(Vertical):
         self.current_time_position: tuple[str | None, int | None] | None = None
 
     def compose(self) -> ComposeResult:
-        yield Static("STUNDENPLAN", classes="dashboard-heading")
         yield TimetableDataTable(id="schedule", cursor_type="none")
+
+    def on_resize(self) -> None:
+        if not self.is_mounted:
+            return
+        width = max(8, (self.content_size.width - 6) // 5 - 2)
+        if width != self._column_width:
+            self._column_width = width
+            table = self.query_one(DataTable)
+            table.clear(columns=True)
+            self.populate_timetable(*(self.current_time_position or (None, None)))
 
     def update_data(
         self,
@@ -45,6 +57,7 @@ class TimetablePanel(Vertical):
         """Aktualisiere Zellen; ändere die Tabellenstruktur nur bei neuen Stundenzeilen."""
         old_numbers = [period.number for period in self.periods]
         self.periods = periods
+        self.styles.height = len(periods) * 2 + 3
         self.subjects_by_id = subjects_by_id
         self.timetable_entries_by_slot = {
             (entry.weekday, entry.period): entry for entry in timetable_entries
@@ -59,9 +72,7 @@ class TimetablePanel(Vertical):
             for weekday, _ in WEEKDAYS:
                 cell = self._cell(weekday, period.number, *position)
                 if table.get_cell(str(period.number), weekday) != cell:
-                    table.update_cell(
-                        str(period.number), weekday, cell, update_width=True
-                    )
+                    table.update_cell(str(period.number), weekday, cell)
 
     def _cell(
         self,
@@ -74,7 +85,7 @@ class TimetablePanel(Vertical):
         content = "--"
         if entry is not None:
             subject = self.subjects_by_id[entry.subject_id]
-            content = f"{entry.school_class_id}-{subject.short_name} {entry.room}"
+            content = f"{entry.school_class_id} · {subject.short_name}\n{entry.room}"
         return self.get_highlighted_text(
             content,
             is_current_row=period == current_period,
@@ -104,6 +115,7 @@ class TimetablePanel(Vertical):
                     is_current_column=weekday == current_weekday,
                 ),
                 key=weekday,
+                width=self._column_width,
             )
 
         for period in self.periods:
@@ -120,6 +132,7 @@ class TimetablePanel(Vertical):
                 *cells,
                 key=str(period.number),
                 label=row_label,
+                height=2,
             )
 
     @staticmethod
@@ -137,7 +150,7 @@ class TimetablePanel(Vertical):
         if is_current_row and is_current_column:
             styles.append("reverse")
 
-        return Text(content, style=" ".join(styles))
+        return Text(content, style=" ".join(styles), no_wrap=True, overflow="ellipsis")
 
 
 def get_current_timetable_position(

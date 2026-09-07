@@ -15,6 +15,7 @@ from schooltools_tui.progress.queries import (
 )
 from schooltools_tui.school.period import Period
 from schooltools_tui.school.subject import Subject
+from schooltools_tui.widgets.capped_text import CappedText
 
 ACTION_ICONS = {
     TeachingAction.COMPLETED: "✓",
@@ -56,13 +57,13 @@ class DailyScheduleRow(Horizontal):
         )
         yield Static(f"{entry.period}.", classes="day-period")
         with Vertical(classes="day-entry-content"):
-            yield Static(
+            yield CappedText(
                 f"{entry.school_class_id} · "
                 f"{self.subjects_by_id[entry.subject_id].short_name}",
                 classes="day-entry-heading",
             )
             lesson_title = self._get_lesson_title()
-            lesson = Static(lesson_title or "", classes="day-entry-lesson")
+            lesson = CappedText(lesson_title or "", classes="day-entry-lesson")
             lesson.display = lesson_title is not None
             yield lesson
 
@@ -126,13 +127,15 @@ class DailyAdditionalRow(Horizontal):
     def compose(self) -> ComposeResult:
         yield Static("+", classes="day-status")
         with Vertical(classes="day-entry-content"):
-            yield Static(
+            yield CappedText(
                 f"{self.entry.school_class_id} · "
                 f"{self.subjects_by_id[self.entry.log_entry.subject_id].short_name} "
                 "· Zusatzunterricht",
                 classes="day-entry-heading",
             )
-            comment = Static(self.entry.log_entry.comment, classes="day-entry-lesson")
+            comment = CappedText(
+                self.entry.log_entry.comment, classes="day-entry-lesson"
+            )
             comment.display = bool(self.entry.log_entry.comment)
             yield comment
 
@@ -162,16 +165,17 @@ class DailySchedulePanel(Vertical):
     ) -> None:
         super().__init__(id="daily-schedule", classes="dashboard-panel")
         self.daily_schedule = daily_schedule
+        self.border_title = (
+            f"HEUTE · {WEEKDAY_NAMES[daily_schedule.date.weekday()].upper()}"
+        )
         self.subjects_by_id = subjects_by_id
         self.sequences_by_key = sequences_by_key
 
     def compose(self) -> ComposeResult:
         daily_schedule = self.daily_schedule
-        yield Static(
-            f"HEUTE · {WEEKDAY_NAMES[daily_schedule.date.weekday()].upper()}",
-            classes="dashboard-heading",
-        )
-        with VerticalScroll(id="daily-schedule-entries"):
+        content = VerticalScroll(id="daily-schedule-entries")
+        content.can_focus = False
+        with content:
             empty = Static(
                 "Heute ist kein Unterricht geplant.", classes="dashboard-empty"
             )
@@ -201,7 +205,7 @@ class DailySchedulePanel(Vertical):
         self.daily_schedule = daily_schedule
         self.subjects_by_id = subjects_by_id
         self.sequences_by_key = sequences_by_key
-        self.query_one(".dashboard-heading", Static).update(
+        self.border_title = (
             f"HEUTE · {WEEKDAY_NAMES[daily_schedule.date.weekday()].upper()}"
         )
         content = self.query_one("#daily-schedule-entries", VerticalScroll)

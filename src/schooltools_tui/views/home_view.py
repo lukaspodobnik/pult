@@ -2,7 +2,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.message import Message
 
 from schooltools_tui.curriculum.sequence import Sequence
@@ -18,7 +18,7 @@ from schooltools_tui.widgets.dashboard.school_year_progress import SchoolYearPro
 from schooltools_tui.widgets.dashboard.timetable import TimetablePanel
 
 
-class HomeView(Vertical):
+class HomeView(VerticalScroll, can_focus=False):
     class DashboardRefreshRequested(Message):
         pass
 
@@ -94,21 +94,21 @@ class HomeView(Vertical):
     def compose(self) -> ComposeResult:
         yield SchoolYearProgress(self.dashboard.school_year_progress)
         with Horizontal(id="home-dashboard-content"):
-            yield TimetablePanel(
-                self.timetable_entries, self.subjects_by_id, self.periods
-            )
-            with Vertical(id="home-dashboard-sidebar"):
+            with Vertical(id="home-dashboard-left"):
+                yield TimetablePanel(
+                    self.timetable_entries, self.subjects_by_id, self.periods
+                )
                 yield NextLessonPanel(
                     self.dashboard.next_planned_lesson,
                     self.dashboard.daily_schedule.date,
                     self.subjects_by_id,
                     self.sequences_by_key,
                 )
-                yield DailySchedulePanel(
-                    self.dashboard.daily_schedule,
-                    self.subjects_by_id,
-                    self.sequences_by_key,
-                )
+            yield DailySchedulePanel(
+                self.dashboard.daily_schedule,
+                self.subjects_by_id,
+                self.sequences_by_key,
+            )
 
     def on_mount(self) -> None:
         self.refresh_time_highlight()

@@ -3,15 +3,21 @@ MainScreen #main {
 }
 
 MainScreen #navigation {
-    width: 24;
-    padding: 1;
+    width: 28;
+    padding: 1 1;
     background: $panel;
-    border-right: tall $primary;
 }
 
 MainScreen #view-picker,
 MainScreen #management-picker {
     height: 1fr;
+    border: round $primary;
+    border-title-color: $text-accent;
+}
+
+MainScreen #management-picker {
+    height: 9;
+    margin-top: 1;
 }
 
 MainScreen #content {
@@ -23,6 +29,7 @@ MainScreen #content {
 HomeView {
     width: 1fr;
     height: 1fr;
+    overflow: auto auto;
 }
 
 HomeView #school-year-progress {
@@ -59,50 +66,47 @@ HomeView #school-year-progress-percentage {
 
 HomeView #home-dashboard-content {
     height: 1fr;
+    min-height: 32;
+    min-width: 120;
+}
+
+HomeView #home-dashboard-left {
+    width: 3fr;
+    height: 1fr;
+    margin-right: 1;
 }
 
 HomeView .dashboard-panel {
     background: $surface;
     border: round $primary;
-}
-
-HomeView .dashboard-heading {
-    height: 2;
-    padding: 0 1;
-    color: $text-accent;
-    text-style: bold;
-    content-align-vertical: middle;
+    border-title-color: $text-accent;
 }
 
 HomeView #timetable-panel {
     width: 1fr;
-    height: 1fr;
-    margin-right: 1;
+    height: auto;
+    margin-bottom: 1;
 }
 
 MainScreen #schedule {
     height: 1fr;
     min-height: 10;
-    padding: 0 1 1 1;
+    padding: 0 1;
     border: none;
 }
 
-HomeView #home-dashboard-sidebar {
-    width: 40;
-    height: 1fr;
-}
-
 HomeView #next-planned-lesson {
-    height: auto;
-    min-height: 8;
-    padding: 0 1 1 1;
-    margin-bottom: 1;
+    height: 1fr;
+    min-height: 10;
+    padding: 0 1;
 }
 
 HomeView .next-lesson-heading,
 HomeView .next-lesson-sequence,
 HomeView .next-lesson-name,
 HomeView .next-lesson-occurrence,
+HomeView .next-lesson-tasks,
+HomeView .next-lesson-notes,
 HomeView .dashboard-empty {
     height: auto;
 }
@@ -119,6 +123,7 @@ HomeView .dashboard-empty {
 }
 
 HomeView #daily-schedule {
+    width: 2fr;
     height: 1fr;
     min-height: 7;
 }
@@ -134,6 +139,7 @@ HomeView .daily-additional-row {
     min-height: 2;
     padding: 0 1;
     margin-bottom: 1;
+    border-left: thick transparent;
 }
 
 HomeView .daily-schedule-row.time-highlighted {
@@ -179,7 +185,16 @@ HomeView .day-entry-content {
 
 HomeView .day-entry-heading,
 HomeView .day-entry-lesson {
-    height: auto;
+    height: 1;
+}
+
+HomeView .next-lesson-name {
+    max-height: 2;
+}
+
+HomeView .next-lesson-tasks,
+HomeView .next-lesson-notes {
+    margin-top: 1;
 }
 
 HomeView .day-entry-lesson {
