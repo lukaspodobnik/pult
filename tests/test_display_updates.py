@@ -26,7 +26,7 @@ from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
 from schooltools_tui.views.teaching_log_view import TeachingLogView
 
 
-def test_cell_updates_preserve_table_and_resize_columns(tmp_path, monkeypatch):
+def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
 
@@ -35,6 +35,7 @@ def test_cell_updates_preserve_table_and_resize_columns(tmp_path, monkeypatch):
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
             await app.push_screen(EditTimetableScreen())
+            await pilot.pause()
             screen = app.screen
             table = screen.query_one(DataTable)
             table.move_cursor(row=2, column=1)
@@ -50,17 +51,33 @@ def test_cell_updates_preserve_table_and_resize_columns(tmp_path, monkeypatch):
                 entry = TimetableEntry("tuesday", 3, "5A", "mathematik", room)
                 screen.timetable_entry_edited(TimetableEditResult(action, entry))
                 await pilot.pause()
-                expected = (
-                    "--" if action is TimetableEditAction.DELETE else f"5A-Ma {room}"
-                )
-                assert table.get_cell("3", "tuesday") == expected
-                assert table.get_cell("1", "monday") == "--"
+                cell = str(table.get_cell("3", "tuesday"))
+                assert ("5A · Ma" in cell) == (action is TimetableEditAction.SAVE)
+                assert "--" not in str(table.get_cell("1", "monday"))
                 assert table.cursor_coordinate == cursor
                 assert table.has_focus
                 assert all(a is b for a, b in zip(columns, table.ordered_columns))
                 assert all(a is b for a, b in zip(rows, table.ordered_rows))
                 widths.append(table.ordered_columns[1].content_width)
-            assert widths[0] > widths[1] >= widths[2]
+            assert widths[0] == widths[1] == widths[2]
+            await pilot.resize_terminal(206, 46)
+            await pilot.pause()
+            assert table.cursor_coordinate == cursor
+            assert len({column.width for column in table.ordered_columns}) == 1
+            assert table.ordered_columns[1].width > widths[0]
+            assert (
+                sum(row.height for row in table.ordered_rows)
+                == table.content_size.height - table.header_height
+            )
+            assert all(row.height >= 3 for row in table.ordered_rows)
+            for size in [(180, 42), (241, 70), (80, 24)]:
+                await pilot.resize_terminal(*size)
+                await pilot.pause()
+                assert table.cursor_coordinate == cursor
+                assert len(table.columns) == 5
+                assert len({column.width for column in table.ordered_columns}) == 1
+                assert all(row.height >= 3 for row in table.ordered_rows)
+            assert table.max_scroll_y > 0
 
     asyncio.run(run())
 

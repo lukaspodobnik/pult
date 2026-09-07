@@ -1,7 +1,9 @@
 from typing import ClassVar
 
+from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, DataTable, Footer, Static
 
@@ -23,6 +25,10 @@ from schooltools_tui.screens.edit_timetable_entry_screen import (
 )
 
 
+class EditableTimetable(DataTable):
+    BINDINGS: ClassVar = [Binding("enter", "select_cursor", "Stunde bearbeiten")]
+
+
 class EditTimetableScreen(SchooltoolsScreen[None]):
     BINDINGS: ClassVar = [
         ("ctrl+s", "save", "Speichern"),
@@ -36,10 +42,14 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         self.subjects: list[Subject] = []
         self.subjects_by_id: dict[str, Subject] = {}
         self.periods: list[Period] = []
+        self._column_width = 12
+        self._row_heights: dict[int, int] = {}
 
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-timetable-screen"):
-            table = DataTable(id="edit-schedule", cursor_type="cell")
+            table = EditableTimetable(
+                id="edit-schedule", cursor_type="cell", cell_padding=0, header_height=3
+            )
             table.border_title = "STUNDENPLAN"
             yield table
 
@@ -73,27 +83,101 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
 
     def populate_timetable(self) -> None:
         table = self.query_one("#edit-schedule", DataTable)
+        if not self.periods:
+            return
+        # 13 Zellen für Stundenlabel; Reserve für die Scrollbar.
+        self._column_width = max(14, (table.content_size.width - 15) // 5)
+        height, extra = divmod(max(0, table.content_size.height - 3), len(self.periods))
+        self._row_heights = {
+            period.number: max(3, height + (index < extra))
+            for index, period in enumerate(self.periods)
+        }
         cursor = table.cursor_coordinate
         table.clear(columns=True)
 
         for weekday, label in WEEKDAYS:
-            table.add_column(label, key=weekday)
+            first = weekday == WEEKDAYS[0][0]
+            last = weekday == WEEKDAYS[-1][0]
+            inner = self._column_width - 1 - first
+            header = Text(no_wrap=True)
+            header.append(("┏" if first else "") + "━" * inner + ("┓" if last else "┯"))
+            header.append(
+                "\n"
+                + ("┃" if first else "")
+                + label.center(inner)
+                + ("┃" if last else "│"),
+                style="bold",
+            )
+            header.append(
+                "\n" + ("┣" if first else "") + "━" * inner + ("┫" if last else "┿")
+            )
+            table.add_column(header, key=weekday, width=self._column_width)
 
         for period in self.periods:
             cells = []
             for weekday, _ in WEEKDAYS:
                 entry = self.entries_by_slot.get((weekday, period.number))
-                cells.append(self._format_entry(entry))
+                cells.append(self._format_cell(entry, weekday, period.number))
 
-            table.add_row(*cells, key=str(period.number), label=str(period.number))
+            table.add_row(
+                *cells,
+                key=str(period.number),
+                label=self._format_period(period),
+                height=self._row_heights[period.number],
+            )
 
         table.move_cursor(row=cursor.row, column=cursor.column)
 
+    def on_resize(self) -> None:
+        if self.is_mounted:
+            self.call_after_refresh(self.populate_timetable)
+
     def _format_entry(self, entry: TimetableEntry | None) -> str:
         if entry is None:
-            return "--"
+            return ""
         subject = self.subjects_by_id[entry.subject_id]
-        return f"{entry.school_class_id}-{subject.short_name} {entry.room}"
+        return f"{entry.school_class_id} · {subject.short_name}\n{entry.room}"
+
+    def _format_period(self, period: Period) -> Text:
+        height = self._row_heights[period.number]
+        result = Text("\n" * ((height - 3) // 2), no_wrap=True)
+        result.append(f"{period.number}. Stunde".center(13), style="bold")
+        result.append("\n")
+        result.append(
+            f"{period.start:%H:%M}–{period.end:%H:%M}".center(13), style="dim"
+        )
+        return result
+
+    def _format_cell(
+        self, entry: TimetableEntry | None, weekday: str, period: int
+    ) -> Text:
+        """Zeichne Zellinhalt und Trennlinien ohne zusätzliche auswählbare Spalten."""
+        height = self._row_heights[period]
+        width = self._column_width
+        first = weekday == WEEKDAYS[0][0]
+        last = weekday == WEEKDAYS[-1][0]
+        inner = width - 1 - first
+        lines = self._format_entry(entry).split("\n") if entry else []
+        offset = max(0, (height - 1 - len(lines)) // 2)
+        result = Text(no_wrap=True)
+        for index in range(height - 1):
+            content_index = index - offset
+            content = lines[content_index] if 0 <= content_index < len(lines) else ""
+            line = Text(content, style="bold" if content_index == 0 else "dim")
+            line.truncate(inner, overflow="ellipsis")
+            line.align("center", inner)
+            if first:
+                result.append("┃")
+            result.append_text(line)
+            result.append("┃" if last else "│")
+            result.append("\n")
+        bottom = period == self.periods[-1].number
+        result.append(
+            (("┗" if bottom else "┠") if first else "")
+            + ("━" if bottom else "─") * inner
+            + (("┛" if bottom else "┨") if last else ("┷" if bottom else "┼")),
+        )
+        return result
 
     @on(DataTable.CellSelected, "#edit-schedule")
     def edit_timetable_slot(self, event: DataTable.CellSelected) -> None:
@@ -132,8 +216,7 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         table.update_cell(
             str(slot[1]),
             slot[0],
-            self._format_entry(self.entries_by_slot.get(slot)),
-            update_width=True,
+            self._format_cell(self.entries_by_slot.get(slot), slot[0], slot[1]),
         )
         table.focus()
 
