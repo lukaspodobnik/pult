@@ -94,6 +94,7 @@ class MainScreen(SchooltoolsScreen[None]):
         super().__init__()
         self.school_classes_by_id: dict[str, SchoolClass] = {}
         self.active_school_class_id: str | None = None
+        self.active_subject_id: str | None = None
         self._pending_view_id: str | None = None
         self._view_timer: Timer | None = None
 
@@ -127,6 +128,7 @@ class MainScreen(SchooltoolsScreen[None]):
         self.refresh_school_classes()
         view_picker.refresh_options(
             list(self.school_classes_by_id.values()),
+            load_subjects(self.app_config.root),
             highlighted_option_id,
         )
 
@@ -163,11 +165,14 @@ class MainScreen(SchooltoolsScreen[None]):
             if option_id == "home":
                 await self.show_home_view()
             else:
-                school_class = self.school_classes_by_id.get(
-                    option_id.removeprefix("class-")
+                target = self.query_one(ViewPicker).class_subjects_by_option_id.get(
+                    option_id
                 )
-                if school_class is not None:
-                    await self.show_school_class_view(school_class)
+                if target is not None:
+                    class_id, subject_id = target
+                    school_class = self.school_classes_by_id.get(class_id)
+                    if school_class is not None:
+                        await self.show_school_class_view(school_class, subject_id)
         finally:
             self._pending_view_id = None
             self.refresh_bindings()
@@ -194,6 +199,7 @@ class MainScreen(SchooltoolsScreen[None]):
     async def show_home_view(self) -> None:
         """Lade alle Dashboarddaten neu und zeige anschließend die HomeView."""
         self.active_school_class_id = None
+        self.active_subject_id = None
         config = self.app_config
         try:
             data = load_planning_data(config, sequences=self.sequence_library)
@@ -244,7 +250,9 @@ class MainScreen(SchooltoolsScreen[None]):
         if self.app.screen is self and self.active_school_class_id is None:
             await self.show_home_view()
 
-    async def show_school_class_view(self, school_class: SchoolClass) -> None:
+    async def show_school_class_view(
+        self, school_class: SchoolClass, subject_id: str | None = None
+    ) -> None:
         """Lade und validiere alle Daten für die Ansicht einer Klasse."""
         config = self.app_config
         try:
@@ -266,7 +274,15 @@ class MainScreen(SchooltoolsScreen[None]):
             self.notify(str(error), severity="error")
             return
 
+        if subject_id is None:
+            subject_id = (
+                self.active_subject_id
+                if self.active_school_class_id == school_class.id
+                and self.active_subject_id in school_class.subject_ids
+                else school_class.subject_ids[0]
+            )
         self.active_school_class_id = school_class.id
+        self.active_subject_id = subject_id
         views = self.query(SchoolClassView)
         if views:
             view = views.first()
