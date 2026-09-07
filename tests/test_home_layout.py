@@ -4,7 +4,7 @@ from datetime import datetime, time
 import pytest
 from test_ui_integration import prepare_root
 from textual.events import MouseScrollDown
-from textual.widgets import DataTable
+from textual.widgets import DataTable, Header
 
 from schooltools_tui.app import SchooltoolsApp
 from schooltools_tui.school.calendar import load_school_calendar
@@ -57,7 +57,11 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
                 await pilot.pause(0.05)
             home = app.screen.query_one(HomeView)
             placeholder = app.screen.query_one("#logo-placeholder")
-            assert placeholder.region.height == 4
+            assert placeholder.region.height == 5
+            assert not app.screen.query(Header)
+            assert not app.ENABLE_COMMAND_PALETTE
+            assert home.query_one("#school-year-progress").region.height == 4
+            assert home.query_one("#school-year-progress-bar").region.height == 1
             assert not placeholder.can_focus
             assert (
                 placeholder.region.bottom <= app.screen.query_one(ViewPicker).region.y

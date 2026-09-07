@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, Footer, Header, OptionList, Static
+from textual.widgets import ContentSwitcher, Footer, OptionList, Static
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -101,8 +101,6 @@ class MainScreen(SchooltoolsScreen[None]):
         self._view_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
-        yield Header()
-
         with Horizontal(id="main"):
             with Vertical(id="navigation"):
                 yield Static("SCHOOLTOOLS\nLogo-Platzhalter", id="logo-placeholder")

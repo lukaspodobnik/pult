@@ -23,6 +23,7 @@ class SchooltoolsApp(App):
 
     TITLE = "Schooltools"
     SUB_TITLE = "Schulalltag im Blick"
+    ENABLE_COMMAND_PALETTE = False
 
     BINDINGS: ClassVar = [
         ("q", "quit", "Beenden"),

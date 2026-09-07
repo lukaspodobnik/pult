@@ -9,7 +9,7 @@ MainScreen #navigation {
 }
 
 MainScreen #logo-placeholder {
-    height: 4;
+    height: 5;
     content-align: center middle;
     color: $foreground-muted;
 }
@@ -40,7 +40,7 @@ HomeView {
 }
 
 HomeView #school-year-progress {
-    height: 3;
+    height: 4;
     padding: 0 1;
     margin-bottom: 1;
     align-vertical: middle;
