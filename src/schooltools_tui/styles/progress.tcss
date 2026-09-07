@@ -53,6 +53,7 @@ SchoolClassView .class-dashboard {
 }
 
 SchoolClassView .sequence-list {
+    padding-top: 1;
     width: 3fr;
     height: 1fr;
     margin-right: 1;
