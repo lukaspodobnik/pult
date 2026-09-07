@@ -90,7 +90,7 @@ class MainScreen(SchooltoolsScreen[None]):
         ("a", "cancel_next_lesson", "Ausfall"),
         ("z", "add_extra_lesson", "Zusatzunterricht"),
         ("p", "undo_last_entry", "Rückgängig"),
-        ("l", "show_teaching_log", "Protokoll"),
+        ("u", "show_teaching_log", "Protokoll"),
         ("w", "change_active_sequence", "Sequenz wechseln"),
         ("f2", "go_home", "Home"),
     ]

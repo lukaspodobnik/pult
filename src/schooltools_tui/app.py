@@ -34,14 +34,15 @@ class SchooltoolsApp(App):
     ]
 
     async def on_event(self, event: Event) -> None:
-        """Behandle j/k außerhalb von Textfeldern wie die vertikalen Pfeiltasten."""
+        """Behandle h/j/k/l außerhalb von Textfeldern wie die Pfeiltasten."""
         if (
             isinstance(event, Key)
-            and event.key in ("j", "k")
+            and event.key in ("h", "j", "k", "l")
             and self.focused is not None
             and not isinstance(self.focused, (Input, TextArea))
         ):
-            event = Key("down" if event.key == "j" else "up", None)
+            directions = {"h": "left", "j": "down", "k": "up", "l": "right"}
+            event = Key(directions[event.key], None)
         await super().on_event(event)
 
     def __init__(self) -> None:

@@ -166,7 +166,7 @@ def test_class_view_log_binding_preselects_current_class(tmp_path, monkeypatch):
                     and app.screen._pending_view_id is None
                 ):
                     break
-            await pilot.press("l")
+            await pilot.press("u")
             await pilot.pause()
             assert isinstance(app.screen, TeachingLogScreen)
             title = app.screen.query_one("#teaching-log-content").border_title

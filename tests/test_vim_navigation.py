@@ -5,8 +5,9 @@ from textual.widgets import DataTable, Input, OptionList, Select, SelectionList,
 from schooltools_tui.app import SchooltoolsApp
 
 
-def test_j_k_navigate_without_changing_text_input(monkeypatch):
+def test_vim_keys_navigate_without_changing_text_input(monkeypatch):
     monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: None)
+
     class NavigationApp(SchooltoolsApp):
         CSS_PATH = []
 
@@ -40,8 +41,8 @@ def test_j_k_navigate_without_changing_text_input(monkeypatch):
                 assert options.highlighted == 0
             field = app.query_one(Input)
             field.focus()
-            await pilot.press("j", "k")
-            assert field.value == "jk"
+            await pilot.press("h", "j", "k", "l")
+            assert field.value == "hjkl"
             tree = app.query_one(Tree)
             tree.focus()
             tree.move_cursor(tree.root)
@@ -51,12 +52,17 @@ def test_j_k_navigate_without_changing_text_input(monkeypatch):
             assert tree.cursor_node is tree.root
             table = app.query_one(DataTable)
             table.add_column("Test")
-            table.add_rows([("A",), ("B",)])
+            table.add_column("Test 2")
+            table.add_rows([("A", "C"), ("B", "D")])
             table.focus()
             await pilot.press("j")
             assert table.cursor_row == 1
             await pilot.press("k")
             assert table.cursor_row == 0
+            await pilot.press("l")
+            assert table.cursor_column == 1
+            await pilot.press("h")
+            assert table.cursor_column == 0
             select = app.query_one(Select)
             select.focus()
             await pilot.press("enter")

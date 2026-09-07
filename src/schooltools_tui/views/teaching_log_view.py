@@ -53,7 +53,7 @@ class TeachingLogEntryBlock(Vertical):
             yield Static(occurrence, classes="teaching-log-period")
 
         yield Static(
-            f"{self.subject.name} · {self.sequence.curriculum_section_id} · "
+            f"{self.sequence.curriculum_section_id} · "
             f"{self.sequence.title}",
             classes="teaching-log-sequence",
         )
