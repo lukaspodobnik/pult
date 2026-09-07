@@ -8,6 +8,12 @@ MainScreen #navigation {
     background: $panel;
 }
 
+MainScreen #logo-placeholder {
+    height: 4;
+    content-align: center middle;
+    color: $foreground-muted;
+}
+
 MainScreen #view-picker,
 MainScreen #management-picker {
     height: 1fr;
@@ -16,7 +22,8 @@ MainScreen #management-picker {
 }
 
 MainScreen #management-picker {
-    height: 9;
+    height: 1fr;
+    min-height: 7;
     margin-top: 1;
 }
 
@@ -66,7 +73,7 @@ HomeView #school-year-progress-percentage {
 
 HomeView #home-dashboard-content {
     height: 1fr;
-    min-height: 32;
+    min-height: 34;
     min-width: 120;
 }
 
@@ -97,7 +104,7 @@ MainScreen #schedule {
 
 HomeView #next-planned-lesson {
     height: 1fr;
-    min-height: 10;
+    min-height: 7;
     padding: 0 1;
 }
 

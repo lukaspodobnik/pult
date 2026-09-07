@@ -56,9 +56,33 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
                     break
                 await pilot.pause(0.05)
             home = app.screen.query_one(HomeView)
+            placeholder = app.screen.query_one("#logo-placeholder")
+            assert placeholder.region.height == 4
+            assert not placeholder.can_focus
+            assert (
+                placeholder.region.bottom <= app.screen.query_one(ViewPicker).region.y
+            )
             timetable = home.query_one(TimetablePanel)
             next_lesson = home.query_one(NextLessonPanel)
             daily = home.query_one(DailySchedulePanel)
+            views = app.screen.query_one(ViewPicker)
+            management = app.screen.query_one(ManagementPicker)
+            assert (views.region.y, views.region.height) == (
+                timetable.region.y,
+                timetable.region.height,
+            )
+            assert (management.region.y, management.region.height) == (
+                next_lesson.region.y,
+                next_lesson.region.height,
+            )
+            table = timetable.query_one(DataTable)
+            assert [row.height for row in table.rows.values()] == [3] * (
+                len(periods) - 1
+            ) + [2]
+            assert (
+                str(table.get_cell(str(periods[0].number), "separator-1")) == "│\n│\n│"
+            )
+            assert timetable.region.height == len(periods) * 3 + 2
             assert timetable.region.x == next_lesson.region.x
             assert timetable.region.width == next_lesson.region.width
             assert next_lesson.region.y > timetable.region.bottom

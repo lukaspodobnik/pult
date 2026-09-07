@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, Footer, Header, OptionList
+from textual.widgets import ContentSwitcher, Footer, Header, OptionList, Static
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -67,6 +67,7 @@ from schooltools_tui.services.progress import (
 )
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
+from schooltools_tui.widgets.dashboard.timetable import TimetablePanel
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
 
 
@@ -104,6 +105,7 @@ class MainScreen(SchooltoolsScreen[None]):
 
         with Horizontal(id="main"):
             with Vertical(id="navigation"):
+                yield Static("SCHOOLTOOLS\nLogo-Platzhalter", id="logo-placeholder")
                 yield ViewPicker(id="view-picker")
                 yield ManagementPicker(id="management-picker")
 
@@ -238,6 +240,10 @@ class MainScreen(SchooltoolsScreen[None]):
                 data.timetable_entries, subjects, periods, data.sequences, dashboard
             )
         await self.switch_view(view)
+        # Gleiche Rahmenhöhen, auch wenn die Anzahl der Stunden geändert wird.
+        self.query_one(ViewPicker).styles.height = view.query_one(
+            TimetablePanel
+        ).styles.height
         view.refresh_time_highlight()
         if self._pending_view_id is None:
             self.refresh_bindings()

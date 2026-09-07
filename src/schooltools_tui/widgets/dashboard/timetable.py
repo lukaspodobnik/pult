@@ -26,7 +26,7 @@ class TimetablePanel(Vertical):
     ) -> None:
         super().__init__(id="timetable-panel", classes="dashboard-panel")
         self.border_title = "STUNDENPLAN"
-        self.styles.height = len(periods) * 2 + 3
+        self.styles.height = max(0, len(periods) * 3 - 1) + 3
         self._column_width = 10
         self.periods = periods
         self.subjects_by_id = subjects_by_id
@@ -41,7 +41,7 @@ class TimetablePanel(Vertical):
     def on_resize(self) -> None:
         if not self.is_mounted:
             return
-        width = max(8, (self.content_size.width - 6) // 5 - 2)
+        width = max(6, (self.content_size.width - 18) // 5 - 2)
         if width != self._column_width:
             self._column_width = width
             table = self.query_one(DataTable)
@@ -57,7 +57,7 @@ class TimetablePanel(Vertical):
         """Aktualisiere Zellen; ändere die Tabellenstruktur nur bei neuen Stundenzeilen."""
         old_numbers = [period.number for period in self.periods]
         self.periods = periods
-        self.styles.height = len(periods) * 2 + 3
+        self.styles.height = max(0, len(periods) * 3 - 1) + 3
         self.subjects_by_id = subjects_by_id
         self.timetable_entries_by_slot = {
             (entry.weekday, entry.period): entry for entry in timetable_entries
@@ -108,7 +108,11 @@ class TimetablePanel(Vertical):
     ) -> None:
         table = self.query_one("#schedule", DataTable)
 
-        for weekday, label in WEEKDAYS:
+        for index, (weekday, label) in enumerate(WEEKDAYS):
+            if index:
+                table.add_column(
+                    Text("│", style="dim"), key=f"separator-{index}", width=1
+                )
             table.add_column(
                 self.get_highlighted_text(
                     label,
@@ -118,11 +122,15 @@ class TimetablePanel(Vertical):
                 width=self._column_width,
             )
 
-        for period in self.periods:
-            cells = [
-                self._cell(weekday, period.number, current_weekday, current_period)
-                for weekday, _ in WEEKDAYS
-            ]
+        for row_index, period in enumerate(self.periods):
+            height = 2 if row_index == len(self.periods) - 1 else 3
+            cells = []
+            for index, (weekday, _) in enumerate(WEEKDAYS):
+                if index:
+                    cells.append(Text("\n".join(["│"] * height), style="dim"))
+                cells.append(
+                    self._cell(weekday, period.number, current_weekday, current_period)
+                )
 
             row_label = self.get_highlighted_text(
                 str(period.number),
@@ -132,7 +140,7 @@ class TimetablePanel(Vertical):
                 *cells,
                 key=str(period.number),
                 label=row_label,
-                height=2,
+                height=height,
             )
 
     @staticmethod
