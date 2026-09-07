@@ -2,6 +2,8 @@ from dataclasses import replace
 from typing import ClassVar
 
 from textual.app import App
+from textual.events import Event, Key
+from textual.widgets import Input, TextArea
 
 from schooltools_tui.config import AppConfig, load_app_config
 from schooltools_tui.screens.main_screen import MainScreen
@@ -30,6 +32,17 @@ class SchooltoolsApp(App):
     BINDINGS: ClassVar = [
         ("q", "quit", "Beenden"),
     ]
+
+    async def on_event(self, event: Event) -> None:
+        """Behandle j/k außerhalb von Textfeldern wie die vertikalen Pfeiltasten."""
+        if (
+            isinstance(event, Key)
+            and event.key in ("j", "k")
+            and self.focused is not None
+            and not isinstance(self.focused, (Input, TextArea))
+        ):
+            event = Key("down" if event.key == "j" else "up", None)
+        await super().on_event(event)
 
     def __init__(self) -> None:
         super().__init__()
