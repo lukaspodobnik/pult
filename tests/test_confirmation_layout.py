@@ -54,12 +54,14 @@ def test_confirmation_layout_and_actions(kind):
                 assert dialog.region.height >= 13
                 assert dialog.border_title
                 buttons = list(screen.query("Button"))
+                for button in buttons:
+                    assert str(button.label) in button.render_line(0).text
                 assert [str(button.label) for button in buttons] == [
                     "Abbrechen",
                     "Bestätigen",
                 ]
                 assert all(button.region.height == 1 for button in buttons)
-                assert [button.region.width for button in buttons] == [14, 14]
+                assert [button.region.width for button in buttons] == [16, 16]
                 assert app.focused is screen.query_one(".confirmation-cancel")
                 message = screen.query_one(".confirmation-message")
                 assert message.region.height >= 2

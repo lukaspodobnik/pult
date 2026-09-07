@@ -21,6 +21,7 @@ from schooltools_tui.screens.base_screen import (
     SchooltoolsModalScreen,
 )
 from schooltools_tui.services.closures import ScopedClosure, validate_closure
+from schooltools_tui.widgets.form_dialog import FormDialog, FormFields
 
 SCHOOL_SCOPE = "school"
 CLASS_SCOPE_PREFIX = "class:"
@@ -42,34 +43,38 @@ class AddClosureScreen(SchooltoolsModalScreen[ScopedClosure | None]):
             for school_class in self.school_classes
         )
 
-        with Vertical(id="add-closure-dialog"):
-            yield Label("Ausfall anlegen", id="add-closure-title")
-            yield Label("Bezeichnung", classes="closure-field-label")
-            yield Input(
-                placeholder="z. B. Wandertag",
-                id="closure-name",
-            )
-            yield Label("Reichweite", classes="closure-field-label")
-            yield Select(
-                scope_options,
-                value=SCHOOL_SCOPE,
-                allow_blank=False,
-                id="closure-scope",
-            )
-            yield Label("Startdatum", classes="closure-field-label")
-            yield Input(
-                value=default_date,
-                placeholder=DATE_INPUT_HINT,
-                id="closure-start",
-            )
-            yield Label("Enddatum", classes="closure-field-label")
-            yield Input(
-                value=default_date,
-                placeholder=DATE_INPUT_HINT,
-                id="closure-end",
-            )
+        with FormDialog("Geplanter Ausfall", id="add-closure-dialog"):
+            with FormFields(classes="form-fields"):
+                yield Label("Bezeichnung", classes="closure-field-label")
+                yield Input(
+                    placeholder="z. B. Wandertag",
+                    id="closure-name",
+                )
+                yield Label("Reichweite", classes="closure-field-label")
+                yield Select(
+                    scope_options,
+                    value=SCHOOL_SCOPE,
+                    allow_blank=False,
+                    id="closure-scope",
+                )
+                with Horizontal(classes="date-fields"):
+                    with Vertical(classes="date-field"):
+                        yield Label("Startdatum", classes="field-label")
+                        yield Input(
+                            value=default_date,
+                            placeholder=DATE_INPUT_HINT,
+                            id="closure-start",
+                        )
+                    with Vertical(classes="date-field"):
+                        yield Label("Enddatum", classes="field-label")
+                        yield Input(
+                            value=default_date,
+                            placeholder=DATE_INPUT_HINT,
+                            id="closure-end",
+                        )
+                yield Label(DATE_INPUT_HINT, classes="form-hint")
 
-            with Horizontal(id="add-closure-actions"):
+            with Horizontal(id="add-closure-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-closure")
                 yield Button(
                     "Anlegen",

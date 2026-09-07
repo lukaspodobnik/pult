@@ -5,13 +5,14 @@ from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, VerticalScroll
+from textual.containers import Horizontal
 from textual.widgets import Button, Checkbox, Input, Label, Select
 
 from schooltools_tui.presentation import DATE_INPUT_HINT, format_date, parse_date
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.subject import Subject
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
+from schooltools_tui.widgets.form_dialog import FormDialog, FormFields
 
 
 @dataclass(frozen=True)
@@ -52,56 +53,57 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
         selected_class_id = self.fixed_school_class_id or self.school_classes[0].id
         subject_options = self.get_subject_options(selected_class_id)
 
-        with VerticalScroll(id="add-extra-lesson-dialog"):
-            yield Label("Zusatzunterricht eintragen", id="add-extra-lesson-title")
+        with FormDialog("Zusatzunterricht", id="add-extra-lesson-dialog"):
+            with FormFields(classes="form-fields"):
+                if self.fixed_school_class_id is None:
+                    yield Label("Klasse", classes="field-label")
+                    yield Select(
+                        [
+                            (school_class.id, school_class.id)
+                            for school_class in self.school_classes
+                        ],
+                        value=selected_class_id,
+                        allow_blank=False,
+                        id="extra-school-class",
+                    )
+                else:
+                    context = f"Klasse {selected_class_id}"
+                    if self.fixed_subject_id is not None:
+                        context += (
+                            f" · {self.subjects_by_id[self.fixed_subject_id].name}"
+                        )
+                    yield Label(
+                        context, id="extra-school-class-label", classes="form-context"
+                    )
 
-            yield Label("Klasse", classes="field-label")
-            if self.fixed_school_class_id is None:
-                yield Select(
-                    [
-                        (school_class.id, school_class.id)
-                        for school_class in self.school_classes
-                    ],
-                    value=selected_class_id,
-                    allow_blank=False,
-                    id="extra-school-class",
+                if self.fixed_subject_id is None:
+                    yield Label("Fach", classes="field-label")
+                    yield Select(
+                        subject_options,
+                        value=subject_options[0][1],
+                        allow_blank=False,
+                        id="extra-subject",
+                    )
+
+                yield Label("Datum", classes="field-label")
+                yield Input(
+                    value=format_date(datetime.now(ZoneInfo("Europe/Berlin")).date()),
+                    placeholder=DATE_INPUT_HINT,
+                    id="extra-date",
                 )
-            else:
-                yield Label(selected_class_id, id="extra-school-class-label")
 
-            yield Label("Fach", classes="field-label")
-            if self.fixed_subject_id is None:
-                yield Select(
-                    subject_options,
-                    value=subject_options[0][1],
-                    allow_blank=False,
-                    id="extra-subject",
-                )
-            else:
-                yield Label(
-                    self.subjects_by_id[self.fixed_subject_id].name,
-                    id="extra-subject-label",
+                yield Label("Beschreibung", classes="field-label")
+                yield Input(
+                    placeholder="z. B. zusätzliche Wiederholungsstunde",
+                    id="extra-comment",
                 )
 
-            yield Label("Datum", classes="field-label")
-            yield Input(
-                value=format_date(datetime.now(ZoneInfo("Europe/Berlin")).date()),
-                placeholder=DATE_INPUT_HINT,
-                id="extra-date",
-            )
+                yield Checkbox(
+                    "Nächste geplante Stunde abschließen",
+                    id="complete-next-extra-lesson",
+                )
 
-            yield Label("Beschreibung", classes="field-label")
-            yield Input(
-                placeholder="z. B. zusätzliche Wiederholungsstunde",
-                id="extra-comment",
-            )
-
-            yield Checkbox(
-                "Nächste geplante Stunde abschließen",
-                id="complete-next-extra-lesson",
-            )
-
-            with Horizontal(id="add-extra-lesson-actions"):
+            with Horizontal(id="add-extra-lesson-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-extra-lesson")
                 yield Button(
                     "Speichern",

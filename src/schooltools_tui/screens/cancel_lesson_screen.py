@@ -2,10 +2,11 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.widgets import Button, Input, Label
 
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
+from schooltools_tui.widgets.form_dialog import FormDialog, FormFields
 
 
 class CancelLessonScreen(SchooltoolsModalScreen[str | None]):
@@ -16,17 +17,21 @@ class CancelLessonScreen(SchooltoolsModalScreen[str | None]):
         self.school_class_id = school_class_id
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="cancel-lesson-dialog"):
-            yield Label("Spontanen Ausfall eintragen", id="cancel-lesson-title")
-            if self.school_class_id is not None:
-                yield Label(f"Klasse: {self.school_class_id}", id="cancel-lesson-class")
-            yield Label("Grund", classes="field-label")
-            yield Input(
-                placeholder="z. B. Feueralarm",
-                id="cancel-lesson-comment",
-            )
+        with FormDialog("Spontaner Ausfall", id="cancel-lesson-dialog"):
+            with FormFields(classes="form-fields"):
+                if self.school_class_id is not None:
+                    yield Label(
+                        f"Klasse {self.school_class_id}",
+                        id="cancel-lesson-class",
+                        classes="form-context",
+                    )
+                yield Label("Grund", classes="field-label")
+                yield Input(
+                    placeholder="z. B. Feueralarm",
+                    id="cancel-lesson-comment",
+                )
 
-            with Horizontal(id="cancel-lesson-actions"):
+            with Horizontal(id="cancel-lesson-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="abort-cancel-lesson")
                 yield Button(
                     "Speichern",

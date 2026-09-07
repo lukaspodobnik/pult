@@ -2,11 +2,12 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.widgets import Button, Label, Select
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
+from schooltools_tui.widgets.form_dialog import FormDialog, FormFields
 
 
 class SelectNextSequenceScreen(SchooltoolsModalScreen[str | None]):
@@ -22,22 +23,29 @@ class SelectNextSequenceScreen(SchooltoolsModalScreen[str | None]):
         self.suggested_sequence_id = suggested_sequence_id
 
     def compose(self) -> ComposeResult:
-        with Vertical(id="select-next-sequence-dialog"):
-            yield Label("Nächste Sequenz wählen", id="select-next-sequence-title")
-            yield Select(
-                [
-                    (
-                        f"{sequence.curriculum_section_id} – {sequence.title}",
-                        sequence.id,
-                    )
-                    for sequence in self.sequences
-                ],
-                value=self.suggested_sequence_id,
-                allow_blank=False,
-                id="next-sequence",
-            )
+        with FormDialog(
+            "Nächste Sequenz wählen", id="select-next-sequence-dialog", wide=True
+        ):
+            with FormFields(classes="form-fields"):
+                yield Label(
+                    "Die vorgeschlagene nächste Sequenz ist vorausgewählt.",
+                    classes="form-hint",
+                )
+                yield Label("Sequenz", classes="field-label")
+                yield Select(
+                    [
+                        (
+                            f"{sequence.curriculum_section_id} – {sequence.title}",
+                            sequence.id,
+                        )
+                        for sequence in self.sequences
+                    ],
+                    value=self.suggested_sequence_id,
+                    allow_blank=False,
+                    id="next-sequence",
+                )
 
-            with Horizontal(id="select-next-sequence-actions"):
+            with Horizontal(id="select-next-sequence-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-next-sequence")
                 yield Button(
                     "Speichern",

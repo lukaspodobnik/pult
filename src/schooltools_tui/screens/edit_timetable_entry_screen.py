@@ -4,14 +4,15 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, Input, Label, Select
+from textual.containers import Horizontal
+from textual.widgets import Button, Input, Label, Select, Static
 
 from schooltools_tui.presentation import WEEKDAYS
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.subject import Subject
 from schooltools_tui.school.timetable import TimetableEntry
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
+from schooltools_tui.widgets.form_dialog import FormDialog, FormFields
 
 
 class TimetableEditAction(Enum):
@@ -55,39 +56,38 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
             self.entry.subject_id if self.entry is not None else subject_options[0][1]
         )
 
-        with Vertical(id="edit-timetable-dialog"):
-            yield Label(
-                f"{weekday_labels[self.weekday]}, {self.period}. Stunde",
-                id="edit-timetable-title",
-            )
+        with FormDialog(
+            f"{weekday_labels[self.weekday]} · {self.period}. Stunde",
+            id="edit-timetable-dialog",
+        ):
+            with FormFields(classes="form-fields"):
+                yield Label("Klasse", classes="field-label")
+                yield Select(
+                    [
+                        (school_class.id, school_class.id)
+                        for school_class in self.school_classes
+                    ],
+                    value=selected_class_id,
+                    allow_blank=False,
+                    id="school-class",
+                )
 
-            yield Label("Klasse", classes="field-label")
-            yield Select(
-                [
-                    (school_class.id, school_class.id)
-                    for school_class in self.school_classes
-                ],
-                value=selected_class_id,
-                allow_blank=False,
-                id="school-class",
-            )
+                yield Label("Fach", classes="field-label")
+                yield Select(
+                    subject_options,
+                    value=selected_subject_id,
+                    allow_blank=False,
+                    id="subject",
+                )
 
-            yield Label("Fach", classes="field-label")
-            yield Select(
-                subject_options,
-                value=selected_subject_id,
-                allow_blank=False,
-                id="subject",
-            )
+                yield Label("Raum", classes="field-label")
+                yield Input(
+                    value=self.entry.room if self.entry is not None else "",
+                    placeholder="Raum",
+                    id="room",
+                )
 
-            yield Label("Raum", classes="field-label")
-            yield Input(
-                value=self.entry.room if self.entry is not None else "",
-                placeholder="Raum",
-                id="room",
-            )
-
-            with Horizontal(id="edit-timetable-actions"):
+            with Horizontal(id="edit-timetable-actions", classes="form-actions"):
                 if self.entry is not None:
                     yield Button(
                         "Löschen",
@@ -95,6 +95,7 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
                         id="delete-timetable-entry",
                     )
 
+                yield Static(classes="form-action-spacer")
                 yield Button("Abbrechen", id="cancel-timetable-entry-edit")
                 yield Button(
                     "Speichern",

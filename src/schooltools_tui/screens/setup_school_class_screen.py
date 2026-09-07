@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.widgets import Button, Input, Label, SelectionList
 from textual.widgets.selection_list import Selection
 
@@ -16,6 +16,7 @@ from schooltools_tui.school.school_class import (
 )
 from schooltools_tui.school.subject import Subject, load_subjects
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
+from schooltools_tui.widgets.form_dialog import FormDialog, FormFields
 
 
 class SchoolClassSetupScreen(SchooltoolsModalScreen[None]):
@@ -25,11 +26,15 @@ class SchoolClassSetupScreen(SchooltoolsModalScreen[None]):
         self.subjects = load_subjects(self.app_config.root)
         self.current_grade_level: int | None = None
 
-        with Vertical(id="school-class-setup-form"):
-            yield Label("Klasse anlegen", id="school-class-setup-title")
-            yield Input(placeholder="Klassenname, z. B. '8A'", id="class-name")
-            yield SelectionList(id="subjects")
-            with Horizontal(id="school-class-setup-actions"):
+        with FormDialog("Klasse anlegen", id="school-class-setup-form"):
+            with FormFields(classes="form-fields"):
+                yield Label("Klassenname", classes="field-label")
+                yield Input(placeholder="z. B. 8A", id="class-name")
+                subjects = SelectionList(id="subjects")
+                subjects.border_title = "FÄCHER"
+                yield subjects
+                yield Label("Mindestens ein Fach auswählen.", classes="form-hint")
+            with Horizontal(id="school-class-setup-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-class-setup")
                 yield Button("Anlegen", variant="primary", id="submit-class")
 

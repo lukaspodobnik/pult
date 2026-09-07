@@ -3,7 +3,7 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
+from textual.containers import Horizontal
 from textual.widgets import Button, Label, Select
 
 from schooltools_tui.curriculum.sequence import Sequence
@@ -15,6 +15,7 @@ from schooltools_tui.progress.queries import (
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.subject import Subject
 from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
+from schooltools_tui.widgets.form_dialog import FormDialog, FormFields
 
 
 @dataclass(frozen=True)
@@ -52,35 +53,40 @@ class SetActiveSequenceScreen(SchooltoolsModalScreen[ActiveSequenceFormResult | 
             selected_subject_id
         )
 
-        with Vertical(id="set-active-sequence-dialog"):
-            yield Label("Aktive Sequenz wechseln", id="set-active-sequence-title")
+        with FormDialog(
+            "Aktive Sequenz wechseln", id="set-active-sequence-dialog", wide=True
+        ):
+            with FormFields(classes="form-fields"):
+                if len(self.available_subject_ids) > 1:
+                    yield Label(
+                        f"Klasse {self.school_class.id}", classes="form-context"
+                    )
+                    yield Label("Fach", classes="field-label")
+                    yield Select(
+                        [
+                            (self.subjects_by_id[subject_id].name, subject_id)
+                            for subject_id in self.available_subject_ids
+                        ],
+                        value=selected_subject_id,
+                        allow_blank=False,
+                        id="active-sequence-subject",
+                    )
+                else:
+                    yield Label(
+                        f"Klasse {self.school_class.id} · {self.subjects_by_id[selected_subject_id].name}",
+                        id="active-sequence-subject-label",
+                        classes="form-context",
+                    )
 
-            yield Label("Fach", classes="field-label")
-            if len(self.available_subject_ids) > 1:
+                yield Label("Sequenz", classes="field-label")
                 yield Select(
-                    [
-                        (self.subjects_by_id[subject_id].name, subject_id)
-                        for subject_id in self.available_subject_ids
-                    ],
-                    value=selected_subject_id,
+                    sequence_options,
+                    value=suggested_sequence_id,
                     allow_blank=False,
-                    id="active-sequence-subject",
-                )
-            else:
-                yield Label(
-                    self.subjects_by_id[selected_subject_id].name,
-                    id="active-sequence-subject-label",
+                    id="active-sequence",
                 )
 
-            yield Label("Sequenz", classes="field-label")
-            yield Select(
-                sequence_options,
-                value=suggested_sequence_id,
-                allow_blank=False,
-                id="active-sequence",
-            )
-
-            with Horizontal(id="set-active-sequence-actions"):
+            with Horizontal(id="set-active-sequence-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-active-sequence")
                 yield Button(
                     "Speichern",

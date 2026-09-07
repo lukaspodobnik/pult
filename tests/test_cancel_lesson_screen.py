@@ -45,7 +45,7 @@ def test_cancellation_shows_home_class_and_saves_same_target(
             if from_home:
                 assert (
                     modal.query_one("#cancel-lesson-class", Label).render().plain
-                    == "Klasse: 5A"
+                    == "Klasse 5A"
                 )
             else:
                 assert not modal.query("#cancel-lesson-class")

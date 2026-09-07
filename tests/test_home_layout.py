@@ -57,6 +57,10 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
                 await pilot.pause(0.05)
             home = app.screen.query_one(HomeView)
             footer = app.screen.query_one("SchooltoolsFooter")
+            for _ in range(40):
+                if footer.query(".quit-key"):
+                    break
+                await pilot.pause(0.05)
             quit_key = footer.query_one(".quit-key")
             assert quit_key.region.right == footer.region.right
             assert quit_key.key == "q"

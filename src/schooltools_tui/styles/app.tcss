@@ -33,13 +33,102 @@ ConfirmationScreen .confirmation-actions Button {
     margin-left: 1;
     height: 1;
     min-width: 0;
-    width: 14;
+    width: 16;
     border: none;
     padding: 0 2;
 }
 
 Header {
     background: $panel;
+}
+
+SchooltoolsModalScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+FormDialog {
+    width: 68;
+    max-width: 95%;
+    height: auto;
+    min-height: 13;
+    max-height: 95%;
+    padding: 1 2;
+    border: round $primary;
+    border-title-color: $text-accent;
+    background: $surface;
+}
+
+FormDialog.wide {
+    width: 76;
+}
+
+FormDialog .form-fields {
+    height: auto;
+    max-height: 60vh;
+    overflow-x: hidden;
+}
+
+FormDialog .field-label,
+FormDialog .closure-field-label {
+    height: 1;
+    margin-top: 1;
+    color: $foreground-muted;
+}
+
+FormDialog .form-context {
+    height: auto;
+    margin-bottom: 1;
+    text-style: bold;
+}
+
+FormDialog .form-hint {
+    height: auto;
+    color: $foreground-muted;
+}
+
+FormDialog .form-actions {
+    height: 1;
+    margin-top: 2;
+    align-horizontal: right;
+}
+
+FormDialog .form-actions Button {
+    width: 16;
+    min-width: 0;
+    height: 1;
+    border: none;
+    padding: 0 2;
+    margin-left: 1;
+}
+
+FormDialog .form-action-spacer {
+    width: 1fr;
+    height: 1;
+}
+
+FormDialog .date-fields {
+    height: auto;
+}
+
+FormDialog .date-field {
+    width: 1fr;
+    height: auto;
+}
+
+FormDialog .date-field:first-child {
+    margin-right: 2;
+}
+
+FormDialog #subjects {
+    height: 8;
+    margin: 1 0;
+    border: round $primary;
+    border-title-color: $text-accent;
+}
+
+FormDialog #complete-next-extra-lesson {
+    margin-top: 1;
 }
 
 Footer {
