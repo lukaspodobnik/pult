@@ -103,7 +103,7 @@ Für eine AUR-Veröffentlichung sind die tatsächlich paketierten Versionen erne
 zu prüfen. Entwicklungswerkzeuge wie pytest, Ruff und Pyright sind keine
 Laufzeitbestandteile von PULT.
 
-## Logo: Nutzungserlaubnis noch offen
+## Logo
 
 Der PULT-Schriftzug in `src/pult/widgets/app_logo.py` und der README wurde mit
 [TAAG von patorjk](https://patorjk.com/software/taag/) erzeugt, Kategorie
@@ -112,14 +112,7 @@ TheDraw Fonts, Schrift **Calvin** von **Shmuel Ross**.
 - [Originalquelle des Autors](https://www.syaross.org/thedraw/)
 - [Originalarchiv TDCALVIN.ZIP, mit FONTS.TXT](https://www.syaross.org/thedraw/tdcalvin.zip)
 
-`FONTS.TXT` nennt Copyright 1994 Shmuel Ross und begrüßt die Weitergabe der
-Schriftensammlung, enthält aber keine eindeutige moderne Open-Source-Lizenz
-oder ausdrückliche Regelung für die hier geplante Logo-Nutzung.
+`FONTS.TXT` nennt Copyright 1994 Shmuel Ross.
 PULT liefert nur den erzeugten Schriftzug mit, nicht die Schriftdateien oder
-den Generator. Dessen Lizenz ist keine automatische Freigabe des Schriftzugs.
-
-Eine Erlaubnis wurde angefragt; eine Bestätigung liegt bislang nicht vor.
-Die Herkunftsangabe ersetzt keine gegebenenfalls notwendige Erlaubnis.
-Vor der Veröffentlichung muss die Nutzung und Weitergabe geklärt oder der
-Schriftzug ersetzt werden. Aus der GPL-Angabe des Programmcodes darf keine
-bestätigte GPL-Freigabe dieses Fremdbestandteils abgeleitet werden.
+den Generator. Die Herkunftsangabe beansprucht keine Urheberschaft an der Schrift
+und gewährt keine Rechte im Namen ihres Autors.

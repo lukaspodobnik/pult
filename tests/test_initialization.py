@@ -1,6 +1,6 @@
 import pytest
 
-from pult.config import AppConfig
+from pult.config import AppConfig, load_app_config
 from pult.curriculum.sequence import load_sequence_library
 from pult.initialization.pult import (
     SetupError,
@@ -50,6 +50,21 @@ def test_initialization_preserves_existing_default_file(tmp_path, monkeypatch):
     (tmp_path / "subjects.toml").write_text(marker)
     initialize_pult(str(tmp_path), "nvim", "2026-2027")
     assert (tmp_path / "subjects.toml").read_text() == marker
+
+
+def test_relative_setup_root_remains_valid_after_changing_directory(
+    tmp_path, monkeypatch
+):
+    monkeypatch.chdir(tmp_path)
+    config = initialize_pult("data", "nvim", "2026-2027")
+    assert config.root == tmp_path / "data"
+    other = tmp_path / "elsewhere"
+    other.mkdir()
+    monkeypatch.chdir(other)
+    loaded = load_app_config()
+    assert loaded == config
+    assert loaded is not None
+    assert len(load_sequence_library(loaded.root)) == 116
 
 
 def test_school_year_requires_existing_calendar(tmp_path):

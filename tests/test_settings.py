@@ -135,11 +135,16 @@ def test_startup_year_offer(tmp_path, monkeypatch, confirm):
         async with app.run_test(size=(140, 42)) as pilot:
             for _ in range(60):
                 await pilot.pause(0.05)
-                if isinstance(app.screen, ConfirmationScreen) and app.screen.query(
-                    "#confirm-year-change"
+                if (
+                    isinstance(app.screen, ConfirmationScreen)
+                    and app.focused is not None
+                    and app.focused.id == "cancel-year-change"
                 ):
                     break
             assert isinstance(app.screen, ConfirmationScreen)
+            # Erst nach dem Startfokus ist das Modal bereit für Benutzereingaben.
+            assert app.focused is not None
+            assert app.focused.id == "cancel-year-change"
             if confirm:
                 confirm_button = app.screen.query_one("#confirm-year-change")
                 confirm_button.focus()

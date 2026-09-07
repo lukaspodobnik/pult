@@ -75,6 +75,7 @@ class ManagementPicker(OptionList):
             None,
             Option("Stundenplan", id="edit-timetable"),
             Option("Klassen", id="edit-classes"),
+            None,
             Option("Einstellungen", id="settings"),
             id=id,
         )

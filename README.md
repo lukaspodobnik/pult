@@ -20,20 +20,24 @@ Gewährleistung bereitgestellt, soweit gesetzlich zulässig.
 Die Herkunft der Lehrplanvorlagen, Kalenderdaten und Bibliotheken ist in
 [Quellen und Fremdbestandteile](SOURCES.md) dokumentiert.
 
-**Noch offen vor der Veröffentlichung:** Die Nutzungserlaubnis für den mit
-„Calvin“ erzeugten Logo-Schriftzug ist angefragt, aber noch nicht bestätigt.
-Er wird nicht als selbst entworfener oder abschließend GPL-lizenzierter Bestandteil
-ausgewiesen; vor der Veröffentlichung muss die Frage geklärt oder das Logo ersetzt werden.
-
 ## Starten
 
 Voraussetzungen: Python ab 3.11, [uv](https://docs.astral.sh/uv/) und ein Terminal
-mit Unicode-Unterstützung. Im Projektverzeichnis:
+mit Unicode-Unterstützung. Aus einem heruntergeladenen oder geklonten Projektordner:
 
 ```sh
-uv sync
-uv run pult
+uv tool install .
+pult
 ```
+
+Danach ist `pult` aus jedem Verzeichnis aufrufbar, ohne die Projektumgebung zu
+aktivieren. Falls uv auf einen fehlenden Suchpfad hinweist: `uv tool update-shell`
+ausführen und ein neues Terminal öffnen. Die Shell vervollständigt den Programmnamen
+mit Tab. Ein Editor muss zusätzlich installiert sein, beispielsweise Neovim.
+
+Nach einer Aktualisierung des Projektordners installiert `uv tool install --force .`
+den neuen Stand. `uv tool uninstall pult` entfernt die Installation, nicht deine
+Konfiguration oder Unterrichtsdaten. Ein AUR-Paket ist noch nicht veröffentlicht.
 
 Beim ersten Start Datenverzeichnis, Editor und Schuljahr auswählen. Danach unter
 **Verwaltung → Klassen** Klassen anlegen (z. B. `9B`); die führende Zahl bestimmt
@@ -117,11 +121,16 @@ GPL-Lizenztext auch offline.
 ## Entwicklung
 
 ```sh
+uv sync
+uv run pult                      # aus der Entwicklungsumgebung starten
 just check                       # Ruff, Formatprüfung, Pyright und pytest
 uv run pytest                    # nur Tests
 uv run ruff check . --fix         # automatische Codekorrekturen
 uv run ruff format .              # Formatierung
 ```
+
+Für einen überall verfügbaren Entwicklungsstand: `uv tool install --editable .`.
+Dabei bleibt die Installation mit diesem Projektordner verbunden.
 
 Tests verwenden temporäre Datenverzeichnisse. Quellcode liegt in `src/pult/`, Tests in
 `tests/`. Fachlogik und Darstellung sind getrennt; die Sequenzbibliothek wird gemeinsam

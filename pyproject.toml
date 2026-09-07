@@ -17,6 +17,11 @@ dependencies = [
 [project.scripts]
 pult = "pult:main"
 
+[project.urls]
+Homepage = "https://github.com/lukaspodobnik/pult"
+Repository = "https://github.com/lukaspodobnik/pult"
+Issues = "https://github.com/lukaspodobnik/pult/issues"
+
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"

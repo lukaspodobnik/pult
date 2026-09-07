@@ -25,10 +25,8 @@ Third-party notices and applicable rights remain unchanged. The GPL does
 not create copyright protection for otherwise unprotected facts or texts.
 See SOURCES.md for provenance and the scope of the source review.
 
-LOGO CLEARANCE PENDING: The generated PULT lettering in the application and
-README uses the Calvin TheDraw font by Shmuel Ross via patorjk.com TAAG.
-Permission has been requested but has not yet been confirmed. This notice
-does not grant rights in that lettering on behalf of its original author.
-Resolve this question or replace the lettering before publishing a release.
+The generated PULT lettering in the application and README uses the Calvin
+TheDraw font by Shmuel Ross via patorjk.com TAAG. No font files are bundled.
+This notice does not grant rights on behalf of third-party authors.
 
 Project and source code: https://github.com/lukaspodobnik/pult

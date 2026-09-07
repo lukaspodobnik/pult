@@ -48,7 +48,7 @@ def initialize_pult(root: str, editor: str, year: str) -> AppConfig:
     if not year:
         raise SetupError("Bitte wähle ein Schuljahr aus.")
 
-    root_path = Path(root).expanduser()
+    root_path = Path(root).expanduser().absolute()
 
     if root_path.exists() and not root_path.is_dir():
         raise SetupError("Der angegebene Pfad ist kein Verzeichnis.")
