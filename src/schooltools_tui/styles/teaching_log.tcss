@@ -59,8 +59,16 @@ TeachingLogView .teaching-log-entry {
     border-left: thick $primary;
 }
 
+TeachingLogView .teaching-log-entry.completed {
+    border-left: thick $success;
+}
+
 TeachingLogView .teaching-log-entry.skipped {
     border-left: thick $warning;
+}
+
+TeachingLogView .teaching-log-entry.continued {
+    border-left: thick $secondary;
 }
 
 TeachingLogView .teaching-log-entry.cancelled {

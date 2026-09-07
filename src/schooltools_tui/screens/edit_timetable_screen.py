@@ -1,3 +1,4 @@
+from dataclasses import replace
 from typing import ClassVar
 
 from rich.text import Text
@@ -18,6 +19,7 @@ from schooltools_tui.school.timetable import (
     save_timetable,
 )
 from schooltools_tui.screens.base_screen import SchooltoolsScreen
+from schooltools_tui.screens.confirmation_screen import ConfirmationScreen
 from schooltools_tui.screens.edit_timetable_entry_screen import (
     EditTimetabelEntryScreen,
     TimetableEditAction,
@@ -44,6 +46,7 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
     def __init__(self) -> None:
         super().__init__()
         self.entries_by_slot: dict[tuple[str, int], TimetableEntry] = {}
+        self._initial_entries: dict[tuple[str, int], TimetableEntry] = {}
         self.school_classes: list[SchoolClass] = []
         self.subjects: list[Subject] = []
         self.subjects_by_id: dict[str, Subject] = {}
@@ -78,6 +81,9 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         path = get_timetable_path(config.root, config.active_school_year)
         self.entries_by_slot = {
             (entry.weekday, entry.period): entry for entry in load_timetable(path)
+        }
+        self._initial_entries = {
+            slot: replace(entry) for slot, entry in self.entries_by_slot.items()
         }
         self.school_classes = load_school_classes(
             config.root, config.active_school_year
@@ -245,4 +251,21 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         self.dismiss()
 
     def action_cancel(self) -> None:
-        self.dismiss()
+        if self.entries_by_slot == self._initial_entries:
+            self.dismiss()
+            return
+
+        def discard_confirmed(confirmed: bool | None) -> None:
+            if confirmed:
+                self.dismiss()
+
+        self.app.push_screen(
+            ConfirmationScreen(
+                "Änderungen verwerfen?",
+                "Der Stundenplan enthält ungespeicherte Änderungen.\n"
+                "Wenn du sie verwirfst, bleibt der zuletzt gespeicherte Plan erhalten.",
+                confirm_id="confirm-discard-timetable",
+                cancel_id="cancel-discard-timetable",
+            ),
+            discard_confirmed,
+        )
