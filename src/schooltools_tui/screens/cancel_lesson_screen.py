@@ -11,9 +11,15 @@ from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 class CancelLessonScreen(SchooltoolsModalScreen[str | None]):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
 
+    def __init__(self, school_class_id: str | None = None) -> None:
+        super().__init__()
+        self.school_class_id = school_class_id
+
     def compose(self) -> ComposeResult:
         with Vertical(id="cancel-lesson-dialog"):
             yield Label("Spontanen Ausfall eintragen", id="cancel-lesson-title")
+            if self.school_class_id is not None:
+                yield Label(f"Klasse: {self.school_class_id}", id="cancel-lesson-class")
             yield Label("Grund", classes="field-label")
             yield Input(
                 placeholder="z. B. Feueralarm",

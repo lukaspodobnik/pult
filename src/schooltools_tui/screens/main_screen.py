@@ -468,7 +468,16 @@ class MainScreen(SchooltoolsScreen[None]):
                 f"'{context.planned_lesson.lesson.title}' eingetragen."
             )
 
-        self.app.push_screen(CancelLessonScreen(), cancellation_entered)
+        self.app.push_screen(
+            CancelLessonScreen(
+                school_class_id=(
+                    context.school_class.id
+                    if self.active_school_class_id is None
+                    else None
+                )
+            ),
+            cancellation_entered,
+        )
 
     def action_add_extra_lesson(self) -> None:
         config = self.app_config
