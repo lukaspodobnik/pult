@@ -36,6 +36,7 @@ from schooltools_tui.progress.queries import (
     get_home_dashboard_summary,
     get_next_lesson,
     get_next_planned_lesson,
+    get_next_planned_lessons_for_class,
     get_suggested_next_sequence,
 )
 from schooltools_tui.school.period import load_periods
@@ -260,6 +261,15 @@ class MainScreen(SchooltoolsScreen[None]):
                 config, school_class.id, sequences=self.sequence_library
             )
             school_class = data.school_classes[0]
+            if subject_id is None:
+                subject_id = (
+                    self.active_subject_id
+                    if self.active_school_class_id == school_class.id
+                    and self.active_subject_id in school_class.subject_ids
+                    else school_class.subject_ids[0]
+                )
+            if subject_id not in school_class.subject_ids:
+                raise ValueError("Das ausgewählte Fach gehört nicht zu dieser Klasse.")
             subjects = load_subjects(config.root)
             progress_summaries = get_class_progress_summary(
                 data.progresses_by_class_id[school_class.id],
@@ -274,13 +284,11 @@ class MainScreen(SchooltoolsScreen[None]):
             self.notify(str(error), severity="error")
             return
 
-        if subject_id is None:
-            subject_id = (
-                self.active_subject_id
-                if self.active_school_class_id == school_class.id
-                and self.active_subject_id in school_class.subject_ids
-                else school_class.subject_ids[0]
-            )
+        progress_summaries = tuple(
+            summary
+            for summary in progress_summaries
+            if summary.subject_id == subject_id
+        )
         self.active_school_class_id = school_class.id
         self.active_subject_id = subject_id
         views = self.query(SchoolClassView)
@@ -350,15 +358,34 @@ class MainScreen(SchooltoolsScreen[None]):
             self.school_classes_by_id.update(
                 {school_class.id: school_class for school_class in data.school_classes}
             )
-            planned_lesson = get_next_planned_lesson(
-                data.progresses_by_class_id,
-                data.sequences,
-                data.timetable_entries,
-                data.school_classes,
-                data.school_calendar,
-                data.school_closures,
-                data.class_closures_by_class_id,
-            )
+            if self.active_school_class_id is None:
+                planned_lesson = get_next_planned_lesson(
+                    data.progresses_by_class_id,
+                    data.sequences,
+                    data.timetable_entries,
+                    data.school_classes,
+                    data.school_calendar,
+                    data.school_closures,
+                    data.class_closures_by_class_id,
+                )
+            else:
+                class_id = self.active_school_class_id
+                planned_lesson = next(
+                    (
+                        lesson
+                        for lesson in get_next_planned_lessons_for_class(
+                            data.progresses_by_class_id[class_id],
+                            data.sequences,
+                            data.timetable_entries,
+                            self.school_classes_by_id[class_id],
+                            data.school_calendar,
+                            data.school_closures,
+                            data.class_closures_by_class_id[class_id],
+                        )
+                        if lesson.subject_id == self.active_subject_id
+                    ),
+                    None,
+                )
             progress = (
                 data.progresses_by_class_id[planned_lesson.school_class_id]
                 if planned_lesson is not None
@@ -590,14 +617,16 @@ class MainScreen(SchooltoolsScreen[None]):
                 school_classes,
                 subjects,
                 fixed_school_class_id=self.active_school_class_id,
+                fixed_subject_id=self.active_subject_id,
             ),
             extra_lesson_entered,
         )
 
     async def action_undo_last_entry(self) -> None:
-        if self.active_school_class_id is None:
+        if self.active_school_class_id is None or self.active_subject_id is None:
             return
 
+        subject_id = self.active_subject_id
         config = self.app_config
         school_class = self.school_classes_by_id[self.active_school_class_id]
         try:
@@ -605,13 +634,18 @@ class MainScreen(SchooltoolsScreen[None]):
                 config, school_class, sequences=self.sequence_library
             )
             sequences, progress = data.sequences, data.progress
+            subject_name = next(
+                subject.name
+                for subject in load_subjects(config.root)
+                if subject.id == subject_id
+            )
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
             return
 
-        if not progress.entries:
+        if not any(entry.subject_id == subject_id for entry in progress.entries):
             self.notify(
-                "Es gibt keinen Protokolleintrag zum Zurücknehmen.",
+                "Für dieses Fach gibt es keinen Protokolleintrag zum Zurücknehmen.",
                 severity="warning",
             )
             return
@@ -621,7 +655,7 @@ class MainScreen(SchooltoolsScreen[None]):
                 return
 
             try:
-                updated_progress = undo_last_entry(progress)
+                updated_progress = undo_last_entry(progress, subject_id=subject_id)
                 await self.save_progress_and_refresh(
                     school_class,
                     updated_progress,
@@ -634,14 +668,15 @@ class MainScreen(SchooltoolsScreen[None]):
             self.notify(f"{school_class.id}: Letzten Eintrag zurückgenommen.")
 
         self.app.push_screen(
-            ConfirmUndoScreen(school_class.id),
+            ConfirmUndoScreen(school_class.id, subject_name),
             undo_confirmed,
         )
 
     def action_change_active_sequence(self) -> None:
-        if self.active_school_class_id is None:
+        if self.active_school_class_id is None or self.active_subject_id is None:
             return
 
+        selected_subject_id = self.active_subject_id
         config = self.app_config
         school_class = self.school_classes_by_id[self.active_school_class_id]
         try:
@@ -650,14 +685,10 @@ class MainScreen(SchooltoolsScreen[None]):
             )
             sequences, progress = data.sequences, data.progress
             subjects = load_subjects(config.root)
-            has_available_sequence = any(
+            has_available_sequence = bool(
                 get_available_next_sequences(
-                    progress,
-                    sequences,
-                    subject_id,
-                    school_class.grade_level,
+                    progress, sequences, selected_subject_id, school_class.grade_level
                 )
-                for subject_id in school_class.subject_ids
             )
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(str(error), severity="error")
@@ -665,7 +696,7 @@ class MainScreen(SchooltoolsScreen[None]):
 
         if not has_available_sequence:
             self.notify(
-                "Für diese Klasse gibt es keine weitere offene Sequenz.",
+                "Für dieses Fach gibt es keine weitere offene Sequenz.",
                 severity="warning",
             )
             return
@@ -706,6 +737,7 @@ class MainScreen(SchooltoolsScreen[None]):
                 progress,
                 sequences,
                 subjects,
+                fixed_subject_id=selected_subject_id,
             ),
             active_sequence_selected,
         )
@@ -715,7 +747,9 @@ class MainScreen(SchooltoolsScreen[None]):
             return
 
         self.app.push_screen(
-            TeachingLogScreen(self.active_school_class_id),
+            TeachingLogScreen(
+                self.active_school_class_id, subject_id=self.active_subject_id
+            ),
         )
 
     async def handle_lesson_progress_result(

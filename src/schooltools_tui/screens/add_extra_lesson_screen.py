@@ -31,6 +31,7 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
         school_classes: list[SchoolClass],
         subjects: list[Subject],
         fixed_school_class_id: str | None = None,
+        fixed_subject_id: str | None = None,
     ) -> None:
         super().__init__()
         self.school_classes = school_classes
@@ -39,6 +40,13 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
         }
         self.subjects_by_id = {subject.id: subject for subject in subjects}
         self.fixed_school_class_id = fixed_school_class_id
+        self.fixed_subject_id = fixed_subject_id
+        if fixed_subject_id is not None and (
+            fixed_school_class_id not in self.school_classes_by_id
+            or fixed_subject_id
+            not in self.school_classes_by_id[fixed_school_class_id].subject_ids
+        ):
+            raise ValueError("Das feste Fach muss zur festgelegten Klasse gehören.")
 
     def compose(self) -> ComposeResult:
         selected_class_id = self.fixed_school_class_id or self.school_classes[0].id
@@ -62,12 +70,18 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
                 yield Label(selected_class_id, id="extra-school-class-label")
 
             yield Label("Fach", classes="field-label")
-            yield Select(
-                subject_options,
-                value=subject_options[0][1],
-                allow_blank=False,
-                id="extra-subject",
-            )
+            if self.fixed_subject_id is None:
+                yield Select(
+                    subject_options,
+                    value=subject_options[0][1],
+                    allow_blank=False,
+                    id="extra-subject",
+                )
+            else:
+                yield Label(
+                    self.subjects_by_id[self.fixed_subject_id].name,
+                    id="extra-subject-label",
+                )
 
             yield Label("Datum", classes="field-label")
             yield Input(
@@ -122,7 +136,11 @@ class AddExtraLessonScreen(SchooltoolsModalScreen[ExtraLessonFormResult | None])
         else:
             school_class_id = self.fixed_school_class_id
 
-        subject_value = self.query_one("#extra-subject", Select).value
+        subject_value = (
+            self.fixed_subject_id
+            if self.fixed_subject_id is not None
+            else self.query_one("#extra-subject", Select).value
+        )
         if subject_value is Select.NULL:
             return
 

@@ -236,7 +236,9 @@ class SchoolClassView(Vertical):
             and self.progress_summaries == progress_summaries
         ):
             return
-        changed_class = self.school_class.id != school_class.id
+        changed_selection = self.school_class.id != school_class.id or tuple(
+            s.subject_id for s in self.progress_summaries
+        ) != tuple(s.subject_id for s in progress_summaries)
         self.school_class = school_class
         self.subjects_by_id = subjects_by_id
         self.progress_summaries = progress_summaries
@@ -254,7 +256,7 @@ class SchoolClassView(Vertical):
                     for s in progress_summaries[len(blocks) :]
                 )
             )
-        if changed_class:
+        if changed_selection:
             content.scroll_home(animate=False)
 
     def compose(self) -> ComposeResult:

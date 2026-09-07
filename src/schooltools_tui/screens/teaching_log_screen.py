@@ -20,9 +20,15 @@ from schooltools_tui.views.teaching_log_view import TeachingLogView
 class TeachingLogScreen(SchooltoolsScreen[None]):
     BINDINGS: ClassVar = [("escape", "close", "Zurück")]
 
-    def __init__(self, initial_school_class_id: str | None = None) -> None:
+    def __init__(
+        self,
+        initial_school_class_id: str | None = None,
+        *,
+        subject_id: str | None = None,
+    ) -> None:
         super().__init__()
         self.initial_school_class_id = initial_school_class_id
+        self.subject_id = subject_id
         self.school_classes: list[SchoolClass] = []
         self.school_classes_by_id: dict[str, SchoolClass] = {}
         self.subjects: list[Subject] = []
@@ -47,10 +53,21 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
                 config.root,
                 config.active_school_year,
             )
+            if self.subject_id is not None:
+                self.school_classes = [
+                    c for c in self.school_classes if self.subject_id in c.subject_ids
+                ]
             self.school_classes_by_id = {
                 school_class.id: school_class for school_class in self.school_classes
             }
             self.subjects = load_subjects(config.root)
+            if self.subject_id is not None:
+                subject_name = next(
+                    s.name for s in self.subjects if s.id == self.subject_id
+                )
+                self.query_one("#teaching-log-navigation-title", Label).update(
+                    f"KLASSEN · {subject_name}"
+                )
             self.sequences = self.sequence_library
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
@@ -112,9 +129,14 @@ class TeachingLogScreen(SchooltoolsScreen[None]):
         await content.mount(
             TeachingLogView(
                 school_class,
-                progress.entries,
+                tuple(
+                    entry
+                    for entry in progress.entries
+                    if self.subject_id is None or entry.subject_id == self.subject_id
+                ),
                 self.subjects,
                 self.sequences,
+                subject_id=self.subject_id,
             )
         )
 

@@ -94,9 +94,11 @@ class TeachingLogView(VerticalScroll):
         sequences: list[Sequence],
         *,
         id: str | None = None,
+        subject_id: str | None = None,
     ) -> None:
         super().__init__(id=id)
         self.school_class = school_class
+        self.subject_id = subject_id
         self.entries = entries
         self.subjects_by_id = {subject.id: subject for subject in subjects}
         self.sequences_by_key = {
@@ -110,14 +112,21 @@ class TeachingLogView(VerticalScroll):
         self.scroll_end(animate=False)
 
     def compose(self) -> ComposeResult:
+        subject_label = (
+            f" · {self.subjects_by_id[self.subject_id].name}"
+            if self.subject_id is not None
+            else ""
+        )
         yield Static(
-            f"Unterrichtsprotokoll · {self.school_class.id}",
+            f"Unterrichtsprotokoll{subject_label} · {self.school_class.id}",
             classes="teaching-log-title",
         )
 
         if not self.entries:
             yield Static(
-                "Für diese Klasse gibt es noch keine Protokolleinträge.",
+                "Für dieses Fach gibt es noch keine Protokolleinträge."
+                if self.subject_id is not None
+                else "Für diese Klasse gibt es noch keine Protokolleinträge.",
                 classes="teaching-log-empty",
             )
             return

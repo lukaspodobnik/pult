@@ -32,6 +32,7 @@ class SetActiveSequenceScreen(SchooltoolsModalScreen[ActiveSequenceFormResult | 
         progress: ClassProgress,
         sequences: list[Sequence],
         subjects: list[Subject],
+        fixed_subject_id: str | None = None,
     ) -> None:
         super().__init__()
         self.school_class = school_class
@@ -41,6 +42,7 @@ class SetActiveSequenceScreen(SchooltoolsModalScreen[ActiveSequenceFormResult | 
         self.available_subject_ids = [
             subject_id
             for subject_id in school_class.subject_ids
+            if fixed_subject_id is None or subject_id == fixed_subject_id
             if self.get_available_sequences(subject_id)
         ]
 

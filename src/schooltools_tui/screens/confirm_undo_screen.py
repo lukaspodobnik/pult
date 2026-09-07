@@ -11,16 +11,19 @@ from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
 class ConfirmUndoScreen(SchooltoolsModalScreen[bool]):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
 
-    def __init__(self, school_class_id: str) -> None:
+    def __init__(self, school_class_id: str, subject_name: str | None = None) -> None:
         super().__init__()
         self.school_class_id = school_class_id
+        self.subject_name = subject_name
 
     def compose(self) -> ComposeResult:
         with Vertical(id="confirm-undo-dialog"):
             yield Label("Letzten Eintrag zurücknehmen", id="confirm-undo-title")
             yield Label(
                 f"Der letzte Protokolleintrag der Klasse "
-                f"'{self.school_class_id}' wird zurückgenommen.\n"
+                f"'{self.school_class_id}'"
+                + (f" im Fach '{self.subject_name}'" if self.subject_name else "")
+                + " wird zurückgenommen.\n"
                 "Möchtest du wirklich fortfahren?",
                 id="confirm-undo-message",
             )

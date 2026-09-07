@@ -179,12 +179,22 @@ def complete_additional_lesson(
     )
 
 
-def undo_last_entry(progress: ClassProgress) -> ClassProgress:
-    """Entferne den zuletzt angelegten Protokolleintrag und korrigiere die Sequenz."""
-    if not progress.entries:
+def undo_last_entry(
+    progress: ClassProgress, *, subject_id: str | None = None
+) -> ClassProgress:
+    """Entferne die letzte Buchung, optional nur eines Fachs; erhalte andere Fächer."""
+    index = next(
+        (
+            i
+            for i in range(len(progress.entries) - 1, -1, -1)
+            if subject_id is None or progress.entries[i].subject_id == subject_id
+        ),
+        None,
+    )
+    if index is None:
         raise ProgressCommandError("Es gibt keinen Protokolleintrag zum Zurücknehmen.")
 
-    removed_entry = progress.entries[-1]
+    removed_entry = progress.entries[index]
     active_sequences = progress.active_sequences
     if removed_entry.action in {
         TeachingAction.COMPLETED,
@@ -199,7 +209,7 @@ def undo_last_entry(progress: ClassProgress) -> ClassProgress:
 
     return ClassProgress(
         active_sequences=active_sequences,
-        entries=progress.entries[:-1],
+        entries=progress.entries[:index] + progress.entries[index + 1 :],
     )
 
 

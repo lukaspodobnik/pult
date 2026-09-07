@@ -37,10 +37,15 @@ def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypa
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.3)
             screen = app.screen
-            for _ in range(20):
-                if screen._pending_view_id is None:
-                    break
-                await pilot.pause(0.05)
+
+            async def settled():
+                for _ in range(40):
+                    await pilot.pause(0.05)
+                    if screen._pending_view_id is None:
+                        return
+                raise AssertionError("Ansichtswechsel wurde nicht abgeschlossen")
+
+            await settled()
             picker = screen.query_one(ViewPicker)
             home = screen.query_one(HomeView)
             assert builds == ["home"]
@@ -59,7 +64,7 @@ def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypa
             # Auch ohne Footer-Neuaufbau blockiert Textual die tatsächliche Aktion.
             await app.run_action("complete_next_lesson", default_namespace=screen)
             complete.assert_not_awaited()
-            await pilot.pause(0.3)
+            await settled()
             assert builds == ["home", "5B"]
             assert screen.active_school_class_id == "5B"
             assert screen._pending_view_id is None
@@ -73,10 +78,10 @@ def test_burst_builds_only_last_view_and_defers_hidden_screen(tmp_path, monkeypa
             await pilot.pause(0.3)
             assert builds == ["home", "5B"]
             app.pop_screen()
-            await pilot.pause(0.3)
+            await settled()
             assert builds == ["home", "5B", "5A"]
             picker.highlighted = 0
-            await pilot.pause(0.3)
+            await settled()
             assert builds == ["home", "5B", "5A", "home"]
 
     asyncio.run(run())
