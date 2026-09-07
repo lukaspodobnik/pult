@@ -102,6 +102,9 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
                 ].label
             )
             assert "│" in str(table.get_cell("1", "separator-0"))
+            separator_key = next(k for k in table.columns if k.value == "separator-0")
+            assert str(table.columns[separator_key].label) == "│\n┼"
+            assert str(table.ordered_columns[0].label) == "\n" + "─" * 12
             assert "08:00–08:45" in str(table.ordered_rows[0].label)
             assert timetable.region.x == next_lesson.region.x
             assert timetable.region.width == next_lesson.region.width

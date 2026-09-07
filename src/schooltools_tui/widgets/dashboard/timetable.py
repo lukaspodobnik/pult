@@ -61,7 +61,11 @@ class TimetablePanel(Vertical):
 
     def compose(self) -> ComposeResult:
         yield TimetableDataTable(
-            id="schedule", cursor_type="none", cell_padding=0, header_height=2
+            id="schedule",
+            cursor_type="none",
+            cell_padding=0,
+            header_height=2,
+            show_row_labels=False,
         )
 
     def on_resize(self) -> None:
@@ -144,9 +148,12 @@ class TimetablePanel(Vertical):
     ) -> None:
         table = self.query_one("#schedule", DataTable)
 
+        table.add_column(Text("\n" + "─" * 12, style="dim"), key="period", width=12)
         for index, (weekday, label) in enumerate(WEEKDAYS):
             table.add_column(
-                Text("│\n┼", style="dim"), key=f"separator-{index}", width=1
+                Text("│\n┼", style="dim"),
+                key=f"separator-{index}",
+                width=1,
             )
             header = self.get_highlighted_text(
                 label.center(self._column_width),
@@ -180,6 +187,7 @@ class TimetablePanel(Vertical):
             if height > 2:
                 row_label.append("\n" + " " * 12)
             table.add_row(
+                row_label,
                 *cells,
                 key=str(period.number),
                 label=row_label,
