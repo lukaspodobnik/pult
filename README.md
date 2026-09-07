@@ -22,11 +22,17 @@ Die Herkunft der Lehrplanvorlagen, Kalenderdaten und Bibliotheken ist in
 
 ## Starten
 
-Voraussetzungen: Python ab 3.11, [uv](https://docs.astral.sh/uv/) und ein Terminal
-mit Unicode-Unterstützung. Aus einem heruntergeladenen oder geklonten Projektordner:
+Voraussetzungen: [uv](https://docs.astral.sh/uv/) und ein Terminal mit
+Unicode-Unterstützung. PULT 1.0.0 direkt aus dem GitHub-Release installieren
+(kein Klonen des Projekts nötig):
 
 ```sh
-uv tool install .
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.0.0/pult-1.0.0-py3-none-any.whl
+```
+
+Eine fehlende Python-Version lädt uv bei Bedarf herunter. Anschließend starten:
+
+```sh
 pult
 ```
 
@@ -35,8 +41,15 @@ aktivieren. Falls uv auf einen fehlenden Suchpfad hinweist: `uv tool update-shel
 ausführen und ein neues Terminal öffnen. Die Shell vervollständigt den Programmnamen
 mit Tab. Ein Editor muss zusätzlich installiert sein, beispielsweise Neovim.
 
-Nach einer Aktualisierung des Projektordners installiert `uv tool install --force .`
-den neuen Stand. `uv tool uninstall pult` entfernt die Installation, nicht deine
+Alternativ aus einem heruntergeladenen oder geklonten Projektordner:
+
+```sh
+uv tool install .
+```
+
+Bei dieser lokalen Installation übernimmt nach einer Aktualisierung des
+Projektordners `uv tool install --force .` den neuen Stand.
+`uv tool uninstall pult` entfernt die Installation, nicht deine
 Konfiguration oder Unterrichtsdaten. Ein AUR-Paket ist noch nicht veröffentlicht.
 
 Beim ersten Start Datenverzeichnis, Editor und Schuljahr auswählen. Danach unter
