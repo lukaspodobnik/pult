@@ -33,7 +33,7 @@ ConfirmationScreen .confirmation-actions Button {
     margin-left: 1;
     height: 1;
     min-width: 0;
-    width: auto;
+    width: 14;
     border: none;
     padding: 0 2;
 }
