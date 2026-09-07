@@ -21,7 +21,6 @@ from pult.services.settings import (
     get_suggested_school_year,
     update_settings,
 )
-from pult.storage import save_toml
 
 
 def test_settings_preserve_years_and_save_last(tmp_path, monkeypatch):
@@ -55,18 +54,11 @@ def test_year_offer_uses_first_school_day(tmp_path):
     )
 
 
-def test_legacy_config_is_read_without_moving_data(tmp_path, monkeypatch):
-    old_path = tmp_path / "old.toml"
-    new_path = tmp_path / "new.toml"
-    monkeypatch.setattr("pult.config.app_config.APP_CONFIG_PATH", new_path)
-    monkeypatch.setattr("pult.config.app_config.LEGACY_APP_CONFIG_PATH", old_path)
-    save_toml(
-        old_path, dict(root=str(tmp_path), editor="vim", active_school_year="2026-2027")
-    )
-    config = load_app_config()
-    assert config is not None and config.editor == "vim"
-    assert not new_path.exists()
-    assert old_path.exists()
+def test_missing_config_returns_none_without_creating_file(tmp_path, monkeypatch):
+    config_path = tmp_path / "config.toml"
+    monkeypatch.setattr("pult.config.app_config.APP_CONFIG_PATH", config_path)
+    assert load_app_config() is None
+    assert not config_path.exists()
 
 
 def test_missing_editor_notifies_without_starting_process(
@@ -149,7 +141,11 @@ def test_startup_year_offer(tmp_path, monkeypatch, confirm):
                     break
             assert isinstance(app.screen, ConfirmationScreen)
             if confirm:
-                app.screen.query_one("#confirm-year-change").focus()
+                confirm_button = app.screen.query_one("#confirm-year-change")
+                confirm_button.focus()
+                # Textual übernimmt den Fokus erst im nächsten Eventloop-Durchlauf.
+                await pilot.pause()
+                assert app.focused is confirm_button
                 await pilot.press("enter")
             else:
                 await pilot.press("escape")

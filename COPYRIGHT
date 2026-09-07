@@ -1,0 +1,34 @@
+PULT
+Copyright (C) 2026 Lukas Podobnik
+
+The original program code is licensed under the GNU General Public License,
+version 3 or (at your option) any later version (GPL-3.0-or-later).
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+Scope and third-party material
+------------------------------
+This notice does not claim ownership of third-party libraries, official
+curriculum texts, factual calendar information, or the Calvin font design.
+Third-party notices and applicable rights remain unchanged. The GPL does
+not create copyright protection for otherwise unprotected facts or texts.
+See SOURCES.md for provenance and the scope of the source review.
+
+LOGO CLEARANCE PENDING: The generated PULT lettering in the application and
+README uses the Calvin TheDraw font by Shmuel Ross via patorjk.com TAAG.
+Permission has been requested but has not yet been confirmed. This notice
+does not grant rights in that lettering on behalf of its original author.
+Resolve this question or replace the lettering before publishing a release.
+
+Project and source code: https://github.com/lukaspodobnik/pult

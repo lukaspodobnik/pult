@@ -12,6 +12,19 @@ Dein Unterrichtsplaner im Terminal: Stundenplan, wiederverwendbare Sequenzen,
 Unterrichtsprotokoll und Fortschritt pro Klasse und Fach. Lokal, ohne Konto und
 im Alltag offline nutzbar. Ein persönliches Lernprojekt auf Basis von Textual.
 
+## Lizenz und Quellen
+
+Der eigene Programmcode steht unter **GNU GPL Version 3 oder später**
+([Lizenztext](LICENSE), [Urheber- und Lizenzhinweise](COPYRIGHT)). PULT wird ohne
+Gewährleistung bereitgestellt, soweit gesetzlich zulässig.
+Die Herkunft der Lehrplanvorlagen, Kalenderdaten und Bibliotheken ist in
+[Quellen und Fremdbestandteile](SOURCES.md) dokumentiert.
+
+**Noch offen vor der Veröffentlichung:** Die Nutzungserlaubnis für den mit
+„Calvin“ erzeugten Logo-Schriftzug ist angefragt, aber noch nicht bestätigt.
+Er wird nicht als selbst entworfener oder abschließend GPL-lizenzierter Bestandteil
+ausgewiesen; vor der Veröffentlichung muss die Frage geklärt oder das Logo ersetzt werden.
+
 ## Starten
 
 Voraussetzungen: Python ab 3.11, [uv](https://docs.astral.sh/uv/) und ein Terminal
@@ -82,8 +95,6 @@ Konfiguration: `~/.config/pult/config.toml`. Das gewählte Datenverzeichnis enth
 `subjects.toml`, `periods.toml`, die gemeinsame Bibliothek in `sequences/`, Kalender in
 `calendars/` und Jahresdaten in `school-years/<Jahr>/`. Stundenpläne sind CSV, übrige
 Fachdaten TOML. **Sichere das gesamte Datenverzeichnis** vor größeren manuellen Änderungen.
-Die Konfiguration des früheren Projektnamens wird beim Umstieg gelesen, falls noch keine
-PULT-Konfiguration existiert; Daten werden nicht verschoben.
 
 Enthalten sind Mathematik- und Informatiksequenzen der hinterlegten bayerischen
 Gymnasiallehrpläne und Kalender von **2025/26 bis 2029/30**. Nur Jahre mit gültigem lokalem
@@ -93,6 +104,15 @@ Auf Omarchy folgt das Farbschema automatisch dem aktuellen Theme; sonst wird Gru
 verwendet. Das Layout ist für etwa **206 × 46 Zeichen** ausgelegt. Die Standardzeiten
 umfassen acht Stunden. Eine flexiblere Darstellung längerer Unterrichtstage und die
 Feinausrichtung mit echten Unterrichtsinhalten sind für später vorgesehen.
+
+## Weitere Einstellungen
+
+Unter **Einstellungen → Stundenzeiten** lassen sich Beginn und Ende jeder Stunde
+im Format `HH:MM` ändern. Die Zeiten gelten für alle Schuljahre und werden direkt
+im eigenen Dialog gespeichert; Anzahl und Nummerierung bleiben unverändert.
+Ohne Anpassung gelten die mitgelieferten Standardzeiten.
+**Einstellungen → Über PULT / Lizenz** zeigt Version, Quellen und den vollständigen
+GPL-Lizenztext auch offline.
 
 ## Entwicklung
 

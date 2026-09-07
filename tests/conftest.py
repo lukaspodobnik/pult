@@ -20,7 +20,7 @@ def isolated_omarchy_palette(tmp_path, monkeypatch):
         lambda: tmp_path / "omarchy" / "colors.toml",
     )
     monkeypatch.setattr(
-        "pult.config.app_config.LEGACY_APP_CONFIG_PATH", tmp_path / "legacy-config.toml"
+        "pult.config.app_config.APP_CONFIG_PATH", tmp_path / "config.toml"
     )
 
 

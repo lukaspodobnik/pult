@@ -898,8 +898,10 @@ class MainScreen(PultScreen[None]):
             case "settings":
                 self.app.push_screen(SettingsScreen(), self.settings_changed)
 
-    def settings_changed(self, config: AppConfig | None) -> None:
+    async def settings_changed(self, config: AppConfig | None) -> None:
         if config is None:
+            # Der eigenständige Stundenzeitendialog kann bereits gespeichert haben.
+            await self.refresh_current_view()
             return
         year_changed = config.active_school_year != self.app_config.active_school_year
         self.pult_app.app_config = config
@@ -908,6 +910,8 @@ class MainScreen(PultScreen[None]):
             if self._view_timer is not None:
                 self._view_timer.stop()
             self.app.switch_screen(MainScreen())
+        else:
+            await self.refresh_current_view()
         self.notify("Einstellungen gespeichert.")
 
     def classes_edited(self, _: None) -> None:

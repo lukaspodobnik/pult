@@ -5,8 +5,6 @@ from typing import Any
 from pult.storage import load_toml, save_toml
 
 APP_CONFIG_PATH = Path.home() / ".config" / "pult" / "config.toml"
-# Nur für den Umstieg: bestehende Daten bleiben am bisherigen Ort.
-LEGACY_APP_CONFIG_PATH = Path.home() / ".config" / "schooltools-tui" / "config.toml"
 
 
 @dataclass
@@ -21,10 +19,7 @@ def load_app_config() -> AppConfig | None:
     try:
         data = load_toml(APP_CONFIG_PATH)
     except FileNotFoundError:
-        try:
-            data = load_toml(LEGACY_APP_CONFIG_PATH)
-        except FileNotFoundError:
-            return None
+        return None
 
     root = data.get("root")
     if root is None:

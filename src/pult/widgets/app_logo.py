@@ -1,6 +1,7 @@
 from textual.widgets import Static
 
-# Dein mehrzeiliges Logo zwischen die Anführungszeichen einfügen.
+# Lettering generated with TAAG / Calvin (TheDraw), by Shmuel Ross.
+# Logo permission is pending; see SOURCES.md. No font files are bundled.
 LOGO = r"""
 ╔══╗ ╦  ╦ ╦  ╔═╦═╗
 ║  ║ ║  ║ ║    ║  

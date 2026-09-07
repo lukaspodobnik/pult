@@ -58,9 +58,15 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             home = app.screen.query_one(HomeView)
             footer = app.screen.query_one("PultFooter")
             for _ in range(40):
+                # Bei einem Footer-Neuaufbau existiert die Taste vor ihrem Layout.
+                # Deshalb bei jedem Versuch das aktuelle Widget erneut abfragen.
                 if footer.query(".quit-key"):
-                    break
+                    quit_key = footer.query_one(".quit-key")
+                    if quit_key.region.width > 0 and quit_key.region.height > 0:
+                        break
                 await pilot.pause(0.05)
+            else:
+                pytest.fail("Die Beenden-Taste im Footer erhielt kein Layout.")
             quit_key = footer.query_one(".quit-key")
             assert quit_key.region.right == footer.region.right
             assert quit_key.key == "q"
