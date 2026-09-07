@@ -32,6 +32,44 @@ from schooltools_tui.views.school_class_view import (
     SubjectProgressBlock,
 )
 from schooltools_tui.views.teaching_log_view import TeachingLogView
+from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
+
+
+def test_management_focus_blocks_progress_commands(multi_class_config, monkeypatch):
+    async def run():
+        app = SchooltoolsApp()
+        async with app.run_test(size=(140, 42)) as pilot:
+            main = await ready(app, pilot)
+            await main.show_school_class_view(
+                main.school_classes_by_id["9B"], "mathematik"
+            )
+            calls = []
+            actions = {
+                "n": "complete_next_lesson",
+                "s": "skip_next_lesson",
+                "c": "continue_next_lesson",
+                "a": "cancel_next_lesson",
+                "z": "add_extra_lesson",
+                "p": "undo_last_entry",
+                "w": "change_active_sequence",
+            }
+            for action in actions.values():
+                monkeypatch.setattr(
+                    main, f"action_{action}", lambda: calls.append(True)
+                )
+            main.query_one(ManagementPicker).focus()
+            await pilot.pause()
+            for key, action in actions.items():
+                assert main.check_action(action, ()) is False
+                assert key not in app.active_bindings
+                await pilot.press(key)
+            assert not calls
+            main.query_one(ViewPicker).focus()
+            await pilot.pause()
+            await pilot.press("n")
+            assert calls == [True]
+
+    asyncio.run(run())
 
 
 @pytest.fixture

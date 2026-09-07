@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
+from textual.events import DescendantFocus
 from textual.timer import Timer
 from textual.widget import Widget
 from textual.widgets import ContentSwitcher, OptionList, Static
@@ -313,6 +314,16 @@ class MainScreen(SchooltoolsScreen[None]):
         action: str,
         parameters: tuple[object, ...],
     ) -> bool | None:
+        if isinstance(self.app.focused, ManagementPicker) and action in {
+            "complete_next_lesson",
+            "skip_next_lesson",
+            "continue_next_lesson",
+            "cancel_next_lesson",
+            "add_extra_lesson",
+            "undo_last_entry",
+            "change_active_sequence",
+        }:
+            return False
         if self._pending_view_id is not None and any(
             (binding[1] if isinstance(binding, tuple) else binding.action) == action
             for binding in self.BINDINGS
@@ -326,6 +337,10 @@ class MainScreen(SchooltoolsScreen[None]):
         }:
             return self.active_school_class_id is not None
         return super().check_action(action, parameters)
+
+    @on(DescendantFocus)
+    def refresh_focused_bindings(self) -> None:
+        self.refresh_bindings()
 
     async def refresh_current_view(self) -> None:
         """Aktualisiere die Daten der momentan aktiven Home- oder Klassenansicht."""
