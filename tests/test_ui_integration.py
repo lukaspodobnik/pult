@@ -55,7 +55,7 @@ def test_closure_modals_create_cancel_and_delete(tmp_path, monkeypatch, scope):
             assert screen.query_one("#closures", OptionList).option_count == 1
             screen.action_delete_closure()
             await pilot.pause()
-            app.screen.confirm_deletion()
+            await pilot.click("#confirm-closure-deletion")
             await pilot.pause()
             assert screen.query_one("#closures", OptionList).option_count == 0
 

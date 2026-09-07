@@ -3,7 +3,7 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, Label, OptionList, Static
+from textual.widgets import Button, OptionList, Static
 from textual.widgets.option_list import Option
 
 from schooltools_tui.school.school_class import (
@@ -15,46 +15,25 @@ from schooltools_tui.school.timetable import (
     get_timetable_path,
 )
 from schooltools_tui.screens.base_screen import (
-    SchooltoolsModalScreen,
     SchooltoolsScreen,
 )
+from schooltools_tui.screens.confirmation_screen import ConfirmationScreen
 from schooltools_tui.screens.setup_school_class_screen import SchoolClassSetupScreen
 from schooltools_tui.widgets.footer import SchooltoolsFooter
 
 
-class ConfirmClassDeletionScreen(SchooltoolsModalScreen[bool]):
-    BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
-
+class ConfirmClassDeletionScreen(ConfirmationScreen):
     def __init__(self, school_class_id: str) -> None:
-        super().__init__()
-        self.school_class_id = school_class_id
-
-    def compose(self) -> ComposeResult:
-        with Vertical(id="confirm-class-deletion-dialog"):
-            yield Label("Klasse löschen", id="confirm-class-deletion-title")
-            yield Label(
-                f"Soll die Klasse '{self.school_class_id}' wirklich gelöscht werden?\n"
-                "Zugehörige Stundenplaneinträge werden ebenfalls entfernt.",
-                id="confirm-class-deletion-message",
-            )
-            with Horizontal(id="confirm-class-deletion-actions"):
-                yield Button("Abbrechen", id="cancel-class-deletion")
-                yield Button(
-                    "Löschen",
-                    variant="error",
-                    id="confirm-class-deletion",
-                )
-
-    @on(Button.Pressed, "#confirm-class-deletion")
-    def confirm_deletion(self) -> None:
-        self.dismiss(True)
-
-    @on(Button.Pressed, "#cancel-class-deletion")
-    def cancel_deletion(self) -> None:
-        self.action_cancel()
-
-    def action_cancel(self) -> None:
-        self.dismiss(False)
+        super().__init__(
+            "Klasse löschen",
+            f"Klasse {school_class_id}\n\n"
+            "Die Klasse wird einschließlich ihres Unterrichtsprotokolls und "
+            "ihrer lokalen Ausfälle gelöscht. Ihre Stundenplaneinträge werden "
+            "ebenfalls entfernt.\n\n"
+            "Diese Löschung kann in der App nicht rückgängig gemacht werden.",
+            confirm_id="confirm-class-deletion",
+            cancel_id="cancel-class-deletion",
+        )
 
 
 class EditClassesScreen(SchooltoolsScreen[None]):

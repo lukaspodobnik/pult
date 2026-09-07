@@ -1,48 +1,15 @@
-from typing import ClassVar
-
-from textual import on
-from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.widgets import Button, Label
-
-from schooltools_tui.screens.base_screen import SchooltoolsModalScreen
+from schooltools_tui.screens.confirmation_screen import ConfirmationScreen
 
 
-class ConfirmUndoScreen(SchooltoolsModalScreen[bool]):
-    BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
-
+class ConfirmUndoScreen(ConfirmationScreen):
     def __init__(self, school_class_id: str, subject_name: str | None = None) -> None:
-        super().__init__()
-        self.school_class_id = school_class_id
-        self.subject_name = subject_name
-
-    def compose(self) -> ComposeResult:
-        with Vertical(id="confirm-undo-dialog"):
-            yield Label("Letzten Eintrag zurücknehmen", id="confirm-undo-title")
-            yield Label(
-                f"Der letzte Protokolleintrag der Klasse "
-                f"'{self.school_class_id}'"
-                + (f" im Fach '{self.subject_name}'" if self.subject_name else "")
-                + " wird zurückgenommen.\n"
-                "Möchtest du wirklich fortfahren?",
-                id="confirm-undo-message",
-            )
-
-            with Horizontal(id="confirm-undo-actions"):
-                yield Button("Abbrechen", id="cancel-undo")
-                yield Button(
-                    "Zurücknehmen",
-                    variant="error",
-                    id="confirm-undo",
-                )
-
-    @on(Button.Pressed, "#confirm-undo")
-    def confirm_undo(self) -> None:
-        self.dismiss(True)
-
-    @on(Button.Pressed, "#cancel-undo")
-    def cancel_undo(self) -> None:
-        self.action_cancel()
-
-    def action_cancel(self) -> None:
-        self.dismiss(False)
+        super().__init__(
+            "Letzten Eintrag zurücknehmen",
+            f"Klasse {school_class_id}"
+            + (f" · {subject_name}" if subject_name else "")
+            + "\n\nDie letzte Buchung wird aus dem Unterrichtsprotokoll entfernt. "
+            "Ihre Auswirkungen auf den Fortschritt und die Terminplanung "
+            "werden zurückgenommen.",
+            confirm_id="confirm-undo",
+            cancel_id="cancel-undo",
+        )

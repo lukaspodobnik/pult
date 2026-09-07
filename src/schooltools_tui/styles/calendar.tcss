@@ -1,11 +1,11 @@
-AddClosureScreen,
-ConfirmClosureDeletionScreen {
+
+
+AddClosureScreen {
     align: center middle;
     background: $background 60%;
 }
 
-AddClosureScreen #add-closure-dialog,
-ConfirmClosureDeletionScreen #confirm-closure-deletion-dialog {
+AddClosureScreen #add-closure-dialog {
     width: 68;
     height: auto;
     padding: 2 3;
@@ -13,8 +13,7 @@ ConfirmClosureDeletionScreen #confirm-closure-deletion-dialog {
     border: round $primary;
 }
 
-AddClosureScreen #add-closure-title,
-ConfirmClosureDeletionScreen #confirm-closure-deletion-title {
+AddClosureScreen #add-closure-title {
     height: 3;
     content-align: center middle;
     color: $text-accent;
@@ -31,22 +30,14 @@ AddClosureScreen #closure-scope {
     width: 1fr;
 }
 
-AddClosureScreen #add-closure-actions,
-ConfirmClosureDeletionScreen #confirm-closure-deletion-actions {
+AddClosureScreen #add-closure-actions {
     height: auto;
     margin-top: 1;
     align-horizontal: right;
 }
 
-AddClosureScreen #add-closure-actions Button,
-ConfirmClosureDeletionScreen #confirm-closure-deletion-actions Button {
+AddClosureScreen #add-closure-actions Button {
     margin-left: 1;
-}
-
-ConfirmClosureDeletionScreen #confirm-closure-deletion-message {
-    height: auto;
-    margin: 1 0;
-    text-align: center;
 }
 
 EditClosuresScreen #edit-closures-screen {

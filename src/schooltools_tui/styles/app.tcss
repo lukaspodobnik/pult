@@ -3,6 +3,41 @@ Screen {
     color: $foreground;
 }
 
+ConfirmationScreen {
+    align: center middle;
+    background: $background 60%;
+}
+
+ConfirmationScreen .confirmation-dialog {
+    width: 68;
+    max-width: 95%;
+    height: auto;
+    min-height: 13;
+    padding: 1 2;
+    border: round $primary;
+    border-title-color: $text-accent;
+    background: $surface;
+}
+
+ConfirmationScreen .confirmation-message {
+    height: auto;
+}
+
+ConfirmationScreen .confirmation-actions {
+    height: 1;
+    margin-top: 2;
+    align-horizontal: right;
+}
+
+ConfirmationScreen .confirmation-actions Button {
+    margin-left: 1;
+    height: 1;
+    min-width: 0;
+    width: auto;
+    border: none;
+    padding: 0 2;
+}
+
 Header {
     background: $panel;
 }
