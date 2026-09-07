@@ -53,6 +53,17 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
                 preview.region.bottom,
             )
             assert set(screen.focus_chain) == {tree, preview}
+            tree.focus()
+            await pilot.pause()
+            assert tree.styles.background_tint.a == 0
+            assert tree.styles.border.top[1] != preview.styles.border.top[1]
+            await pilot.press("tab")
+            assert app.focused is preview
+            await pilot.pause()
+            assert preview.styles.background_tint.a == 0
+            assert preview.styles.border.top[1] != tree.styles.border.top[1]
+            await pilot.press("tab")
+            assert app.focused is tree
             assert not tree.show_root
             assert all(not node.is_expanded for node in tree.root.children)
 

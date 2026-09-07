@@ -26,3 +26,25 @@ SequenceLibraryScreen #sequence-preview {
     border: round $primary;
     border-title-color: $text-accent;
 }
+
+SequenceLibraryScreen #sequence-tree,
+SequenceLibraryScreen #sequence-preview {
+    background-tint: transparent;
+    outline: none;
+    border-title-style: none;
+}
+
+SequenceLibraryScreen #sequence-tree:focus,
+SequenceLibraryScreen #sequence-preview:focus {
+    border: round $primary-lighten-2;
+    border-title-color: $primary-lighten-2;
+    border-title-style: bold;
+    background-tint: transparent;
+    outline: none;
+}
+
+App.-light-mode SequenceLibraryScreen #sequence-tree:focus,
+App.-light-mode SequenceLibraryScreen #sequence-preview:focus {
+    border: round $primary-darken-2;
+    border-title-color: $primary-darken-2;
+}
