@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 import pytest
 from test_ui_integration import prepare_root
-from textual.widgets import DataTable, OptionList
+from textual.widgets import Button, DataTable, Input, OptionList, Select
 
 from schooltools_tui.app import SchooltoolsApp
 from schooltools_tui.initialization.school_class import initialize_school_class
@@ -18,12 +18,84 @@ from schooltools_tui.progress.class_progress import (
 from schooltools_tui.school.school_class import SchoolClass
 from schooltools_tui.school.timetable import TimetableEntry
 from schooltools_tui.screens.edit_timetable_entry_screen import (
+    EditTimetabelEntryScreen,
     TimetableEditAction,
     TimetableEditResult,
 )
 from schooltools_tui.screens.edit_timetable_screen import EditTimetableScreen
 from schooltools_tui.screens.teaching_log_screen import TeachingLogScreen
 from schooltools_tui.views.teaching_log_view import TeachingLogView
+
+
+def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
+    config = prepare_root(tmp_path)
+    initialize_school_class(
+        tmp_path,
+        config.active_school_year,
+        SchoolClass("9B", 9, ["mathematik", "informatik-ntg"]),
+    )
+    monkeypatch.setattr("schooltools_tui.app.load_app_config", lambda: config)
+
+    async def run():
+        app = SchooltoolsApp()
+        async with app.run_test(size=(140, 42)) as pilot:
+            await pilot.pause()
+            screen = EditTimetableScreen()
+            await app.push_screen(screen)
+            await pilot.pause()
+            table = screen.query_one(DataTable)
+            await pilot.press("ctrl+s")
+            assert app.screen is screen
+            table.move_cursor(row=0, column=0)
+            await pilot.press("enter")
+            await pilot.pause()
+            modal = app.screen
+            assert isinstance(modal, EditTimetabelEntryScreen)
+            assert (
+                str(modal.query_one("#save-timetable-entry", Button).label)
+                == "Übernehmen"
+            )
+            modal.query_one("#school-class", Select).value = "9B"
+            await pilot.pause()
+            modal.query_one("#subject", Select).value = "informatik-ntg"
+            modal.query_one("#room", Input).value = "101"
+            await pilot.click("#save-timetable-entry")
+            await pilot.pause()
+
+            table.move_cursor(row=1, column=0)
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.screen.query_one("#school-class", Select).value == "9B"
+            assert app.screen.query_one("#subject", Select).value == "informatik-ntg"
+            assert app.screen.query_one("#room", Input).value == "101"
+            app.screen.query_one("#school-class", Select).value = "5A"
+            app.screen.query_one("#room", Input).value = "999"
+            await pilot.pause()
+            await pilot.click("#cancel-timetable-entry-edit")
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.screen.query_one("#school-class", Select).value == "9B"
+            assert app.screen.query_one("#subject", Select).value == "informatik-ntg"
+            assert app.screen.query_one("#room", Input).value == "101"
+            await pilot.click("#save-timetable-entry")
+            await pilot.pause()
+
+            # Existing slots keep their own values, regardless of the suggestion.
+            screen.timetable_entry_edited(
+                TimetableEditResult(
+                    TimetableEditAction.SAVE,
+                    TimetableEntry("monday", 3, "5A", "mathematik", "202"),
+                )
+            )
+            table.move_cursor(row=0, column=0)
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.screen.query_one("#school-class", Select).value == "9B"
+            assert app.screen.query_one("#subject", Select).value == "informatik-ntg"
+            assert app.screen.query_one("#room", Input).value == "101"
+
+    asyncio.run(run())
 
 
 def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):

@@ -29,10 +29,15 @@ from schooltools_tui.widgets.footer import SchooltoolsFooter
 class EditableTimetable(DataTable):
     BINDINGS: ClassVar = [Binding("enter", "select_cursor", "Stunde bearbeiten")]
 
+    def on_focus(self) -> None:
+        self.show_cursor = True
+
+    def on_blur(self) -> None:
+        self.show_cursor = False
+
 
 class EditTimetableScreen(SchooltoolsScreen[None]):
     BINDINGS: ClassVar = [
-        ("ctrl+s", "save", "Speichern"),
         ("escape", "cancel", "Abbrechen"),
     ]
 
@@ -43,6 +48,7 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         self.subjects: list[Subject] = []
         self.subjects_by_id: dict[str, Subject] = {}
         self.periods: list[Period] = []
+        self._last_entry: TimetableEntry | None = None
         self._column_width = 12
         self._row_heights: dict[int, int] = {}
 
@@ -101,16 +107,16 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
             last = weekday == WEEKDAYS[-1][0]
             inner = self._column_width - 1 - first
             header = Text(no_wrap=True)
-            header.append(("┏" if first else "") + "━" * inner + ("┓" if last else "┯"))
             header.append(
-                "\n"
-                + ("┃" if first else "")
-                + label.center(inner)
-                + ("┃" if last else "│"),
-                style="bold",
+                ("┌" if first else "") + "─" * inner + ("┐" if last else "┬"),
+                style="dim",
             )
+            header.append("\n" + ("│" if first else ""), style="dim")
+            header.append(label.center(inner), style="bold")
+            header.append("│", style="dim")
             header.append(
-                "\n" + ("┣" if first else "") + "━" * inner + ("┫" if last else "┿")
+                "\n" + ("├" if first else "") + "─" * inner + ("┤" if last else "┼"),
+                style="dim",
             )
             table.add_column(header, key=weekday, width=self._column_width)
 
@@ -168,15 +174,16 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
             line.truncate(inner, overflow="ellipsis")
             line.align("center", inner)
             if first:
-                result.append("┃")
+                result.append("│", style="dim")
             result.append_text(line)
-            result.append("┃" if last else "│")
+            result.append("│", style="dim")
             result.append("\n")
         bottom = period == self.periods[-1].number
         result.append(
-            (("┗" if bottom else "┠") if first else "")
-            + ("━" if bottom else "─") * inner
-            + (("┛" if bottom else "┨") if last else ("┷" if bottom else "┼")),
+            (("└" if bottom else "├") if first else "")
+            + "─" * inner
+            + (("┘" if bottom else "┤") if last else ("┴" if bottom else "┼")),
+            style="dim",
         )
         return result
 
@@ -199,6 +206,7 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
                 entry=self.entries_by_slot.get(slot),
                 school_classes=self.school_classes,
                 subjects=self.subjects,
+                suggested_entry=self._last_entry,
             ),
             self.timetable_entry_edited,
         )
@@ -210,6 +218,7 @@ class EditTimetableScreen(SchooltoolsScreen[None]):
         slot = (result.entry.weekday, result.entry.period)
         if result.action is TimetableEditAction.SAVE:
             self.entries_by_slot[slot] = result.entry
+            self._last_entry = result.entry
         else:
             self.entries_by_slot.pop(slot, None)
 

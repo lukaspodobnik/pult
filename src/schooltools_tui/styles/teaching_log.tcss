@@ -30,6 +30,27 @@ TeachingLogView {
     padding: 1 2;
 }
 
+TeachingLogScreen #teaching-log-class-picker,
+TeachingLogScreen #teaching-log-content,
+TeachingLogView {
+    background-tint: transparent;
+    outline: none;
+    border-title-style: none;
+}
+
+TeachingLogScreen #teaching-log-class-picker:focus,
+TeachingLogScreen #teaching-log-content:focus-within {
+    border: round $primary-lighten-2;
+    border-title-color: $primary-lighten-2;
+    border-title-style: bold;
+}
+
+App.-light-mode TeachingLogScreen #teaching-log-class-picker:focus,
+App.-light-mode TeachingLogScreen #teaching-log-content:focus-within {
+    border: round $primary-darken-2;
+    border-title-color: $primary-darken-2;
+}
+
 TeachingLogView .teaching-log-entry {
     height: auto;
     margin-bottom: 1;

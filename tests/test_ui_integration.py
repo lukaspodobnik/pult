@@ -171,6 +171,17 @@ def test_class_view_log_binding_preselects_current_class(tmp_path, monkeypatch):
             assert isinstance(app.screen, TeachingLogScreen)
             title = app.screen.query_one("#teaching-log-content").border_title
             assert title == "Unterrichtsprotokoll · 5A · Mathematik"
+            picker = app.screen.query_one("#teaching-log-class-picker")
+            content = app.screen.query_one("#teaching-log-content")
+            picker.focus()
+            await pilot.pause()
+            assert picker.styles.background_tint.a == 0
+            assert picker.styles.border.top[1] != content.styles.border.top[1]
+            active_color = picker.styles.border.top[1]
+            await pilot.press("tab")
+            await pilot.pause()
+            assert content.styles.border.top[1] == active_color
+            assert picker.styles.border.top[1] != active_color
             await pilot.press("escape")
             assert isinstance(app.screen, MainScreen)
 

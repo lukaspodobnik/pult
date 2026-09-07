@@ -42,6 +42,17 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
             buttons = list(actions.query(Button))
             assert all(button.region.height == 1 for button in buttons)
             assert buttons[-1].region.right == actions.region.right
+            if screen_type is EditTimetableScreen:
+                content.focus()
+                await pilot.pause()
+                assert content.show_cursor
+                assert (
+                    content.get_component_styles("datatable--header").background_tint.a
+                    == 0
+                )
+                buttons[-1].focus()
+                await pilot.pause()
+                assert not content.show_cursor
             if screen_type is not EditTimetableScreen:
                 assert buttons[0].region.x == actions.region.x
                 assert str(buttons[-1].label) == "Zurück"

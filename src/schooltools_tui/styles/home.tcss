@@ -252,4 +252,22 @@ EditTimetableScreen #edit-schedule {
     background: $surface;
     border: round $primary;
     border-title-color: $text-accent;
+    background-tint: transparent;
+    outline: none;
+}
+
+EditTimetableScreen #edit-schedule > .datatable--header,
+EditTimetableScreen #edit-schedule > .datatable--fixed,
+EditTimetableScreen #edit-schedule > .datatable--header-hover,
+EditTimetableScreen #edit-schedule > .datatable--header-cursor,
+EditTimetableScreen #edit-schedule > .datatable--fixed-cursor {
+    background: $surface;
+    background-tint: transparent;
+    color: $foreground;
+    text-style: none;
+}
+
+EditTimetableScreen #edit-schedule > .datatable--hover {
+    background: transparent;
+    background-tint: transparent;
 }

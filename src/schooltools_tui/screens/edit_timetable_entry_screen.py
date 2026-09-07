@@ -36,6 +36,8 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
         entry: TimetableEntry | None,
         school_classes: list[SchoolClass],
         subjects: list[Subject],
+        *,
+        suggested_entry: TimetableEntry | None = None,
     ) -> None:
         super().__init__()
         self.weekday = weekday
@@ -43,17 +45,30 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
         self.entry = entry
         self.school_classes = school_classes
         self.subjects_by_id = {subject.id: subject for subject in subjects}
+        self.suggested_entry = suggested_entry
 
     def compose(self) -> ComposeResult:
         weekday_labels: dict[str, str] = dict(WEEKDAYS)
+        suggestion = self.suggested_entry
+        if suggestion is not None and not any(
+            c.id == suggestion.school_class_id and suggestion.subject_id in c.subject_ids
+            for c in self.school_classes
+        ):
+            suggestion = None
         selected_class_id = (
             self.entry.school_class_id
             if self.entry is not None
+            else suggestion.school_class_id
+            if suggestion is not None
             else self.school_classes[0].id
         )
         subject_options = self.get_subject_options(selected_class_id)
         selected_subject_id = (
-            self.entry.subject_id if self.entry is not None else subject_options[0][1]
+            self.entry.subject_id
+            if self.entry is not None
+            else suggestion.subject_id
+            if suggestion is not None
+            else subject_options[0][1]
         )
 
         with FormDialog(
@@ -82,7 +97,13 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
 
                 yield Label("Raum", classes="field-label")
                 yield Input(
-                    value=self.entry.room if self.entry is not None else "",
+                    value=(
+                        self.entry.room
+                        if self.entry is not None
+                        else suggestion.room
+                        if suggestion is not None
+                        else ""
+                    ),
                     placeholder="Raum",
                     id="room",
                 )
@@ -98,7 +119,7 @@ class EditTimetabelEntryScreen(SchooltoolsModalScreen[TimetableEditResult | None
                 yield Static(classes="form-action-spacer")
                 yield Button("Abbrechen", id="cancel-timetable-entry-edit")
                 yield Button(
-                    "Speichern",
+                    "Übernehmen",
                     variant="primary",
                     id="save-timetable-entry",
                 )
