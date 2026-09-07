@@ -1,6 +1,6 @@
 [project]
 name = "pult"
-version = "0.1.0"
+version = "1.0.0"
 description = "Lokaler Unterrichtsplaner für das Terminal: Sequenzen, Stundenplan und Unterrichtsprotokoll."
 readme = "README.md"
 license = "GPL-3.0-or-later"
