@@ -4,8 +4,12 @@ MainScreen #main {
 
 MainScreen #navigation {
     width: 28;
-    padding: 1 1;
+    padding: 0 1 1 1;
     background: $background;
+}
+
+MainScreen AppLogo {
+    margin-bottom: 1;
 }
 
 MainScreen #logo-placeholder {

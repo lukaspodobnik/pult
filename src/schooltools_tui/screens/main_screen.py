@@ -9,7 +9,7 @@ from textual.containers import Horizontal, Vertical
 from textual.events import DescendantFocus
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, OptionList, Static
+from textual.widgets import ContentSwitcher, OptionList
 
 from schooltools_tui.curriculum.sequence import Sequence
 from schooltools_tui.progress.class_progress import (
@@ -68,6 +68,7 @@ from schooltools_tui.services.progress import (
 )
 from schooltools_tui.views.home_view import HomeView
 from schooltools_tui.views.school_class_view import SchoolClassView
+from schooltools_tui.widgets.app_logo import AppLogo
 from schooltools_tui.widgets.dashboard.timetable import TimetablePanel
 from schooltools_tui.widgets.footer import SchooltoolsFooter
 from schooltools_tui.widgets.navigation import ManagementPicker, ViewPicker
@@ -106,7 +107,7 @@ class MainScreen(SchooltoolsScreen[None]):
     def compose(self) -> ComposeResult:
         with Horizontal(id="main"):
             with Vertical(id="navigation"):
-                yield Static("SCHOOLTOOLS\nLogo-Platzhalter", id="logo-placeholder")
+                yield AppLogo(id="app-logo")
                 yield ViewPicker(id="view-picker")
                 yield ManagementPicker(id="management-picker")
 

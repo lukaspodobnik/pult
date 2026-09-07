@@ -64,15 +64,16 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             quit_key = footer.query_one(".quit-key")
             assert quit_key.region.right == footer.region.right
             assert quit_key.key == "q"
-            placeholder = app.screen.query_one("#logo-placeholder")
-            assert placeholder.region.height == 5
+            logo = app.screen.query_one("#app-logo")
+            assert logo.region.height == 5
+            assert logo.region.y == 0
             assert not app.screen.query(Header)
             assert not app.ENABLE_COMMAND_PALETTE
             assert home.query_one("#school-year-progress").region.height == 4
             assert home.query_one("#school-year-progress-bar").region.height == 1
-            assert not placeholder.can_focus
+            assert not logo.can_focus
             assert (
-                placeholder.region.bottom <= app.screen.query_one(ViewPicker).region.y
+                logo.region.bottom + 1 == app.screen.query_one(ViewPicker).region.y
             )
             timetable = home.query_one(TimetablePanel)
             next_lesson = home.query_one(NextLessonPanel)
