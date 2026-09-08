@@ -1,0 +1,35 @@
+# Maintainer: Lukas Podobnik <lukas.podobnik@gmail.com>
+
+pkgname=pult
+pkgver=1.0.0
+pkgrel=2
+pkgdesc='Terminal-based lesson planner with curriculum sequences and teaching logs'
+arch=('any')
+url='https://github.com/lukaspodobnik/pult'
+license=('GPL-3.0-or-later')
+depends=('python>=3.11' 'python-rich' 'python-textual>=8.2.8' 'python-tomli-w>=1.2.0')
+makedepends=(
+  'python-build'
+  'python-installer'
+  'python-uv-build>=0.12.5'
+  'python-uv-build<0.13.0'
+)
+optdepends=(
+  'neovim: edit lesson sequences'
+  'vim: edit lesson sequences'
+  'nano: edit lesson sequences'
+)
+source=("$url/releases/download/v$pkgver/$pkgname-$pkgver.tar.gz")
+sha256sums=('d10e9b364e2c59e38a24db4bf67dafec1e2d283bcc0343e6f92573c788b41a4d')
+
+build() {
+  cd "$pkgname-$pkgver"
+  /usr/bin/python -m build --wheel --no-isolation
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+  /usr/bin/python -m installer --destdir="$pkgdir" dist/*.whl
+  install -Dm644 LICENSE COPYRIGHT SOURCES.md -t "$pkgdir/usr/share/licenses/$pkgname/"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}

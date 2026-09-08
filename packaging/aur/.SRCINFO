@@ -1,0 +1,22 @@
+pkgbase = pult
+	pkgdesc = Terminal-based lesson planner with curriculum sequences and teaching logs
+	pkgver = 1.0.0
+	pkgrel = 2
+	url = https://github.com/lukaspodobnik/pult
+	arch = any
+	license = GPL-3.0-or-later
+	makedepends = python-build
+	makedepends = python-installer
+	makedepends = python-uv-build>=0.12.5
+	makedepends = python-uv-build<0.13.0
+	depends = python>=3.11
+	depends = python-rich
+	depends = python-textual>=8.2.8
+	depends = python-tomli-w>=1.2.0
+	optdepends = neovim: edit lesson sequences
+	optdepends = vim: edit lesson sequences
+	optdepends = nano: edit lesson sequences
+	source = https://github.com/lukaspodobnik/pult/releases/download/v1.0.0/pult-1.0.0.tar.gz
+	sha256sums = d10e9b364e2c59e38a24db4bf67dafec1e2d283bcc0343e6f92573c788b41a4d
+
+pkgname = pult
