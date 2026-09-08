@@ -35,5 +35,6 @@ soll ausdrücklich die Installation statt des Projektcodes prüfen.
 Noch nichts hochgeladen, keine Repository-Sichtbarkeit geändert, kein Tag erstellt
 und keine Git-Historie umgeschrieben. Nach Commit des geprüften Stands folgen die
 öffentliche Freigabe des Repositorys, ein Release-Tag und die AUR-Paketierung.
-Die Logo-Herkunft bleibt dokumentiert; diese technische Prüfung behauptet keine
-tatsächlich erhaltene Zustimmung und ersetzt keine rechtliche Freigabe.
+Nachtrag: Die Logo-Erlaubnis liegt inzwischen per E-Mail von Stevonnie Ross vor,
+einschließlich abgeleiteter Werke unter der GPL. Sie ist in SOURCES.md dokumentiert.
+Der obige Veröffentlichungsstatus beschreibt den damaligen Prüfzeitpunkt.

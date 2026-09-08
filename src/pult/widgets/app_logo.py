@@ -1,6 +1,6 @@
 from textual.widgets import Static
 
-# Lettering generated with TAAG / Calvin (TheDraw), by Shmuel Ross.
+# Lettering generated with TAAG / Calvin (TheDraw), by Stevonnie Ross.
 # See SOURCES.md for attribution. No font files are bundled.
 LOGO = r"""
 ╔══╗ ╦  ╦ ╦  ╔═╦═╗

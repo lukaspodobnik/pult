@@ -107,12 +107,30 @@ Laufzeitbestandteile von PULT.
 
 Der PULT-Schriftzug in `src/pult/widgets/app_logo.py` und der README wurde mit
 [TAAG von patorjk](https://patorjk.com/software/taag/) erzeugt, Kategorie
-TheDraw Fonts, Schrift **Calvin** von **Shmuel Ross**.
+TheDraw Fonts, Schrift **Calvin** von **Stevonnie Ross**.
 
 - [Originalquelle des Autors](https://www.syaross.org/thedraw/)
 - [Originalarchiv TDCALVIN.ZIP, mit FONTS.TXT](https://www.syaross.org/thedraw/tdcalvin.zip)
 
-`FONTS.TXT` nennt Copyright 1994 Shmuel Ross.
+Die ältere Archivdokumentation verwendet einen früheren Namen; auf ausdrücklichen
+Wunsch erfolgt die Namensnennung hier als Stevonnie Ross.
+
+### Erhaltene Nutzungserlaubnis
+
+Stevonnie Ross hat per E-Mail die Nutzung für das Logo, in der App und ihren
+Dateien sowie in Screenshots erlaubt, ausdrücklich einschließlich abgeleiteter
+Werke unter der GPL. Die Namensnennung ist freiwillig.
+
+Originalauszug aus der von der Projektpflege bereitgestellten Antwort
+(Zeilenumbrüche normalisiert):
+
+> You're welcome to use my font for the logo of your app, using it in that app
+> and its files as you see fit, and to include it in screenshots of the app.
+> I acknowledge that you're releasing the app under the GPL and this blanket
+> permission also applies to derivative works made under that license.
+> I don't require any credit.
+
+Dies ist keine allgemeine Neulizenzierung der Schriftdateien. Die ergänzende
+Bemerkung in der Antwort nimmt deren Verkauf ausdrücklich aus.
 PULT liefert nur den erzeugten Schriftzug mit, nicht die Schriftdateien oder
-den Generator. Die Herkunftsangabe beansprucht keine Urheberschaft an der Schrift
-und gewährt keine Rechte im Namen ihres Autors.
+den Generator. Die Herkunftsangabe beansprucht keine Urheberschaft an der Schrift.
