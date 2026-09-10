@@ -1,0 +1,25 @@
+id = "sinus-und-kosinusfunktion"
+curriculum_section_id = "M10 3"
+subject_id = "mathematik"
+grade_level = 10
+recommended_lesson_count = 17
+titel = "Sinus- und Kosinusfunktion"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+    "stunde-13",
+    "stunde-14",
+    "stunde-15",
+    "stunde-16",
+    "stunde-17",
+]

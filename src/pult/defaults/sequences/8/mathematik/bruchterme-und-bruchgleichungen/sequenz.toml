@@ -1,0 +1,21 @@
+id = "bruchterme-und-bruchgleichungen"
+curriculum_section_id = "M8 4"
+subject_id = "mathematik"
+grade_level = 8
+recommended_lesson_count = 13
+titel = "Bruchterme und Bruchgleichungen"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+    "stunde-13",
+]

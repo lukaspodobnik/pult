@@ -1,0 +1,37 @@
+id = "kongruenz-besondere-dreiecke-und-dreieckskonstruktionen"
+curriculum_section_id = "M7 5"
+subject_id = "mathematik"
+grade_level = 7
+recommended_lesson_count = 29
+titel = "Kongruenz, besondere Dreiecke und Dreieckskonstruktionen"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+    "stunde-13",
+    "stunde-14",
+    "stunde-15",
+    "stunde-16",
+    "stunde-17",
+    "stunde-18",
+    "stunde-19",
+    "stunde-20",
+    "stunde-21",
+    "stunde-22",
+    "stunde-23",
+    "stunde-24",
+    "stunde-25",
+    "stunde-26",
+    "stunde-27",
+    "stunde-28",
+    "stunde-29",
+]

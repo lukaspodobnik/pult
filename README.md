@@ -93,8 +93,10 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
 
 - **Sequenzen:** Fach → Jahrgang → Abschnitt wählen; die Vorschau folgt der Auswahl.
   **e** auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
-  neu geladen und validiert. Titel, Aufgaben, Notizen und Stunden können bearbeitet
-  werden. Bestehende IDs möglichst erhalten: Protokolle verweisen darauf.
+  neu geladen und validiert. Die Datei `sequenz.toml` enthält Metadaten und geordnete
+  Stunden-IDs; die Stunden liegen in eigenen Ordnern. IDs bleiben stabil, da
+  Protokolle darauf verweisen. Das neue Format ist im
+  [Materialvertrag](docs/materialvertrag.md) beschrieben.
 - **Stundenplan:** Enter bearbeitet eine Zelle. „Übernehmen“ ändert den Entwurf;
   erst „Speichern“ schreibt die Datei. Klasse, Fach und Raum werden beim nächsten
   Eintrag vorgeschlagen. Abbrechen fragt nur bei tatsächlichen Änderungen nach.
@@ -148,3 +150,12 @@ Dabei bleibt die Installation mit diesem Projektordner verbunden.
 Tests verwenden temporäre Datenverzeichnisse. Quellcode liegt in `src/pult/`, Tests in
 `tests/`. Fachlogik und Darstellung sind getrennt; die Sequenzbibliothek wird gemeinsam
 gecacht, Jahresdaten bleiben getrennt.
+
+### Eigene Unterrichtsmaterialien
+
+Die Defaults liefern Lehrplanstruktur und leere Planungsstunden. Bei der
+Einrichtung werden pro Sequenz leere Ordner für Aufgaben und Begleitdateien
+angelegt. Deine ausgearbeiteten Inhalte bleiben im persönlichen Datenverzeichnis
+außerhalb dieses Repositorys. Sie werden nicht in die Defaults zurückübertragen.
+Ein [neutrales Formatbeispiel](examples/unterricht/README.md) zeigt den Aufbau,
+ohne automatisch in deine Sequenzbibliothek übernommen zu werden.

@@ -1,8 +1,10 @@
 # Materialvertrag für Unterrichtsmaterialien
 
 Status: vereinbarte Grundlage für die nächste Pult-Erweiterung.
-Die Implementierung steht noch aus. Die Beispieldaten des Darstellungsprototyps
-sind noch nicht auf diesen Vertrag umgestellt.
+Datenmodell, Laden/Speichern und Defaults sind umgesetzt. Home, Klassenansicht
+und Sequenzvorschau lesen Materiallisten aus dem Stundenmodell. Die Integration
+der neuen Unterrichtsansicht samt Renderer und Vorbereitungs-Editor steht noch aus.
+Die Beispieldaten des Darstellungsprototyps verwenden weiterhin ihr eigenes Format.
 
 ## Grundprinzip
 
@@ -47,12 +49,20 @@ Stundenliste enthält künftig IDs statt eingebetteter Stundenbeschreibungen.
 
 ```toml
 id = "bruchzahlen"
+curriculum_section_id = "M6 1"
+subject_id = "mathematik"
+grade_level = 6
 titel = "Bruchzahlen"
 stunden = ["brueche-erweitern", "brueche-kuerzen"]
 ```
 
-Dieser Ausschnitt zeigt die neue Verweisstruktur. Die bestehenden Fach- und
-Jahrgangsangaben werden bei der Integration an das vorhandene Datenmodell angebunden.
+Die äußere Ablage bleibt `sequences/<Jahrgang>/<Fach-ID>/<Sequenz-ID>/`.
+`curriculum_section_id`, `subject_id` und `grade_level` behalten die bisherigen
+Feldnamen. Optional bleiben `recommended_lesson_count` sowie das gemeinsame Paar
+`chapter_id`/`chapter_title` erhalten. Bei angegebener empfohlener Stundenzahl muss
+weiterhin mindestens eine Planungsstunde existieren. Die geladenen
+`Sequence.lessons` enthalten aufgelöste `Lesson`-Objekte; `Lesson.tasks` enthält
+sequenzweit gemeinsam geladene `Task`-Objekte. Die Datei selbst speichert nur IDs.
 Die Sequenzbibliothek bleibt der zentrale Überblick und lädt die referenzierten
 Stunden. Zusammenfassungen werden aus den Stundendaten erzeugt, nicht zusätzlich
 als eigener Überblick gepflegt.
@@ -182,12 +192,43 @@ bei der Integration an das bestehende Pult-Styling angepasst.
 
 ## Auslieferung und Umfang
 
-Mitgelieferte Materialien liegen in den Defaults und werden entsprechend Pults
-bisherigem Verfahren ins persönliche Datenverzeichnis übernommen. Bearbeitet
-werden die persönlichen Dateien. Eine Änderung dieses Einrichtungsverfahrens
-oder eine Migration bestehender Unterrichtsmaterialien ist nicht vorgesehen.
+Die öffentlichen Defaults enthalten die allgemeine Lehrplanstruktur und leere
+Planungsstunden, keine persönliche Unterrichtsvorbereitung. Ein neutrales,
+vollständiges Formatmuster liegt unter `examples/unterricht/`, außerhalb der
+Defaults und der automatisch eingerichteten Sequenzbibliothek.
+
+Bei der Einrichtung werden die Defaults weiterhin nach den bisherigen Kopierregeln
+übernommen. Zusätzlich entstehen in jedem Sequenzordner die leeren Verzeichnisse
+`stunden/`, `aufgaben/` und `dateien/`, sofern sie fehlen. Vorhandene Dateien
+bleiben erhalten; Beispielaufgaben werden nicht in jede Sequenz kopiert.
+
+Eigene Vorbereitungen, Aufgaben, Lösungen und Begleitdateien werden ausschließlich
+in der persönlichen Datenablage außerhalb des Repositorys gepflegt. Es gibt
+keine Rückübertragung in die Defaults und keine Veröffentlichung durch Pult.
+Eine Migration bestehender Unterrichtsmaterialien ist nicht vorgesehen.
 
 Nicht Bestandteil dieser Erweiterung sind KI-Erzeugung innerhalb von Pult,
 KI-Kontextdateien, gesonderte fachliche oder didaktische Hintergrunddateien und
 Export. Unterrichtsmaterialien können außerhalb von Pult mit KI-Unterstützung
 erstellt und anschließend von der Lehrkraft geprüft und weiterentwickelt werden.
+
+
+## Verhalten der Datenablage
+
+Unbekannte TOML-Felder, leere Pflichttitel, ungültige oder doppelte Verweise und
+fehlende referenzierte Stunden-/Aufgabendateien werden als Fehler mit Dateipfad
+angezeigt. Referenz-IDs müssen bereits der kanonischen Kleinschreibung entsprechen.
+Optionale Markdown-Dateien dürfen fehlen; vorhandener Markdown-Quelltext wird
+unverändert geladen und gespeichert. Relative Bildverweise bleiben dadurch erhalten.
+Entfernte Referenzen löschen keine verwaisten Stunden- oder Aufgabenordner.
+Wird eine optionale Datei im Modell ausdrücklich auf `None` gesetzt und dieses
+Modell gespeichert, wird diese Datei entfernt. Leerer Text bleibt eine leere Datei.
+
+Die 116 mitgelieferten Sequenzen behalten ihre bisherigen Metadaten und 1645
+Planungsstunden-IDs. Die bisherigen leeren Titel heißen jetzt „Noch nicht
+vorbereitet“, weil `titel` im Vertrag ein nicht leerer Pflichttext ist.
+
+Alte flache Sequenzdateien werden ausdrücklich als altes Format gemeldet.
+Bestehende persönliche Daten werden nicht automatisch umgeschrieben. Zum
+Ausprobieren dieser Entwicklung ist eine frisch eingerichtete Datenablage nötig;
+die bisherigen Kopierregeln bleiben erhalten; leere Materialordner werden ergänzt.

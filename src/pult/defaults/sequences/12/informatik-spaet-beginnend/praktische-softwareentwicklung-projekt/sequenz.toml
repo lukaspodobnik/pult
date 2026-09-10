@@ -1,0 +1,23 @@
+id = "praktische-softwareentwicklung-projekt"
+curriculum_section_id = "INF12 6"
+subject_id = "informatik-spaet-beginnend"
+grade_level = 12
+recommended_lesson_count = 15
+titel = "Praktische Softwareentwicklung, Projekt"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+    "stunde-13",
+    "stunde-14",
+    "stunde-15",
+]

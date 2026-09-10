@@ -1,0 +1,21 @@
+id = "dezimalbrueche"
+curriculum_section_id = "M6 1.2"
+subject_id = "mathematik"
+grade_level = 6
+chapter_id = "M6 1"
+chapter_title = "Rationale Zahlen"
+recommended_lesson_count = 11
+titel = "Dezimalbrüche"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+]

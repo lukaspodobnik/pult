@@ -1,0 +1,32 @@
+id = "formale-sprachen-und-automaten"
+curriculum_section_id = "INF13 3"
+subject_id = "informatik-erhoehtes-anforderungsniveau"
+grade_level = 13
+recommended_lesson_count = 24
+titel = "Formale Sprachen und Automaten"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+    "stunde-13",
+    "stunde-14",
+    "stunde-15",
+    "stunde-16",
+    "stunde-17",
+    "stunde-18",
+    "stunde-19",
+    "stunde-20",
+    "stunde-21",
+    "stunde-22",
+    "stunde-23",
+    "stunde-24",
+]

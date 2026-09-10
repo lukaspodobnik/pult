@@ -1,0 +1,28 @@
+id = "informationsdarstellung-mit-grafik-text-und-multimediadokumenten"
+curriculum_section_id = "NT6 2.1"
+subject_id = "nut-informatik"
+grade_level = 6
+chapter_id = "NT6 2"
+chapter_title = "Schwerpunkt Informatik"
+recommended_lesson_count = 18
+titel = "Informationsdarstellung mit Grafik-, Text- und Multimediadokumenten"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+    "stunde-13",
+    "stunde-14",
+    "stunde-15",
+    "stunde-16",
+    "stunde-17",
+    "stunde-18",
+]

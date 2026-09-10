@@ -1,0 +1,14 @@
+id = "projekt"
+curriculum_section_id = "NT7 2.4"
+subject_id = "nut-informatik"
+grade_level = 7
+chapter_id = "NT7 2"
+chapter_title = "Schwerpunkt Informatik"
+recommended_lesson_count = 4
+titel = "Projekt"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+]

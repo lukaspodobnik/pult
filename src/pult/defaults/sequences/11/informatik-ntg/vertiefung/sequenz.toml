@@ -1,0 +1,15 @@
+id = "vertiefung"
+curriculum_section_id = "INF11 5"
+subject_id = "informatik-ntg"
+grade_level = 11
+recommended_lesson_count = 7
+titel = "Vertiefung"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+]

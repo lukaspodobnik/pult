@@ -41,18 +41,20 @@ class SequencePreview(MarkdownViewer):
 
             if lesson.tasks:
                 lines.extend(["**Aufgaben**", ""])
-                lines.extend(f"- {task}" for task in lesson.tasks)
+                lines.extend(f"- {task.id}" for task in lesson.tasks)
             else:
                 lines.append("*Noch keine Aufgaben eingetragen.*")
 
-            if lesson.notes:
+            if lesson.goals:
+                lines.extend(["", "**Ziele**", ""])
+                lines.extend(f"- {goal}" for goal in lesson.goals)
+            if lesson.material:
+                lines.extend(["", "**Benötigtes Material**", ""])
+                lines.extend(f"- {item}" for item in lesson.material)
+            if lesson.phases:
+                lines.extend(["", "**Verlauf**", ""])
                 lines.extend(
-                    [
-                        "",
-                        "**Notizen**",
-                        "",
-                        lesson.notes,
-                    ]
+                    f"- **{phase.title}:** {phase.text}" for phase in lesson.phases
                 )
 
         if not sequence.lessons:

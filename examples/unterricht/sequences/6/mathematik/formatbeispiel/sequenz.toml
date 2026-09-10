@@ -1,0 +1,6 @@
+id = "formatbeispiel"
+titel = "Formatbeispiel: gleiche Anteile"
+curriculum_section_id = "M6 1"
+subject_id = "mathematik"
+grade_level = 6
+stunden = ["anteile"]

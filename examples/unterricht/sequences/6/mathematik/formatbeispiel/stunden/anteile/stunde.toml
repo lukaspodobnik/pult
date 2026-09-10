@@ -1,0 +1,12 @@
+titel = "Gleiche Anteile vergleichen"
+ziele = ["Gleiche Anteile trotz unterschiedlicher Einteilung erkennen."]
+material = ["Zwei gleich große Papierstreifen", "Buntstift"]
+aufgaben = ["vergleichen"]
+
+[[phasen]]
+titel = "Einstieg"
+text = "Die beiden Einteilungen beschreiben lassen."
+
+[[phasen]]
+titel = "Sicherung"
+text = "Die Gleichheit der markierten Anteile gemeinsam begründen."

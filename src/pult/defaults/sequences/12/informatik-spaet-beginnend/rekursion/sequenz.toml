@@ -1,0 +1,13 @@
+id = "rekursion"
+curriculum_section_id = "INF12 2"
+subject_id = "informatik-spaet-beginnend"
+grade_level = 12
+recommended_lesson_count = 5
+titel = "Rekursion"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+]

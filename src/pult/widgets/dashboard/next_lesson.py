@@ -74,7 +74,7 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
                 "next-lesson-name",
                 "next-lesson-occurrence",
                 "next-lesson-tasks",
-                "next-lesson-notes",
+                "next-lesson-material",
             ),
             "",
         )
@@ -96,11 +96,13 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
             planned_lesson
         )
         if planned_lesson.lesson.tasks:
-            texts["next-lesson-tasks"] = "Aufgaben: " + " · ".join(
-                planned_lesson.lesson.tasks
+            texts["next-lesson-tasks"] = (
+                "Aufgaben: " + planned_lesson.lesson.task_summary
             )
-        if planned_lesson.lesson.notes:
-            texts["next-lesson-notes"] = "Notizen: " + planned_lesson.lesson.notes
+        if planned_lesson.lesson.material:
+            texts["next-lesson-material"] = (
+                "Material: " + planned_lesson.lesson.material_summary
+            )
         return texts
 
     def _get_sequence(self, planned_lesson: PlannedLesson) -> Sequence:

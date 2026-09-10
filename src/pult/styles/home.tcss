@@ -137,7 +137,7 @@ HomeView .next-lesson-sequence,
 HomeView .next-lesson-name,
 HomeView .next-lesson-occurrence,
 HomeView .next-lesson-tasks,
-HomeView .next-lesson-notes,
+HomeView .next-lesson-material,
 HomeView .dashboard-empty {
     height: auto;
 }
@@ -224,7 +224,7 @@ HomeView .next-lesson-name {
 }
 
 HomeView .next-lesson-tasks,
-HomeView .next-lesson-notes {
+HomeView .next-lesson-material {
     margin-top: 1;
 }
 

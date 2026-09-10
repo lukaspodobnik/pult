@@ -1,0 +1,15 @@
+id = "sinus-und-kosinusfunktion"
+curriculum_section_id = "M12 1.3"
+subject_id = "mathematik"
+grade_level = 12
+chapter_id = "M12 1"
+chapter_title = "Untersuchung von Funktionen – Stammfunktion, Produkt- und Kettenregel"
+recommended_lesson_count = 5
+titel = "Sinus- und Kosinusfunktion"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+]

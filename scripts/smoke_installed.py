@@ -37,6 +37,7 @@ async def smoke(app: PultApp, root: Path) -> None:
             if (
                 isinstance(app.screen, MainScreen)
                 and app.screen._pending_view_id is None
+                and app.screen.query("TimetablePanel")
             ):
                 break
         assert isinstance(app.screen, MainScreen)
@@ -50,8 +51,18 @@ async def smoke(app: PultApp, root: Path) -> None:
     os.chdir(root / "other")
     second = PultApp()
     async with second.run_test(size=(206, 46)) as pilot:
-        await pilot.pause(0.3)
+        # Nicht während des ersten asynchronen Ansichtsaufbaus herunterfahren.
+        for _ in range(100):
+            await pilot.pause(0.05)
+            if (
+                isinstance(second.screen, MainScreen)
+                and second.screen._pending_view_id is None
+                and second.screen.query("TimetablePanel")
+            ):
+                break
         assert isinstance(second.screen, MainScreen)
+        assert second.screen.query("TimetablePanel")
+        assert second.screen._pending_view_id is None
         assert second.require_config().root == root / "data"
 
 

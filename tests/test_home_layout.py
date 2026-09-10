@@ -153,8 +153,8 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert title.render().plain.count("\n") <= 1
             assert title.content == long_title
             app.save_screenshot("home.svg", path=str(tmp_path))
-            next_lesson.query_one(".next-lesson-notes").update("Notizen\n" * 100)
-            next_lesson.query_one(".next-lesson-notes").display = True
+            next_lesson.query_one(".next-lesson-material").update("Material\n" * 100)
+            next_lesson.query_one(".next-lesson-material").display = True
             await pilot.pause()
             assert next_lesson.max_scroll_y > 0
             assert next_lesson not in app.screen.focus_chain

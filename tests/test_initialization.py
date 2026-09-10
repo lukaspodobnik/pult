@@ -149,3 +149,22 @@ def test_setup_requires_all_values(tmp_path, monkeypatch, root, editor, year):
     actual_root = root if not root else str(tmp_path / root)
     with pytest.raises(SetupError):
         initialize_pult(actual_root, editor, year)
+
+
+def test_material_directories_are_created_without_overwriting_content(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr("pult.initialization.pult.save_app_config", lambda config: None)
+    initialize_pult(str(tmp_path), "nvim", "2026-2027")
+    folders = list((tmp_path / "sequences").glob("*/*/*/sequenz.toml"))
+    assert len(folders) == 116
+    for metadata in folders:
+        for name in ("aufgaben", "dateien"):
+            directory = metadata.parent / name
+            assert directory.is_dir()
+            assert not list(directory.iterdir())
+    marker = folders[0].parent / "dateien" / "privat.txt"
+    marker.write_text("Persönlich")
+    initialize_pult(str(tmp_path), "nvim", "2026-2027")
+    assert marker.read_text() == "Persönlich"
+    assert not (tmp_path / "sequences/6/mathematik/formatbeispiel").exists()

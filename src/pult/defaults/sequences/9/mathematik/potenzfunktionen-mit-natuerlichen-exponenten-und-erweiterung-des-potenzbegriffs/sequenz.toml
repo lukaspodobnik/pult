@@ -1,0 +1,17 @@
+id = "potenzfunktionen-mit-natuerlichen-exponenten-und-erweiterung-des-potenzbegriffs"
+curriculum_section_id = "M9 5"
+subject_id = "mathematik"
+grade_level = 9
+recommended_lesson_count = 9
+titel = "Potenzfunktionen mit natürlichen Exponenten und Erweiterung des Potenzbegriffs"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+]

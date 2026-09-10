@@ -146,9 +146,9 @@ class SubjectProgressBlock(Vertical):
     def _compose_next_lesson(self) -> ComposeResult:
         for name, text in self._next_lesson_texts().items():
             classes = name
-            if name in {"next-lesson-tasks", "next-lesson-notes"}:
+            if name in {"next-lesson-tasks", "next-lesson-material"}:
                 classes += " next-lesson-details"
-            widget = Static(text, classes=classes)
+            widget = Static(text, classes=classes, markup=False)
             widget.display = bool(text)
             yield widget
 
@@ -160,7 +160,7 @@ class SubjectProgressBlock(Vertical):
                 "next-lesson-sequence",
                 "next-lesson-date",
                 "next-lesson-tasks",
-                "next-lesson-notes",
+                "next-lesson-material",
             ),
             "",
         )
@@ -183,11 +183,13 @@ class SubjectProgressBlock(Vertical):
             f"{format_date(planned_lesson.date)} · {planned_lesson.period}. Stunde"
         )
         if planned_lesson.lesson.tasks:
-            texts["next-lesson-tasks"] = "Aufgaben: " + " · ".join(
-                planned_lesson.lesson.tasks
+            texts["next-lesson-tasks"] = (
+                "Aufgaben: " + planned_lesson.lesson.task_summary
             )
-        if planned_lesson.lesson.notes:
-            texts["next-lesson-notes"] = f"Notizen: {planned_lesson.lesson.notes}"
+        if planned_lesson.lesson.material:
+            texts["next-lesson-material"] = (
+                "Material: " + planned_lesson.lesson.material_summary
+            )
         return texts
 
     async def update_data(

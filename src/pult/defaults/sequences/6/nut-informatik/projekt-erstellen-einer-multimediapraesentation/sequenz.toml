@@ -1,0 +1,15 @@
+id = "projekt-erstellen-einer-multimediapraesentation"
+curriculum_section_id = "NT6 2.2"
+subject_id = "nut-informatik"
+grade_level = 6
+chapter_id = "NT6 2"
+chapter_title = "Schwerpunkt Informatik"
+recommended_lesson_count = 5
+titel = "Projekt: Erstellen einer Multimediapräsentation"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+]

@@ -1,0 +1,18 @@
+id = "grundlagen-der-datenmodellierung-und-relationaler-datenbanksysteme"
+curriculum_section_id = "INF9 2"
+subject_id = "informatik-ntg"
+grade_level = 9
+recommended_lesson_count = 10
+titel = "Grundlagen der Datenmodellierung und relationaler Datenbanksysteme"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+]
