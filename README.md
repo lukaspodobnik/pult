@@ -172,8 +172,11 @@ Auswahl der Sequenzvorschau zurück.
 
 - **Leertaste:** Vorbereitung / Aufgaben. Lösungen stehen direkt unter den Aufgaben.
 - **Tab:** Zwischen Stundenliste, Inhalt, Zielen und Verlauf wechseln.
-- **e:** Vorbereitung im konfigurierten Editor bearbeiten; eine fehlende Datei wird
-  erst beim Bearbeiten angelegt. Die automatisch angezeigte Materialliste bleibt in TOML.
+- **e:** Den sichtbaren Bereich bearbeiten: bei Vorbereitung direkt im konfigurierten
+  Editor, bei Aufgaben nach Auswahl der Aufgabe und von Aufgabentext oder Lösung.
+  Fehlende Vorbereitungs- und Lösungsdateien werden erst beim Bearbeiten angelegt.
+  Die automatisch angezeigte Materialliste bleibt in TOML. Aufgabenänderungen gelten
+  für alle Stunden der Sequenz, die dieselbe Aufgabe verwenden.
 - **m:** `stunde.toml` für Titel, Ziele, benötigtes Material, Aufgabenverweise und Phasen bearbeiten.
 
 Nach dem Editor werden die Dateien neu geladen. Bei Fehlern bleibt der letzte

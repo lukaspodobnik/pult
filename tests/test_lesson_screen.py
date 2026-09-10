@@ -196,3 +196,62 @@ def test_graphics_and_inline_math_survive_material_switch(tmp_path, monkeypatch)
         loop.run_until_complete(run())
     finally:
         loop.close()
+
+
+def test_edit_task_text_and_missing_solution(tmp_path, monkeypatch):
+    from pult.screens.select_task_file_screen import SelectTaskFileScreen
+
+    config = prepare_root(tmp_path)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
+    sequence = load_sequence(Path(__file__).parents[1] / "examples/unterricht", 6,
+                             "mathematik", "formatbeispiel")
+    sequence.lessons[0].tasks[0].solution = None
+    sequence.lessons.append(replace(sequence.lessons[0], id="zweite"))
+    save_sequence(tmp_path, sequence)
+    calls = []
+
+    async def run():
+        app = PultApp()
+        async with app.run_test(size=(180, 52)) as pilot:
+            await pilot.pause(.5)
+            viewer = LessonScreen(sequence, sequence.lessons[0].id)
+            await app.push_screen(viewer)
+            await pilot.pause()
+            monkeypatch.setattr(app, "suspend", nullcontext)
+
+            def editor(command, *, check):
+                path = Path(command[-1])
+                calls.append(path)
+                assert path.exists()
+                path.write_text("Neu: " + path.name)
+                return SimpleNamespace(returncode=0)
+
+            monkeypatch.setattr("pult.screens.lesson_screen.subprocess", SimpleNamespace(run=editor))
+            await pilot.press("space", "e")
+            assert isinstance(app.screen, SelectTaskFileScreen)
+            await pilot.press("enter", "escape", "escape")
+            assert app.screen is viewer
+            assert not calls
+            solution = viewer.directory / "aufgaben" / viewer.lesson.tasks[0].id / "loesung.md"
+            assert not solution.exists()
+            await pilot.press("e", "enter", "enter")
+            await pilot.pause()
+            assert app.screen is viewer
+            assert calls[-1].name == "aufgabe.md"
+            assert viewer.lesson.tasks[0].text == "Neu: aufgabe.md"
+            assert viewer.sequence.lessons[1].tasks[0].text == "Neu: aufgabe.md"
+            assert viewer.show_tasks
+            await pilot.press("e", "enter", "down", "enter")
+            await pilot.pause()
+            await app.workers.wait_for_complete()
+            assert app.screen is viewer
+            assert calls[-1] == solution
+            assert viewer.lesson.tasks[0].solution == "Neu: loesung.md"
+            assert any(m.source == "Neu: loesung.md" for m in viewer.query(LessonMaterial))
+            await pilot.press("escape")
+
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(run())
+    finally:
+        loop.close()

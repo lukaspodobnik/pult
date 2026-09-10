@@ -16,6 +16,7 @@ from pult.curriculum.material import Lesson, material_path
 from pult.curriculum.sequence import Sequence, get_sequence_path, load_sequence
 from pult.school.subject import load_subjects
 from pult.screens.base_screen import PultScreen
+from pult.screens.select_task_file_screen import SelectTaskFileScreen
 from pult.widgets.footer import PultFooter
 from pult.widgets.lesson_material import LessonMaterial
 
@@ -29,7 +30,7 @@ class LessonScreen(PultScreen[Sequence]):
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
         ("space", "toggle_material", "Vorbereitung / Aufgaben"),
-        ("e", "edit_preparation", "Vorbereitung bearbeiten"),
+        ("e", "edit_preparation", "Bearbeiten"),
         ("m", "edit_metadata", "Stundendaten"),
     ]
 
@@ -199,14 +200,27 @@ class LessonScreen(PultScreen[Sequence]):
         self.update_view()
 
     async def action_edit_preparation(self):
+        if self.show_tasks:
+            if self.lesson is None or not self.lesson.tasks:
+                self.notify("Dieser Stunde sind noch keine Aufgaben zugeordnet.")
+                return
+            self.app.push_screen(SelectTaskFileScreen(self.lesson.tasks), self.task_file_selected)
+            return
         await self.edit("vorbereitung.md")
+
+    async def task_file_selected(self, selection: tuple[str, str] | None):
+        if selection is not None:
+            task_id, filename = selection
+            await self.edit(filename, task_id=task_id)
 
     async def action_edit_metadata(self):
         await self.edit("stunde.toml")
 
-    async def edit(self, filename: str):
+    async def edit(self, filename: str, *, task_id: str | None = None):
         lesson = self.lesson
         if lesson is None:
+            return
+        if task_id is not None and not any(task.id == task_id for task in lesson.tasks):
             return
         try:
             command = shlex.split(self.app_config.editor)
@@ -215,8 +229,13 @@ class LessonScreen(PultScreen[Sequence]):
                     "Der konfigurierte Editor wurde nicht gefunden.", severity="error"
                 )
                 return
-            path = material_path(self.directory, "stunden", lesson.id, filename)
-            if filename == "vorbereitung.md" and not path.exists():
+            path = material_path(
+                self.directory,
+                "aufgaben" if task_id is not None else "stunden",
+                task_id if task_id is not None else lesson.id,
+                filename,
+            )
+            if filename in {"vorbereitung.md", "loesung.md"} and not path.exists():
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.touch(exist_ok=False)
             with self.app.suspend():
