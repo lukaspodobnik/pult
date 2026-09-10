@@ -9,9 +9,19 @@ class PultFooter(Footer):
     def compose(self) -> ComposeResult:
         quit_key = None
         has_navigation = False
-        for widget in super().compose():
+        widgets = list(super().compose())
+        for widget in widgets:
+            if (
+                isinstance(widget, FooterKey)
+                and widget.action.rsplit(".", 1)[-1] == "go_home"
+            ):
+                yield widget
+                yield Static(classes="overview-spacer")
+        for widget in widgets:
             if isinstance(widget, FooterKey):
                 action = widget.action.rsplit(".", 1)[-1]
+                if action == "go_home":
+                    continue
                 if action == "quit":
                     widget.add_class("quit-key")
                     quit_key = widget

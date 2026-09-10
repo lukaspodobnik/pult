@@ -1,10 +1,22 @@
 # AUR-Paketierung
 
-Paket: `pult`, Version `1.0.0-2`. Noch nicht ins AUR hochgeladen.
+Paket: `pult`, Version `1.0.1-1`. Für das kommende GitHub-Release vorbereitet; noch nicht ins AUR hochgeladen.
 
 - `PKGBUILD`: Bauanleitung für das veröffentlichte Quellpaket.
 - `.SRCINFO`: mit `makepkg --printsrcinfo > .SRCINFO` erzeugte Metadaten.
 - Die optionale Editorauswahl erzwingt keine Installation eines bestimmten Editors.
+
+## Vorbereitung für 1.0.1
+
+`pkgver` wurde auf `1.0.1` gesetzt und `pkgrel` auf `1` zurückgesetzt.
+Die SHA-256-Prüfsumme stammt aus dem lokal gebauten Release-Quellarchiv
+`dist/pult-1.0.1.tar.gz`. `.SRCINFO` wurde mit `makepkg --printsrcinfo` neu erzeugt.
+Bash-Syntax und Metadaten wurden geprüft. Der Download-Link funktioniert erst,
+wenn genau dieses Quellarchiv beim GitHub-Release `v1.0.1` veröffentlicht ist.
+
+Ein neuer vollständiger Arch-Chroot-Bau und eine pacman-Installation von 1.0.1
+stehen noch aus. Die früheren Prüfungen unten sind historische Ergebnisse.
+Nach einem erneuten Archivbau muss die Prüfsumme erneut abgeglichen werden.
 
 ## Prüfung vom 8. September 2026
 

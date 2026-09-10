@@ -23,11 +23,11 @@ Die Herkunft der Lehrplanvorlagen, Kalenderdaten und Bibliotheken ist in
 ## Starten
 
 Voraussetzungen: [uv](https://docs.astral.sh/uv/) und ein Terminal mit
-Unicode-Unterstützung. PULT 1.0.0 direkt aus dem GitHub-Release installieren
+Unicode-Unterstützung. PULT 1.0.1 direkt aus dem GitHub-Release installieren
 (kein Klonen des Projekts nötig):
 
 ```sh
-uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.0.0/pult-1.0.0-py3-none-any.whl
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.0.1/pult-1.0.1-py3-none-any.whl
 ```
 
 Eine fehlende Python-Version lädt uv bei Bedarf herunter. Anschließend starten:
@@ -92,7 +92,7 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
 ### Verwaltung
 
 - **Sequenzen:** Fach → Jahrgang → Abschnitt wählen; die Vorschau folgt der Auswahl.
-  Enter auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
+  **e** auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
   neu geladen und validiert. Titel, Aufgaben, Notizen und Stunden können bearbeitet
   werden. Bestehende IDs möglichst erhalten: Protokolle verweisen darauf.
 - **Stundenplan:** Enter bearbeitet eine Zelle. „Übernehmen“ ändert den Entwurf;
