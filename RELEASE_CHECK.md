@@ -1,5 +1,35 @@
 # Veröffentlichungsprüfung
 
+## Release 1.0.1 — Vorbereitung
+
+- Version in `pyproject.toml` und `uv.lock`: `1.0.1`.
+- README-Installationslink und `RELEASE_NOTES.md` für das neue Release vorbereitet.
+- Ruff, Formatprüfung und Pyright erfolgreich; alle 177 Tests bestanden.
+- Wheel und Quellarchiv aus dem Release-Stand gebaut.
+- Paketversion, GPL-Metadaten und mitgelieferte Dateien `LICENSE`, `COPYRIGHT`
+  und `SOURCES.md` geprüft; 116 Sequenzvorlagen im Wheel enthalten.
+- Keine Prototypen, Node-Abhängigkeiten, virtuelle Umgebung oder Git-Verzeichnisse
+  in den gebauten Archiven.
+- Wheel in separater Python-3.11-Umgebung unter `/tmp` installiert.
+- Installierter Einstiegspunkt, Ersteinrichtung, Neustart aus anderem Verzeichnis,
+  Defaults und Lizenzdialog mit temporären Nutzerdaten erfolgreich geprüft.
+- AUR auf `1.0.1-1` aktualisiert, SHA-256 aus dem neuen Quellarchiv übernommen,
+  `.SRCINFO` neu erzeugt und PKGBUILD-Syntax geprüft.
+- Vollständiger neuer Arch-Chroot-Bau und pacman-Installation noch ausstehend;
+  die Python-Installationsprüfung ersetzt diese nicht.
+
+Artefakte für die spätere Veröffentlichung:
+
+- `dist/pult-1.0.1-py3-none-any.whl`
+- `dist/pult-1.0.1.tar.gz`
+
+Noch kein Release-Commit, Tag oder Upload erstellt. Nach dem Merge den finalen
+Stand und die Archivprüfsumme erneut abgleichen. Die AUR-Downloadadresse ist erst
+nach Veröffentlichung des Quellarchivs erreichbar. Gebaute Archive werden nicht
+in Git eingecheckt, sondern später als Release-Anhänge hochgeladen.
+
+## Historische Prüfung für 0.1.0
+
 Stand: 7. September 2026, Paketversion `0.1.0`.
 
 ## Geprüft

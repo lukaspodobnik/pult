@@ -23,11 +23,11 @@ Die Herkunft der Lehrplanvorlagen, Kalenderdaten und Bibliotheken ist in
 ## Starten
 
 Voraussetzungen: [uv](https://docs.astral.sh/uv/) und ein Terminal mit
-Unicode-Unterstützung. PULT 1.0.0 direkt aus dem GitHub-Release installieren
+Unicode-Unterstützung. PULT 1.0.1 direkt aus dem GitHub-Release installieren
 (kein Klonen des Projekts nötig):
 
 ```sh
-uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.0.0/pult-1.0.0-py3-none-any.whl
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.0.1/pult-1.0.1-py3-none-any.whl
 ```
 
 Eine fehlende Python-Version lädt uv bei Bedarf herunter. Anschließend starten:
