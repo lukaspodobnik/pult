@@ -79,6 +79,7 @@ def test_management_focus_blocks_progress_commands(multi_class_config, monkeypat
                 "z": "add_extra_lesson",
                 "p": "undo_last_entry",
                 "w": "change_active_sequence",
+                "u": "show_teaching_log",
             }
             for action in actions.values():
                 monkeypatch.setattr(

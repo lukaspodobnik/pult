@@ -29,6 +29,9 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
             footer = app.screen.query_one("PultFooter")
             navigation_key = footer.query_one(".navigation-key")
             keys = list(footer.children)
+            assert keys[0].action.rsplit(".", 1)[-1] == "go_home"
+            assert keys[1].has_class("overview-spacer")
+            assert keys[1].region.width == 2
             previous_key = keys[keys.index(navigation_key) - 2]
             assert footer.query_one(".navigation-spacer").region.width <= 8
             assert navigation_key.region.x - previous_key.region.right <= 9

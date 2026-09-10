@@ -234,3 +234,8 @@ PultFooter FooterKey.balanced-quit {
     width: 1fr;
     height: 1;
 }
+
+PultFooter .overview-spacer {
+    width: 2;
+    height: 1;
+}

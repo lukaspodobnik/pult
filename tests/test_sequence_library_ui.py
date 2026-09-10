@@ -115,6 +115,10 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             )
             await pilot.press("enter")
             await pilot.pause()
+            assert node.data == original
+            notifications.assert_not_called()
+            await pilot.press("e")
+            await pilot.pause()
             assert app.screen is screen
             if editor_result == "saved":
                 assert updated in screen.sequence_library
