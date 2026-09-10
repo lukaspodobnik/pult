@@ -10,10 +10,10 @@ from PIL import Image as PILImage
 from rich.cells import cell_len
 from rich.text import Text
 from textual import work
-from textual.containers import Horizontal, Vertical
 from textual.widgets import Markdown, Static
 
 from pult.services.material_rendering import MaterialRenderer, blocks, image_widget
+from pult.widgets.scrolling import Horizontal, Vertical
 
 
 class LessonMaterial(Vertical):

@@ -4,12 +4,12 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal
 from textual.widgets import Button, Input, Label, Static
 
 from pult.school.period import Period, save_periods
 from pult.screens.base_screen import PultModalScreen
 from pult.widgets.form_dialog import FormDialog, FormFields
+from pult.widgets.scrolling import Horizontal
 
 
 class EditPeriodsScreen(PultModalScreen[bool]):

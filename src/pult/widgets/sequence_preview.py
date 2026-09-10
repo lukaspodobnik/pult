@@ -1,9 +1,9 @@
 from rich.text import Text
-from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
 from pult.curriculum.sequence import Lesson, Sequence
 from pult.presentation import UNTITLED_LESSON
+from pult.widgets.scrolling import OptionList
 
 
 class SequencePreview(OptionList):

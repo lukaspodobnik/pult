@@ -2,13 +2,12 @@ from datetime import datetime
 
 from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Vertical
-from textual.widgets import DataTable
 
 from pult.presentation import WEEKDAYS
 from pult.school.period import Period, get_period_at
 from pult.school.subject import Subject
 from pult.school.timetable import TimetableEntry
+from pult.widgets.scrolling import DataTable, Vertical
 
 
 class TimetableDataTable(DataTable):

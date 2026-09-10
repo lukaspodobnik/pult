@@ -5,11 +5,10 @@ from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
 from textual.events import DescendantFocus
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, OptionList
+from textual.widgets import ContentSwitcher
 
 from pult.config import AppConfig
 from pult.curriculum.sequence import Sequence
@@ -75,6 +74,7 @@ from pult.views.school_class_view import SchoolClassView
 from pult.widgets.app_logo import AppLogo
 from pult.widgets.footer import PultFooter
 from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
+from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
 @dataclass(frozen=True)

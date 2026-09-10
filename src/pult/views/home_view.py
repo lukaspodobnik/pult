@@ -2,7 +2,6 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.message import Message
 
 from pult.curriculum.sequence import Sequence
@@ -16,6 +15,7 @@ from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
 from pult.widgets.dashboard.next_lesson import NextLessonPanel
 from pult.widgets.dashboard.school_year_progress import SchoolYearProgress
 from pult.widgets.dashboard.timetable import TimetablePanel
+from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
 
 class HomeView(VerticalScroll, can_focus=False):

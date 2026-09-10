@@ -2,11 +2,11 @@ import json
 
 from rich.cells import cell_len
 from rich.text import Text
-from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
 from pult.school.school_class import SchoolClass, school_class_sort_key
 from pult.school.subject import Subject
+from pult.widgets.scrolling import OptionList
 
 
 class ViewPicker(OptionList):

@@ -2,7 +2,6 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal
 from textual.widgets import Button, Input, Label, SelectionList
 from textual.widgets.selection_list import Selection
 
@@ -16,6 +15,7 @@ from pult.school.school_class import (
 from pult.school.subject import Subject, load_subjects
 from pult.screens.base_screen import PultModalScreen
 from pult.widgets.form_dialog import FormDialog, FormFields
+from pult.widgets.scrolling import Horizontal
 
 
 class SchoolClassSetupScreen(PultModalScreen[None]):

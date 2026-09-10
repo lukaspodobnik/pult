@@ -1,5 +1,4 @@
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
 from textual.widgets import Static
 
 from pult.presentation import format_school_year
@@ -7,6 +6,7 @@ from pult.progress.queries import (
     SchoolYearProgressSummary,
 )
 from pult.widgets.lesson_progress_bar import LessonProgressBar
+from pult.widgets.scrolling import Horizontal, Vertical
 
 
 class SchoolYearProgress(Vertical):

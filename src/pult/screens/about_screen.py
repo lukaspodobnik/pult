@@ -4,11 +4,11 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, VerticalScroll
 from textual.widgets import Button, Static
 
 from pult.screens.base_screen import PultModalScreen
 from pult.widgets.form_dialog import FormDialog
+from pult.widgets.scrolling import Horizontal, VerticalScroll
 
 
 class AboutScreen(PultModalScreen[None]):

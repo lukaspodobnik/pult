@@ -4,12 +4,12 @@ from typing import ClassVar
 
 from rich.text import Text
 from textual import on
-from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
 from pult.curriculum.material import Task
 from pult.screens.base_screen import PultModalScreen
 from pult.widgets.form_dialog import FormDialog
+from pult.widgets.scrolling import OptionList
 
 
 class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):

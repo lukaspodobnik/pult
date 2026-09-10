@@ -2,9 +2,9 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Container
 from textual.timer import Timer
-from textual.widgets import Label, OptionList
+from textual.widgets import Label
 
 from pult.curriculum.sequence import Sequence
 from pult.progress.class_progress import (
@@ -18,6 +18,7 @@ from pult.screens.base_screen import PultScreen
 from pult.views.teaching_log_view import TeachingLogView
 from pult.widgets.footer import PultFooter
 from pult.widgets.navigation import ViewPicker
+from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
 class TeachingLogScreen(PultScreen[None]):

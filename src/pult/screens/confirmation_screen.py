@@ -2,10 +2,10 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Static
 
 from pult.screens.base_screen import PultModalScreen
+from pult.widgets.scrolling import Horizontal, Vertical
 
 
 class ConfirmationScreen(PultModalScreen[bool]):

@@ -1,8 +1,8 @@
-from textual.widgets import Tree
 from textual.widgets.tree import TreeNode
 
 from pult.curriculum.sequence import Sequence, sequence_sort_key
 from pult.school.subject import Subject
+from pult.widgets.scrolling import Tree
 
 
 class SequenceTree(Tree[Sequence | None]):

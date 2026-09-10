@@ -1,5 +1,4 @@
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Static
 
 from pult.curriculum.sequence import Sequence
@@ -11,6 +10,7 @@ from pult.progress.class_progress import (
 )
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
+from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
 ACTION_LABELS = {
     TeachingAction.COMPLETED: "Abgeschlossen",

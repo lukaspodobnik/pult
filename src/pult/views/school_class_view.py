@@ -1,5 +1,4 @@
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Rule, Static
 
 from pult.presentation import (
@@ -14,6 +13,7 @@ from pult.progress.queries import (
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
 from pult.widgets.lesson_progress_bar import LessonProgressBar
+from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
 
 class SequenceProgressBlock(Vertical):

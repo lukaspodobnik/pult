@@ -8,8 +8,7 @@ from typing import ClassVar
 
 from rich.text import Text
 from textual import on
-from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.widgets import OptionList, Static
+from textual.widgets import Static
 from textual.widgets.option_list import Option
 
 from pult.curriculum.material import Lesson, material_path
@@ -19,6 +18,7 @@ from pult.screens.base_screen import PultScreen
 from pult.screens.select_task_file_screen import SelectTaskFileScreen
 from pult.widgets.footer import PultFooter
 from pult.widgets.lesson_material import LessonMaterial
+from pult.widgets.scrolling import Horizontal, OptionList, Vertical, VerticalScroll
 
 
 class LessonPane(VerticalScroll):
