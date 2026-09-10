@@ -884,7 +884,7 @@ class MainScreen(PultScreen[None]):
             case "edit-classes":
                 self.app.push_screen(EditClassesScreen(), self.classes_edited)
             case "sequence-library":
-                self.app.push_screen(SequenceLibraryScreen())
+                self.app.push_screen(SequenceLibraryScreen(), self.sequence_library_closed)
             case "edit-timetable":
                 self.app.push_screen(
                     EditTimetableScreen(), self.timetable_edit_finished
@@ -919,6 +919,9 @@ class MainScreen(PultScreen[None]):
         self.refresh_view_picker()
 
     async def timetable_edit_finished(self, _: None) -> None:
+        await self.refresh_current_view()
+
+    async def sequence_library_closed(self, _: None) -> None:
         await self.refresh_current_view()
 
     async def closures_edited(self, _: None) -> None:

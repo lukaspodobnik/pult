@@ -48,8 +48,18 @@ class AboutScreen(PultModalScreen[None]):
                     "Textual, Rich, tomli-w, markdown-it-py, mdit-py-plugins, "
                     "linkify-it-py, mdurl und platformdirs: MIT.\n"
                     "Pygments: BSD-2-Clause. typing_extensions: PSF-2.0.\n"
+                    "textual-image: MIT. Pillow: MIT-CMU.\n"
+                    "MathJax 3.2.2: Apache-2.0; lokal gebündelter Formelrenderer.\n"
                     "Fremde Bestandteile behalten ihre jeweiligen Rechte und Lizenzen.\n\n"
-                    "VOLLSTÄNDIGER LIZENZTEXT\n\n"
+                    "MATHJAX · LIZENZ UND HINWEISE\n\n"
+                    + files("pult")
+                    .joinpath("legal/MathJax-NOTICE.txt")
+                    .read_text(encoding="utf-8")
+                    + "\n"
+                    + files("pult")
+                    .joinpath("legal/MathJax-Apache-2.0.txt")
+                    .read_text(encoding="utf-8")
+                    + "\n\nVOLLSTÄNDIGER GPL-LIZENZTEXT\n\n"
                     + files("pult")
                     .joinpath("legal/GPL-3.0.txt")
                     .read_text(encoding="utf-8"),

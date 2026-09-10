@@ -4,6 +4,9 @@
 
 
 def main() -> None:
+    from .services.material_rendering import initialize_graphics
+
+    initialize_graphics()
     from .app import PultApp
 
     PultApp().run()

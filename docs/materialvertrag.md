@@ -2,8 +2,8 @@
 
 Status: vereinbarte Grundlage für die nächste Pult-Erweiterung.
 Datenmodell, Laden/Speichern und Defaults sind umgesetzt. Home, Klassenansicht
-und Sequenzvorschau lesen Materiallisten aus dem Stundenmodell. Die Integration
-der neuen Unterrichtsansicht samt Renderer und Vorbereitungs-Editor steht noch aus.
+und Sequenzvorschau lesen Materiallisten aus dem Stundenmodell. Die Unterrichtsansicht ist über Enter in der Sequenzvorschau erreichbar, einschließlich
+Vorbereitungs-Editor und lokalem Formelrenderer. Weitere Zugangswege folgen separat.
 Die Beispieldaten des Darstellungsprototyps verwenden weiterhin ihr eigenes Format.
 
 ## Grundprinzip

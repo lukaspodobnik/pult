@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "scripts": {"build": "esbuild render.cjs --bundle --platform=node --format=cjs --outfile=../../src/pult/assets/math-renderer.cjs"},
+  "dependencies": {"mathjax-full": "3.2.2"},
+  "devDependencies": {"esbuild": "0.25.12"}
+}

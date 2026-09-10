@@ -83,6 +83,8 @@ des aktuellen Entwicklungsstands:
 | Paket | Version | Lizenz |
 | --- | --- | --- |
 | textual | 8.2.8 | MIT |
+| textual-image | 0.12.0 | MIT |
+| Pillow | 12.3.0 | MIT-CMU |
 | tomli-w | 1.2.0 | MIT |
 | rich | 15.0.0 | MIT |
 | markdown-it-py | 4.2.0 | MIT |
@@ -134,3 +136,16 @@ Dies ist keine allgemeine Neulizenzierung der Schriftdateien. Die ergänzende
 Bemerkung in der Antwort nimmt deren Verkauf ausdrücklich aus.
 PULT liefert nur den erzeugten Schriftzug mit, nicht die Schriftdateien oder
 den Generator. Die Herkunftsangabe beansprucht keine Urheberschaft an der Schrift.
+
+
+## Formelrenderer im Unterrichtsviewer
+
+MathJax 3.2.2 (`mathjax-full`) wird als lokales JavaScript-Bundle mitgeliefert,
+unter Apache-2.0. Quelle: https://github.com/mathjax/MathJax-src/tree/3.2.2.
+Das Bundle verwendet die TeX-Schrift (Computer-Modern-basiert) und die TeX-Pakete
+base, ams, newcommand und configmacros. PULT ergänzt einen lokalen stdin/stdout-
+Wrapper und die SVG-Größenumrechnung. Build-Anleitung: `tools/math-renderer/README.md`.
+Vollständiger Lizenztext und Hinweisdatei: `src/pult/legal/MathJax-Apache-2.0.txt`
+und `src/pult/legal/MathJax-NOTICE.txt`. Esbuild dient ausschließlich dem Build.
+Node.js und librsvg/rsvg-convert werden als externe Programme verwendet und sind
+nicht in den Python-Paketen gebündelt.

@@ -93,7 +93,7 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
 
 - **Sequenzen:** Fach → Jahrgang → Abschnitt wählen; die Vorschau folgt der Auswahl.
   Mit Tab in die rechte Vorschau wechseln und mit ↑/↓ ganze Stundenblöcke auswählen.
-  Enter öffnet dort noch keine Unterrichtsansicht.
+  Enter öffnet die ausgewählte Stunde im Unterrichtsviewer; Esc führt zur Vorschau zurück.
   **e** auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
   neu geladen und validiert. Die Datei `sequenz.toml` enthält Metadaten und geordnete
   Stunden-IDs; die Stunden liegen in eigenen Ordnern. IDs bleiben stabil, da
@@ -161,3 +161,39 @@ angelegt. Deine ausgearbeiteten Inhalte bleiben im persönlichen Datenverzeichni
 außerhalb dieses Repositorys. Sie werden nicht in die Defaults zurückübertragen.
 Ein [neutrales Formatbeispiel](examples/unterricht/README.md) zeigt den Aufbau,
 ohne automatisch in deine Sequenzbibliothek übernommen zu werden.
+
+### Unterrichtsviewer (Entwicklungsstand)
+
+In der Sequenzbibliothek mit Tab in die rechte Vorschau wechseln, die Stunde
+mit ↑/↓ auswählen und Enter drücken. Der Viewer lädt die Dateien dieser Stunde.
+Links bleiben die Stunden derselben Sequenz erreichbar. Esc kehrt zur bisherigen
+Auswahl der Sequenzvorschau zurück.
+
+- **Leertaste:** Vorbereitung / Aufgaben. Lösungen stehen direkt unter den Aufgaben.
+- **Tab:** Zwischen Stundenliste, Inhalt, Zielen und Verlauf wechseln.
+- **e:** Vorbereitung im konfigurierten Editor bearbeiten; eine fehlende Datei wird
+  erst beim Bearbeiten angelegt. Die automatisch angezeigte Materialliste bleibt in TOML.
+- **m:** `stunde.toml` für Titel, Ziele, benötigtes Material, Aufgabenverweise und Phasen bearbeiten.
+
+Nach dem Editor werden die Dateien neu geladen. Bei Fehlern bleibt der letzte
+ gültige Stand sichtbar und Pult meldet die betroffene Datei. Die fehlerhafte Datei
+wird nicht automatisch zurückgesetzt.
+
+Grafische Formeln und SVG-Abbildungen benötigen **Node.js** und **rsvg-convert**
+(unter Arch: `nodejs` und `librsvg`) sowie ein Terminal mit passender Bildunterstützung,
+beispielsweise Foot mit Sixel. MathJax ist im Pult-Paket enthalten; npm ist zur
+Benutzung nicht nötig. Es wird kein Browser geöffnet und nichts ins Internet gesendet.
+Ohne Grafikunterstützung erscheinen Formelquellen beziehungsweise Bildhinweise;
+das ist keine gleichwertige mathematische Darstellung. Codeblöcke mit Sprachangabe
+werden als normaler Terminaltext mit Syntaxhervorhebung dargestellt.
+
+Formeln nutzen eine Computer-Modern-basierte TeX-Schrift und unterstützen etwa
+`aligned`. Bilder werden relativ zur jeweiligen Markdown-Datei innerhalb des
+Sequenzordners aufgelöst. Die erste Integration unterstützt Formeln in normalen
+Absätzen und eigenen Blöcken; Mathematik in verschachtelten Listen und Tabellen
+ist noch nicht vollständig umgesetzt. Das Layout bleibt auf Vollbild ausgelegt.
+
+Die Navigation über eine eigene Stundenbibliothek und der direkte Hotkey zur
+nächsten geplanten Stunde folgen separat. Die Darstellung benötigt keine Dateien
+aus `prototypes/`; gerenderte Bilder liegen im lokalen Cache unter
+`$XDG_CACHE_HOME/pult/materials` beziehungsweise `~/.cache/pult/materials`.
