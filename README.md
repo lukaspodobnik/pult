@@ -207,3 +207,21 @@ Der Unterrichtsviewer ist über die Sequenzvorschau sowie mit **o** direkt aus
 der Übersicht und den Klassenansichten erreichbar. Die Darstellung benötigt keine Dateien
 aus `prototypes/`; gerenderte Bilder liegen im lokalen Cache unter
 `$XDG_CACHE_HOME/pult/materials` beziehungsweise `~/.cache/pult/materials`.
+
+### Stundenplan und gemeinsame Ansichtsaufteilung
+
+Neue Datenablagen enthalten voreingestellte Zeiten für elf Stunden; Stunden 9–11
+laufen standardmäßig von 14:50 bis 17:05 Uhr. Bestehende persönliche Stundenzeiten
+bleiben unverändert und können in der Stundenzeitverwaltung ergänzt werden.
+Die Stundenplanverwaltung zeigt alle konfigurierten Stunden. Home zeigt mindestens
+Stunden 1–8 und bei späteren Wochenplaneinträgen alle Zeilen bis zur höchsten
+belegten Stunde. Zusätzliche Zeilen sind im festen Rahmen scrollbar. Beim Wechsel
+der aktuellen Stundenmarkierung wird die betreffende Zeile sichtbar gemacht;
+anschließendes manuelles Scrollen bleibt erhalten.
+
+Home und Klassenansicht verwenden dieselben Spaltenbreiten und oberen Rahmenhöhen.
+In der Klassenansicht stehen links Sequenzen und darunter die Stundenbilanz,
+rechts die nächste Stunde über die gesamte Höhe. In niedrigeren Terminals wird
+der obere Rahmen gemeinsam mit den Navigationsblöcken verkleinert. Ansichten
+und Unterricht teilen sich seine Höhe; Verwaltung liegt auf Höhe des unteren
+Inhaltsblocks.

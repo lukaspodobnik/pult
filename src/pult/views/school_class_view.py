@@ -90,23 +90,23 @@ class SubjectProgressBlock(Vertical):
                 classes="subject-progress-bar",
             )
         with Horizontal(classes="class-dashboard"):
-            sequences = VerticalScroll(classes="sequence-list")
-            sequences.border_title = "SEQUENZEN"
-            sequences.can_focus = False
-            with sequences:
-                for sequence in self.summary.sequences:
-                    yield SequenceProgressBlock(sequence)
             with Vertical(classes="class-details"):
-                next_lesson = VerticalScroll(classes="class-next-lesson")
-                next_lesson.border_title = "NÄCHSTE STUNDE"
-                next_lesson.can_focus = False
-                with next_lesson:
-                    yield from self._compose_next_lesson()
+                sequences = VerticalScroll(classes="sequence-list")
+                sequences.border_title = "SEQUENZEN"
+                sequences.can_focus = False
+                with sequences:
+                    for sequence in self.summary.sequences:
+                        yield SequenceProgressBlock(sequence)
                 capacity = Vertical(classes="lesson-capacity")
                 capacity.border_title = "STUNDENBILANZ"
                 with capacity:
                     with Vertical(classes="capacity-summary"):
                         yield from self._compose_capacity()
+            next_lesson = VerticalScroll(classes="class-next-lesson")
+            next_lesson.border_title = "NÄCHSTE STUNDE"
+            next_lesson.can_focus = False
+            with next_lesson:
+                yield from self._compose_next_lesson()
 
     @property
     def _total_label(self) -> str:

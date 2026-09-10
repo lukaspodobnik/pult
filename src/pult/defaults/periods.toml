@@ -37,3 +37,18 @@ end = "14:05"
 number = 8
 start = "14:05"
 end = "14:50"
+
+[[periods]]
+number = 9
+start = "14:50"
+end = "15:35"
+
+[[periods]]
+number = 10
+start = "15:35"
+end = "16:20"
+
+[[periods]]
+number = 11
+start = "16:20"
+end = "17:05"

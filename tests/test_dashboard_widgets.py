@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 
 from textual.app import App, ComposeResult
-from textual.widgets import DataTable, ProgressBar
+from textual.widgets import DataTable
 
 from pult.progress.queries import get_home_dashboard_summary
 from pult.views.home_view import HomeView
@@ -13,6 +13,7 @@ from pult.widgets.dashboard.daily_schedule import (
 from pult.widgets.dashboard.next_lesson import NextLessonPanel
 from pult.widgets.dashboard.school_year_progress import SchoolYearProgress
 from pult.widgets.dashboard.timetable import TimetablePanel
+from pult.widgets.lesson_progress_bar import LessonProgressBar
 
 
 def test_dashboard_widgets_and_time_updates(
@@ -60,8 +61,8 @@ def test_dashboard_widgets_and_time_updates(
             await pilot.pause()
             view = app.query_one(HomeView)
             assert app.query_one(SchoolYearProgress).parent is view
-            bar = app.query_one(ProgressBar)
-            assert bar.progress == dashboard.school_year_progress.elapsed_day_count
+            bar = app.query_one("#school-year-progress-bar", LessonProgressBar)
+            assert bar.completed == dashboard.school_year_progress.elapsed_day_count
             assert (
                 app.query_one(NextLessonPanel).planned_lesson
                 == dashboard.next_planned_lesson

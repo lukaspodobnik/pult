@@ -50,9 +50,9 @@ class TimetablePanel(Vertical):
     ) -> None:
         super().__init__(id="timetable-panel", classes="dashboard-panel")
         self.border_title = "STUNDENPLAN"
-        self.styles.height = max(0, len(periods) * 3 - 1) + 3
+        self.styles.height = 27
         self._column_width = 10
-        self.periods = periods
+        self.periods = displayed_periods(periods, timetable_entries)
         self.subjects_by_id = subjects_by_id
         self.timetable_entries_by_slot = {
             (entry.weekday, entry.period): entry for entry in timetable_entries
@@ -86,19 +86,19 @@ class TimetablePanel(Vertical):
     ) -> None:
         """Aktualisiere Zellen; ändere die Tabellenstruktur nur bei neuen Stundenzeilen."""
         old_periods = self.periods
-        self.periods = periods
-        self.styles.height = max(0, len(periods) * 3 - 1) + 3
+        self.periods = displayed_periods(periods, timetable_entries)
+        self.styles.height = 27
         self.subjects_by_id = subjects_by_id
         self.timetable_entries_by_slot = {
             (entry.weekday, entry.period): entry for entry in timetable_entries
         }
         table = self.query_one(DataTable)
         position = self.current_time_position or (None, None)
-        if old_periods != periods or not table.columns:
+        if old_periods != self.periods or not table.columns:
             table.clear(columns=True)
             self.populate_timetable(*position)
             return
-        for period in periods:
+        for period in self.periods:
             for weekday, _ in WEEKDAYS:
                 cell = self._cell(weekday, period.number, *position)
                 if table.get_cell(str(period.number), weekday) != cell:
@@ -120,7 +120,7 @@ class TimetablePanel(Vertical):
             row_index = next(
                 i for i, item in enumerate(self.periods) if item.number == period
             )
-            height = 2 if row_index >= len(self.periods) - 2 else 3
+            height = 2 if row_index == len(self.periods) - 1 else 3
             lines = content.splitlines()
             content = "\n".join(
                 (lines[i] if i < len(lines) else "").ljust(self._column_width)
@@ -140,6 +140,13 @@ class TimetablePanel(Vertical):
             table = self.query_one("#schedule", DataTable)
             table.clear(columns=True)
             self.populate_timetable(*position)
+            if position[1] is not None:
+                from textual.coordinate import Coordinate
+
+                row = next(i for i, p in enumerate(self.periods) if p.number == position[1])
+                table.call_after_refresh(table.scroll_to_region,
+                                         table._get_cell_region(Coordinate(row, 0)),
+                                         animate=False)
 
     def populate_timetable(
         self,
@@ -166,7 +173,7 @@ class TimetablePanel(Vertical):
             )
 
         for row_index, period in enumerate(self.periods):
-            height = 2 if row_index >= len(self.periods) - 2 else 3
+            height = 2 if row_index == len(self.periods) - 1 else 3
             cells = []
             for index, (weekday, _) in enumerate(WEEKDAYS):
                 separator = self.get_highlighted_text(
@@ -228,8 +235,22 @@ def get_current_timetable_position(
         if current_weekday is not None
         else None
     )
+    # In Pausen zwischen zwei Schulstunden bereits die folgende Zeile markieren.
+    if current_weekday is not None and current_period is None:
+        now = current_datetime.time()
+        if any(period.end <= now for period in periods):
+            current_period = min(
+                (period for period in periods if period.start > now),
+                key=lambda period: period.start,
+                default=None,
+            )
 
     return (
         current_weekday,
         current_period.number if current_period is not None else None,
     )
+
+
+def displayed_periods(periods: list[Period], entries: list[TimetableEntry]) -> list[Period]:
+    last = max(8, max((entry.period for entry in entries), default=0))
+    return [period for period in periods if period.number <= last]

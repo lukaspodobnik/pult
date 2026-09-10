@@ -73,7 +73,6 @@ from pult.services.progress import (
 from pult.views.home_view import HomeView
 from pult.views.school_class_view import SchoolClassView
 from pult.widgets.app_logo import AppLogo
-from pult.widgets.dashboard.timetable import TimetablePanel
 from pult.widgets.footer import PultFooter
 from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 
@@ -126,6 +125,17 @@ class MainScreen(PultScreen[None]):
     def on_mount(self) -> None:
         self.refresh_view_picker()
         self.query_one("#view-picker", ViewPicker).focus()
+
+    def on_resize(self) -> None:
+        self.call_after_refresh(self.align_dashboard)
+
+    def align_dashboard(self) -> None:
+        # Ansichten und Unterricht teilen die Höhe des oberen Inhaltsrahmens.
+        height = min(27, max(12, self.size.height - 17))
+        for widget in self.query("TimetablePanel, .sequence-list"):
+            widget.styles.height = height
+        for widget in self.query("#view-picker"):
+            widget.styles.height = height - 5
 
     def action_go_home(self) -> None:
         """Wähle die Übersicht und setze den Fokus zurück auf den Ansichtenpicker."""
@@ -257,9 +267,7 @@ class MainScreen(PultScreen[None]):
             )
         await self.switch_view(view)
         # Gleiche Rahmenhöhen, auch wenn die Anzahl der Stunden geändert wird.
-        self.query_one(ViewPicker).styles.height = view.query_one(
-            TimetablePanel
-        ).styles.height
+        self.align_dashboard()
         view.refresh_time_highlight()
         if self._pending_view_id is None:
             self.refresh_bindings()
@@ -324,9 +332,7 @@ class MainScreen(PultScreen[None]):
         await self.switch_view(view)
         if self not in self.app.screen_stack:
             return
-        view.query_one(".class-next-lesson").styles.height = self.query_one(
-            ViewPicker
-        ).styles.height
+        self.align_dashboard()
         if self._pending_view_id is None:
             self.refresh_bindings()
 

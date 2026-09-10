@@ -85,21 +85,20 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             views = app.screen.query_one(ViewPicker)
             management = app.screen.query_one(ManagementPicker)
             teaching = app.screen.query_one(TeachingPicker)
-            assert (views.region.y, views.region.height) == (
-                timetable.region.y,
-                timetable.region.height,
-            )
-            assert teaching.region.y == next_lesson.region.y
+            assert views.region.y == timetable.region.y
+            assert teaching.region.bottom == timetable.region.bottom
+            assert management.region.y == next_lesson.region.y
             assert management.region.bottom >= next_lesson.region.bottom
             assert teaching.region.bottom < management.region.y
             table = timetable.query_one(DataTable)
             assert [row.height for row in table.rows.values()] == [3] * (
-                len(periods) - 2
-            ) + [2, 2]
+                len(periods) - 1
+            ) + [2]
             assert (
                 str(table.get_cell(str(periods[0].number), "separator-1")) == "│\n│\n│"
             )
-            assert timetable.region.height == len(periods) * 3 + 2
+            assert timetable.region.height == min(27, size[1] - 17)
+            assert table.max_scroll_y > 0
             assert table.header_height == 2
             assert "─" in str(
                 table.columns[
@@ -119,8 +118,6 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert daily.region.x >= timetable.region.right
             for widget in (
                 home,
-                timetable.query_one(DataTable),
-                daily.query_one("#daily-schedule-entries"),
                 next_lesson,
             ):
                 assert widget.max_scroll_y == 0, (
@@ -167,6 +164,19 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             await pilot.pause(0.2)
             assert next_lesson.scroll_y > 0
             assert isinstance(app.focused, ManagementPicker)
+            timetable.refresh_time_highlight(datetime(2026, 9, 14, 16, 30))
+            await pilot.pause()
+            assert table.scroll_y > 0
+            table.scroll_home(animate=False)
+            timetable.refresh_time_highlight(datetime(2026, 9, 14, 16, 31))
+            await pilot.pause()
+            assert table.scroll_y == 0
+            timetable.update_data([], home.subjects_by_id, periods)
+            app.screen.align_dashboard()
+            await pilot.pause()
+            assert table.row_count == 8
+            if size[1] >= 44:
+                assert table.max_scroll_y == 0
             await pilot.resize_terminal(100, 30)
             await pilot.pause()
             assert home.max_scroll_y > 0
@@ -175,3 +185,24 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert daily.region.x >= timetable.region.right
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize('hour, minute, expected', [(7, 50, None), (8, 0, 1), (8, 45, 2), (8, 50, 2), (9, 0, 2), (9, 45, None)])
+def test_timetable_highlights_next_period_during_break(hour, minute, expected):
+    from pult.school.period import Period
+    from pult.widgets.dashboard.timetable import get_current_timetable_position
+
+    periods = [Period(1, time(8), time(8, 45)), Period(2, time(9), time(9, 45))]
+    assert get_current_timetable_position(periods, datetime(2026, 9, 14, hour, minute)) == ('monday', expected)
+    assert get_current_timetable_position(periods, datetime(2026, 9, 13, hour, minute)) == (None, None)
+
+
+def test_home_periods_expand_only_for_scheduled_late_lessons(tmp_path):
+    from pult.widgets.dashboard.timetable import displayed_periods
+
+    config = prepare_root(tmp_path)
+    periods = load_periods(config.root)
+    assert [p.number for p in periods] == list(range(1, 12))
+    assert len(displayed_periods(periods, [])) == 8
+    for number in (9, 10, 11):
+        assert len(displayed_periods(periods, [TimetableEntry('monday', number, '5A', 'mathematik', '')])) == number

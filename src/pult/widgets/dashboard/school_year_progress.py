@@ -1,28 +1,31 @@
 from textual.app import ComposeResult
-from textual.containers import Horizontal
-from textual.widgets import ProgressBar, Static
+from textual.containers import Horizontal, Vertical
+from textual.widgets import Static
 
 from pult.presentation import format_school_year
 from pult.progress.queries import (
     SchoolYearProgressSummary,
 )
+from pult.widgets.lesson_progress_bar import LessonProgressBar
 
 
-class SchoolYearProgress(Horizontal):
+class SchoolYearProgress(Vertical):
     """Zeige den vergangenen Anteil des Schuljahres."""
 
     def __init__(self, progress: SchoolYearProgressSummary) -> None:
         super().__init__(id="school-year-progress")
         self.progress_summary = progress
+        self.border_title = f"Schuljahr {format_school_year(progress.school_year)}"
 
     def update_data(self, progress: SchoolYearProgressSummary) -> None:
         """Aktualisiere die Jahresanzeige und den bestehenden Balken."""
         self.progress_summary = progress
+        self.border_title = f"Schuljahr {format_school_year(progress.school_year)}"
         self.query_one("#school-year-progress-label", Static).update(
-            f"Schuljahr {format_school_year(progress.school_year)}"
+            f"{progress.elapsed_day_count} von {progress.total_day_count} Tagen vergangen"
         )
-        self.query_one(ProgressBar).update(
-            total=progress.total_day_count, progress=progress.elapsed_day_count
+        self.query_one(LessonProgressBar).update_counts(
+            completed=progress.elapsed_day_count, skipped=0, total=progress.total_day_count
         )
         self.query_one("#school-year-progress-percentage", Static).update(
             f"{progress.percentage} %"
@@ -30,19 +33,18 @@ class SchoolYearProgress(Horizontal):
 
     def compose(self) -> ComposeResult:
         progress = self.progress_summary
-        yield Static(
-            f"Schuljahr {format_school_year(progress.school_year)}",
-            id="school-year-progress-label",
-        )
-        progress_bar = ProgressBar(
+        with Horizontal(id="school-year-progress-heading"):
+            yield Static(
+                f"{progress.elapsed_day_count} von {progress.total_day_count} Tagen vergangen",
+                id="school-year-progress-label",
+            )
+            yield Static(
+                f"{progress.percentage} %",
+                id="school-year-progress-percentage",
+            )
+        yield LessonProgressBar(
+            completed=progress.elapsed_day_count,
+            skipped=0,
             total=progress.total_day_count,
-            show_percentage=False,
-            show_eta=False,
             id="school-year-progress-bar",
-        )
-        progress_bar.progress = progress.elapsed_day_count
-        yield progress_bar
-        yield Static(
-            f"{progress.percentage} %",
-            id="school-year-progress-percentage",
         )
