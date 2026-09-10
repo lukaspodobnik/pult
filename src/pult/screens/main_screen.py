@@ -342,6 +342,7 @@ class MainScreen(PultScreen[None]):
             "add_extra_lesson",
             "undo_last_entry",
             "change_active_sequence",
+            "show_teaching_log",
         }:
             return False
         if self._pending_view_id is not None and any(

@@ -23,7 +23,10 @@ from pult.widgets.sequence_tree import SequenceTree
 
 
 class SequenceLibraryScreen(PultScreen[None]):
-    BINDINGS: ClassVar = [("escape", "close", "Zurück")]
+    BINDINGS: ClassVar = [
+        ("escape", "close", "Zurück"),
+        ("e", "edit_sequence", "Bearbeiten"),
+    ]
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="sequence-library"):
@@ -58,9 +61,10 @@ class SequenceLibraryScreen(PultScreen[None]):
         preview = self.query_one("#sequence-preview", SequencePreview)
         preview.show_sequence(sequence)
 
-    @on(Tree.NodeSelected, "#sequence-tree")
-    def sequence_selected(self, event: Tree.NodeSelected) -> None:
-        self.open_sequence_in_editor(event.node)
+    def action_edit_sequence(self) -> None:
+        node = self.query_one("#sequence-tree", SequenceTree).cursor_node
+        if node is not None:
+            self.open_sequence_in_editor(node)
 
     def open_sequence_in_editor(self, node: TreeNode[Sequence | None]) -> None:
         """Öffne eine Sequenz im konfigurierten Editor und lade sie danach neu."""

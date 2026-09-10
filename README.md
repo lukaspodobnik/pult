@@ -92,7 +92,7 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
 ### Verwaltung
 
 - **Sequenzen:** Fach → Jahrgang → Abschnitt wählen; die Vorschau folgt der Auswahl.
-  Enter auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
+  **e** auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
   neu geladen und validiert. Titel, Aufgaben, Notizen und Stunden können bearbeitet
   werden. Bestehende IDs möglichst erhalten: Protokolle verweisen darauf.
 - **Stundenplan:** Enter bearbeitet eine Zelle. „Übernehmen“ ändert den Entwurf;
