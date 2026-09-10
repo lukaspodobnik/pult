@@ -18,16 +18,32 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
     SelectTaskFileScreen OptionList { height: auto; max-height: 16; }
     """
 
-    def __init__(self, tasks: list[Task]):
+    def __init__(self, tasks: list[Task], *, choose_file: bool = False):
         super().__init__()
         self.tasks = tasks
-        self.task_id: str | None = None
+        self.choose_file = choose_file
+        self.task_id: str | None = tasks[0].id if choose_file else None
+
+    def on_mount(self):
+        if self.choose_file:
+            picker = self.query_one(OptionList)
+            picker.clear_options()
+            picker.add_options(
+                [
+                    Option("Aufgabentext", id="aufgabe.md"),
+                    Option("Lösung", id="loesung.md"),
+                ]
+            )
+            picker.border_title = self.task_id or ""
+            picker.highlighted = 0
 
     def compose(self):
         with FormDialog("Aufgabe bearbeiten", id="task-file-dialog"):
             yield OptionList(
-                *(Option(Text(f"{i} · {task.id}"), id=task.id)
-                  for i, task in enumerate(self.tasks, 1)),
+                *(
+                    Option(Text(f"{i} · {task.id}"), id=task.id)
+                    for i, task in enumerate(self.tasks, 1)
+                ),
                 id="task-file-picker",
             )
 
@@ -40,15 +56,17 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
         self.task_id = str(event.option.id)
         picker = self.query_one(OptionList)
         picker.clear_options()
-        picker.add_options([
-            Option("Aufgabentext", id="aufgabe.md"),
-            Option("Lösung", id="loesung.md"),
-        ])
+        picker.add_options(
+            [
+                Option("Aufgabentext", id="aufgabe.md"),
+                Option("Lösung", id="loesung.md"),
+            ]
+        )
         picker.border_title = self.task_id
         picker.highlighted = 0
 
     def action_back(self):
-        if self.task_id is None:
+        if self.task_id is None or self.choose_file:
             self.dismiss(None)
             return
         selected = self.task_id

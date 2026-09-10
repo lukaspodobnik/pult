@@ -15,17 +15,17 @@ LessonPane { height: 1fr; padding: 1 2; background: $surface; border: round $pri
 LessonPane:focus { border: round $primary-lighten-2; border-title-color: $primary-lighten-2; }
 App.-light-mode LessonPane:focus { border: round $primary-darken-2; border-title-color: $primary-darken-2; }
 LessonScreen #lesson-goals-text, LessonScreen #lesson-phases-text { height: auto; }
-LessonScreen .lesson-empty, LessonScreen .lesson-caption { height: auto; color: $text-muted; }
+.lesson-empty, .lesson-caption { height: auto; color: $text-muted; }
 LessonMaterial { height: auto; overflow: hidden hidden; }
 LessonMaterial Markdown { height: auto; background: transparent; margin: 0; padding: 0; }
 LessonMaterial MarkdownH1 { background: transparent; border: none; color: $text-accent; content-align: left middle; }
 LessonMaterial MarkdownH2 { color: $text-accent; }
-LessonScreen .lesson-task-title { height: auto; text-style: bold; color: $text-accent; border-top: solid $foreground 18%; padding-top: 1; margin-bottom: 1; }
-LessonScreen .lesson-solution-title { height: 1; color: $text-muted; margin: 1 0; }
-LessonScreen .formula, LessonScreen .figure { overflow: hidden hidden; margin-bottom: 1; }
-LessonScreen .formula > Widget, LessonScreen .figure > Widget { width: 100%; height: 100%; overflow: hidden hidden; }
-LessonScreen .lesson-fallback { height: auto; color: $text-muted; margin-bottom: 1; }
-LessonScreen .lesson-inline-flow { height: auto; min-height: 1; margin-bottom: 1; }
-LessonScreen .lesson-inline-row { height: auto; overflow: hidden hidden; align-vertical: middle; }
-LessonScreen .lesson-inline-row .formula { margin: 0 1; }
-LessonScreen .lesson-inline-text { height: auto; }
+.lesson-task-title { height: auto; text-style: bold; color: $text-accent; border-top: solid $foreground 18%; padding-top: 1; margin-bottom: 1; }
+.lesson-solution-title { height: 1; color: $text-muted; margin: 1 0; }
+.formula, .figure { overflow: hidden hidden; margin-bottom: 1; }
+.formula > Widget, .figure > Widget { width: 100%; height: 100%; overflow: hidden hidden; }
+.lesson-fallback { height: auto; color: $text-muted; margin-bottom: 1; }
+.lesson-inline-flow { height: auto; min-height: 1; margin-bottom: 1; }
+.lesson-inline-row { height: auto; overflow: hidden hidden; align-vertical: middle; }
+.lesson-inline-row .formula { margin: 0 1; }
+.lesson-inline-text { height: auto; }

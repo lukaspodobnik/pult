@@ -170,6 +170,12 @@ mit ↑/↓ auswählen und Enter drücken. Der Viewer lädt die Dateien dieser S
 Links bleiben die Stunden derselben Sequenz erreichbar. Esc kehrt zur bisherigen
 Auswahl der Sequenzvorschau zurück.
 
+Aus der Sequenzbibliothek öffnet **a** alle Aufgaben der ausgewählten Sequenz,
+auch noch keiner Stunde zugeordnete Aufgaben. Links wählt ↑/↓ eine Aufgabe, rechts
+stehen Aufgabentext und Lösung. **Tab** wechselt zum scrollbaren Inhalt, **e**
+öffnet die Auswahl von Aufgabentext oder Lösung zum Bearbeiten. **Esc** führt
+zur bisherigen Auswahl in der Sequenzbibliothek zurück. Die Liste ist nach Aufgaben-ID sortiert.
+
 - **Leertaste:** Vorbereitung / Aufgaben. Lösungen stehen direkt unter den Aufgaben.
 - **Tab:** Zwischen Stundenliste, Inhalt, Zielen und Verlauf wechseln.
 - **e:** Den sichtbaren Bereich bearbeiten: bei Vorbereitung direkt im konfigurierten
