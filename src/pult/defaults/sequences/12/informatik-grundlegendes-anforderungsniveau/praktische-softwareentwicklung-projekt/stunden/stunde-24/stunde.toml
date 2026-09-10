@@ -1,1 +1,38 @@
+# Titel der Stunde.
 titel = "Noch nicht vorbereitet"
+
+# Lernziele als kurze Aussagen.
+ziele = []
+
+# Benötigtes Material, z. B. Lineal oder Arbeitsblatt.
+material = []
+
+# Aufgaben-IDs aus aufgaben/, in geplanter Reihenfolge.
+aufgaben = []
+
+# Geordneter Verlauf ohne Zeitangaben.
+phasen = []
+
+# Vorschlag: Nur die benötigten Phasen verwenden.
+# Zuerst phasen = [] oben entfernen, dann die gewünschten Phasen unten
+# aktivieren (führende # entfernen) und jeweils einen nicht leeren Text ergänzen.
+
+# [[phasen]]
+# titel = "Einstieg"
+# text = ""
+
+# [[phasen]]
+# titel = "Erarbeitung"
+# text = ""
+
+# [[phasen]]
+# titel = "Übung"
+# text = ""
+
+# [[phasen]]
+# titel = "Auswertung"
+# text = ""
+
+# [[phasen]]
+# titel = "Schluss"
+# text = ""

@@ -4,6 +4,10 @@ Dieses kleine Beispiel zeigt den Materialvertrag, keine ausgearbeitete
 Unterrichtssequenz. Es gehört nicht zu den Defaults und wird bei der Einrichtung
 nicht in die persönliche Sequenzbibliothek kopiert.
 
+`stunde-vorlage.toml` zeigt eine leere Stunde mit allen optionalen Feldern
+und fünf kommentierten Phasenvorschlägen. Sie ist eine Kopiervorlage, keine
+zusätzliche Stunde der Beispielsequenz.
+
 Unter `sequences/6/mathematik/formatbeispiel/` stehen:
 
 - `sequenz.toml`: Metadaten und geordnete Stundenverweise.

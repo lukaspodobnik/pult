@@ -212,3 +212,27 @@ def test_neutral_example_matches_contract():
     assert (
         root / "sequences/6/mathematik/formatbeispiel/dateien/anteile.svg"
     ).is_file()
+
+
+def test_empty_lesson_template_can_activate_suggested_phases(tmp_path):
+    from pult.curriculum.material import load_lesson, save_lesson
+
+    lesson = Lesson("neu", "Neue Stunde")
+    save_lesson(tmp_path, lesson)
+    path = tmp_path / "stunden/neu/stunde.toml"
+    source = path.read_text()
+    assert load_lesson(tmp_path, "neu", {}) == lesson
+    assert load_toml(path) == {
+        "titel": "Neue Stunde", "ziele": [], "material": [], "aufgaben": [], "phasen": []
+    }
+    # Genau die im Dateihinweis beschriebenen Bearbeitungsschritte ausführen.
+    prefix, proposals = source.split('# [[phasen]]', 1)
+    active = prefix.replace('phasen = []\n', '') + '[[phasen]]'
+    active += '\n'.join(line.removeprefix('# ') for line in proposals.splitlines())
+    active = active.replace('text = ""', 'text = "Gemeinsam bearbeiten."')
+    path.write_text(active)
+    loaded = load_lesson(tmp_path, "neu", {})
+    assert [phase.title for phase in loaded.phases] == [
+        "Einstieg", "Erarbeitung", "Übung", "Auswertung", "Schluss"
+    ]
+    assert not (path.parent / "vorbereitung.md").exists()

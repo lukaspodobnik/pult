@@ -106,6 +106,15 @@ optional und werden bei Fehlen als leere Listen geladen. Jede angegebene Phase
 hat einen Titel und einen Text. Zeitangaben sind nicht Bestandteil des Verlaufs.
 Die Reihenfolge der Phasen und Aufgaben entspricht der jeweiligen Liste.
 
+Die leeren Defaults und der Stundenschreiber geben alle optionalen Listen
+explizit an. Bei leerem Verlauf folgen kommentierte Vorschläge für Einstieg,
+Erarbeitung, Übung, Auswertung und Schluss. Zum Aktivieren zuerst `phasen = []`
+entfernen, dann bei den gewünschten Phasen die führenden `#` entfernen und
+einen nicht leeren Beschreibungstext eintragen. Die Vorschläge sind kein
+verpflichtender Ablauf. Eine vollständige leere Vorlage liegt unter
+[`examples/unterricht/stunde-vorlage.toml`](../examples/unterricht/stunde-vorlage.toml).
+Bestehende persönliche Dateien werden nicht automatisch auf diese Vorlage umgestellt.
+
 Aufgaben sind direkt über die Stunde erreichbar; Verweise über Phasen sind
 nicht erforderlich. Klassen, konkrete Termine, Fortschritt, Ausfälle und
 Unterrichtsprotokolle gehören nicht in diese Materialdateien. Pults bestehende

@@ -5,7 +5,50 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from pult.storage import load_toml, save_toml
+import tomli_w
+
+from pult.storage import load_toml
+
+PHASE_TEMPLATE = '''
+# Vorschlag: Nur die benötigten Phasen verwenden.
+# Zuerst phasen = [] oben entfernen, dann die gewünschten Phasen unten
+# aktivieren (führende # entfernen) und jeweils einen nicht leeren Text ergänzen.
+
+# [[phasen]]
+# titel = "Einstieg"
+# text = ""
+
+# [[phasen]]
+# titel = "Erarbeitung"
+# text = ""
+
+# [[phasen]]
+# titel = "Übung"
+# text = ""
+
+# [[phasen]]
+# titel = "Auswertung"
+# text = ""
+
+# [[phasen]]
+# titel = "Schluss"
+# text = ""
+'''
+
+
+def lesson_metadata_source(lesson: "Lesson") -> str:
+    """Schreibe die erlaubten Felder mit kurzen Ausfüllhinweisen."""
+    fields = [
+        ("titel", lesson.title, "Titel der Stunde."),
+        ("ziele", lesson.goals, "Lernziele als kurze Aussagen."),
+        ("material", lesson.material, "Benötigtes Material, z. B. Lineal oder Arbeitsblatt."),
+        ("aufgaben", [t.id for t in lesson.tasks], "Aufgaben-IDs aus aufgaben/, in geplanter Reihenfolge."),
+        ("phasen", [{"titel": p.title, "text": p.text} for p in lesson.phases], "Geordneter Verlauf ohne Zeitangaben."),
+    ]
+    source = "\n".join(
+        f"# {hint}\n{tomli_w.dumps({key: value})}" for key, value, hint in fields
+    )
+    return source + (PHASE_TEMPLATE if not lesson.phases else "")
 
 ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
@@ -195,16 +238,7 @@ def save_lesson(directory: Path, lesson: Lesson) -> None:
     lesson.__post_init__()
     path = material_path(directory, "stunden", lesson.id, "stunde.toml")
     path.parent.mkdir(parents=True, exist_ok=True)
-    save_toml(
-        path,
-        {
-            "titel": lesson.title,
-            "ziele": lesson.goals,
-            "material": lesson.material,
-            "aufgaben": [t.id for t in lesson.tasks],
-            "phasen": [{"titel": p.title, "text": p.text} for p in lesson.phases],
-        },
-    )
+    path.write_text(lesson_metadata_source(lesson), encoding="utf-8")
     save_markdown(
         material_path(directory, "stunden", lesson.id, "vorbereitung.md"),
         lesson.preparation,
