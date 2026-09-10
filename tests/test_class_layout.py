@@ -5,7 +5,7 @@ from test_ui_integration import prepare_root
 
 from pult.app import PultApp
 from pult.views.school_class_view import SchoolClassView
-from pult.widgets.navigation import ManagementPicker, ViewPicker
+from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 
 
 @pytest.mark.parametrize("size", [(206, 46), (180, 42), (241, 70)])
@@ -40,6 +40,7 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
             sequences = view.query_one(".sequence-list")
             details = view.query_one(".class-details")
             management = app.screen.query_one(ManagementPicker)
+            teaching = app.screen.query_one(TeachingPicker)
             logo = app.screen.query_one("#app-logo")
             assert overview.region.y == logo.region.y + 1
             first_sequence = view.query_one(".sequence-progress")
@@ -49,7 +50,7 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
             assert "5A" in str(overview.border_title)
             assert "Mathematik" in str(overview.border_title)
             assert sequences.region.y == picker.region.y
-            assert sequences.region.bottom == management.region.bottom
+            assert sequences.region.bottom <= management.region.bottom
             assert details.region.y == sequences.region.y
             assert details.region.bottom == sequences.region.bottom
             assert details.region.x > sequences.region.right
@@ -68,14 +69,12 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
                 picker.region.y,
                 picker.region.height,
             )
-            assert (capacity.region.y, capacity.region.height) == (
-                management.region.y,
-                management.region.height,
-            )
+            assert capacity.region.y == teaching.region.y
+            assert capacity.region.bottom <= management.region.bottom
             assert len({w.region.right for w in view.query(".capacity-value")}) == 1
             assert not view.query("#school-class-title")
             assert view.query_one("#school-class-content").max_scroll_y == 0
-            assert set(app.screen.focus_chain) == {picker, management}
+            assert set(app.screen.focus_chain) == {picker, teaching, management}
             app.save_screenshot(str(tmp_path / "class-layout.svg"))
 
     asyncio.run(run())

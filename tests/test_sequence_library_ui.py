@@ -17,7 +17,7 @@ from pult.curriculum.sequence import (
 from pult.screens.main_screen import MainScreen
 from pult.screens.sequence_library_screen import SequenceLibraryScreen
 from pult.storage import save_toml
-from pult.widgets.navigation import ManagementPicker
+from pult.widgets.navigation import TeachingPicker
 from pult.widgets.sequence_preview import SequencePreview
 from pult.widgets.sequence_tree import SequenceTree
 
@@ -36,7 +36,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
-            picker = app.screen.query_one(ManagementPicker)
+            picker = app.screen.query_one(TeachingPicker)
             picker.focus()
             picker.highlighted = picker.get_option_index("sequence-library")
             await pilot.press("enter")

@@ -74,7 +74,7 @@ from pult.views.school_class_view import SchoolClassView
 from pult.widgets.app_logo import AppLogo
 from pult.widgets.dashboard.timetable import TimetablePanel
 from pult.widgets.footer import PultFooter
-from pult.widgets.navigation import ManagementPicker, ViewPicker
+from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 
 
 @dataclass(frozen=True)
@@ -112,6 +112,7 @@ class MainScreen(PultScreen[None]):
             with Vertical(id="navigation"):
                 yield AppLogo(id="app-logo")
                 yield ViewPicker(id="view-picker")
+                yield TeachingPicker(id="teaching-picker")
                 yield ManagementPicker(id="management-picker")
 
             content = ContentSwitcher(id="content")
@@ -334,7 +335,7 @@ class MainScreen(PultScreen[None]):
     ) -> bool | None:
         if action == "go_home":
             return True
-        if isinstance(self.app.focused, ManagementPicker) and action in {
+        if isinstance(self.app.focused, (ManagementPicker, TeachingPicker)) and action in {
             "complete_next_lesson",
             "skip_next_lesson",
             "continue_next_lesson",
@@ -875,6 +876,7 @@ class MainScreen(PultScreen[None]):
             self.notify(f"{school_class.id}: '{lesson_title}' {action_description}.")
 
     @on(OptionList.OptionSelected, "#management-picker")
+    @on(OptionList.OptionSelected, "#teaching-picker")
     def management_picker_selected(self, event: OptionList.OptionSelected) -> None:
         option_id = event.option_id
         if option_id is None:

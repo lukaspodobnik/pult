@@ -19,7 +19,7 @@ from pult.widgets.capped_text import CappedText
 from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
 from pult.widgets.dashboard.next_lesson import NextLessonPanel
 from pult.widgets.dashboard.timetable import TimetablePanel
-from pult.widgets.navigation import ManagementPicker, ViewPicker
+from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 
 
 @pytest.mark.parametrize("size", [(206, 46), (180, 42), (241, 70)])
@@ -84,14 +84,14 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             daily = home.query_one(DailySchedulePanel)
             views = app.screen.query_one(ViewPicker)
             management = app.screen.query_one(ManagementPicker)
+            teaching = app.screen.query_one(TeachingPicker)
             assert (views.region.y, views.region.height) == (
                 timetable.region.y,
                 timetable.region.height,
             )
-            assert (management.region.y, management.region.height) == (
-                next_lesson.region.y,
-                next_lesson.region.height,
-            )
+            assert teaching.region.y == next_lesson.region.y
+            assert management.region.bottom >= next_lesson.region.bottom
+            assert teaching.region.bottom < management.region.y
             table = timetable.query_one(DataTable)
             assert [row.height for row in table.rows.values()] == [3] * (
                 len(periods) - 2
@@ -132,7 +132,10 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert set(app.screen.focus_chain) == {
                 app.screen.query_one(ViewPicker),
                 app.screen.query_one(ManagementPicker),
+                teaching,
             }
+            await pilot.press("tab")
+            assert isinstance(app.focused, TeachingPicker)
             await pilot.press("tab")
             assert isinstance(app.focused, ManagementPicker)
             await pilot.pause()

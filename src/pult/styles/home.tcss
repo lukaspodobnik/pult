@@ -6,6 +6,7 @@ MainScreen #navigation {
     width: 28;
     padding: 0 1 1 1;
     background: $background;
+    overflow-y: auto;
 }
 
 MainScreen AppLogo {
@@ -13,6 +14,7 @@ MainScreen AppLogo {
 }
 
 MainScreen #view-picker,
+MainScreen #teaching-picker,
 MainScreen #management-picker {
     height: 1fr;
     border: round $primary;
@@ -23,6 +25,7 @@ MainScreen #management-picker {
 }
 
 MainScreen #view-picker:focus,
+MainScreen #teaching-picker:focus,
 MainScreen #management-picker:focus {
     border: round $primary-lighten-2;
     border-title-color: $primary-lighten-2;
@@ -32,6 +35,7 @@ MainScreen #management-picker:focus {
 }
 
 App.-light-mode MainScreen #view-picker:focus,
+App.-light-mode MainScreen #teaching-picker:focus,
 App.-light-mode MainScreen #management-picker:focus {
     border: round $primary-darken-2;
     border-title-color: $primary-darken-2;
@@ -39,7 +43,12 @@ App.-light-mode MainScreen #management-picker:focus {
 
 MainScreen #management-picker {
     height: 1fr;
-    min-height: 7;
+    min-height: 6;
+    margin-top: 1;
+}
+
+MainScreen #teaching-picker {
+    height: 4;
     margin-top: 1;
 }
 
