@@ -92,6 +92,8 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
 ### Verwaltung
 
 - **Sequenzen:** Fach → Jahrgang → Abschnitt wählen; die Vorschau folgt der Auswahl.
+  Mit Tab in die rechte Vorschau wechseln und mit ↑/↓ ganze Stundenblöcke auswählen.
+  Enter öffnet dort noch keine Unterrichtsansicht.
   **e** auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
   neu geladen und validiert. Die Datei `sequenz.toml` enthält Metadaten und geordnete
   Stunden-IDs; die Stunden liegen in eigenen Ordnern. IDs bleiben stabil, da

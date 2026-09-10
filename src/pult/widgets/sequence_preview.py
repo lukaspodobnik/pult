@@ -1,68 +1,101 @@
-from textual.widgets import MarkdownViewer
+from rich.text import Text
+from textual.widgets import OptionList
+from textual.widgets.option_list import Option
 
-from pult.curriculum.sequence import Sequence
+from pult.curriculum.sequence import Lesson, Sequence
 from pult.presentation import UNTITLED_LESSON
 
 
-class SequencePreview(MarkdownViewer):
-    can_focus = True
-    can_focus_children = False
+class SequencePreview(OptionList):
+    """Sequenzüberblick mit einem auswählbaren Eintrag je vollständiger Stunde."""
 
     def __init__(self, *, id: str | None) -> None:
-        super().__init__("Wähle eine Sequenz.", show_table_of_contents=False, id=id)
+        super().__init__(Option("Wähle eine Sequenz.", disabled=True), id=id)
         self.border_title = "VORSCHAU"
+        self.sequence: Sequence | None = None
+
+    @property
+    def selected_lesson(self) -> Lesson | None:
+        if self.sequence is None or self.highlighted is None:
+            return None
+        index = self.highlighted - 1  # Der erste Eintrag ist die Metadatenzeile.
+        if 0 <= index < len(self.sequence.lessons):
+            return self.sequence.lessons[index]
+        return None
 
     def show_sequence(self, sequence: Sequence) -> None:
-        """Ersetze die Vorschau durch die formatierte Darstellung einer Sequenz."""
-        self.document.update(self.render_sequence(sequence))
-        self.border_title = sequence.title
-        self.scroll_home(animate=False)
-
-    @staticmethod
-    def render_sequence(sequence: Sequence) -> str:
-        """Formatiere eine Sequenz als Markdown für die Vorschau."""
-        metadata = f"Lehrplanabschnitt {sequence.curriculum_section_id}"
-        if sequence.recommended_lesson_count is not None:
-            count = sequence.recommended_lesson_count
-            metadata += f" · Richtwert: {count} {'Stunde' if count == 1 else 'Stunden'}"
-        lines = [metadata, ""]
-
+        """Lade den Überblick; Aktualisierungen erhalten die Auswahl anhand der ID."""
+        same_sequence = self.sequence is not None and (
+            self.sequence.grade_level,
+            self.sequence.subject_id,
+            self.sequence.id,
+        ) == (sequence.grade_level, sequence.subject_id, sequence.id)
+        selected = self.selected_lesson
+        selected_id = selected.id if same_sequence and selected else None
+        position = self.scroll_y if same_sequence else 0
+        self.sequence = sequence
+        self.clear_options()
+        self.add_option(Option(self.metadata(sequence) + "\n", disabled=True))
         for index, lesson in enumerate(sequence.lessons, start=1):
             if index > 1:
-                lines.extend(["", "---", ""])
-            title = lesson.title or UNTITLED_LESSON
-            lines.extend(
-                [
-                    "",
-                    f"## {index}. Stunde · {title}",
-                    "",
-                ]
-            )
-
-            if lesson.tasks:
-                lines.extend(["**Aufgaben**", ""])
-                lines.extend(f"- {task.id}" for task in lesson.tasks)
-            else:
-                lines.append("*Noch keine Aufgaben eingetragen.*")
-
-            if lesson.goals:
-                lines.extend(["", "**Ziele**", ""])
-                lines.extend(f"- {goal}" for goal in lesson.goals)
-            if lesson.material:
-                lines.extend(["", "**Benötigtes Material**", ""])
-                lines.extend(f"- {item}" for item in lesson.material)
-            if lesson.phases:
-                lines.extend(["", "**Verlauf**", ""])
-                lines.extend(
-                    f"- **{phase.title}:** {phase.text}" for phase in lesson.phases
-                )
-
+                self.add_option(None)
+            self.add_option(Option(self.render_lesson(lesson, index), id=lesson.id))
         if not sequence.lessons:
-            lines.extend(
-                [
-                    "",
-                    "*Noch keine Unterrichtsstunden eingetragen.*",
-                ]
+            self.add_option(
+                Option("Noch keine Unterrichtsstunden eingetragen.", disabled=True)
             )
+        self.border_title = sequence.title
+        self.highlighted = next(
+            (
+                index
+                for index, lesson in enumerate(sequence.lessons, start=1)
+                if lesson.id == selected_id
+            ),
+            1 if sequence.lessons else None,
+        )
+        self.call_after_refresh(self.scroll_to, y=position, animate=False)
 
-        return "\n".join(lines)
+    @staticmethod
+    def metadata(sequence: Sequence) -> str:
+        text = f"Lehrplanabschnitt {sequence.curriculum_section_id}"
+        if sequence.recommended_lesson_count is not None:
+            count = sequence.recommended_lesson_count
+            text += f" · Richtwert: {count} {'Stunde' if count == 1 else 'Stunden'}"
+        return text
+
+    @staticmethod
+    def render_lesson(lesson: Lesson, index: int) -> Text:
+        text = Text(f"{index}. Stunde · {lesson.title or UNTITLED_LESSON}\n", style="")
+        text.stylize("bold", 0, len(text))
+        for label, values in [
+            ("Aufgaben", [task.id for task in lesson.tasks]),
+            ("Ziele", lesson.goals),
+            ("Benötigtes Material", lesson.material),
+        ]:
+            if values:
+                text.append(f"\n{label}\n", style="bold")
+                text.append("\n".join(f"• {value}" for value in values) + "\n")
+            elif label == "Aufgaben":
+                text.append("\nNoch keine Aufgaben eingetragen.\n", style="italic")
+        if lesson.phases:
+            text.append("\nVerlauf\n", style="bold")
+            for phase in lesson.phases:
+                text.append(f"• {phase.title}: ", style="bold")
+                text.append(phase.text + "\n")
+        return text
+
+    @classmethod
+    def render_sequence(cls, sequence: Sequence) -> str:
+        """Textfassung desselben Überblicks, ohne zusätzliche gepflegte Inhalte."""
+        return "\n\n".join(
+            [cls.metadata(sequence)]
+            + [
+                cls.render_lesson(lesson, index).plain
+                for index, lesson in enumerate(sequence.lessons, start=1)
+            ]
+            + (
+                []
+                if sequence.lessons
+                else ["Noch keine Unterrichtsstunden eingetragen."]
+            )
+        )

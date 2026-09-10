@@ -128,7 +128,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
                 notifications.assert_not_called()
                 preview = screen.query_one(SequencePreview)
                 assert preview.border_title == updated.title
-                assert not preview.document.query("MarkdownH1")
+                assert preview.sequence.title == updated.title
             else:
                 assert node.data == original
                 assert notifications.call_args.kwargs["severity"] == "error"
