@@ -289,3 +289,54 @@ def test_subject_undo_preserves_other_entries_and_active_sequences():
     )
     with pytest.raises(ProgressCommandError):
         undo_last_entry(result, subject_id="mathematik")
+
+
+def test_open_next_lesson_uses_visible_lesson_and_returns(multi_class_config, monkeypatch):
+    from datetime import datetime
+
+    from pult.screens.lesson_screen import LessonScreen
+    from pult.views.home_view import HomeView
+
+    class Clock:
+        @classmethod
+        def now(cls, tz):
+            return datetime(2026, 9, 16, 8, 0, tzinfo=tz)
+
+    monkeypatch.setattr("pult.screens.main_screen.datetime", Clock)
+    monkeypatch.setattr("pult.views.home_view.datetime", Clock)
+
+    async def run():
+        app = PultApp()
+        async with app.run_test(size=(180, 52)) as pilot:
+            main = await ready(app, pilot)
+            picker = main.query_one(ViewPicker)
+            for target in ("home", '["9B", "informatik-ntg"]', '["9B", "mathematik"]'):
+                picker.highlighted = picker.get_option_index(target)
+                await ready(app, pilot)
+                expected = main.displayed_next_lesson()
+                assert expected is not None
+                assert main.check_action("open_next_lesson", ())
+                await pilot.press("o")
+                await pilot.pause()
+                viewer = app.screen
+                assert isinstance(viewer, LessonScreen)
+                assert viewer.lesson_id == expected.lesson.id
+                assert viewer.sequence.id == expected.sequence_id
+                assert viewer.sequence.subject_id == expected.subject_id
+                await pilot.press("escape")
+                await ready(app, pilot)
+                assert app.screen is main
+                assert picker.get_option_at_index(picker.highlighted).id == target
+                assert app.focused is picker
+            picker.highlighted = picker.get_option_index("home")
+            await ready(app, pilot)
+            home = main.query_one(HomeView)
+            home.dashboard = replace(home.dashboard, next_planned_lesson=None)
+            assert main.check_action("open_next_lesson", ()) is False
+            await pilot.press("o")
+            assert app.screen is main
+            main._pending_view_id = "home"
+            assert main.check_action("open_next_lesson", ()) is None
+            main._pending_view_id = None
+
+    asyncio.run(run())

@@ -55,6 +55,7 @@ from pult.screens.confirm_undo_screen import ConfirmUndoScreen
 from pult.screens.edit_classes_screen import EditClassesScreen
 from pult.screens.edit_closures_screen import EditClosuresScreen
 from pult.screens.edit_timetable_screen import EditTimetableScreen
+from pult.screens.lesson_screen import LessonScreen
 from pult.screens.select_next_sequence_screen import (
     SelectNextSequenceScreen,
 )
@@ -88,6 +89,7 @@ class PlannedLessonContext:
 class MainScreen(PultScreen[None]):
     VIEW_DEBOUNCE_SECONDS: ClassVar[float] = 0.06
     BINDINGS: ClassVar = [
+        ("o", "open_next_lesson", "Unterricht öffnen"),
         ("n", "complete_next_lesson", "Abschließen"),
         ("s", "skip_next_lesson", "Überspringen"),
         ("c", "continue_next_lesson", "Fortsetzen"),
@@ -344,6 +346,7 @@ class MainScreen(PultScreen[None]):
             "undo_last_entry",
             "change_active_sequence",
             "show_teaching_log",
+            "open_next_lesson",
         }:
             return False
         if self._pending_view_id is not None and any(
@@ -352,6 +355,8 @@ class MainScreen(PultScreen[None]):
         ):
             # Während Highlight und Ansicht auseinanderliegen, keine falsche Klasse ändern.
             return None
+        if action == "open_next_lesson":
+            return self.displayed_next_lesson() is not None
         if action in {
             "undo_last_entry",
             "change_active_sequence",
@@ -363,6 +368,50 @@ class MainScreen(PultScreen[None]):
     @on(DescendantFocus)
     def refresh_focused_bindings(self) -> None:
         self.refresh_bindings()
+
+    def displayed_next_lesson(self) -> PlannedLesson | None:
+        """Verwende genau die Stunde der sichtbaren Übersicht, ohne neu zu planen."""
+        if self.active_school_class_id is None:
+            views = self.query(HomeView)
+            return views.first().dashboard.next_planned_lesson if views else None
+        views = self.query(SchoolClassView)
+        if not views:
+            return None
+        return next(
+            (
+                summary.next_planned_lesson
+                for summary in views.first().progress_summaries
+                if summary.subject_id == self.active_subject_id
+            ),
+            None,
+        )
+
+    def action_open_next_lesson(self) -> None:
+        if not self.check_action("open_next_lesson", ()):
+            return
+        planned = self.displayed_next_lesson()
+        if planned is None:
+            return
+        sequence = next(
+            (
+                sequence
+                for sequence in self.sequence_library
+                if (sequence.grade_level, sequence.subject_id, sequence.id)
+                == (planned.grade_level, planned.subject_id, planned.sequence_id)
+            ),
+            None,
+        )
+        if sequence is None or not any(
+            lesson.id == planned.lesson.id for lesson in sequence.lessons
+        ):
+            self.notify("Die angezeigte Stunde ist nicht mehr verfügbar.", severity="warning")
+            return
+        self.app.push_screen(
+            LessonScreen(sequence, planned.lesson.id), self.lesson_viewer_closed
+        )
+
+    async def lesson_viewer_closed(self, _: Sequence | None) -> None:
+        await self.refresh_current_view()
 
     async def refresh_current_view(self) -> None:
         """Aktualisiere die Daten der momentan aktiven Home- oder Klassenansicht."""

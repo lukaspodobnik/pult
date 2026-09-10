@@ -58,9 +58,10 @@ die Jahrgangsstufe und die angebotenen Fächer. Anschließend den Stundenplan f�
 
 ## Bedienung
 
-- **Tab / Shift+Tab:** Fokus wechseln. Im Hauptbildschirm nur zwischen Ansichten und Verwaltung.
+- **Tab / Shift+Tab:** Fokus wechseln. Im Hauptbildschirm zwischen Ansichten, Unterricht und Verwaltung.
 - **Pfeiltasten oder h/j/k/l:** Navigieren; in Textfeldern bleiben Buchstaben normale Eingaben.
 - **Enter:** Werkzeug öffnen, Auswahl bestätigen oder Stundenplanzelle bearbeiten.
+- **o:** Mit Fokus auf Ansichten die angezeigte nächste Stunde im Unterrichtsviewer öffnen; Escape führt zurück. Ohne nächste Stunde ist die Aktion deaktiviert.
 - **F2:** Im Hauptbildschirm zur Übersicht und zum Ansichtenpicker zurückkehren.
 - **Escape:** Zurück bzw. abbrechen. **q:** Beenden (außer in Texteingaben).
 - Der Footer zeigt verfügbare Befehle. Kleine Terminals können mit der Maus gescrollt werden.
@@ -193,7 +194,7 @@ Sequenzordners aufgelöst. Die erste Integration unterstützt Formeln in normale
 Absätzen und eigenen Blöcken; Mathematik in verschachtelten Listen und Tabellen
 ist noch nicht vollständig umgesetzt. Das Layout bleibt auf Vollbild ausgelegt.
 
-Die Navigation über eine eigene Stundenbibliothek und der direkte Hotkey zur
-nächsten geplanten Stunde folgen separat. Die Darstellung benötigt keine Dateien
+Der Unterrichtsviewer ist über die Sequenzvorschau sowie mit **o** direkt aus
+der Übersicht und den Klassenansichten erreichbar. Die Darstellung benötigt keine Dateien
 aus `prototypes/`; gerenderte Bilder liegen im lokalen Cache unter
 `$XDG_CACHE_HOME/pult/materials` beziehungsweise `~/.cache/pult/materials`.
