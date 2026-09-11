@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="160" viewBox="0 0 480 160">
+  <title>Eine Hälfte entspricht zwei Vierteln</title>
+  <g stroke="#314850" stroke-width="2">
+    <path fill="#a9d6bf" d="M20 20h200v45H20z M20 95h200v45H20z"/>
+    <path fill="none" d="M20 20h400v45H20z M220 20v45 M20 95h400v45H20z M120 95v45 M220 95v45 M320 95v45"/>
+  </g>
+</svg>

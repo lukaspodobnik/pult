@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Static
 
 from pult.curriculum.sequence import Sequence
@@ -16,6 +15,7 @@ from pult.progress.queries import (
 from pult.school.period import Period
 from pult.school.subject import Subject
 from pult.widgets.capped_text import CappedText
+from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
 ACTION_ICONS = {
     TeachingAction.COMPLETED: "✓",

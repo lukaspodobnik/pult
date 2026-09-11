@@ -5,11 +5,10 @@ from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
 from textual.events import DescendantFocus
 from textual.timer import Timer
 from textual.widget import Widget
-from textual.widgets import ContentSwitcher, OptionList
+from textual.widgets import ContentSwitcher
 
 from pult.config import AppConfig
 from pult.curriculum.sequence import Sequence
@@ -55,6 +54,7 @@ from pult.screens.confirm_undo_screen import ConfirmUndoScreen
 from pult.screens.edit_classes_screen import EditClassesScreen
 from pult.screens.edit_closures_screen import EditClosuresScreen
 from pult.screens.edit_timetable_screen import EditTimetableScreen
+from pult.screens.lesson_screen import LessonScreen
 from pult.screens.select_next_sequence_screen import (
     SelectNextSequenceScreen,
 )
@@ -72,9 +72,9 @@ from pult.services.progress import (
 from pult.views.home_view import HomeView
 from pult.views.school_class_view import SchoolClassView
 from pult.widgets.app_logo import AppLogo
-from pult.widgets.dashboard.timetable import TimetablePanel
 from pult.widgets.footer import PultFooter
-from pult.widgets.navigation import ManagementPicker, ViewPicker
+from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
+from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
 @dataclass(frozen=True)
@@ -88,6 +88,7 @@ class PlannedLessonContext:
 class MainScreen(PultScreen[None]):
     VIEW_DEBOUNCE_SECONDS: ClassVar[float] = 0.06
     BINDINGS: ClassVar = [
+        ("o", "open_next_lesson", "Unterricht öffnen"),
         ("n", "complete_next_lesson", "Abschließen"),
         ("s", "skip_next_lesson", "Überspringen"),
         ("c", "continue_next_lesson", "Fortsetzen"),
@@ -112,6 +113,7 @@ class MainScreen(PultScreen[None]):
             with Vertical(id="navigation"):
                 yield AppLogo(id="app-logo")
                 yield ViewPicker(id="view-picker")
+                yield TeachingPicker(id="teaching-picker")
                 yield ManagementPicker(id="management-picker")
 
             content = ContentSwitcher(id="content")
@@ -123,6 +125,17 @@ class MainScreen(PultScreen[None]):
     def on_mount(self) -> None:
         self.refresh_view_picker()
         self.query_one("#view-picker", ViewPicker).focus()
+
+    def on_resize(self) -> None:
+        self.call_after_refresh(self.align_dashboard)
+
+    def align_dashboard(self) -> None:
+        # Ansichten und Unterricht teilen die Höhe des oberen Inhaltsrahmens.
+        height = min(27, max(12, self.size.height - 17))
+        for widget in self.query("TimetablePanel, .sequence-list"):
+            widget.styles.height = height
+        for widget in self.query("#view-picker"):
+            widget.styles.height = height - 5
 
     def action_go_home(self) -> None:
         """Wähle die Übersicht und setze den Fokus zurück auf den Ansichtenpicker."""
@@ -254,9 +267,7 @@ class MainScreen(PultScreen[None]):
             )
         await self.switch_view(view)
         # Gleiche Rahmenhöhen, auch wenn die Anzahl der Stunden geändert wird.
-        self.query_one(ViewPicker).styles.height = view.query_one(
-            TimetablePanel
-        ).styles.height
+        self.align_dashboard()
         view.refresh_time_highlight()
         if self._pending_view_id is None:
             self.refresh_bindings()
@@ -321,9 +332,7 @@ class MainScreen(PultScreen[None]):
         await self.switch_view(view)
         if self not in self.app.screen_stack:
             return
-        view.query_one(".class-next-lesson").styles.height = self.query_one(
-            ViewPicker
-        ).styles.height
+        self.align_dashboard()
         if self._pending_view_id is None:
             self.refresh_bindings()
 
@@ -334,7 +343,9 @@ class MainScreen(PultScreen[None]):
     ) -> bool | None:
         if action == "go_home":
             return True
-        if isinstance(self.app.focused, ManagementPicker) and action in {
+        if isinstance(
+            self.app.focused, (ManagementPicker, TeachingPicker)
+        ) and action in {
             "complete_next_lesson",
             "skip_next_lesson",
             "continue_next_lesson",
@@ -343,6 +354,7 @@ class MainScreen(PultScreen[None]):
             "undo_last_entry",
             "change_active_sequence",
             "show_teaching_log",
+            "open_next_lesson",
         }:
             return False
         if self._pending_view_id is not None and any(
@@ -351,6 +363,8 @@ class MainScreen(PultScreen[None]):
         ):
             # Während Highlight und Ansicht auseinanderliegen, keine falsche Klasse ändern.
             return None
+        if action == "open_next_lesson":
+            return self.displayed_next_lesson() is not None
         if action in {
             "undo_last_entry",
             "change_active_sequence",
@@ -362,6 +376,52 @@ class MainScreen(PultScreen[None]):
     @on(DescendantFocus)
     def refresh_focused_bindings(self) -> None:
         self.refresh_bindings()
+
+    def displayed_next_lesson(self) -> PlannedLesson | None:
+        """Verwende genau die Stunde der sichtbaren Übersicht, ohne neu zu planen."""
+        if self.active_school_class_id is None:
+            views = self.query(HomeView)
+            return views.first().dashboard.next_planned_lesson if views else None
+        views = self.query(SchoolClassView)
+        if not views:
+            return None
+        return next(
+            (
+                summary.next_planned_lesson
+                for summary in views.first().progress_summaries
+                if summary.subject_id == self.active_subject_id
+            ),
+            None,
+        )
+
+    def action_open_next_lesson(self) -> None:
+        if not self.check_action("open_next_lesson", ()):
+            return
+        planned = self.displayed_next_lesson()
+        if planned is None:
+            return
+        sequence = next(
+            (
+                sequence
+                for sequence in self.sequence_library
+                if (sequence.grade_level, sequence.subject_id, sequence.id)
+                == (planned.grade_level, planned.subject_id, planned.sequence_id)
+            ),
+            None,
+        )
+        if sequence is None or not any(
+            lesson.id == planned.lesson.id for lesson in sequence.lessons
+        ):
+            self.notify(
+                "Die angezeigte Stunde ist nicht mehr verfügbar.", severity="warning"
+            )
+            return
+        self.app.push_screen(
+            LessonScreen(sequence, planned.lesson.id), self.lesson_viewer_closed
+        )
+
+    async def lesson_viewer_closed(self, _: Sequence | None) -> None:
+        await self.refresh_current_view()
 
     async def refresh_current_view(self) -> None:
         """Aktualisiere die Daten der momentan aktiven Home- oder Klassenansicht."""
@@ -875,6 +935,7 @@ class MainScreen(PultScreen[None]):
             self.notify(f"{school_class.id}: '{lesson_title}' {action_description}.")
 
     @on(OptionList.OptionSelected, "#management-picker")
+    @on(OptionList.OptionSelected, "#teaching-picker")
     def management_picker_selected(self, event: OptionList.OptionSelected) -> None:
         option_id = event.option_id
         if option_id is None:
@@ -884,7 +945,9 @@ class MainScreen(PultScreen[None]):
             case "edit-classes":
                 self.app.push_screen(EditClassesScreen(), self.classes_edited)
             case "sequence-library":
-                self.app.push_screen(SequenceLibraryScreen())
+                self.app.push_screen(
+                    SequenceLibraryScreen(), self.sequence_library_closed
+                )
             case "edit-timetable":
                 self.app.push_screen(
                     EditTimetableScreen(), self.timetable_edit_finished
@@ -919,6 +982,9 @@ class MainScreen(PultScreen[None]):
         self.refresh_view_picker()
 
     async def timetable_edit_finished(self, _: None) -> None:
+        await self.refresh_current_view()
+
+    async def sequence_library_closed(self, _: None) -> None:
         await self.refresh_current_view()
 
     async def closures_edited(self, _: None) -> None:

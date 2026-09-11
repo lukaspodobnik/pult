@@ -2,6 +2,7 @@ from datetime import date, time
 
 import pytest
 
+from pult.curriculum.material import Task
 from pult.curriculum.sequence import Lesson, Sequence
 from pult.progress.class_progress import ActiveSequence, ClassProgress
 from pult.progress.queries import PlannedLesson
@@ -45,7 +46,9 @@ def sequences() -> list[Sequence]:
             title="Natürliche Zahlen",
             recommended_lesson_count=2,
             lessons=[
-                Lesson("lesson-1", "Zahlen ordnen", ["Aufgabe 1"], ""),
+                Lesson(
+                    "lesson-1", "Zahlen ordnen", [Task("aufgabe-1", "Aufgabe 1")], ""
+                ),
                 Lesson("lesson-2", "Zahlen runden", [], "Hinweis"),
             ],
         ),

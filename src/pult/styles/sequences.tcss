@@ -49,36 +49,35 @@ App.-light-mode SequenceLibraryScreen #sequence-preview:focus {
     border-title-color: $primary-darken-2;
 }
 
-SequencePreview Markdown {
-    padding: 0;
-    background: transparent;
-}
-
-SequencePreview MarkdownHeader {
-    background: transparent;
-    color: $text-accent;
-    text-style: bold;
-    content-align: left middle;
-    margin: 1 0;
-}
-
-SequencePreview MarkdownHorizontalRule {
-    height: 1;
-    padding: 0;
-    margin: 1 0;
-    border-bottom: solid $foreground 18%;
-}
-
-SequencePreview MarkdownParagraph {
-    margin: 0 0 1 0;
-}
-
-SequencePreview MarkdownBulletList {
-    margin: 0 0 1 0;
-}
-
-SequencePreview MarkdownBlockQuote {
-    background: transparent;
-    border-left: solid $foreground 25%;
+SequencePreview > .option-list--option {
     padding: 0 1;
+    color: $text;
+    background: transparent;
+}
+
+SequencePreview > .option-list--option-disabled {
+    color: $text-muted;
+    background: transparent;
+}
+
+SequencePreview > .option-list--option-highlighted,
+SequencePreview > .option-list--option-hover-highlighted,
+SequencePreview > .option-list--option-hover {
+    color: $text;
+    background: transparent;
+    text-style: none;
+}
+
+SequencePreview:focus > .option-list--option-highlighted,
+SequencePreview:focus > .option-list--option-hover-highlighted {
+    color: $text;
+    background: $primary 16%;
+    text-style: none;
+}
+
+SequencePreview:blur > .option-list--option-highlighted,
+SequencePreview:blur > .option-list--option-hover-highlighted,
+SequencePreview:blur > .option-list--option-hover {
+    background: transparent;
+    text-style: none;
 }

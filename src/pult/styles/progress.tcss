@@ -53,18 +53,19 @@ SchoolClassView .class-dashboard {
 }
 
 SchoolClassView .sequence-list {
-    padding-top: 1;
-    width: 3fr;
-    height: 1fr;
-    margin-right: 1;
+    padding: 1 0 0 1;
+    width: 1fr;
+    height: 27;
 }
 
 SchoolClassView .class-details {
-    width: 2fr;
+    width: 3fr;
+    margin-right: 1;
     height: 1fr;
 }
 
 SchoolClassView .class-next-lesson {
+    width: 2fr;
     height: 1fr;
 }
 
@@ -79,17 +80,12 @@ SchoolClassView .next-lesson-sequence {
     margin-bottom: 1;
 }
 
-SchoolClassView .next-lesson-details {
+SchoolClassView .next-lesson-preview {
+    height: auto;
     margin-top: 1;
 }
 
-SchoolClassView .next-lesson-title {
-    height: auto;
-    text-style: bold;
-}
-
 SchoolClassView .next-lesson-date,
-SchoolClassView .next-lesson-details,
 SchoolClassView .next-lesson-empty,
 SchoolClassView .empty-sequence-hint {
     height: auto;
@@ -162,18 +158,12 @@ SchoolClassView .lesson-balance.neutral {
 
 SchoolClassView .sequence-progress {
     height: auto;
+    margin-right: 1;
     margin-bottom: 1;
 }
 
 SchoolClassView .sequence-progress.active {
     color: $text-accent;
-    margin: 1 0;
-    padding: 1 0;
-}
-
-SchoolClassView .sequence-progress.active:first-child {
-    margin-top: 0;
-    padding-top: 0;
 }
 
 SchoolClassView .sequence-progress.active .progress-heading,

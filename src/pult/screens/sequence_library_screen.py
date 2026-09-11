@@ -5,8 +5,7 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
-from textual.widgets import Tree
+from textual.containers import Container
 from textual.widgets.tree import TreeNode
 
 from pult.curriculum.sequence import (
@@ -17,7 +16,10 @@ from pult.curriculum.sequence import (
 )
 from pult.school.subject import load_subjects
 from pult.screens.base_screen import PultScreen
+from pult.screens.lesson_screen import LessonScreen
+from pult.screens.task_screen import TaskScreen
 from pult.widgets.footer import PultFooter
+from pult.widgets.scrolling import Horizontal, OptionList, Tree, Vertical
 from pult.widgets.sequence_preview import SequencePreview
 from pult.widgets.sequence_tree import SequenceTree
 
@@ -26,6 +28,7 @@ class SequenceLibraryScreen(PultScreen[None]):
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
         ("e", "edit_sequence", "Bearbeiten"),
+        ("a", "open_tasks", "Aufgaben"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -51,6 +54,38 @@ class SequenceLibraryScreen(PultScreen[None]):
     def action_close(self) -> None:
         self.dismiss()
 
+    def action_open_tasks(self) -> None:
+        tree = self.query_one(SequenceTree)
+        preview = self.query_one(SequencePreview)
+        sequence = (
+            tree.cursor_node.data
+            if tree.has_focus and tree.cursor_node
+            else preview.sequence
+        )
+        if sequence is None:
+            return
+        try:
+            screen = TaskScreen(
+                sequence,
+                get_sequence_path(
+                    self.app_config.root,
+                    sequence.grade_level,
+                    sequence.subject_id,
+                    sequence.id,
+                ).parent,
+            )
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+        focused = self.focused
+
+        def closed(updated: Sequence | None):
+            self.lesson_closed(updated)
+            if focused is not None:
+                focused.focus()
+
+        self.app.push_screen(screen, closed)
+
     @on(Tree.NodeHighlighted, "#sequence-tree")
     def sequence_highlighted(self, event: Tree.NodeHighlighted) -> None:
         sequence = event.node.data
@@ -60,6 +95,38 @@ class SequenceLibraryScreen(PultScreen[None]):
 
         preview = self.query_one("#sequence-preview", SequencePreview)
         preview.show_sequence(sequence)
+
+    @on(OptionList.OptionSelected, "#sequence-preview")
+    def open_lesson(self, event: OptionList.OptionSelected) -> None:
+        event.stop()
+        preview = self.query_one(SequencePreview)
+        if preview.sequence is None or preview.selected_lesson is None:
+            return
+        self.app.push_screen(
+            LessonScreen(preview.sequence, preview.selected_lesson.id),
+            self.lesson_closed,
+        )
+
+    def lesson_closed(self, updated: Sequence | None) -> None:
+        if updated is None:
+            return
+        tree = self.query_one(SequenceTree)
+
+        def update_node(node):
+            if node.data is not None and (
+                node.data.grade_level,
+                node.data.subject_id,
+                node.data.id,
+            ) == (updated.grade_level, updated.subject_id, updated.id):
+                node.data = updated
+                node.set_label(updated.title)
+            for child in node.children:
+                update_node(child)
+
+        update_node(tree.root)
+        preview = self.query_one(SequencePreview)
+        preview.show_sequence(updated)
+        preview.focus()
 
     def action_edit_sequence(self) -> None:
         node = self.query_one("#sequence-tree", SequenceTree).cursor_node

@@ -1,7 +1,6 @@
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical
-from textual.widgets import Header, Label, OptionList
+from textual.widgets import Header, Label
 from textual.widgets.option_list import Option
 
 from pult.initialization.school_year import initialize_school_year
@@ -11,6 +10,7 @@ from pult.school.school_year import (
 )
 from pult.screens.base_screen import PultScreen
 from pult.widgets.footer import PultFooter
+from pult.widgets.scrolling import OptionList, Vertical
 
 
 class SchoolYearSetupScreen(PultScreen[str]):

@@ -1,0 +1,18 @@
+id = "vernetzte-informationsstrukturen"
+curriculum_section_id = "NT7 2.1"
+subject_id = "nut-informatik"
+grade_level = 7
+chapter_id = "NT7 2"
+chapter_title = "Schwerpunkt Informatik"
+recommended_lesson_count = 8
+titel = "Vernetzte Informationsstrukturen"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+]

@@ -1,0 +1,17 @@
+id = "kommunikation-in-netzwerken-internet"
+curriculum_section_id = "INF11 3"
+subject_id = "informatik-spaet-beginnend"
+grade_level = 11
+recommended_lesson_count = 9
+titel = "Kommunikation in Netzwerken, Internet"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+]

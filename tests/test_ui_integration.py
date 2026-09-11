@@ -15,7 +15,7 @@ from pult.screens.setup_pult_screen import SetupScreen
 from pult.screens.teaching_log_screen import TeachingLogScreen
 from pult.views.home_view import HomeView
 from pult.views.school_class_view import SchoolClassView
-from pult.widgets.navigation import ManagementPicker, ViewPicker
+from pult.widgets.navigation import TeachingPicker, ViewPicker
 
 
 @pytest.mark.parametrize("scope", ["school", "class:5A"])
@@ -134,7 +134,7 @@ def test_management_opens_teaching_log_with_class_picker(tmp_path, monkeypatch):
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
-            picker = app.screen.query_one(ManagementPicker)
+            picker = app.screen.query_one(TeachingPicker)
             picker.focus()
             option_ids = [
                 picker.get_option_at_index(index).id

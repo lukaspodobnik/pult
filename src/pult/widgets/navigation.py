@@ -2,11 +2,11 @@ import json
 
 from rich.cells import cell_len
 from rich.text import Text
-from textual.widgets import OptionList
 from textual.widgets.option_list import Option
 
 from pult.school.school_class import SchoolClass, school_class_sort_key
 from pult.school.subject import Subject
+from pult.widgets.scrolling import OptionList
 
 
 class ViewPicker(OptionList):
@@ -66,17 +66,54 @@ class ViewPicker(OptionList):
         )
 
 
-class ManagementPicker(OptionList):
+class TeachingPicker(OptionList):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__(
             Option("Sequenzen", id="sequence-library"),
-            Option("Ausfälle", id="edit-closures"),
             Option("Protokoll", id="teaching-log"),
-            None,
-            Option("Stundenplan", id="edit-timetable"),
+            id=id,
+        )
+        self.border_title = "UNTERRICHT"
+
+
+class ManagementPicker(OptionList):
+    def __init__(self, *, id: str | None = None) -> None:
+        super().__init__(
             Option("Klassen", id="edit-classes"),
+            Option("Stundenplan", id="edit-timetable"),
+            Option("Ausfälle", id="edit-closures"),
             None,
             Option("Einstellungen", id="settings"),
             id=id,
         )
         self.border_title = "VERWALTUNG"
+        self._spacer_rows = 0
+
+    def on_resize(self) -> None:
+        self.call_after_refresh(self.align_settings)
+
+    def align_settings(self) -> None:
+        # Vier Einträge und eine Trennlinie; der freie Platz liegt vor der Linie.
+        rows = max(0, self.content_size.height - 5)
+        if rows == self._spacer_rows:
+            return
+        selected = (
+            self.get_option_at_index(self.highlighted).id
+            if self.highlighted is not None
+            else None
+        )
+        self._spacer_rows = rows
+        with self.prevent(OptionList.OptionHighlighted):
+            self.clear_options()
+            self.add_options(
+                [
+                    Option("Klassen", id="edit-classes"),
+                    Option("Stundenplan", id="edit-timetable"),
+                    Option("Ausfälle", id="edit-closures"),
+                ]
+            )
+            if rows:
+                self.add_option(Option(Text("\n" * (rows - 1)), disabled=True))
+            self.add_options([None, Option("Einstellungen", id="settings")])
+            if selected is not None:
+                self.highlighted = self.get_option_index(selected)

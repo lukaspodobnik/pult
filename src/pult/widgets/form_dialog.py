@@ -1,4 +1,4 @@
-from textual.containers import Vertical, VerticalScroll
+from pult.widgets.scrolling import Vertical, VerticalScroll
 
 
 class FormFields(VerticalScroll):

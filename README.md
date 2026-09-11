@@ -23,11 +23,11 @@ Die Herkunft der Lehrplanvorlagen, Kalenderdaten und Bibliotheken ist in
 ## Starten
 
 Voraussetzungen: [uv](https://docs.astral.sh/uv/) und ein Terminal mit
-Unicode-Unterstützung. PULT 1.0.1 direkt aus dem GitHub-Release installieren
+Unicode-Unterstützung. PULT 1.1.0 nach Veröffentlichung direkt aus dem GitHub-Release installieren
 (kein Klonen des Projekts nötig):
 
 ```sh
-uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.0.1/pult-1.0.1-py3-none-any.whl
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.1.0/pult-1.1.0-py3-none-any.whl
 ```
 
 Eine fehlende Python-Version lädt uv bei Bedarf herunter. Anschließend starten:
@@ -58,9 +58,10 @@ die Jahrgangsstufe und die angebotenen Fächer. Anschließend den Stundenplan f�
 
 ## Bedienung
 
-- **Tab / Shift+Tab:** Fokus wechseln. Im Hauptbildschirm nur zwischen Ansichten und Verwaltung.
+- **Tab / Shift+Tab:** Fokus wechseln. Im Hauptbildschirm zwischen Ansichten, Unterricht und Verwaltung.
 - **Pfeiltasten oder h/j/k/l:** Navigieren; in Textfeldern bleiben Buchstaben normale Eingaben.
 - **Enter:** Werkzeug öffnen, Auswahl bestätigen oder Stundenplanzelle bearbeiten.
+- **o:** Mit Fokus auf Ansichten die angezeigte nächste Stunde im Unterrichtsviewer öffnen; Escape führt zurück. Ohne nächste Stunde ist die Aktion deaktiviert.
 - **F2:** Im Hauptbildschirm zur Übersicht und zum Ansichtenpicker zurückkehren.
 - **Escape:** Zurück bzw. abbrechen. **q:** Beenden (außer in Texteingaben).
 - Der Footer zeigt verfügbare Befehle. Kleine Terminals können mit der Maus gescrollt werden.
@@ -92,9 +93,14 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
 ### Verwaltung
 
 - **Sequenzen:** Fach → Jahrgang → Abschnitt wählen; die Vorschau folgt der Auswahl.
+  Mit Tab in die rechte Vorschau wechseln und mit ↑/↓ ganze Stundenblöcke auswählen.
+  Die Stundenmarkierung erscheint nur bei Fokus auf der Vorschau.
+  Enter öffnet die ausgewählte Stunde im Unterrichtsviewer; Esc führt zur Vorschau zurück.
   **e** auf einer Sequenz öffnet ihre TOML-Datei im Editor. Nach der Rückkehr wird sie
-  neu geladen und validiert. Titel, Aufgaben, Notizen und Stunden können bearbeitet
-  werden. Bestehende IDs möglichst erhalten: Protokolle verweisen darauf.
+  neu geladen und validiert. Die Datei `sequenz.toml` enthält Metadaten und geordnete
+  Stunden-IDs; die Stunden liegen in eigenen Ordnern. IDs bleiben stabil, da
+  Protokolle darauf verweisen. Das neue Format ist im
+  [Materialvertrag](docs/materialvertrag.md) beschrieben.
 - **Stundenplan:** Enter bearbeitet eine Zelle. „Übernehmen“ ändert den Entwurf;
   erst „Speichern“ schreibt die Datei. Klasse, Fach und Raum werden beim nächsten
   Eintrag vorgeschlagen. Abbrechen fragt nur bei tatsächlichen Änderungen nach.
@@ -118,15 +124,14 @@ Gymnasiallehrpläne und Kalender von **2025/26 bis 2029/30**. Nur Jahre mit gül
 Kalender sind auswählbar. Quellen stehen in den Kalenderdateien.
 
 Auf Omarchy folgt das Farbschema automatisch dem aktuellen Theme; sonst wird Gruvbox
-verwendet. Das Layout ist für etwa **206 × 46 Zeichen** ausgelegt. Die Standardzeiten
-umfassen acht Stunden. Eine flexiblere Darstellung längerer Unterrichtstage und die
-Feinausrichtung mit echten Unterrichtsinhalten sind für später vorgesehen.
+verwendet. Das Layout ist für etwa **206 × 46 Zeichen** ausgelegt. Neue Datenablagen enthalten elf Stundenzeiten. Die Übersicht zeigt mindestens
+acht Stunden; spätere belegte Stunden werden im Stundenplan scrollbar ergänzt.
 
 ## Weitere Einstellungen
 
 Unter **Einstellungen → Stundenzeiten** lassen sich Beginn und Ende jeder Stunde
 im Format `HH:MM` ändern. Die Zeiten gelten für alle Schuljahre und werden direkt
-im eigenen Dialog gespeichert; Anzahl und Nummerierung bleiben unverändert.
+im eigenen Dialog gespeichert; Anzahl und Nummerierung bleiben bei der Bearbeitung der Zeiten unverändert.
 Ohne Anpassung gelten die mitgelieferten Standardzeiten.
 **Einstellungen → Über PULT / Lizenz** zeigt Version, Quellen und den vollständigen
 GPL-Lizenztext auch offline.
@@ -148,3 +153,83 @@ Dabei bleibt die Installation mit diesem Projektordner verbunden.
 Tests verwenden temporäre Datenverzeichnisse. Quellcode liegt in `src/pult/`, Tests in
 `tests/`. Fachlogik und Darstellung sind getrennt; die Sequenzbibliothek wird gemeinsam
 gecacht, Jahresdaten bleiben getrennt.
+
+### Eigene Unterrichtsmaterialien
+
+Die Defaults liefern Lehrplanstruktur und leere Planungsstunden. Bei der
+Einrichtung werden pro Sequenz leere Ordner für Aufgaben und Begleitdateien
+angelegt. Deine ausgearbeiteten Inhalte bleiben im persönlichen Datenverzeichnis
+außerhalb dieses Repositorys. Sie werden nicht in die Defaults zurückübertragen.
+Ein [neutrales Formatbeispiel](examples/unterricht/README.md) zeigt den Aufbau,
+ohne automatisch in deine Sequenzbibliothek übernommen zu werden.
+
+### Unterrichts- und Aufgabenviewer
+
+In der Sequenzbibliothek mit Tab in die rechte Vorschau wechseln, die Stunde
+mit ↑/↓ auswählen und Enter drücken. Der Viewer lädt die Dateien dieser Stunde.
+Links zeigt bereits das Markieren einer Stunde deren Inhalt; Enter ist dafür nicht
+nötig. Esc kehrt zur bisherigen
+Auswahl der Sequenzvorschau zurück.
+
+Aus der Sequenzbibliothek öffnet **a** alle Aufgaben der ausgewählten Sequenz,
+auch noch keiner Stunde zugeordnete Aufgaben. Links wählt ↑/↓ eine Aufgabe, rechts
+stehen Aufgabentext und Lösung direkt untereinander. Der Fokus bleibt in der
+Aufgabenliste; längere Inhalte lassen sich mit der Maus scrollen. **e** öffnet
+die Auswahl von Aufgabentext oder Lösung zum Bearbeiten. **n** legt nach Eingabe
+eines Titels eine neue Aufgabe mit `aufgabe.md` und `loesung.md` an und öffnet
+beide Dateien gemeinsam im konfigurierten Editor. Neue Aufgaben sind zunächst
+keiner Stunde zugeordnet; ihre ID wird bei Bedarf in `stunde.toml` unter
+`aufgaben` eingetragen. Bestehende Aufgaben werden beim Anlegen nicht überschrieben.
+**Esc** führt zur bisherigen Auswahl in der Sequenzbibliothek zurück.
+Die Liste zeigt den Titel aus der ersten Markdown-Überschrift (`# Titel`),
+sonst die Aufgaben-ID, und bleibt nach Aufgaben-ID sortiert.
+
+- **Leertaste:** Vorbereitung / Aufgaben. Lösungen stehen direkt unter den Aufgaben.
+- Die Stundenliste ist der einzige Fokusbereich. Inhalte, Ziele und Verlauf lassen sich mit der Maus scrollen; die Rahmen bleiben ohne Fokushervorhebung.
+- **e:** Den sichtbaren Bereich bearbeiten: bei Vorbereitung direkt im konfigurierten
+  Editor, bei Aufgaben nach Auswahl der Aufgabe und von Aufgabentext oder Lösung.
+  Fehlende Vorbereitungs- und Lösungsdateien werden erst beim Bearbeiten angelegt.
+  Die automatisch angezeigte Materialliste bleibt in TOML. Aufgabenänderungen gelten
+  für alle Stunden der Sequenz, die dieselbe Aufgabe verwenden.
+- **m:** `stunde.toml` für Titel, Ziele, benötigtes Material, Aufgabenverweise und Phasen bearbeiten.
+
+Nach dem Editor werden die Dateien neu geladen. Bei Fehlern bleibt der letzte
+gültige Stand sichtbar und Pult meldet die betroffene Datei. Die fehlerhafte Datei
+wird nicht automatisch zurückgesetzt.
+
+Grafische Formeln und SVG-Abbildungen benötigen **Node.js** und **rsvg-convert**
+(unter Arch: `nodejs` und `librsvg`) sowie ein Terminal mit passender Bildunterstützung,
+beispielsweise Foot mit Sixel. MathJax ist im Pult-Paket enthalten; npm ist zur
+Benutzung nicht nötig. Es wird kein Browser geöffnet und nichts ins Internet gesendet.
+Ohne Grafikunterstützung erscheinen Formelquellen beziehungsweise Bildhinweise;
+das ist keine gleichwertige mathematische Darstellung. Codeblöcke mit Sprachangabe
+werden als normaler Terminaltext mit Syntaxhervorhebung dargestellt.
+
+Formeln nutzen eine Computer-Modern-basierte TeX-Schrift und unterstützen etwa
+`aligned`. Bilder werden relativ zur jeweiligen Markdown-Datei innerhalb des
+Sequenzordners aufgelöst. Die erste Integration unterstützt Formeln in normalen
+Absätzen und eigenen Blöcken; Mathematik in verschachtelten Listen und Tabellen
+ist noch nicht vollständig umgesetzt. Das Layout bleibt auf Vollbild ausgelegt.
+
+Der Unterrichtsviewer ist über die Sequenzvorschau sowie mit **o** direkt aus
+der Übersicht und den Klassenansichten erreichbar. Die Darstellung benötigt keine Dateien
+aus `prototypes/`; gerenderte Bilder liegen im lokalen Cache unter
+`$XDG_CACHE_HOME/pult/materials` beziehungsweise `~/.cache/pult/materials`.
+
+### Stundenplan und gemeinsame Ansichtsaufteilung
+
+Neue Datenablagen enthalten voreingestellte Zeiten für elf Stunden; Stunden 9–11
+laufen standardmäßig von 14:50 bis 17:05 Uhr. Bestehende persönliche Stundenzeiten
+bleiben unverändert und können in der Stundenzeitverwaltung ergänzt werden.
+Die Stundenplanverwaltung zeigt alle konfigurierten Stunden. Home zeigt mindestens
+Stunden 1–8 und bei späteren Wochenplaneinträgen alle Zeilen bis zur höchsten
+belegten Stunde. Zusätzliche Zeilen sind im festen Rahmen scrollbar. Beim Wechsel
+der aktuellen Stundenmarkierung wird die betreffende Zeile sichtbar gemacht;
+anschließendes manuelles Scrollen bleibt erhalten.
+
+Home und Klassenansicht verwenden dieselben Spaltenbreiten und oberen Rahmenhöhen.
+In der Klassenansicht stehen links Sequenzen und darunter die Stundenbilanz,
+rechts die nächste Stunde über die gesamte Höhe. In niedrigeren Terminals wird
+der obere Rahmen gemeinsam mit den Navigationsblöcken verkleinert. Ansichten
+und Unterricht teilen sich seine Höhe; Verwaltung liegt auf Höhe des unteren
+Inhaltsblocks.

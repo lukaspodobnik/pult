@@ -71,17 +71,17 @@ def test_sequence_rejects_duplicate_lesson_ids():
 
 def test_sequence_loader_rejects_location_mismatch(tmp_path):
     directory = get_sequence_directory(tmp_path, 5, "mathematik")
+    directory = directory / "wrong"
     directory.mkdir(parents=True)
     save_toml(
-        directory / "wrong.toml",
+        directory / "sequenz.toml",
         {
             "id": "different",
             "curriculum_section_id": "M5 1",
             "subject_id": "mathematik",
             "grade_level": 5,
-            "title": "Titel",
-            "recommended_lesson_count": 1,
-            "lessons": [{"id": "lesson", "title": "Titel", "tasks": [], "notes": ""}],
+            "titel": "Titel",
+            "stunden": [],
         },
     )
     with pytest.raises(SequenceFileError):

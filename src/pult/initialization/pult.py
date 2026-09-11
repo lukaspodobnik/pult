@@ -57,6 +57,7 @@ def initialize_pult(root: str, editor: str, year: str) -> AppConfig:
         _create_initial_directories(root_path)
         _create_default_files(root_path)
         _create_default_directories(root_path)
+        _create_material_directories(root_path)
         initialize_school_year(root_path, year)
     except (OSError, CalendarFileError) as error:
         raise SetupError(
@@ -109,6 +110,13 @@ def _create_default_directories(root_path: Path) -> None:
 
         destination = root_path / relative_path
         _copy_default_directory(source, destination)
+
+
+def _create_material_directories(root_path: Path) -> None:
+    """Ergänze leere Materialordner, ohne persönliche Inhalte anzutasten."""
+    for sequence_file in (root_path / "sequences").glob("*/*/*/sequenz.toml"):
+        for name in ("stunden", "aufgaben", "dateien"):
+            (sequence_file.parent / name).mkdir(exist_ok=True)
 
 
 def _copy_default_directory(source: Traversable, destination: Path) -> None:

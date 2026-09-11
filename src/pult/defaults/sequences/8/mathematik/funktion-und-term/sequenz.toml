@@ -1,0 +1,16 @@
+id = "funktion-und-term"
+curriculum_section_id = "M8 1"
+subject_id = "mathematik"
+grade_level = 8
+recommended_lesson_count = 8
+titel = "Funktion und Term"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+]

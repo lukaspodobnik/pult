@@ -1,0 +1,21 @@
+id = "beschreibung-von-ablaeufen-durch-algorithmen"
+curriculum_section_id = "NT7 2.3"
+subject_id = "nut-informatik"
+grade_level = 7
+chapter_id = "NT7 2"
+chapter_title = "Schwerpunkt Informatik"
+recommended_lesson_count = 11
+titel = "Beschreibung von Abläufen durch Algorithmen"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+]

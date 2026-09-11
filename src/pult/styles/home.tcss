@@ -6,6 +6,15 @@ MainScreen #navigation {
     width: 28;
     padding: 0 1 1 1;
     background: $background;
+    overflow-y: auto;
+}
+
+MainScreen #navigation OptionList:blur > .option-list--option-highlighted,
+MainScreen #navigation OptionList:blur > .option-list--option-hover-highlighted,
+MainScreen #navigation OptionList:blur > .option-list--option-hover {
+    background: transparent;
+    color: $text;
+    text-style: none;
 }
 
 MainScreen AppLogo {
@@ -13,6 +22,7 @@ MainScreen AppLogo {
 }
 
 MainScreen #view-picker,
+MainScreen #teaching-picker,
 MainScreen #management-picker {
     height: 1fr;
     border: round $primary;
@@ -23,6 +33,7 @@ MainScreen #management-picker {
 }
 
 MainScreen #view-picker:focus,
+MainScreen #teaching-picker:focus,
 MainScreen #management-picker:focus {
     border: round $primary-lighten-2;
     border-title-color: $primary-lighten-2;
@@ -32,6 +43,7 @@ MainScreen #management-picker:focus {
 }
 
 App.-light-mode MainScreen #view-picker:focus,
+App.-light-mode MainScreen #teaching-picker:focus,
 App.-light-mode MainScreen #management-picker:focus {
     border: round $primary-darken-2;
     border-title-color: $primary-darken-2;
@@ -40,6 +52,11 @@ App.-light-mode MainScreen #management-picker:focus {
 MainScreen #management-picker {
     height: 1fr;
     min-height: 7;
+    margin-top: 1;
+}
+
+MainScreen #teaching-picker {
+    height: 4;
     margin-top: 1;
 }
 
@@ -70,10 +87,15 @@ HomeView #school-year-progress {
     align-vertical: middle;
     background: $surface;
     border: round $primary;
+    border-title-color: $text-accent;
+}
+
+HomeView #school-year-progress-heading {
+    height: 1;
 }
 
 HomeView #school-year-progress-label {
-    width: 20;
+    width: 1fr;
     height: 1;
     text-style: bold;
 }
@@ -81,10 +103,6 @@ HomeView #school-year-progress-label {
 HomeView #school-year-progress-bar {
     width: 1fr;
     height: 1;
-}
-
-HomeView #school-year-progress-bar Bar {
-    width: 1fr;
 }
 
 HomeView #school-year-progress-percentage {
@@ -137,7 +155,6 @@ HomeView .next-lesson-sequence,
 HomeView .next-lesson-name,
 HomeView .next-lesson-occurrence,
 HomeView .next-lesson-tasks,
-HomeView .next-lesson-notes,
 HomeView .dashboard-empty {
     height: auto;
 }
@@ -220,11 +237,19 @@ HomeView .day-entry-lesson {
 }
 
 HomeView .next-lesson-name {
-    max-height: 2;
+    margin-top: 1;
 }
 
-HomeView .next-lesson-tasks,
-HomeView .next-lesson-notes {
+HomeView .next-lesson-heading {
+    color: $text-accent;
+}
+
+HomeView .next-lesson-spacer {
+    height: 1fr;
+    min-height: 0;
+}
+
+HomeView .next-lesson-tasks {
     margin-top: 1;
 }
 

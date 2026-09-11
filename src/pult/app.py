@@ -25,6 +25,7 @@ class PultApp(App):
         "styles/calendar.tcss",
         "styles/progress.tcss",
         "styles/sequences.tcss",
+        "styles/lesson.tcss",
         "styles/setup.tcss",
         "styles/school_year_setup.tcss",
         "styles/teaching_log.tcss",

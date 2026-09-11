@@ -3,7 +3,6 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
 from textual.widgets import (
     Button,
     Input,
@@ -22,6 +21,7 @@ from pult.screens.base_screen import (
 )
 from pult.services.closures import ScopedClosure, validate_closure
 from pult.widgets.form_dialog import FormDialog, FormFields
+from pult.widgets.scrolling import Horizontal, Vertical
 
 SCHOOL_SCOPE = "school"
 CLASS_SCOPE_PREFIX = "class:"

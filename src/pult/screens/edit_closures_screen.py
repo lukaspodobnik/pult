@@ -4,12 +4,7 @@ from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical
-from textual.widgets import (
-    Button,
-    OptionList,
-    Static,
-)
+from textual.widgets import Button, Static
 from textual.widgets.option_list import Option
 
 from pult.presentation import format_date
@@ -32,6 +27,7 @@ from pult.services.closures import (
     get_default_closure_date,
 )
 from pult.widgets.footer import PultFooter
+from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
 class EditClosuresScreen(PultScreen[None]):

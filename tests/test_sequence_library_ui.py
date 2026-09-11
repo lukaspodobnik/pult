@@ -17,7 +17,7 @@ from pult.curriculum.sequence import (
 from pult.screens.main_screen import MainScreen
 from pult.screens.sequence_library_screen import SequenceLibraryScreen
 from pult.storage import save_toml
-from pult.widgets.navigation import ManagementPicker
+from pult.widgets.navigation import TeachingPicker
 from pult.widgets.sequence_preview import SequencePreview
 from pult.widgets.sequence_tree import SequenceTree
 
@@ -36,7 +36,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
-            picker = app.screen.query_one(ManagementPicker)
+            picker = app.screen.query_one(TeachingPicker)
             picker.focus()
             picker.highlighted = picker.get_option_index("sequence-library")
             await pilot.press("enter")
@@ -55,11 +55,23 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             assert set(screen.focus_chain) == {tree, preview}
             tree.focus()
             await pilot.pause()
+            assert (
+                preview.get_component_styles(
+                    "option-list--option-highlighted"
+                ).background.a
+                == 0
+            )
             assert tree.styles.background_tint.a == 0
             assert tree.styles.border.top[1] != preview.styles.border.top[1]
             await pilot.press("tab")
             assert app.focused is preview
             await pilot.pause()
+            assert (
+                preview.get_component_styles(
+                    "option-list--option-highlighted"
+                ).background.a
+                > 0
+            )
             assert preview.styles.background_tint.a == 0
             assert preview.styles.border.top[1] != tree.styles.border.top[1]
             await pilot.press("tab")
@@ -128,7 +140,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
                 notifications.assert_not_called()
                 preview = screen.query_one(SequencePreview)
                 assert preview.border_title == updated.title
-                assert not preview.document.query("MarkdownH1")
+                assert preview.sequence.title == updated.title
             else:
                 assert node.data == original
                 assert notifications.call_args.kwargs["severity"] == "error"

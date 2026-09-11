@@ -1,0 +1,55 @@
+# Beispieldaten für den Prototyp; noch kein endgültiger Materialvertrag.
+
+[[lessons]]
+title = "Brüche erweitern"
+context = "MATHEMATIK · 6. JAHRGANG · BRUCHZAHLEN"
+note = "brueche.md"
+goal = "Gleichwertige Brüche durch Verfeinern der Einteilung erklären und gezielt erweitern."
+phases = [["5 min", "Einstieg", "Gleiche Anteile vergleichen", "Abbildung"], ["12 min", "Erarbeitung", "Einteilung verfeinern, Regel finden", "Papierstreifen"], ["8 min", "Sicherung", "Regel und Beispiel an der Tafel festhalten", "Vorbereitung"], ["15 min", "Übung", "Selbstständig erweitern und begründen", "Aufgabe 1"], ["5 min", "Abschluss", "Erweiterungsfaktor erklären lassen", "Weiterdenken"]]
+[[lessons.tasks]]
+id = "equal-parts"
+title = "Gezielt erweitern"
+text = "task1/task.md"
+solution = "task1/solution.md"
+
+[[lessons]]
+title = "Integral und Flächeninhalt"
+context = "MATHEMATIK · OBERSTUFE · INTEGRALRECHNUNG"
+note = "integral.md"
+goal = "Orientierte Flächenbilanz und geometrischen Flächeninhalt unterscheiden und berechnen."
+phases = [["5 min", "Einstieg", "Vorzeichen und Bilanz vorhersagen", "Aufgabe 1"], ["12 min", "Erarbeitung", "Integral mit einer Stammfunktion berechnen", "Aufgabe 1"], ["8 min", "Sicherung", "Integral und Fläche gegenüberstellen", "Vorbereitung"], ["15 min", "Übung", "An Nullstellen zerlegen und Beträge addieren", "Aufgabe 1"], ["5 min", "Abschluss", "Symmetrie als Rechenhilfe begründen", "Weiterdenken"]]
+[[lessons.tasks]]
+id = "area"
+title = "Bilanz und Fläche"
+text = "task2/task.md"
+solution = "task2/solution.md"
+
+[[lessons]]
+title = "Eine Zahl erraten"
+context = "INFORMATIK · PROGRAMMIERUNG · PYTHON"
+note = "programmierung.md"
+goal = "Eine while-Schleife mit einer Abbruchbedingung einsetzen und das Programm an Beispielen testen."
+phases = [["5 min", "Einstieg", "Zahlenraten gemeinsam spielen", "iPad · Folien 1–2"], ["8 min", "Erarbeitung", "Abbruchbedingung formulieren", "iPad · Folien 3–4"], ["25 min", "Arbeitsphase", "Spiel implementieren und testen", "Aufgabe 1"], ["7 min", "Sicherung", "Schleifenbedingung erklären lassen", "Gemeinsames Gespräch"]]
+[[lessons.tasks]]
+id = "guess-number"
+title = "Zahlenraten"
+text = "task3/task.md"
+solution = "task3/solution.md"
+
+[[lessons]]
+title = "Brüche kürzen"
+context = "MATHEMATIK · 6. JAHRGANG · BRUCHZAHLEN"
+note = "kuerzen.md"
+goal = "Kürzen als Umkehrung des Erweiterns erklären und Brüche vollständig kürzen."
+phases = [
+ ["5 min", "Rückblick", "Erweitern am Beispiel erklären", "Vorbereitung"],
+ ["12 min", "Erarbeitung", "Teilstücke wieder zusammenfassen", "Abbildung"],
+ ["8 min", "Sicherung", "Regel und Beispiel festhalten", "Vorbereitung"],
+ ["15 min", "Übung", "Gemeinsame Teiler finden", "Aufgabe 1"],
+ ["5 min", "Abschluss", "Vollständig gekürzt begründen", "Gespräch"],
+]
+[[lessons.tasks]]
+id = "reduce-fractions"
+title = "Vollständig kürzen"
+text = "task4/task.md"
+solution = "task4/solution.md"

@@ -2,7 +2,6 @@ from pathlib import Path
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Input, Label, Select
 
@@ -17,6 +16,7 @@ from pult.school.school_year import (
 )
 from pult.services.settings import get_editor_options
 from pult.widgets.footer import PultFooter
+from pult.widgets.scrolling import Vertical
 
 
 class SetupScreen(Screen[AppConfig]):

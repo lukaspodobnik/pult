@@ -1,6 +1,6 @@
 [project]
 name = "pult"
-version = "1.0.1"
+version = "1.1.0"
 description = "Lokaler Unterrichtsplaner für das Terminal: Sequenzen, Stundenplan und Unterrichtsprotokoll."
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -10,8 +10,12 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
+    "markdown-it-py>=4.2.0",
+    "mdit-py-plugins>=0.6.1",
+    "pillow>=12.0",
     "rich",
     "textual>=8.2.8",
+    "textual-image==0.12.0",
     "tomli-w>=1.2.0",
 ]
 

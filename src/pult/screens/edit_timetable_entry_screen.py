@@ -4,7 +4,6 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal
 from textual.widgets import Button, Input, Label, Select, Static
 
 from pult.presentation import WEEKDAYS
@@ -13,6 +12,7 @@ from pult.school.subject import Subject
 from pult.school.timetable import TimetableEntry
 from pult.screens.base_screen import PultModalScreen
 from pult.widgets.form_dialog import FormDialog, FormFields
+from pult.widgets.scrolling import Horizontal
 
 
 class TimetableEditAction(Enum):

@@ -1,0 +1,16 @@
+id = "einseitiger-signifikanztest-bei-als-binomialverteilt-angenommenen-merkmalen"
+curriculum_section_id = "M12 3"
+subject_id = "mathematik"
+grade_level = 12
+recommended_lesson_count = 8
+titel = "Einseitiger Signifikanztest (bei als binomialverteilt angenommenen Merkmalen)"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+]

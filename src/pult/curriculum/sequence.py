@@ -3,29 +3,23 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from pult.curriculum.material import Lesson as Lesson
+from pult.curriculum.material import (
+    load_lesson,
+    reference_ids,
+    reject_unknown,
+    save_lesson,
+)
+from pult.curriculum.material import validate_id as validate_id
 from pult.storage import load_toml, save_toml
 
-ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 CURRICULUM_SECTION_ID_PATTERN = re.compile(r"[A-ZÄÖÜ]+[0-9]+ [0-9]+(?:\.[0-9]+)*")
 SEQUENCES_DIRECTORY_NAME = Path("sequences")
-SEQUENCE_FILE_SUFFIX = ".toml"
+SEQUENCE_FILE_NAME = "sequenz.toml"
 
 
 class SequenceFileError(ValueError):
     """Raised when a sequence file has invalid or inconsistent contents."""
-
-
-def validate_id(value: str, field_name: str) -> str:
-    """Normalisiere eine interne ID und lehne unerlaubte Zeichen ab."""
-    value = value.strip().lower()
-
-    if not ID_PATTERN.fullmatch(value):
-        raise ValueError(
-            f"{field_name} darf nur Kleinbuchstaben, Zahlen "
-            "und einzelne Bindestriche enthalten."
-        )
-
-    return value
 
 
 def validate_curriculum_section_id(value: str, field_name: str) -> str:
@@ -39,24 +33,6 @@ def validate_curriculum_section_id(value: str, field_name: str) -> str:
         )
 
     return value
-
-
-@dataclass
-class Lesson:
-    id: str
-    title: str
-    tasks: list[str]
-    notes: str
-
-    def __post_init__(self) -> None:
-        self.id = validate_id(self.id, "Die Stunden-ID")
-        self.title = self.title.strip()
-        self.notes = self.notes.strip()
-
-        if any(not task.strip() for task in self.tasks):
-            raise ValueError("Aufgaben dürfen keine leeren Einträge enthalten.")
-
-        self.tasks = [task.strip() for task in self.tasks]
 
 
 @dataclass
@@ -156,8 +132,10 @@ def get_sequence_path(
 ) -> Path:
     """Gib den kanonischen Pfad einer Sequenzdatei zurück."""
     sequence_id = validate_id(sequence_id, "Die Sequenz-ID")
-    return get_sequence_directory(root, grade_level, subject_id) / (
-        sequence_id + SEQUENCE_FILE_SUFFIX
+    return (
+        get_sequence_directory(root, grade_level, subject_id)
+        / sequence_id
+        / SEQUENCE_FILE_NAME
     )
 
 
@@ -172,22 +150,34 @@ def load_sequence(
 
     try:
         data = load_toml(path)
-        lessons_data = data["lessons"]
-        if not isinstance(lessons_data, list):
-            raise TypeError("'lessons' muss eine Liste sein.")
+        reject_unknown(
+            data,
+            {
+                "id",
+                "titel",
+                "stunden",
+                "curriculum_section_id",
+                "subject_id",
+                "grade_level",
+                "recommended_lesson_count",
+                "chapter_id",
+                "chapter_title",
+            },
+        )
+        lessons_data = reference_ids(data, "stunden")
+        tasks = {}
 
         sequence = Sequence(
             id=_require_string(data, "id"),
             curriculum_section_id=_require_string(data, "curriculum_section_id"),
             subject_id=_require_string(data, "subject_id"),
             grade_level=_require_integer(data, "grade_level"),
-            title=_require_string(data, "title"),
+            title=_require_string(data, "titel"),
             recommended_lesson_count=_optional_integer(
                 data, "recommended_lesson_count"
             ),
             lessons=[
-                _load_lesson(lesson_data, index)
-                for index, lesson_data in enumerate(lessons_data, start=1)
+                load_lesson(path.parent, lesson_id, tasks) for lesson_id in lessons_data
             ],
             chapter_id=_optional_string(data, "chapter_id"),
             chapter_title=_optional_string(data, "chapter_title"),
@@ -216,8 +206,15 @@ def load_sequences(
 ) -> list[Sequence]:
     """Lade alle Sequenzen eines Fachs in einer Jahrgangsstufe."""
     directory = get_sequence_directory(root, grade_level, subject_id)
-    paths = sorted(directory.glob(f"*{SEQUENCE_FILE_SUFFIX}"))
-    return [load_sequence(root, grade_level, subject_id, path.stem) for path in paths]
+    legacy = list(directory.glob("*.toml"))
+    if legacy:
+        raise SequenceFileError(
+            f"Altes Sequenzformat in '{legacy[0]}'. Die neue Version benötigt Sequenzordner; eine automatische Migration ist nicht vorgesehen."
+        )
+    paths = sorted(directory.glob(f"*/{SEQUENCE_FILE_NAME}"))
+    return [
+        load_sequence(root, grade_level, subject_id, path.parent.name) for path in paths
+    ]
 
 
 def load_sequence_library(root: Path) -> list[Sequence]:
@@ -256,6 +253,7 @@ def load_sequence_library(root: Path) -> list[Sequence]:
 
 def save_sequence(root: Path, sequence: Sequence) -> None:
     """Speichere eine Sequenz am aus ihren IDs abgeleiteten Pfad."""
+    sequence.__post_init__()
     path = get_sequence_path(
         root,
         sequence.grade_level,
@@ -267,16 +265,8 @@ def save_sequence(root: Path, sequence: Sequence) -> None:
         "curriculum_section_id": sequence.curriculum_section_id,
         "subject_id": sequence.subject_id,
         "grade_level": sequence.grade_level,
-        "title": sequence.title,
-        "lessons": [
-            {
-                "id": lesson.id,
-                "title": lesson.title,
-                "tasks": lesson.tasks,
-                "notes": lesson.notes,
-            }
-            for lesson in sequence.lessons
-        ],
+        "titel": sequence.title,
+        "stunden": [lesson.id for lesson in sequence.lessons],
     }
 
     if sequence.recommended_lesson_count is not None:
@@ -286,23 +276,21 @@ def save_sequence(root: Path, sequence: Sequence) -> None:
         data["chapter_id"] = sequence.chapter_id
         data["chapter_title"] = sequence.chapter_title
 
+    # Gleiche IDs bezeichnen dieselbe Aufgabe, auch über mehrere Stunden hinweg.
+    tasks = {}
+    for lesson in sequence.lessons:
+        lesson.__post_init__()
+        for phase in lesson.phases:
+            phase.__post_init__()
+        for task in lesson.tasks:
+            task.__post_init__()
+            if task.id in tasks and tasks[task.id] != task:
+                raise ValueError(f"Widersprüchliche Inhalte für Aufgabe '{task.id}'.")
+            tasks[task.id] = task
+    path.parent.mkdir(parents=True, exist_ok=True)
+    for lesson in sequence.lessons:
+        save_lesson(path.parent, lesson)
     save_toml(path, data)
-
-
-def _load_lesson(data: Any, index: int) -> Lesson:
-    if not isinstance(data, dict):
-        raise TypeError(f"Stunde {index} muss eine TOML-Tabelle sein.")
-
-    tasks = data.get("tasks")
-    if not isinstance(tasks, list) or any(not isinstance(task, str) for task in tasks):
-        raise TypeError(f"'tasks' von Stunde {index} muss eine Liste aus Texten sein.")
-
-    return Lesson(
-        id=_require_string(data, "id"),
-        title=_require_string(data, "title"),
-        tasks=tasks,
-        notes=_require_string(data, "notes"),
-    )
 
 
 def _require_string(data: dict[str, Any], key: str) -> str:

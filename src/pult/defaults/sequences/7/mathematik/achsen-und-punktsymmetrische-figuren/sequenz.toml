@@ -1,0 +1,22 @@
+id = "achsen-und-punktsymmetrische-figuren"
+curriculum_section_id = "M7 2.1"
+subject_id = "mathematik"
+grade_level = 7
+chapter_id = "M7 2"
+chapter_title = "Geometrische Figuren: Symmetrie und Winkel"
+recommended_lesson_count = 12
+titel = "Achsen- und punktsymmetrische Figuren"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+]

@@ -2,7 +2,6 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal
 from textual.widgets import Button, Label, Select, Static
 
 from pult.config import AppConfig
@@ -13,6 +12,7 @@ from pult.screens.base_screen import PultModalScreen
 from pult.screens.edit_periods_screen import EditPeriodsScreen
 from pult.services.settings import get_editor_options, update_settings
 from pult.widgets.form_dialog import FormDialog, FormFields
+from pult.widgets.scrolling import Horizontal
 
 
 class SettingsScreen(PultModalScreen[AppConfig | None]):

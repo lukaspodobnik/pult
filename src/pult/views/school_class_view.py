@@ -1,10 +1,9 @@
+from rich.text import Text
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.widgets import Rule, Static
 
 from pult.presentation import (
     NO_NEXT_LESSON,
-    UNTITLED_LESSON,
     format_date,
 )
 from pult.progress.queries import (
@@ -14,6 +13,8 @@ from pult.progress.queries import (
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
 from pult.widgets.lesson_progress_bar import LessonProgressBar
+from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
+from pult.widgets.sequence_preview import SequencePreview
 
 
 class SequenceProgressBlock(Vertical):
@@ -90,23 +91,23 @@ class SubjectProgressBlock(Vertical):
                 classes="subject-progress-bar",
             )
         with Horizontal(classes="class-dashboard"):
-            sequences = VerticalScroll(classes="sequence-list")
-            sequences.border_title = "SEQUENZEN"
-            sequences.can_focus = False
-            with sequences:
-                for sequence in self.summary.sequences:
-                    yield SequenceProgressBlock(sequence)
             with Vertical(classes="class-details"):
-                next_lesson = VerticalScroll(classes="class-next-lesson")
-                next_lesson.border_title = "NÄCHSTE STUNDE"
-                next_lesson.can_focus = False
-                with next_lesson:
-                    yield from self._compose_next_lesson()
+                sequences = VerticalScroll(classes="sequence-list")
+                sequences.border_title = "SEQUENZEN"
+                sequences.can_focus = False
+                with sequences:
+                    for sequence in self.summary.sequences:
+                        yield SequenceProgressBlock(sequence)
                 capacity = Vertical(classes="lesson-capacity")
                 capacity.border_title = "STUNDENBILANZ"
                 with capacity:
                     with Vertical(classes="capacity-summary"):
                         yield from self._compose_capacity()
+            next_lesson = VerticalScroll(classes="class-next-lesson")
+            next_lesson.border_title = "NÄCHSTE STUNDE"
+            next_lesson.can_focus = False
+            with next_lesson:
+                yield from self._compose_next_lesson()
 
     @property
     def _total_label(self) -> str:
@@ -145,22 +146,17 @@ class SubjectProgressBlock(Vertical):
 
     def _compose_next_lesson(self) -> ComposeResult:
         for name, text in self._next_lesson_texts().items():
-            classes = name
-            if name in {"next-lesson-tasks", "next-lesson-notes"}:
-                classes += " next-lesson-details"
-            widget = Static(text, classes=classes)
+            widget = Static(text, classes=name, markup=False)
             widget.display = bool(text)
             yield widget
 
-    def _next_lesson_texts(self) -> dict[str, str]:
-        texts: dict[str, str] = dict.fromkeys(
+    def _next_lesson_texts(self) -> dict[str, str | Text]:
+        texts: dict[str, str | Text] = dict.fromkeys(
             (
                 "next-lesson-empty",
-                "next-lesson-title",
                 "next-lesson-sequence",
                 "next-lesson-date",
-                "next-lesson-tasks",
-                "next-lesson-notes",
+                "next-lesson-preview",
             ),
             "",
         )
@@ -174,20 +170,16 @@ class SubjectProgressBlock(Vertical):
             for sequence in self.summary.sequences
             if sequence.sequence_id == planned_lesson.sequence_id
         )
-        lesson_title = planned_lesson.lesson.title or UNTITLED_LESSON
-        texts["next-lesson-sequence"] = sequence.title
-        texts["next-lesson-title"] = (
-            f"{sequence.curriculum_section_id} · {lesson_title}"
+        texts["next-lesson-sequence"] = (
+            f"{sequence.curriculum_section_id} · {sequence.title}"
         )
         texts["next-lesson-date"] = (
-            f"{format_date(planned_lesson.date)} · {planned_lesson.period}. Stunde"
+            f"{format_date(planned_lesson.date, with_weekday=True)} · "
+            f"{planned_lesson.period}. Stunde"
         )
-        if planned_lesson.lesson.tasks:
-            texts["next-lesson-tasks"] = "Aufgaben: " + " · ".join(
-                planned_lesson.lesson.tasks
-            )
-        if planned_lesson.lesson.notes:
-            texts["next-lesson-notes"] = f"Notizen: {planned_lesson.lesson.notes}"
+        texts["next-lesson-preview"] = SequencePreview.render_lesson(
+            planned_lesson.lesson
+        )
         return texts
 
     async def update_data(

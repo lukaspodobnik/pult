@@ -1,0 +1,23 @@
+id = "aufstellen-und-interpretieren-von-termen"
+curriculum_section_id = "M7 1.1"
+subject_id = "mathematik"
+grade_level = 7
+chapter_id = "M7 1"
+chapter_title = "Terme mit Variablen"
+recommended_lesson_count = 13
+titel = "Aufstellen und Interpretieren von Termen"
+stunden = [
+    "stunde-01",
+    "stunde-02",
+    "stunde-03",
+    "stunde-04",
+    "stunde-05",
+    "stunde-06",
+    "stunde-07",
+    "stunde-08",
+    "stunde-09",
+    "stunde-10",
+    "stunde-11",
+    "stunde-12",
+    "stunde-13",
+]

@@ -1,7 +1,6 @@
 from datetime import date
 
 from textual.app import ComposeResult
-from textual.containers import VerticalScroll
 from textual.widgets import Static
 
 from pult.curriculum.sequence import Sequence
@@ -15,7 +14,7 @@ from pult.progress.queries import (
     PlannedLesson,
 )
 from pult.school.subject import Subject
-from pult.widgets.capped_text import CappedText
+from pult.widgets.scrolling import VerticalScroll
 
 
 class NextLessonPanel(VerticalScroll, can_focus=False):
@@ -37,14 +36,9 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
 
     def compose(self) -> ComposeResult:
         for name, text in self._texts().items():
-            widget = (
-                CappedText(
-                    text, lines=2 if name == "next-lesson-name" else 1, classes=name
-                )
-                if name
-                in {"next-lesson-heading", "next-lesson-name", "next-lesson-sequence"}
-                else Static(text, classes=name, markup=False)
-            )
+            if name == "next-lesson-occurrence":
+                yield Static(classes="next-lesson-spacer")
+            widget = Static(text, classes=name, markup=False)
             widget.display = bool(text)
             yield widget
 
@@ -72,9 +66,8 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
                 "next-lesson-heading",
                 "next-lesson-sequence",
                 "next-lesson-name",
-                "next-lesson-occurrence",
                 "next-lesson-tasks",
-                "next-lesson-notes",
+                "next-lesson-occurrence",
             ),
             "",
         )
@@ -88,19 +81,15 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
         texts["next-lesson-heading"] = (
             f"{planned_lesson.school_class_id} · {subject.name}"
         )
-        texts["next-lesson-sequence"] = (
-            f"{sequence.curriculum_section_id} · {sequence.title}"
-        )
+        texts["next-lesson-sequence"] = f"{sequence.title}"
         texts["next-lesson-name"] = planned_lesson.lesson.title or UNTITLED_LESSON
         texts["next-lesson-occurrence"] = self._format_planned_occurrence(
             planned_lesson
         )
         if planned_lesson.lesson.tasks:
-            texts["next-lesson-tasks"] = "Aufgaben: " + " · ".join(
-                planned_lesson.lesson.tasks
+            texts["next-lesson-tasks"] = (
+                "Aufgaben: " + planned_lesson.lesson.task_summary
             )
-        if planned_lesson.lesson.notes:
-            texts["next-lesson-notes"] = "Notizen: " + planned_lesson.lesson.notes
         return texts
 
     def _get_sequence(self, planned_lesson: PlannedLesson) -> Sequence:

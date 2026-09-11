@@ -2,11 +2,11 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.containers import Horizontal
 from textual.widgets import Button, Input, Label
 
 from pult.screens.base_screen import PultModalScreen
 from pult.widgets.form_dialog import FormDialog, FormFields
+from pult.widgets.scrolling import Horizontal
 
 
 class CancelLessonScreen(PultModalScreen[str | None]):
