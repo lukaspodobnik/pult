@@ -64,7 +64,7 @@ SequencePreview > .option-list--option-highlighted,
 SequencePreview > .option-list--option-hover-highlighted,
 SequencePreview > .option-list--option-hover {
     color: $text;
-    background: $primary 8%;
+    background: transparent;
     text-style: none;
 }
 
@@ -72,5 +72,12 @@ SequencePreview:focus > .option-list--option-highlighted,
 SequencePreview:focus > .option-list--option-hover-highlighted {
     color: $text;
     background: $primary 16%;
+    text-style: none;
+}
+
+SequencePreview:blur > .option-list--option-highlighted,
+SequencePreview:blur > .option-list--option-hover-highlighted,
+SequencePreview:blur > .option-list--option-hover {
+    background: transparent;
     text-style: none;
 }

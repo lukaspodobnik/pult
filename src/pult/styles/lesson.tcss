@@ -1,8 +1,6 @@
-LessonScreen { padding: 1 0; }
-LessonScreen #lesson-workspace { height: 1fr; padding: 0 1; }
+LessonScreen { padding: 1 0 0 0; }
+LessonScreen #lesson-workspace { height: 1fr; padding: 0 1; margin-bottom: 1; }
 LessonScreen #lesson-navigation { width: 28; height: 1fr; margin-right: 1; }
-LessonScreen #lesson-sequence { height: auto; margin-bottom: 1; padding: 1; border: round $primary; background: $surface; }
-LessonScreen #lesson-context { height: auto; color: $text-muted; }
 LessonScreen #lesson-list-frame { height: 1fr; padding: 1; border: round $primary; background: $surface; }
 LessonScreen #lesson-list { height: 1fr; border: none; background: transparent; padding: 0; }
 LessonScreen #lesson-list:focus { border: none; outline: none; background-tint: transparent; }
@@ -21,7 +19,7 @@ LessonMaterial { height: auto; overflow: hidden hidden; }
 LessonMaterial Markdown { height: auto; background: transparent; margin: 0; padding: 0; }
 LessonMaterial MarkdownH1 { background: transparent; border: none; color: $text-accent; content-align: left middle; }
 LessonMaterial MarkdownH2 { color: $text-accent; }
-.lesson-task-title { height: auto; text-style: bold; color: $text-accent; border-top: solid $foreground 18%; padding-top: 1; margin-bottom: 1; }
+.lesson-task-divider { height: 1; color: $foreground 18%; margin: 0 0 1 0; }
 .lesson-solution-title { height: 1; color: $text-muted; margin: 1 0; }
 .formula, .figure { overflow: hidden hidden; margin-bottom: 1; }
 .formula > Widget, .figure > Widget { width: 100%; height: 100%; overflow: hidden hidden; }
@@ -30,3 +28,7 @@ LessonMaterial MarkdownH2 { color: $text-accent; }
 .lesson-inline-row { height: auto; overflow: hidden hidden; align-vertical: middle; }
 .lesson-inline-row .formula { margin: 0 1; }
 .lesson-inline-text { height: auto; }
+
+LessonScreen .lesson-phase-title { height: auto; color: $text-accent; text-style: bold; margin-bottom: 1; }
+LessonScreen .lesson-phase-body { height: auto; }
+LessonScreen .lesson-phase-divider { height: 1; margin: 1 0 0 0; color: $foreground 18%; }

@@ -6,19 +6,18 @@ import subprocess
 from pathlib import Path
 from typing import ClassVar
 
-from rich.text import Text
 from textual import on
-from textual.widgets import Static
+from textual.widgets import Rule, Static
 from textual.widgets.option_list import Option
 
 from pult.curriculum.material import Lesson, material_path
 from pult.curriculum.sequence import Sequence, get_sequence_path, load_sequence
-from pult.school.subject import load_subjects
 from pult.screens.base_screen import PultScreen
 from pult.screens.select_task_file_screen import SelectTaskFileScreen
 from pult.widgets.footer import PultFooter
 from pult.widgets.lesson_material import LessonMaterial
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical, VerticalScroll
+from pult.widgets.sequence_context import SequenceContext
 
 
 class LessonPane(VerticalScroll):
@@ -82,10 +81,8 @@ class LessonScreen(PultScreen[Sequence]):
         if lesson is None or not lesson.tasks:
             yield Static("Noch keine Aufgaben zugeordnet.", classes="lesson-empty")
             return
-        for number, task in enumerate(lesson.tasks, 1):
-            yield Static(
-                f"{number} · {task.id}", classes="lesson-task-title", markup=False
-            )
+        for task in lesson.tasks:
+            yield Rule(classes="lesson-task-divider")
             yield self.source(task.text, "aufgaben", task.id, "aufgabe.md")
             if task.solution is not None:
                 yield Static("Lösung", classes="lesson-solution-title")
@@ -98,26 +95,26 @@ class LessonScreen(PultScreen[Sequence]):
             else "Noch keine Ziele eingetragen."
         )
 
-    def phases(self) -> Text:
-        text = Text()
-        for index, phase in enumerate(self.lesson.phases if self.lesson else []):
-            if index:
-                text.append("\n\n")
-            text.append(phase.title, style="bold")
-            text.append("\n\n" + phase.text)
-        return text or Text("Noch kein Verlauf eingetragen.")
-
-    def context(self) -> str:
-        subjects = {
-            subject.id: subject.name for subject in load_subjects(self.app_config.root)
-        }
-        return f"{subjects.get(self.sequence.subject_id, self.sequence.subject_id)}\n{self.sequence.grade_level}. Jahrgang\n\n{self.sequence.title}"
+    def phases(self):
+        phases = self.lesson.phases if self.lesson else []
+        if not phases:
+            yield Static("Noch kein Verlauf eingetragen.", classes="lesson-empty")
+        for index, phase in enumerate(phases, 1):
+            if index > 1:
+                yield Rule(classes="lesson-phase-divider")
+            yield Static(
+                phase.title,
+                classes="lesson-phase-title",
+                markup=False,
+            )
+            yield Static(phase.text, classes="lesson-phase-body", markup=False)
 
     def compose(self):
         with Horizontal(id="lesson-workspace"):
             with Vertical(id="lesson-navigation"):
-                with Vertical(id="lesson-sequence"):
-                    yield Static(self.context(), id="lesson-context", markup=False)
+                yield SequenceContext(
+                    self.sequence, self.app_config.root, id="lesson-sequence"
+                )
                 with Vertical(id="lesson-list-frame"):
                     yield OptionList(
                         *(
@@ -135,7 +132,8 @@ class LessonScreen(PultScreen[Sequence]):
                 with LessonPane(id="lesson-goals"):
                     yield Static(self.goals(), id="lesson-goals-text", markup=False)
                 with LessonPane(id="lesson-schedule"):
-                    yield Static(self.phases(), id="lesson-phases-text")
+                    with Vertical(id="lesson-phases-text"):
+                        yield from self.phases()
         yield PultFooter()
 
     def on_mount(self):
@@ -164,14 +162,18 @@ class LessonScreen(PultScreen[Sequence]):
             pane.border_subtitle = label
         listing = self.query_one("#lesson-list", OptionList)
         if self.lesson:
-            listing.highlighted = listing.get_option_index(self.lesson.id)
+            with self.prevent(OptionList.OptionHighlighted):
+                listing.highlighted = listing.get_option_index(self.lesson.id)
         listing.focus()
 
-    @on(OptionList.OptionSelected, "#lesson-list")
-    async def select_lesson(self, event: OptionList.OptionSelected):
+    @on(OptionList.OptionHighlighted, "#lesson-list")
+    async def select_lesson(self, event: OptionList.OptionHighlighted):
         event.stop()
-        if event.option.id == self.lesson_id:
-            self.update_view()
+        listing = self.query_one("#lesson-list", OptionList)
+        if (
+            event.option_index != listing.highlighted
+            or event.option.id == self.lesson_id
+        ):
             return
         self.lesson_id = str(event.option.id)
         self.show_tasks = False
@@ -187,7 +189,9 @@ class LessonScreen(PultScreen[Sequence]):
             await pane.mount(*widgets)
             pane.scroll_home(animate=False)
         self.query_one("#lesson-goals-text", Static).update(self.goals())
-        self.query_one("#lesson-phases-text", Static).update(self.phases())
+        phases = self.query_one("#lesson-phases-text", Vertical)
+        await phases.remove_children()
+        await phases.mount(*self.phases())
         for selector in ["lesson-goals", "lesson-schedule"]:
             self.query_one("#" + selector, LessonPane).scroll_home(animate=False)
         self.update_view()
@@ -204,7 +208,9 @@ class LessonScreen(PultScreen[Sequence]):
             if self.lesson is None or not self.lesson.tasks:
                 self.notify("Dieser Stunde sind noch keine Aufgaben zugeordnet.")
                 return
-            self.app.push_screen(SelectTaskFileScreen(self.lesson.tasks), self.task_file_selected)
+            self.app.push_screen(
+                SelectTaskFileScreen(self.lesson.tasks), self.task_file_selected
+            )
             return
         await self.edit("vorbereitung.md")
 
@@ -269,10 +275,11 @@ class LessonScreen(PultScreen[Sequence]):
         if self.lesson is None:
             self.lesson_id = updated.lessons[0].id if updated.lessons else ""
         listing = self.query_one("#lesson-list", OptionList)
-        listing.clear_options()
-        listing.add_options(
-            Option(f"{i:02}  {item.title}", id=item.id)
-            for i, item in enumerate(updated.lessons, 1)
-        )
-        self.query_one("#lesson-context", Static).update(self.context())
+        with self.prevent(OptionList.OptionHighlighted):
+            listing.clear_options()
+            listing.add_options(
+                Option(f"{i:02}  {item.title}", id=item.id)
+                for i, item in enumerate(updated.lessons, 1)
+            )
+        self.query_one(SequenceContext).update_sequence(self.sequence)
         await self.refresh_contents()

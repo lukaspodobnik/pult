@@ -55,8 +55,7 @@ def test_class_updates_keep_blocks_and_clear_optional_content(
             first = block.query_one(SequenceProgressBlock)
             bar = first.query_one(LessonProgressBar)
             title = first.query_one(".progress-title", Static)
-            assert block.query_one(".next-lesson-tasks").display
-            assert not block.query_one(".next-lesson-material").display
+            assert block.query_one(".next-lesson-preview").display
             summary = summaries[0]
             completed = replace(
                 summary.sequences[0], completed_lesson_count=1, is_active=False
@@ -79,7 +78,7 @@ def test_class_updates_keep_blocks_and_clear_optional_content(
             assert not first.has_class("active")
             assert len(block.query(SequenceProgressBlock)) == 1
             assert block.query_one(".next-lesson-empty").display
-            for name in ("title", "date", "tasks", "material"):
+            for name in ("sequence", "date", "preview"):
                 assert not block.query_one(f".next-lesson-{name}").display
             assert block.query_one(".lesson-balance").has_class("negative")
 
@@ -101,7 +100,7 @@ def test_class_updates_keep_blocks_and_clear_optional_content(
             assert len(view.query(SubjectProgressBlock)) == 1
             assert len(block.query(SequenceProgressBlock)) == 2
             assert not first.query_one(".empty-sequence-hint").display
-            assert block.query_one(".next-lesson-tasks").display
+            assert block.query_one(".next-lesson-preview").display
             assert not block.query_one(".next-lesson-empty").display
             assert not block.query_one(".lesson-balance").has_class("negative")
 

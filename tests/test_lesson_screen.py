@@ -70,7 +70,7 @@ def test_viewer_opens_selected_lesson_and_edits_then_returns(tmp_path, monkeypat
             await app.workers.wait_for_complete()
             assert viewer.query_one("#lesson-tasks").display
             children = list(viewer.query_one("#lesson-tasks").children)
-            assert children[0].has_class("lesson-task-title")
+            assert children[0].has_class("lesson-task-divider")
             assert isinstance(children[1], LessonMaterial)
             assert children[2].has_class("lesson-solution-title")
             assert isinstance(children[3], LessonMaterial)
@@ -135,7 +135,7 @@ def test_viewer_opens_selected_lesson_and_edits_then_returns(tmp_path, monkeypat
             viewer = app.screen
             listing = viewer.query_one("#lesson-list", OptionList)
             listing.focus()
-            await pilot.press("up", "enter")
+            await pilot.press("up")
             await pilot.pause()
             await app.workers.wait_for_complete()
             assert viewer.lesson.id == "anteile"
@@ -206,8 +206,12 @@ def test_edit_task_text_and_missing_solution(tmp_path, monkeypatch):
 
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    sequence = load_sequence(Path(__file__).parents[1] / "examples/unterricht", 6,
-                             "mathematik", "formatbeispiel")
+    sequence = load_sequence(
+        Path(__file__).parents[1] / "examples/unterricht",
+        6,
+        "mathematik",
+        "formatbeispiel",
+    )
     sequence.lessons[0].tasks[0].solution = None
     sequence.lessons.append(replace(sequence.lessons[0], id="zweite"))
     save_sequence(tmp_path, sequence)
@@ -216,7 +220,7 @@ def test_edit_task_text_and_missing_solution(tmp_path, monkeypatch):
     async def run():
         app = PultApp()
         async with app.run_test(size=(180, 52)) as pilot:
-            await pilot.pause(.5)
+            await pilot.pause(0.5)
             viewer = LessonScreen(sequence, sequence.lessons[0].id)
             await app.push_screen(viewer)
             await pilot.pause()
@@ -229,13 +233,17 @@ def test_edit_task_text_and_missing_solution(tmp_path, monkeypatch):
                 path.write_text("Neu: " + path.name)
                 return SimpleNamespace(returncode=0)
 
-            monkeypatch.setattr("pult.screens.lesson_screen.subprocess", SimpleNamespace(run=editor))
+            monkeypatch.setattr(
+                "pult.screens.lesson_screen.subprocess", SimpleNamespace(run=editor)
+            )
             await pilot.press("space", "e")
             assert isinstance(app.screen, SelectTaskFileScreen)
             await pilot.press("enter", "escape", "escape")
             assert app.screen is viewer
             assert not calls
-            solution = viewer.directory / "aufgaben" / viewer.lesson.tasks[0].id / "loesung.md"
+            solution = (
+                viewer.directory / "aufgaben" / viewer.lesson.tasks[0].id / "loesung.md"
+            )
             assert not solution.exists()
             await pilot.press("e", "enter", "enter")
             await pilot.pause()
@@ -250,7 +258,9 @@ def test_edit_task_text_and_missing_solution(tmp_path, monkeypatch):
             assert app.screen is viewer
             assert calls[-1] == solution
             assert viewer.lesson.tasks[0].solution == "Neu: loesung.md"
-            assert any(m.source == "Neu: loesung.md" for m in viewer.query(LessonMaterial))
+            assert any(
+                m.source == "Neu: loesung.md" for m in viewer.query(LessonMaterial)
+            )
             await pilot.press("escape")
 
     loop = asyncio.new_event_loop()

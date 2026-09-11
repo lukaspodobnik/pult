@@ -64,8 +64,9 @@ class SequencePreview(OptionList):
         return text
 
     @staticmethod
-    def render_lesson(lesson: Lesson, index: int) -> Text:
-        text = Text(f"{index}. Stunde · {lesson.title or UNTITLED_LESSON}\n", style="")
+    def render_lesson(lesson: Lesson, index: int | None = None) -> Text:
+        prefix = f"{index}. Stunde · " if index is not None else ""
+        text = Text(f"{prefix}{lesson.title or UNTITLED_LESSON}\n", style="")
         text.stylize("bold", 0, len(text))
         for label, values in [
             ("Aufgaben", [task.id for task in lesson.tasks]),

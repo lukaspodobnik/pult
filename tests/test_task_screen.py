@@ -8,9 +8,11 @@ from textual.widgets import OptionList
 
 from pult.app import PultApp
 from pult.curriculum.sequence import load_sequence, save_sequence
+from pult.screens.lesson_screen import LessonScreen
 from pult.screens.sequence_library_screen import SequenceLibraryScreen
 from pult.screens.task_screen import TaskScreen
 from pult.widgets.lesson_material import LessonMaterial
+from pult.widgets.sequence_context import SequenceContext
 from pult.widgets.sequence_preview import SequencePreview
 from pult.widgets.sequence_tree import SequenceTree
 
@@ -18,8 +20,12 @@ from pult.widgets.sequence_tree import SequenceTree
 def test_task_inventory_edit_and_return(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    sequence = load_sequence(Path(__file__).parents[1] / "examples/unterricht",
-                             6, "mathematik", "formatbeispiel")
+    sequence = load_sequence(
+        Path(__file__).parents[1] / "examples/unterricht",
+        6,
+        "mathematik",
+        "formatbeispiel",
+    )
     save_sequence(tmp_path, sequence)
     directory = tmp_path / "sequences/6/mathematik/formatbeispiel"
     extra = directory / "aufgaben/zusatz"
@@ -29,7 +35,7 @@ def test_task_inventory_edit_and_return(tmp_path, monkeypatch):
     async def run():
         app = PultApp()
         async with app.run_test(size=(180, 52)) as pilot:
-            await pilot.pause(.5)
+            await pilot.pause(0.5)
             library = SequenceLibraryScreen()
             await app.push_screen(library)
             await pilot.pause()
@@ -41,6 +47,33 @@ def test_task_inventory_edit_and_return(tmp_path, monkeypatch):
             await pilot.pause()
             screen = app.screen
             assert isinstance(screen, TaskScreen)
+            context = screen.query_one(SequenceContext)
+            assert screen.query_one("PultFooter").region.bottom == 52
+            assert screen.query_one("#task-content").region.bottom == 50
+            context_region = context.region
+            context_text = context.content().plain
+            assert context_text.startswith("Mathematik\n\n")
+            assert "Klasse 6" not in context_text
+            assert "Lehrplanabschnitt" not in context_text
+            assert (
+                f"{sequence.curriculum_section_id} · {sequence.title}" in context_text
+            )
+            viewer = LessonScreen(sequence, sequence.lessons[0].id)
+            await app.push_screen(viewer)
+            await pilot.pause()
+            assert viewer.query_one("PultFooter").region.bottom == 52
+            assert viewer.query_one("#lesson-preparation").region.bottom == 50
+            assert viewer.query_one(SequenceContext).region == context_region
+            assert viewer.query_one(SequenceContext).content().plain == context_text
+            assert len(viewer.query(".lesson-phase-title")) == len(
+                sequence.lessons[0].phases
+            )
+            assert len(viewer.query(".lesson-phase-divider")) == max(
+                0, len(sequence.lessons[0].phases) - 1
+            )
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.screen is screen
             picker = screen.query_one(OptionList)
             assert picker.option_count == 2
             assert "Noch nicht zugeordnet" in str(picker.get_option("zusatz").prompt)
@@ -49,9 +82,13 @@ def test_task_inventory_edit_and_return(tmp_path, monkeypatch):
             assert screen.task_id == "zusatz"
             assert screen.query_one(LessonMaterial).source == "Private Zusatzaufgabe"
             assert screen.query_one("#task-content").region.x > picker.region.x
-            assert len(screen.focus_chain) == 2
-            await pilot.press("tab")
-            assert app.focused.id == "task-content"
+            assert screen.focus_chain == [picker]
+            assert picker.styles.border.top == context.styles.border.top
+            assert picker.styles.background_tint.a == 0
+            await pilot.press("tab", "shift+tab")
+            assert app.focused is picker
+            await pilot.click("#task-content")
+            assert app.focused is picker
             monkeypatch.setattr(app, "suspend", nullcontext)
 
             def editor(command, *, check):
@@ -61,7 +98,9 @@ def test_task_inventory_edit_and_return(tmp_path, monkeypatch):
                 path.write_text("Neue Lösung")
                 return SimpleNamespace(returncode=0)
 
-            monkeypatch.setattr("pult.screens.task_screen.subprocess", SimpleNamespace(run=editor))
+            monkeypatch.setattr(
+                "pult.screens.task_screen.subprocess", SimpleNamespace(run=editor)
+            )
             await pilot.press("e", "down", "enter")
             await pilot.pause()
             assert app.screen is screen
@@ -76,6 +115,7 @@ def test_task_inventory_edit_and_return(tmp_path, monkeypatch):
             assert preview.selected_lesson.id == original
             # Der identische Zugang funktioniert auch aus dem Sequenzbaum.
             tree = library.query_one(SequenceTree)
+
             def find(node):
                 if node.data and node.data.id == sequence.id:
                     return node
@@ -83,6 +123,7 @@ def test_task_inventory_edit_and_return(tmp_path, monkeypatch):
                     result = find(child)
                     if result:
                         return result
+
             node = find(tree.root)
             assert node is not None
             parent = node.parent

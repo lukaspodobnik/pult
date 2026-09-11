@@ -13,24 +13,34 @@ from textual.widgets.option_list import Option
 from pult.curriculum.material import Task, material_path, validate_id
 from pult.curriculum.sequence import Sequence, load_sequence
 from pult.screens.base_screen import PultScreen
+from pult.screens.create_task_screen import CreateTaskScreen
 from pult.screens.lesson_screen import LessonPane
 from pult.screens.select_task_file_screen import SelectTaskFileScreen
+from pult.services.task_creation import create_task_files
 from pult.widgets.footer import PultFooter
 from pult.widgets.lesson_material import LessonMaterial
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
+from pult.widgets.sequence_context import SequenceContext
 
 
 class TaskScreen(PultScreen[Sequence]):
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
         ("e", "edit_task", "Bearbeiten"),
+        ("n", "create_task", "Neue Aufgabe"),
     ]
     DEFAULT_CSS = """
-    TaskScreen { padding: 1 0; }
-    TaskScreen #task-workspace { height: 1fr; padding: 0 1; }
+    TaskScreen { padding: 1 0 0 0; }
+    TaskScreen #task-workspace { height: 1fr; padding: 0 1; margin-bottom: 1; }
     TaskScreen #task-navigation { width: 28; margin-right: 1; }
-    TaskScreen #task-sequence { height: auto; padding: 1; margin-bottom: 1; border: round $primary; }
     TaskScreen #task-list { height: 1fr; border: round $primary; }
+    TaskScreen #task-list:focus {
+        border: round $primary;
+        border-title-color: $text;
+        border-title-style: none;
+        background-tint: transparent;
+        outline: none;
+    }
     TaskScreen #task-content { width: 1fr; }
     """
 
@@ -68,12 +78,19 @@ class TaskScreen(PultScreen[Sequence]):
     def selected_task(self):
         return next((task for task in self.tasks if task.id == self.task_id), None)
 
+    @staticmethod
+    def task_title(task: Task) -> str:
+        for line in task.text.splitlines():
+            if line.startswith("# ") and line[2:].strip():
+                return line[2:].strip()
+        return task.id
+
     def options(self):
         assigned = {
             task.id for lesson in self.sequence.lessons for task in lesson.tasks
         }
         for task in self.tasks:
-            label = Text(task.id)
+            label = Text(self.task_title(task))
             if task.id not in assigned:
                 label.append("\nNoch nicht zugeordnet", style="dim")
             yield Option(label, id=task.id)
@@ -101,16 +118,21 @@ class TaskScreen(PultScreen[Sequence]):
     def compose(self):
         with Horizontal(id="task-workspace"):
             with Vertical(id="task-navigation"):
-                yield Static(self.sequence.title, id="task-sequence", markup=False)
+                yield SequenceContext(
+                    self.sequence, self.app_config.root, id="task-sequence"
+                )
                 yield OptionList(*self.options(), id="task-list")
             with LessonPane(id="task-content"):
                 yield from self.material()
         yield PultFooter()
 
     def on_mount(self):
+        self.query_one("#task-content", LessonPane).can_focus = False
         self.query_one("#task-sequence").border_title = "SEQUENZ"
         self.query_one("#task-list").border_title = "AUFGABEN"
-        self.query_one("#task-content").border_title = self.task_id or "AUFGABEN"
+        self.query_one("#task-content").border_title = (
+            self.task_title(self.selected_task) if self.selected_task else "AUFGABEN"
+        )
         self.query_one(OptionList).focus()
 
     @on(OptionList.OptionHighlighted, "#task-list")
@@ -125,7 +147,9 @@ class TaskScreen(PultScreen[Sequence]):
         pane = self.query_one("#task-content", LessonPane)
         await pane.remove_children()
         await pane.mount(*self.material())
-        pane.border_title = self.task_id or "AUFGABEN"
+        pane.border_title = (
+            self.task_title(self.selected_task) if self.selected_task else "AUFGABEN"
+        )
         pane.scroll_home(animate=False)
 
     def action_close(self):
@@ -134,8 +158,41 @@ class TaskScreen(PultScreen[Sequence]):
     def action_edit_task(self):
         if self.selected_task is not None:
             self.app.push_screen(
-                SelectTaskFileScreen([self.selected_task], choose_file=True), self.edit_file
+                SelectTaskFileScreen([self.selected_task], choose_file=True),
+                self.edit_file,
             )
+
+    def action_create_task(self):
+        self.app.push_screen(CreateTaskScreen(), self.create_task)
+
+    async def create_task(self, title: str | None):
+        if title is None:
+            return
+        try:
+            command = shlex.split(self.app_config.editor)
+            if not command or shutil.which(command[0]) is None:
+                raise ValueError("Der konfigurierte Editor wurde nicht gefunden.")
+            task_id, paths = create_task_files(self.directory, title)
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+        self.task_id = task_id
+        try:
+            with self.app.suspend():
+                result = subprocess.run(
+                    [*command, *(str(path) for path in paths)], check=False
+                )
+            if result.returncode:
+                self.notify(
+                    f"Der Editor wurde mit Status {result.returncode} beendet.",
+                    severity="warning",
+                )
+        except OSError as error:
+            self.notify(
+                f"Die Aufgabe wurde angelegt, aber der Editor konnte nicht geöffnet werden: {error}",
+                severity="error",
+            )
+        await self.reload_tasks()
 
     async def edit_file(self, selection: tuple[str, str] | None):
         if selection is None:
@@ -155,6 +212,13 @@ class TaskScreen(PultScreen[Sequence]):
                     f"Der Editor wurde mit Status {result.returncode} beendet.",
                     severity="warning",
                 )
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+        await self.reload_tasks()
+
+    async def reload_tasks(self):
+        try:
             self.pult_app.require_sequence_library().invalidate()
             sequence = load_sequence(
                 self.app_config.root,
@@ -170,6 +234,7 @@ class TaskScreen(PultScreen[Sequence]):
             )
             return
         self.sequence, self.tasks = sequence, tasks
+        self.query_one(SequenceContext).update_sequence(sequence)
         if not any(task.id == self.task_id for task in tasks):
             self.task_id = tasks[0].id if tasks else None
         picker = self.query_one(OptionList)

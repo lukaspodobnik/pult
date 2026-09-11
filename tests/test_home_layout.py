@@ -4,7 +4,7 @@ from datetime import datetime, time
 import pytest
 from test_ui_integration import prepare_root
 from textual.events import MouseScrollDown
-from textual.widgets import DataTable, Header
+from textual.widgets import DataTable, Header, Static
 
 from pult.app import PultApp
 from pult.school.calendar import load_school_calendar
@@ -15,7 +15,6 @@ from pult.school.timetable import (
     save_timetable,
 )
 from pult.views.home_view import HomeView
-from pult.widgets.capped_text import CappedText
 from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
 from pult.widgets.dashboard.next_lesson import NextLessonPanel
 from pult.widgets.dashboard.timetable import TimetablePanel
@@ -145,16 +144,16 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert isinstance(app.focused, ViewPicker)
             await pilot.press("shift+tab")
             assert isinstance(app.focused, ManagementPicker)
-            title = next_lesson.query_one(".next-lesson-name", CappedText)
+            title = next_lesson.query_one(".next-lesson-name", Static)
             long_title = "Ein sehr langer Stundentitel mit vielen Wörtern " * 20
             title.update(long_title)
             await pilot.pause()
-            assert title.render().plain.endswith("…")
-            assert title.render().plain.count("\n") <= 1
+            assert title.region.height > 2
+            assert not next_lesson.query(".next-lesson-material")
             assert title.content == long_title
             app.save_screenshot("home.svg", path=str(tmp_path))
-            next_lesson.query_one(".next-lesson-material").update("Material\n" * 100)
-            next_lesson.query_one(".next-lesson-material").display = True
+            next_lesson.query_one(".next-lesson-tasks").update("Aufgabe\n" * 100)
+            next_lesson.query_one(".next-lesson-tasks").display = True
             await pilot.pause()
             assert next_lesson.max_scroll_y > 0
             assert next_lesson not in app.screen.focus_chain

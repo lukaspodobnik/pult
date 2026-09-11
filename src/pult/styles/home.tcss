@@ -155,7 +155,6 @@ HomeView .next-lesson-sequence,
 HomeView .next-lesson-name,
 HomeView .next-lesson-occurrence,
 HomeView .next-lesson-tasks,
-HomeView .next-lesson-material,
 HomeView .dashboard-empty {
     height: auto;
 }
@@ -238,11 +237,19 @@ HomeView .day-entry-lesson {
 }
 
 HomeView .next-lesson-name {
-    max-height: 2;
+    margin-top: 1;
 }
 
-HomeView .next-lesson-tasks,
-HomeView .next-lesson-material {
+HomeView .next-lesson-heading {
+    color: $text-accent;
+}
+
+HomeView .next-lesson-spacer {
+    height: 1fr;
+    min-height: 0;
+}
+
+HomeView .next-lesson-tasks {
     margin-top: 1;
 }
 

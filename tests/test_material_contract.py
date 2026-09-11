@@ -183,7 +183,7 @@ def test_material_summary_in_home_and_class_view(planned_lesson, sequences, subj
         {subject.id: subject},
         {(s.grade_level, s.subject_id, s.id): s for s in sequences},
     )
-    assert home._texts()["next-lesson-material"] == "Material: Papierstreifen · Schere"
+    assert "next-lesson-material" not in home._texts()
     summary = SimpleNamespace(
         next_planned_lesson=planned_lesson,
         sequences=[
@@ -194,12 +194,10 @@ def test_material_summary_in_home_and_class_view(planned_lesson, sequences, subj
             )
         ],
     )
-    assert (
-        SubjectProgressBlock._next_lesson_texts(SimpleNamespace(summary=summary))[
-            "next-lesson-material"
-        ]
-        == "Material: Papierstreifen · Schere"
-    )
+    preview = SubjectProgressBlock._next_lesson_texts(SimpleNamespace(summary=summary))[
+        "next-lesson-preview"
+    ]
+    assert "Benötigtes Material\n• Papierstreifen\n• Schere" in preview.plain
 
 
 def test_neutral_example_matches_contract():
@@ -223,16 +221,24 @@ def test_empty_lesson_template_can_activate_suggested_phases(tmp_path):
     source = path.read_text()
     assert load_lesson(tmp_path, "neu", {}) == lesson
     assert load_toml(path) == {
-        "titel": "Neue Stunde", "ziele": [], "material": [], "aufgaben": [], "phasen": []
+        "titel": "Neue Stunde",
+        "ziele": [],
+        "material": [],
+        "aufgaben": [],
+        "phasen": [],
     }
     # Genau die im Dateihinweis beschriebenen Bearbeitungsschritte ausführen.
-    prefix, proposals = source.split('# [[phasen]]', 1)
-    active = prefix.replace('phasen = []\n', '') + '[[phasen]]'
-    active += '\n'.join(line.removeprefix('# ') for line in proposals.splitlines())
+    prefix, proposals = source.split("# [[phasen]]", 1)
+    active = prefix.replace("phasen = []\n", "") + "[[phasen]]"
+    active += "\n".join(line.removeprefix("# ") for line in proposals.splitlines())
     active = active.replace('text = ""', 'text = "Gemeinsam bearbeiten."')
     path.write_text(active)
     loaded = load_lesson(tmp_path, "neu", {})
     assert [phase.title for phase in loaded.phases] == [
-        "Einstieg", "Erarbeitung", "Übung", "Auswertung", "Schluss"
+        "Einstieg",
+        "Erarbeitung",
+        "Übung",
+        "Auswertung",
+        "Schluss",
     ]
     assert not (path.parent / "vorbereitung.md").exists()
