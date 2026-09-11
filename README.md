@@ -177,7 +177,7 @@ stehen Aufgabentext und Lösung. **Tab** wechselt zum scrollbaren Inhalt, **e**
 zur bisherigen Auswahl in der Sequenzbibliothek zurück. Die Liste ist nach Aufgaben-ID sortiert.
 
 - **Leertaste:** Vorbereitung / Aufgaben. Lösungen stehen direkt unter den Aufgaben.
-- **Tab:** Zwischen Stundenliste, Inhalt, Zielen und Verlauf wechseln.
+- Die Stundenliste ist der einzige Fokusbereich. Inhalte, Ziele und Verlauf lassen sich mit der Maus scrollen; die Rahmen bleiben ohne Fokushervorhebung.
 - **e:** Den sichtbaren Bereich bearbeiten: bei Vorbereitung direkt im konfigurierten
   Editor, bei Aufgaben nach Auswahl der Aufgabe und von Aufgabentext oder Lösung.
   Fehlende Vorbereitungs- und Lösungsdateien werden erst beim Bearbeiten angelegt.

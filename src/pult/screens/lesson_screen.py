@@ -139,6 +139,8 @@ class LessonScreen(PultScreen[Sequence]):
         yield PultFooter()
 
     def on_mount(self):
+        for pane in self.query(LessonPane):
+            pane.can_focus = False
         for selector, title in [
             ("lesson-sequence", "SEQUENZ"),
             ("lesson-list-frame", "STUNDEN"),
@@ -163,9 +165,7 @@ class LessonScreen(PultScreen[Sequence]):
         listing = self.query_one("#lesson-list", OptionList)
         if self.lesson:
             listing.highlighted = listing.get_option_index(self.lesson.id)
-        self.query_one(
-            "#lesson-tasks" if self.show_tasks else "#lesson-preparation"
-        ).focus()
+        listing.focus()
 
     @on(OptionList.OptionSelected, "#lesson-list")
     async def select_lesson(self, event: OptionList.OptionSelected):

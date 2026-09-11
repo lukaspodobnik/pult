@@ -5,6 +5,7 @@ LessonScreen #lesson-sequence { height: auto; margin-bottom: 1; padding: 1; bord
 LessonScreen #lesson-context { height: auto; color: $text-muted; }
 LessonScreen #lesson-list-frame { height: 1fr; padding: 1; border: round $primary; background: $surface; }
 LessonScreen #lesson-list { height: 1fr; border: none; background: transparent; padding: 0; }
+LessonScreen #lesson-list:focus { border: none; outline: none; background-tint: transparent; }
 LessonScreen #lesson-list > .option-list--option { padding: 0; }
 LessonScreen #lesson-list > .option-list--option-highlighted,
 LessonScreen #lesson-list > .option-list--option-hover-highlighted { background: $primary 16%; color: $text; text-style: bold; }

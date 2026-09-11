@@ -53,6 +53,9 @@ def test_viewer_opens_selected_lesson_and_edits_then_returns(tmp_path, monkeypat
             viewer = app.screen
             await app.workers.wait_for_complete()
             assert viewer.lesson.id == "zweite"
+            assert viewer.focus_chain == [viewer.query_one("#lesson-list")]
+            await pilot.press("tab")
+            assert app.focused is viewer.query_one("#lesson-list")
             assert viewer.query_one("#lesson-preparation").display
             assert not viewer.query_one("#lesson-tasks").display
             assert viewer.query_one("#lesson-goals").region.height == 14
