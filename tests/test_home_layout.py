@@ -186,14 +186,21 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
     asyncio.run(run())
 
 
-@pytest.mark.parametrize('hour, minute, expected', [(7, 50, None), (8, 0, 1), (8, 45, 2), (8, 50, 2), (9, 0, 2), (9, 45, None)])
+@pytest.mark.parametrize(
+    "hour, minute, expected",
+    [(7, 50, None), (8, 0, 1), (8, 45, 2), (8, 50, 2), (9, 0, 2), (9, 45, None)],
+)
 def test_timetable_highlights_next_period_during_break(hour, minute, expected):
     from pult.school.period import Period
     from pult.widgets.dashboard.timetable import get_current_timetable_position
 
     periods = [Period(1, time(8), time(8, 45)), Period(2, time(9), time(9, 45))]
-    assert get_current_timetable_position(periods, datetime(2026, 9, 14, hour, minute)) == ('monday', expected)
-    assert get_current_timetable_position(periods, datetime(2026, 9, 13, hour, minute)) == (None, None)
+    assert get_current_timetable_position(
+        periods, datetime(2026, 9, 14, hour, minute)
+    ) == ("monday", expected)
+    assert get_current_timetable_position(
+        periods, datetime(2026, 9, 13, hour, minute)
+    ) == (None, None)
 
 
 def test_home_periods_expand_only_for_scheduled_late_lessons(tmp_path):
@@ -204,4 +211,11 @@ def test_home_periods_expand_only_for_scheduled_late_lessons(tmp_path):
     assert [p.number for p in periods] == list(range(1, 12))
     assert len(displayed_periods(periods, [])) == 8
     for number in (9, 10, 11):
-        assert len(displayed_periods(periods, [TimetableEntry('monday', number, '5A', 'mathematik', '')])) == number
+        assert (
+            len(
+                displayed_periods(
+                    periods, [TimetableEntry("monday", number, "5A", "mathematik", "")]
+                )
+            )
+            == number
+        )

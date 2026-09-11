@@ -1,6 +1,44 @@
 # Veröffentlichungsprüfung
 
-## Release 1.0.1 — Vorbereitung
+## Release 1.1.0 — Vorbereitung
+
+Stand: 11. September 2026. Feature-Branch `feature/unterrichtsmaterialien`.
+
+### Erledigt
+
+- Vollständiger Lauf von `just check` erfolgreich: Ruff, Formatprüfung und Pyright
+  ohne Fehler; **217 Tests bestanden, 2 übersprungen** (219 gesammelt).
+- Der zuvor abbrechende Prüflauf scheiterte an der Formatierung von neun Dateien.
+  Keine Testanforderungen wurden für den erfolgreichen Lauf abgeschwächt.
+- Version in `pyproject.toml` und `uv.lock` auf `1.1.0` gesetzt.
+- README, Release Notes und Materialvertrag auf die aktuelle Bedienung gebracht.
+- Keine Migration erforderlich für den vorgesehenen Einsatz ohne bestehende Daten.
+  Eine Migration alter Sequenzformate ist nicht implementiert.
+
+### Noch vor der Veröffentlichung
+
+- Die zwei übersprungenen Grafiktests mit Node.js und `rsvg-convert` ausführen;
+  Formeln, Bilder und Editoraufrufe im vorgesehenen Terminal manuell prüfen.
+- Änderungen prüfen, committen und den Feature-Branch zusammenführen. Den finalen
+  Stand mit `just check` prüfen.
+- Mit `uv build` Wheel und Quellarchiv aus dem finalen Stand bauen:
+  `dist/pult-1.1.0-py3-none-any.whl` und `dist/pult-1.1.0.tar.gz`.
+- Archivinhalt, Version, Lizenzdateien, Materialvorlagen und mitgelieferten
+  MathJax-Renderer prüfen; keine persönlichen Unterrichtsdaten aufnehmen.
+- Wheel separat unter Python 3.11 installieren und `scripts/smoke_installed.py`
+  mit dem Python dieser Installation ausführen (nicht über `uv run`).
+- Tag `v1.1.0` und GitHub-Release mit Release Notes sowie beiden Archiven erstellen.
+- Falls AUR veröffentlicht wird: Version, neue Laufzeitabhängigkeiten und
+  Grafikvoraussetzungen in `PKGBUILD` berücksichtigen, Prüfsumme des finalen
+  Quellarchivs übernehmen und `.SRCINFO` neu erzeugen. Arch-Bau und Installation
+  separat prüfen. Die vorhandenen AUR-Dateien gehören weiterhin zu 1.0.1.
+
+Für 1.1.0 sind Paketbau, Installationstest, Tag und Upload in dieser Prüfung noch
+nicht erfolgt. Die folgenden Abschnitte dokumentieren frühere Releases und sind
+kein Prüfnachweis für 1.1.0.
+
+
+## Historischer Stand: Release 1.0.1 — Vorbereitung
 
 - Version in `pyproject.toml` und `uv.lock`: `1.0.1`.
 - README-Installationslink und `RELEASE_NOTES.md` für das neue Release vorbereitet.

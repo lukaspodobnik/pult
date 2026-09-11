@@ -142,10 +142,14 @@ class TimetablePanel(Vertical):
             if position[1] is not None:
                 from textual.coordinate import Coordinate
 
-                row = next(i for i, p in enumerate(self.periods) if p.number == position[1])
-                table.call_after_refresh(table.scroll_to_region,
-                                         table._get_cell_region(Coordinate(row, 0)),
-                                         animate=False)
+                row = next(
+                    i for i, p in enumerate(self.periods) if p.number == position[1]
+                )
+                table.call_after_refresh(
+                    table.scroll_to_region,
+                    table._get_cell_region(Coordinate(row, 0)),
+                    animate=False,
+                )
 
     def populate_timetable(
         self,
@@ -250,6 +254,8 @@ def get_current_timetable_position(
     )
 
 
-def displayed_periods(periods: list[Period], entries: list[TimetableEntry]) -> list[Period]:
+def displayed_periods(
+    periods: list[Period], entries: list[TimetableEntry]
+) -> list[Period]:
     last = max(8, max((entry.period for entry in entries), default=0))
     return [period for period in periods if period.number <= last]

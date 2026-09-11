@@ -1,5 +1,15 @@
 # AUR-Paketierung
 
+## Offener Stand für PULT 1.1.0
+
+Die folgenden Paketdateien gehören weiterhin zu 1.0.1. Für 1.1.0 müssen neben
+Version und Archivprüfsumme auch die neuen Python-Laufzeitabhängigkeiten und
+die optionalen Grafikvoraussetzungen berücksichtigt werden. Danach `.SRCINFO`
+neu erzeugen und den Arch-Bau sowie die Installation prüfen. Die historischen
+Prüfergebnisse unten gelten nicht für das Materialfeature.
+
+## Historischer Stand 1.0.1
+
 Paket: `pult`, Version `1.0.1-1`. Für das kommende GitHub-Release vorbereitet; noch nicht ins AUR hochgeladen.
 
 - `PKGBUILD`: Bauanleitung für das veröffentlichte Quellpaket.

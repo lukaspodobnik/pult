@@ -105,11 +105,13 @@ class ManagementPicker(OptionList):
         self._spacer_rows = rows
         with self.prevent(OptionList.OptionHighlighted):
             self.clear_options()
-            self.add_options([
-                Option("Klassen", id="edit-classes"),
-                Option("Stundenplan", id="edit-timetable"),
-                Option("Ausfälle", id="edit-closures"),
-            ])
+            self.add_options(
+                [
+                    Option("Klassen", id="edit-classes"),
+                    Option("Stundenplan", id="edit-timetable"),
+                    Option("Ausfälle", id="edit-closures"),
+                ]
+            )
             if rows:
                 self.add_option(Option(Text("\n" * (rows - 1)), disabled=True))
             self.add_options([None, Option("Einstellungen", id="settings")])

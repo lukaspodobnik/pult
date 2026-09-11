@@ -291,7 +291,9 @@ def test_subject_undo_preserves_other_entries_and_active_sequences():
         undo_last_entry(result, subject_id="mathematik")
 
 
-def test_open_next_lesson_uses_visible_lesson_and_returns(multi_class_config, monkeypatch):
+def test_open_next_lesson_uses_visible_lesson_and_returns(
+    multi_class_config, monkeypatch
+):
     from datetime import datetime
 
     from pult.screens.lesson_screen import LessonScreen

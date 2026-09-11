@@ -25,7 +25,9 @@ class SchoolYearProgress(Vertical):
             f"{progress.elapsed_day_count} von {progress.total_day_count} Tagen vergangen"
         )
         self.query_one(LessonProgressBar).update_counts(
-            completed=progress.elapsed_day_count, skipped=0, total=progress.total_day_count
+            completed=progress.elapsed_day_count,
+            skipped=0,
+            total=progress.total_day_count,
         )
         self.query_one("#school-year-progress-percentage", Static).update(
             f"{progress.percentage} %"

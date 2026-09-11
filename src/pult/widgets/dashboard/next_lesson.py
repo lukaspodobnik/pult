@@ -81,9 +81,7 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
         texts["next-lesson-heading"] = (
             f"{planned_lesson.school_class_id} · {subject.name}"
         )
-        texts["next-lesson-sequence"] = (
-            f"{sequence.title}"
-        )
+        texts["next-lesson-sequence"] = f"{sequence.title}"
         texts["next-lesson-name"] = planned_lesson.lesson.title or UNTITLED_LESSON
         texts["next-lesson-occurrence"] = self._format_planned_occurrence(
             planned_lesson

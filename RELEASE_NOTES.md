@@ -1,24 +1,47 @@
-# PULT 1.0.1
+# PULT 1.1.0
 
-Wartungsupdate mit Verbesserungen der Tastaturbedienung und ergänzten Quellenhinweisen.
+Unterrichtsmaterialien vorbereiten, Aufgaben verwalten und die nächste Stunde
+direkt aus dem Dashboard öffnen.
 
-- Sequenzen werden mit **e** statt Enter im konfigurierten Editor geöffnet.
-- **F2 Übersicht** steht im Footer ganz links, mit Abstand zu den weiteren Befehlen.
-- **u Protokoll** ist bei Fokus auf Verwaltung ausgeblendet und deaktiviert.
-- Die Namensnennung von Stevonnie Ross für den Logo-Schriftzug „Calvin“ und die
-  ausdrückliche Nutzungserlaubnis sind in den Quellenhinweisen und im
-  Über-Pult-Fenster dokumentiert.
-- Rich wird als direkte Laufzeitabhängigkeit deklariert.
+## Neu
 
-Bestehende Konfiguration und Unterrichtsdaten können weiterverwendet werden.
-Die neue Unterrichtsansicht und Unterrichtsmaterialien sind nicht Bestandteil dieses Releases.
+- Unterrichtsviewer mit Vorbereitung, Aufgaben und Lösungen, Lernzielen und
+  gegliedertem Stundenverlauf. Die Anzeige folgt der markierten Stunde;
+  Leertaste wechselt zwischen Vorbereitung und Aufgaben.
+- Aufgabenviewer für alle Aufgaben einer Sequenz, auch ohne Zuordnung zu einer
+  Stunde. **n** erstellt Aufgabentext und Lösungsdatei und öffnet beide im Editor.
+  Eine Aufgabe hat einen Listeneintrag; die Lösung steht direkt unter dem Text.
+- Stunden, Aufgaben und Lösungen liegen in eigenen Ordnern nach dem
+  Materialvertrag. Markdown unterstützt unter anderem Formeln, Bilder und Code.
+- Sequenzbibliothek mit vollständiger Stundenvorschau; **Enter** öffnet die
+  markierte Stunde, **a** die Aufgaben der Sequenz. Die Vorschau hebt Stunden nur
+  hervor, solange ihr Inhaltsbereich den Fokus hat.
+- **o** öffnet die angezeigte nächste Stunde aus Übersicht und Klassenansicht.
+- Überarbeitete nächste Stunde: kompakter Aufbau ohne Materialanzeige auf der
+  Homeview; Aufgaben, Ziele, Material und Verlauf in der Klassenansicht.
+- Einheitliche Sequenzköpfe und Footerpositionen in beiden Viewern.
+- Neue Datenablagen enthalten elf Stundenzeiten. Die Übersicht berücksichtigt
+  auch spätere belegte Stunden und hält den Stundenplan scrollbar.
 
-## Installation oder Aktualisierung
+## Voraussetzungen und Daten
+
+Python 3.11 oder neuer. Für grafische Formeln und SVG-Bilder werden zusätzlich
+Node.js, `rsvg-convert` und ein Terminal mit passender Bildunterstützung benötigt.
+MathJax ist enthalten; npm ist zur Nutzung nicht erforderlich. Ohne Grafikrenderer
+erscheinen Formelquellen beziehungsweise Bildhinweise.
+
+Dieses Release verwendet das neue Materialformat. Eine Migration alter
+Sequenzdateien ist nicht enthalten; für den vorgesehenen Einsatz gibt es keine
+bestehenden Daten, die übernommen werden müssen. Persönliche Inhalte werden im
+gewählten Datenverzeichnis abgelegt, nicht in den mitgelieferten Vorlagen.
+
+## Installation
 
 Nach Veröffentlichung:
 
 ```bash
-uv tool install --force --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.0.1/pult-1.0.1-py3-none-any.whl
+uv tool install --force --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.1.0/pult-1.1.0-py3-none-any.whl
 ```
 
-Die vorhandenen Nutzerdaten bleiben bei dieser Paketaktualisierung erhalten.
+Der Paketierungsstand unter `packaging/aur` gehört noch zu 1.0.1 und ist für dieses
+Release separat anzupassen und unter Arch zu prüfen.

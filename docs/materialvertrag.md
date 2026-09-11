@@ -1,9 +1,10 @@
 # Materialvertrag für Unterrichtsmaterialien
 
-Status: vereinbarte Grundlage für die nächste Pult-Erweiterung.
-Datenmodell, Laden/Speichern und Defaults sind umgesetzt. Home, Klassenansicht
+Status: implementierter Materialvertrag für PULT 1.1.0.
+Datenmodell, Laden/Speichern und Defaults sind umgesetzt. Klassenansicht
 und Sequenzvorschau lesen Materiallisten aus dem Stundenmodell. Die Unterrichtsansicht ist über Enter in der Sequenzvorschau erreichbar, einschließlich
-Vorbereitungs-Editor und lokalem Formelrenderer. Weitere Zugangswege folgen separat.
+Vorbereitungs-Editor und lokalem Formelrenderer. Weitere Zugänge sind **o** aus Home- und Klassenansicht sowie **a** für den
+Aufgabenviewer aus der Sequenzbibliothek.
 Die Beispieldaten des Darstellungsprototyps verwenden weiterhin ihr eigenes Format.
 
 ## Grundprinzip
@@ -45,7 +46,7 @@ keine IDs. Lesbare Nummerierungen sind Anzeigeinformationen, keine Identität.
 ## Sequenz
 
 Die Sequenz behält ihre Angaben wie Titel, Fach und Jahrgang. Ihre geordnete
-Stundenliste enthält künftig IDs statt eingebetteter Stundenbeschreibungen.
+Stundenliste enthält IDs statt eingebetteter Stundenbeschreibungen.
 
 ```toml
 id = "bruchzahlen"
@@ -143,7 +144,8 @@ Die Liste wird einmal gepflegt und mehrfach angezeigt:
 - **Stundenansicht:** Pult setzt am Anfang der Vorbereitungsansicht automatisch
   einen kompakten Abschnitt „Benötigtes Material“. Danach folgt der Inhalt von
   `vorbereitung.md`. Es entsteht kein zusätzlicher Rahmen.
-- **Home/Classview, nächste Stunde:** kurze Materialzeile in der Zusammenfassung.
+- **Klassenansicht, nächste Stunde:** Materialliste im vollständigen Stundenüberblick.
+  Die kompakte Homeview zeigt keine Materialliste.
 - **Sequenzplan:** Material in der Zusammenfassung der jeweiligen Stunde.
 
 Bei leerer Liste entfällt der Materialabschnitt beziehungsweise die Materialzeile.
@@ -162,6 +164,15 @@ Anzeigereihenfolge. Eine spätere Arbeitsheftnummerierung verändert keine IDs.
 In der Aufgabenansicht folgt die Lösung unmittelbar auf ihren Aufgabentext.
 Ein zusätzlicher Knopf zum Einblenden ist nicht nötig, da die Ansicht für die
 Lehrkraft bestimmt ist. Fehlt eine Lösung, wird kein Lösungsinhalt erfunden.
+
+Im Aufgabenviewer erstellt **n** nach Eingabe eines Titels einen neuen, eindeutigen
+Aufgabenordner mit beiden Dateien. `aufgabe.md` beginnt mit `# Titel`,
+`loesung.md` ist zunächst leer. Beide Dateien werden gemeinsam im konfigurierten
+Editor geöffnet. Bei gleichen Titeln erhalten neue Ordner einen Zahlensuffix;
+bestehende Aufgaben werden nicht überschrieben. In der Liste steht der Titel
+aus der ersten Markdown-Überschrift, ersatzweise die ID. Die neue Aufgabe ist
+zunächst keiner Stunde zugeordnet; die Zuordnung erfolgt über `aufgaben` in
+`stunde.toml`.
 
 ## Gemeinsamer Markdown-Vertrag
 
@@ -192,7 +203,8 @@ Das gemeinsam erprobte Layout bleibt die Grundlage:
   Hinweis auf die aktive Ansicht. Lösungen direkt unter den Aufgaben.
 - Rechts: getrennte Rahmen für Ziele und Verlauf. Der Verlauf zeigt fette
   Phasenüberschriften und darunter Text, ohne Zeitspalte.
-- Oben und unten bleibt je eine Terminalzeile frei.
+- Oben bleibt eine Terminalzeile frei. Unten steht der Footer in der letzten
+  Terminalzeile, mit einer freien Zeile zwischen den Inhaltskästen und dem Footer.
 
 Die Anordnung ist fachübergreifend gleich. Benötigtes Material erscheint im
 Vorbereitungsbereich wie oben beschrieben. Zusammenfassungen in anderen Views

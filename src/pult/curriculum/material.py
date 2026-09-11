@@ -9,7 +9,7 @@ import tomli_w
 
 from pult.storage import load_toml
 
-PHASE_TEMPLATE = '''
+PHASE_TEMPLATE = """
 # Vorschlag: Nur die benötigten Phasen verwenden.
 # Zuerst phasen = [] oben entfernen, dann die gewünschten Phasen unten
 # aktivieren (führende # entfernen) und jeweils einen nicht leeren Text ergänzen.
@@ -33,7 +33,7 @@ PHASE_TEMPLATE = '''
 # [[phasen]]
 # titel = "Schluss"
 # text = ""
-'''
+"""
 
 
 def lesson_metadata_source(lesson: "Lesson") -> str:
@@ -41,14 +41,27 @@ def lesson_metadata_source(lesson: "Lesson") -> str:
     fields = [
         ("titel", lesson.title, "Titel der Stunde."),
         ("ziele", lesson.goals, "Lernziele als kurze Aussagen."),
-        ("material", lesson.material, "Benötigtes Material, z. B. Lineal oder Arbeitsblatt."),
-        ("aufgaben", [t.id for t in lesson.tasks], "Aufgaben-IDs aus aufgaben/, in geplanter Reihenfolge."),
-        ("phasen", [{"titel": p.title, "text": p.text} for p in lesson.phases], "Geordneter Verlauf ohne Zeitangaben."),
+        (
+            "material",
+            lesson.material,
+            "Benötigtes Material, z. B. Lineal oder Arbeitsblatt.",
+        ),
+        (
+            "aufgaben",
+            [t.id for t in lesson.tasks],
+            "Aufgaben-IDs aus aufgaben/, in geplanter Reihenfolge.",
+        ),
+        (
+            "phasen",
+            [{"titel": p.title, "text": p.text} for p in lesson.phases],
+            "Geordneter Verlauf ohne Zeitangaben.",
+        ),
     ]
     source = "\n".join(
         f"# {hint}\n{tomli_w.dumps({key: value})}" for key, value, hint in fields
     )
     return source + (PHASE_TEMPLATE if not lesson.phases else "")
+
 
 ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 

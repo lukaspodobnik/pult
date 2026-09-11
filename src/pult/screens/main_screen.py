@@ -343,7 +343,9 @@ class MainScreen(PultScreen[None]):
     ) -> bool | None:
         if action == "go_home":
             return True
-        if isinstance(self.app.focused, (ManagementPicker, TeachingPicker)) and action in {
+        if isinstance(
+            self.app.focused, (ManagementPicker, TeachingPicker)
+        ) and action in {
             "complete_next_lesson",
             "skip_next_lesson",
             "continue_next_lesson",
@@ -410,7 +412,9 @@ class MainScreen(PultScreen[None]):
         if sequence is None or not any(
             lesson.id == planned.lesson.id for lesson in sequence.lessons
         ):
-            self.notify("Die angezeigte Stunde ist nicht mehr verfügbar.", severity="warning")
+            self.notify(
+                "Die angezeigte Stunde ist nicht mehr verfügbar.", severity="warning"
+            )
             return
         self.app.push_screen(
             LessonScreen(sequence, planned.lesson.id), self.lesson_viewer_closed
@@ -941,7 +945,9 @@ class MainScreen(PultScreen[None]):
             case "edit-classes":
                 self.app.push_screen(EditClassesScreen(), self.classes_edited)
             case "sequence-library":
-                self.app.push_screen(SequenceLibraryScreen(), self.sequence_library_closed)
+                self.app.push_screen(
+                    SequenceLibraryScreen(), self.sequence_library_closed
+                )
             case "edit-timetable":
                 self.app.push_screen(
                     EditTimetableScreen(), self.timetable_edit_finished

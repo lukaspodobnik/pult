@@ -31,7 +31,10 @@ class PultFooter(Footer):
                     has_navigation = True
                     yield Static(classes="footer-spacer navigation-spacer")
             yield widget
-            if isinstance(widget, FooterKey) and widget.action.rsplit(".", 1)[-1] == "open_next_lesson":
+            if (
+                isinstance(widget, FooterKey)
+                and widget.action.rsplit(".", 1)[-1] == "open_next_lesson"
+            ):
                 yield Static(classes="lesson-open-spacer")
         if quit_key is not None:
             if has_navigation:
