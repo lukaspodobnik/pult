@@ -27,15 +27,14 @@ def test_class_dashboard_alignment(tmp_path, monkeypatch, size):
             await pilot.pause()
             view = app.screen.query_one(SchoolClassView)
             footer = app.screen.query_one("PultFooter")
-            navigation_key = footer.query_one(".navigation-key")
-            keys = list(footer.children)
+            keys = list(footer.query("FooterKey"))
             assert keys[0].action.rsplit(".", 1)[-1] == "go_home"
-            assert keys[1].has_class("overview-spacer")
-            assert keys[1].region.width == 2
-            previous_key = keys[keys.index(navigation_key) - 2]
-            assert footer.query_one(".navigation-spacer").region.width == 2
-            assert navigation_key.region.x - previous_key.region.right <= 9
-            assert footer.query_one(".quit-key").region.right == footer.region.right
+            assert footer.query_one(".help-key").display
+            assert (
+                footer.query_one(".quit-key").region.right
+                == footer.content_region.right
+            )
+            assert all(key.region.right <= footer.content_region.right for key in keys)
             overview = view.query_one(".subject-overview")
             sequences = view.query_one(".sequence-list")
             details = view.query_one(".class-details")

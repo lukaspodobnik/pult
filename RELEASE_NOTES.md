@@ -1,27 +1,35 @@
-# PULT 1.1.0
+# PULT 1.1.1
 
-Unterrichtsmaterialien vorbereiten, Aufgaben verwalten und die nächste Stunde
-direkt aus dem Dashboard öffnen.
+Überarbeitete Darstellung, eine übersichtlichere Tastaturhilfe und direktes
+Speichern in der Stundenplanverwaltung.
 
-## Neu
+## Darstellung und Bedienung
 
-- Unterrichtsviewer mit Vorbereitung, Aufgaben und Lösungen, Lernzielen und
-  gegliedertem Stundenverlauf. Die Anzeige folgt der markierten Stunde;
-  Leertaste wechselt zwischen Vorbereitung und Aufgaben.
-- Aufgabenviewer für alle Aufgaben einer Sequenz, auch ohne Zuordnung zu einer
-  Stunde. **n** erstellt Aufgabentext und Lösungsdatei und öffnet beide im Editor.
-  Eine Aufgabe hat einen Listeneintrag; die Lösung steht direkt unter dem Text.
-- Stunden, Aufgaben und Lösungen liegen in eigenen Ordnern nach dem
-  Materialvertrag. Markdown unterstützt unter anderem Formeln, Bilder und Code.
-- Sequenzbibliothek mit vollständiger Stundenvorschau; **Enter** öffnet die
-  markierte Stunde, **a** die Aufgaben der Sequenz. Die Vorschau hebt Stunden nur
-  hervor, solange ihr Inhaltsbereich den Fokus hat.
-- **o** öffnet die angezeigte nächste Stunde aus Übersicht und Klassenansicht.
-- Überarbeitete nächste Stunde: kompakter Aufbau ohne Materialanzeige auf der
-  Homeview; Aufgaben, Ziele, Material und Verlauf in der Klassenansicht.
-- Einheitliche Sequenzköpfe und Footerpositionen in beiden Viewern.
-- Neue Datenablagen enthalten elf Stundenzeiten. Die Übersicht berücksichtigt
-  auch spätere belegte Stunden und hält den Stundenplan scrollbar.
+- Eigenes dunkles Standardtheme für Systeme ohne Omarchy: Anthrazit, hellgrauer
+  Text und ein gedämpfter warmer Orangeton als Akzent. Flächen, Rahmen und
+  Fokusmarkierungen folgen denselben Gestaltungsregeln wie unter Omarchy.
+  Dort folgt PULT weiterhin automatisch dem aktuellen Systemtheme.
+- Der Footer passt die angezeigten Aktionen an die verfügbare Breite an und
+  richtet sie an den Inhaltsrahmen aus. Hilfe und Beenden bleiben sichtbar;
+  ausgeblendete Tastenkürzel können weiterhin verwendet werden.
+- **F1** öffnet die Tastaturhilfe zur aktuellen Ansicht und zum aktuellen Fokus.
+  Die Befehle sind nach Navigation, Aktionen der Ansicht und allgemeinen
+  Befehlen gruppiert. Pfeiltasten und ihre **h/j/k/l**-Alternativen stehen
+  gemeinsam in der Liste. Esc oder F1 schließt die Hilfe.
+- Zentrierte Stundenplaneinträge auf der Übersicht. In der Stundenplanverwaltung
+  sind alle Stundenzeilen gleich hoch; Tabellenlinien schließen bündig aneinander an.
+- Stundenplaneinträge werden beim Speichern im Eingabedialog oder beim Löschen
+  sofort gesichert. Ein zusätzlicher Speicherschritt in der Übersicht entfällt.
+  **Zurück** und **Esc** verlassen die Übersicht, ohne gespeicherte Änderungen
+  zu verwerfen. Nicht bestätigte Eingaben im einzelnen Dialog können weiterhin
+  abgebrochen werden.
+- Die Bestätigungsbuttons in den Eingabedialogen für Stundenplaneinträge,
+  Klassen und Ausfälle heißen einheitlich **Speichern**.
+
+## Fehlerbehebung
+
+- Die Schuljahresprüfung greift beim Beenden nicht mehr auf einen bereits
+  geschlossenen Bildschirm zu.
 
 ## Voraussetzungen und Daten
 
@@ -30,18 +38,16 @@ Node.js, `rsvg-convert` und ein Terminal mit passender Bildunterstützung benöt
 MathJax ist enthalten; npm ist zur Nutzung nicht erforderlich. Ohne Grafikrenderer
 erscheinen Formelquellen beziehungsweise Bildhinweise.
 
-Dieses Release verwendet das neue Materialformat. Eine Migration alter
-Sequenzdateien ist nicht enthalten; für den vorgesehenen Einsatz gibt es keine
-bestehenden Daten, die übernommen werden müssen. Persönliche Inhalte werden im
-gewählten Datenverzeichnis abgelegt, nicht in den mitgelieferten Vorlagen.
+Das Datenformat bleibt gegenüber 1.1.0 unverändert. Für dieses Update ist keine
+Migration erforderlich.
 
-## Installation
+## Installation und Update
 
-Nach Veröffentlichung:
+Nach Veröffentlichung von v1.1.1:
 
-```bash
-uv tool install --force --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.1.0/pult-1.1.0-py3-none-any.whl
+```sh
+uv tool install --force --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.1.1/pult-1.1.1-py3-none-any.whl
 ```
 
-Der Paketierungsstand unter `packaging/aur` gehört noch zu 1.0.1 und ist für dieses
-Release separat anzupassen und unter Arch zu prüfen.
+Die Veröffentlichung erfolgt über GitHub. Eine AUR-Veröffentlichung ist für
+dieses Release nicht vorgesehen.

@@ -120,7 +120,7 @@ class EditTimetabelEntryScreen(PultModalScreen[TimetableEditResult | None]):
                 yield Static(classes="form-action-spacer")
                 yield Button("Abbrechen", id="cancel-timetable-entry-edit")
                 yield Button(
-                    "Übernehmen",
+                    "Speichern",
                     variant="primary",
                     id="save-timetable-entry",
                 )

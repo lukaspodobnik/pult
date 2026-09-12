@@ -1,4 +1,3 @@
-from dataclasses import replace
 from typing import ClassVar
 
 from rich.text import Text
@@ -18,7 +17,6 @@ from pult.school.timetable import (
     save_timetable,
 )
 from pult.screens.base_screen import PultScreen
-from pult.screens.confirmation_screen import ConfirmationScreen
 from pult.screens.edit_timetable_entry_screen import (
     EditTimetabelEntryScreen,
     TimetableEditAction,
@@ -40,13 +38,12 @@ class EditableTimetable(DataTable):
 
 class EditTimetableScreen(PultScreen[None]):
     BINDINGS: ClassVar = [
-        ("escape", "cancel", "Abbrechen"),
+        ("escape", "close", "Zurück"),
     ]
 
     def __init__(self) -> None:
         super().__init__()
         self.entries_by_slot: dict[tuple[str, int], TimetableEntry] = {}
-        self._initial_entries: dict[tuple[str, int], TimetableEntry] = {}
         self.school_classes: list[SchoolClass] = []
         self.subjects: list[Subject] = []
         self.subjects_by_id: dict[str, Subject] = {}
@@ -67,12 +64,7 @@ class EditTimetableScreen(PultScreen[None]):
                 id="edit-timetable-screen-actions", classes="management-actions"
             ):
                 yield Static(classes="action-spacer")
-                yield Button("Abbrechen", id="cancel-timetable-edit")
-                yield Button(
-                    "Speichern",
-                    variant="primary",
-                    id="save-timetable",
-                )
+                yield Button("Zurück", variant="primary", id="close-timetable")
 
         yield PultFooter()
 
@@ -81,9 +73,6 @@ class EditTimetableScreen(PultScreen[None]):
         path = get_timetable_path(config.root, config.active_school_year)
         self.entries_by_slot = {
             (entry.weekday, entry.period): entry for entry in load_timetable(path)
-        }
-        self._initial_entries = {
-            slot: replace(entry) for slot, entry in self.entries_by_slot.items()
         }
         self.school_classes = load_school_classes(
             config.root, config.active_school_year
@@ -100,11 +89,10 @@ class EditTimetableScreen(PultScreen[None]):
             return
         # 13 Zellen für Stundenlabel; Reserve für die Scrollbar.
         self._column_width = max(14, (table.content_size.width - 15) // 5)
-        height, extra = divmod(max(0, table.content_size.height - 3), len(self.periods))
-        self._row_heights = {
-            period.number: max(3, height + (index < extra))
-            for index, period in enumerate(self.periods)
-        }
+        height = max(
+            3, (table.content_size.height - table.header_height) // len(self.periods)
+        )
+        self._row_heights = {period.number: height for period in self.periods}
         cursor = table.cursor_coordinate
         table.clear(columns=True)
 
@@ -116,7 +104,10 @@ class EditTimetableScreen(PultScreen[None]):
             header.append(label.center(inner))
             header.append("│", style="dim")
             header.append(
-                "\n" + ("┼" if first else "") + "─" * inner + "┼",
+                "\n"
+                + ("├" if first else "")
+                + "─" * inner
+                + ("┤" if weekday == WEEKDAYS[-1][0] else "┼"),
                 style="dim",
             )
             table.add_column(header, key=weekday, width=self._column_width)
@@ -210,11 +201,27 @@ class EditTimetableScreen(PultScreen[None]):
             return
 
         slot = (result.entry.weekday, result.entry.period)
+        entries = dict(self.entries_by_slot)
         if result.action is TimetableEditAction.SAVE:
-            self.entries_by_slot[slot] = result.entry
-            self._last_entry = result.entry
+            entries[slot] = result.entry
         else:
-            self.entries_by_slot.pop(slot, None)
+            entries.pop(slot, None)
+
+        config = self.app_config
+        path = get_timetable_path(config.root, config.active_school_year)
+        try:
+            save_timetable(path, list(entries.values()))
+        except (OSError, ValueError) as error:
+            self.notify(
+                f"Stundenplan konnte nicht gespeichert werden: {error}",
+                severity="error",
+            )
+            self.query_one("#edit-schedule", DataTable).focus()
+            return
+
+        self.entries_by_slot = entries
+        if result.action is TimetableEditAction.SAVE:
+            self._last_entry = result.entry
 
         table = self.query_one("#edit-schedule", DataTable)
         table.update_cell(
@@ -224,43 +231,9 @@ class EditTimetableScreen(PultScreen[None]):
         )
         table.focus()
 
-    @on(Button.Pressed, "#save-timetable")
-    def save_changes(self) -> None:
-        self.action_save()
+    @on(Button.Pressed, "#close-timetable")
+    def close_timetable(self) -> None:
+        self.action_close()
 
-    @on(Button.Pressed, "#cancel-timetable-edit")
-    def cancel_changes(self) -> None:
-        self.action_cancel()
-
-    def action_save(self) -> None:
-        config = self.app_config
-        path = get_timetable_path(config.root, config.active_school_year)
-        try:
-            save_timetable(path, list(self.entries_by_slot.values()))
-        except (OSError, ValueError) as error:
-            self.notify(
-                f"Stundenplan konnte nicht gespeichert werden: {error}",
-                severity="error",
-            )
-            return
+    def action_close(self) -> None:
         self.dismiss()
-
-    def action_cancel(self) -> None:
-        if self.entries_by_slot == self._initial_entries:
-            self.dismiss()
-            return
-
-        def discard_confirmed(confirmed: bool | None) -> None:
-            if confirmed:
-                self.dismiss()
-
-        self.app.push_screen(
-            ConfirmationScreen(
-                "Änderungen verwerfen?",
-                "Der Stundenplan enthält ungespeicherte Änderungen.\n"
-                "Wenn du sie verwirfst, bleibt der zuletzt gespeicherte Plan erhalten.",
-                confirm_id="confirm-discard-timetable",
-                cancel_id="cancel-discard-timetable",
-            ),
-            discard_confirmed,
-        )

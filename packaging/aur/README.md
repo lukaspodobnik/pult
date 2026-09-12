@@ -1,12 +1,15 @@
 # AUR-Paketierung
 
-## Offener Stand für PULT 1.1.0
+## Zurückgestellt für PULT 1.1.1
 
-Die folgenden Paketdateien gehören weiterhin zu 1.0.1. Für 1.1.0 müssen neben
-Version und Archivprüfsumme auch die neuen Python-Laufzeitabhängigkeiten und
-die optionalen Grafikvoraussetzungen berücksichtigt werden. Danach `.SRCINFO`
-neu erzeugen und den Arch-Bau sowie die Installation prüfen. Die historischen
-Prüfergebnisse unten gelten nicht für das Materialfeature.
+Für 1.1.1 ist nur die Veröffentlichung über GitHub vorgesehen. Ein AUR-Paket
+wird derzeit nicht veröffentlicht; die folgenden Paketdateien bleiben auf 1.0.1.
+
+Bei einer späteren AUR-Veröffentlichung müssen neben Version und Archivprüfsumme
+auch die seit 1.1.0 hinzugekommenen Python-Laufzeitabhängigkeiten und optionalen
+Grafikvoraussetzungen berücksichtigt werden. Danach `.SRCINFO` neu erzeugen und
+Arch-Bau sowie Installation prüfen. Die historischen Prüfergebnisse unten gelten
+nicht für den aktuellen Release-Stand.
 
 ## Historischer Stand 1.0.1
 

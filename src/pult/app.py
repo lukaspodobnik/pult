@@ -4,6 +4,7 @@ from typing import ClassVar
 from zoneinfo import ZoneInfo
 
 from textual.app import App
+from textual.binding import Binding
 from textual.events import Event, Key
 from textual.widgets import Input, TextArea
 
@@ -38,7 +39,24 @@ class PultApp(App):
 
     BINDINGS: ClassVar = [
         ("q", "quit", "Beenden"),
+        Binding("f1", "show_binding_help", "Hilfe", priority=True),
     ]
+
+    def action_show_binding_help(self) -> None:
+        from pult.screens.binding_help_screen import (
+            BindingHelpScreen,
+            binding_help_rows,
+        )
+
+        screen = self.screen
+        if isinstance(screen, BindingHelpScreen):
+            screen.dismiss(None)
+            return
+        focused = screen.focused
+        context = "Tastenkürzel der aktuellen Ansicht"
+        if focused is not None and focused.border_title:
+            context += f" · Fokus: {focused.border_title}"
+        self.push_screen(BindingHelpScreen(binding_help_rows(screen), context))
 
     async def on_event(self, event: Event) -> None:
         """Behandle h/j/k/l außerhalb von Textfeldern wie die Pfeiltasten."""

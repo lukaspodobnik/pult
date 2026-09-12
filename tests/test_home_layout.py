@@ -67,7 +67,7 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             else:
                 pytest.fail("Die Beenden-Taste im Footer erhielt kein Layout.")
             quit_key = footer.query_one(".quit-key")
-            assert quit_key.region.right == footer.region.right
+            assert quit_key.region.right == footer.content_region.right
             assert quit_key.key == "q"
             logo = app.screen.query_one("#app-logo")
             assert logo.region.height == 5
@@ -84,6 +84,8 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             views = app.screen.query_one(ViewPicker)
             management = app.screen.query_one(ManagementPicker)
             teaching = app.screen.query_one(TeachingPicker)
+            assert footer.content_region.x == views.region.x
+            assert footer.content_region.right == daily.region.right
             assert views.region.y == timetable.region.y
             assert teaching.region.bottom == timetable.region.bottom
             assert management.region.y == next_lesson.region.y

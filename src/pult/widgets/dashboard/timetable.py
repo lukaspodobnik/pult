@@ -115,16 +115,18 @@ class TimetablePanel(Vertical):
         if entry is not None:
             subject = self.subjects_by_id[entry.subject_id]
             content = f"{entry.school_class_id} · {subject.short_name}\n{entry.room}"
-        if period == current_period or weekday == current_weekday:
-            row_index = next(
-                i for i, item in enumerate(self.periods) if item.number == period
-            )
-            height = 2 if row_index == len(self.periods) - 1 else 3
-            lines = content.splitlines()
-            content = "\n".join(
-                (lines[i] if i < len(lines) else "").ljust(self._column_width)
-                for i in range(height)
-            )
+        row_index = next(
+            i for i, item in enumerate(self.periods) if item.number == period
+        )
+        height = 2 if row_index == len(self.periods) - 1 else 3
+        lines = content.splitlines()
+        centered = []
+        for index in range(height):
+            line = Text(lines[index] if index < len(lines) else "")
+            line.truncate(self._column_width, overflow="ellipsis")
+            line.align("center", self._column_width)
+            centered.append(line.plain)
+        content = "\n".join(centered)
         return self.get_highlighted_text(
             content,
             is_current_row=period == current_period,

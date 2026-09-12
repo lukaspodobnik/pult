@@ -35,7 +35,7 @@ class SchoolClassSetupScreen(PultModalScreen[None]):
                 yield Label("Mindestens ein Fach auswählen.", classes="form-hint")
             with Horizontal(id="school-class-setup-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-class-setup")
-                yield Button("Anlegen", variant="primary", id="submit-class")
+                yield Button("Speichern", variant="primary", id="submit-class")
 
     def get_subject_selections(self, grade_level: int) -> list[Selection]:
         return [

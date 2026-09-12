@@ -77,7 +77,7 @@ class AddClosureScreen(PultModalScreen[ScopedClosure | None]):
             with Horizontal(id="add-closure-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-closure")
                 yield Button(
-                    "Anlegen",
+                    "Speichern",
                     variant="primary",
                     id="submit-closure",
                 )

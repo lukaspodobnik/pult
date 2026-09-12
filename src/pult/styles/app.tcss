@@ -203,24 +203,9 @@ PultFooter .footer-spacer {
     height: 1;
 }
 
-PultFooter .navigation-spacer {
-    width: 2;
-}
-
-PultFooter .lesson-open-spacer {
-    width: 2;
-    height: 1;
-}
-
 PultFooter FooterKey.quit-key {
-    dock: right;
-    margin-right: 0;
-    margin-left: 2;
-}
-
-PultFooter FooterKey.balanced-quit {
     dock: none;
-    margin-left: 0;
+    margin: 0;
 }
 
 .management-actions {
@@ -246,7 +231,18 @@ PultFooter FooterKey.balanced-quit {
     height: 1;
 }
 
-PultFooter .overview-spacer {
-    width: 2;
-    height: 1;
+/* Gleiche Außenkanten wie die Inhaltsrahmen der jeweiligen Ansicht. */
+PultFooter {
+    padding: 0 2;
+}
+
+MainScreen PultFooter,
+SequenceLibraryScreen PultFooter,
+TeachingLogScreen PultFooter {
+    padding: 0 2 0 1;
+}
+
+LessonScreen PultFooter,
+TaskScreen PultFooter {
+    padding: 0 1;
 }

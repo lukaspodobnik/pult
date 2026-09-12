@@ -1,5 +1,6 @@
-from typing import TYPE_CHECKING, TypeVar, cast
+from typing import TYPE_CHECKING, ClassVar, TypeVar, cast
 
+from textual.binding import Binding
 from textual.screen import ModalScreen, Screen
 
 from pult.config import AppConfig
@@ -27,6 +28,11 @@ class PultScreen(Screen[ScreenResult]):
 
 
 class PultModalScreen(ModalScreen[ScreenResult]):
+    BINDINGS: ClassVar = [Binding("f1", "show_binding_help", "Hilfe", priority=True)]
+
+    def action_show_binding_help(self) -> None:
+        self.pult_app.action_show_binding_help()
+
     @property
     def pult_app(self) -> "PultApp":
         return cast("PultApp", self.app)

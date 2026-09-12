@@ -23,11 +23,11 @@ Die Herkunft der Lehrplanvorlagen, Kalenderdaten und Bibliotheken ist in
 ## Starten
 
 Voraussetzungen: [uv](https://docs.astral.sh/uv/) und ein Terminal mit
-Unicode-Unterstützung. PULT 1.1.0 nach Veröffentlichung direkt aus dem GitHub-Release installieren
+Unicode-Unterstützung. PULT 1.1.1 nach Veröffentlichung direkt aus dem GitHub-Release installieren
 (kein Klonen des Projekts nötig):
 
 ```sh
-uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.1.0/pult-1.1.0-py3-none-any.whl
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.1.1/pult-1.1.1-py3-none-any.whl
 ```
 
 Eine fehlende Python-Version lädt uv bei Bedarf herunter. Anschließend starten:
@@ -58,13 +58,18 @@ die Jahrgangsstufe und die angebotenen Fächer. Anschließend den Stundenplan f�
 
 ## Bedienung
 
+- **F1:** Tastaturhilfe zur aktuellen Ansicht und zum aktuellen Fokus öffnen;
+  Esc oder F1 schließt sie. Navigation, Ansichtsaktionen und allgemeine Befehle
+  sind gruppiert; Pfeiltasten und h/j/k/l werden gemeinsam aufgeführt. Der Footer
+  zeigt je nach verfügbarer Breite eine Auswahl der Aktionen. Ausgeblendete
+  Tastenkürzel bleiben aktiv; Hilfe und Beenden bleiben sichtbar.
 - **Tab / Shift+Tab:** Fokus wechseln. Im Hauptbildschirm zwischen Ansichten, Unterricht und Verwaltung.
 - **Pfeiltasten oder h/j/k/l:** Navigieren; in Textfeldern bleiben Buchstaben normale Eingaben.
 - **Enter:** Werkzeug öffnen, Auswahl bestätigen oder Stundenplanzelle bearbeiten.
 - **o:** Mit Fokus auf Ansichten die angezeigte nächste Stunde im Unterrichtsviewer öffnen; Escape führt zurück. Ohne nächste Stunde ist die Aktion deaktiviert.
 - **F2:** Im Hauptbildschirm zur Übersicht und zum Ansichtenpicker zurückkehren.
 - **Escape:** Zurück bzw. abbrechen. **q:** Beenden (außer in Texteingaben).
-- Der Footer zeigt verfügbare Befehle. Kleine Terminals können mit der Maus gescrollt werden.
+- Kleine Terminals können mit der Maus gescrollt werden.
 
 **Ansichten** wechseln beim Hervorheben: Die Übersicht zeigt Tagesplan, Stundenplan,
 Schuljahresfortschritt und die nächste offene Unterrichtsstunde. Klassen sind nach
@@ -92,6 +97,9 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
 
 ### Verwaltung
 
+Die Eingabedialoge für Klassen, Stundenplaneinträge und Ausfälle bestätigen
+Änderungen mit **Speichern**.
+
 - **Sequenzen:** Fach → Jahrgang → Abschnitt wählen; die Vorschau folgt der Auswahl.
   Mit Tab in die rechte Vorschau wechseln und mit ↑/↓ ganze Stundenblöcke auswählen.
   Die Stundenmarkierung erscheint nur bei Fokus auf der Vorschau.
@@ -101,9 +109,10 @@ Balken unterscheiden abgeschlossene und übersprungene Stunden.
   Stunden-IDs; die Stunden liegen in eigenen Ordnern. IDs bleiben stabil, da
   Protokolle darauf verweisen. Das neue Format ist im
   [Materialvertrag](docs/materialvertrag.md) beschrieben.
-- **Stundenplan:** Enter bearbeitet eine Zelle. „Übernehmen“ ändert den Entwurf;
-  erst „Speichern“ schreibt die Datei. Klasse, Fach und Raum werden beim nächsten
-  Eintrag vorgeschlagen. Abbrechen fragt nur bei tatsächlichen Änderungen nach.
+- **Stundenplan:** Enter bearbeitet eine Zelle. „Speichern“ und Löschen sichern
+  die Änderung sofort. Klasse, Fach und Raum werden beim nächsten Eintrag vorgeschlagen.
+  „Zurück“ oder Esc verlässt die Übersicht; gespeicherte Änderungen bleiben erhalten.
+  „Abbrechen“ im Eingabedialog verwirft nur die dort noch nicht bestätigte Eingabe.
 - **Ausfälle:** Geplante ganztägige Ausfälle schulweit oder für eine Klasse anlegen/löschen.
   Sie werden wie Ferien bei der Terminplanung berücksichtigt.
 - **Protokoll:** Chronologische Einträge nach Klasse und Fach; der neueste steht unten.

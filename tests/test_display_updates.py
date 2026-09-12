@@ -53,7 +53,7 @@ def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
             assert isinstance(modal, EditTimetabelEntryScreen)
             assert (
                 str(modal.query_one("#save-timetable-entry", Button).label)
-                == "Übernehmen"
+                == "Speichern"
             )
             modal.query_one("#school-class", Select).value = "9B"
             await pilot.pause()
@@ -137,10 +137,13 @@ def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):
             assert table.cursor_coordinate == cursor
             assert len({column.width for column in table.ordered_columns}) == 1
             assert table.ordered_columns[1].width > widths[0]
-            assert (
-                sum(row.height for row in table.ordered_rows)
-                == table.content_size.height - table.header_height
+            assert len({row.height for row in table.ordered_rows}) == 1
+            remaining = (
+                table.content_size.height
+                - table.header_height
+                - sum(row.height for row in table.ordered_rows)
             )
+            assert 0 <= remaining < len(table.ordered_rows)
             assert all(row.height >= 3 for row in table.ordered_rows)
             for size in [(180, 42), (241, 70), (80, 24)]:
                 await pilot.resize_terminal(*size)
@@ -149,6 +152,17 @@ def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):
                 assert len(table.columns) == 5
                 assert len({column.width for column in table.ordered_columns}) == 1
                 assert all(row.height >= 3 for row in table.ordered_rows)
+                assert len({row.height for row in table.ordered_rows}) == 1
+                header = table.render_line(1).text
+                rule = table.render_line(2).text
+                body = table.render_line(table.header_height).text
+
+                def positions(text, chars):
+                    return [i for i, char in enumerate(text) if char in chars]
+
+                assert positions(header, "│") == positions(rule, "├┼┤")
+                assert positions(header, "│") == positions(body, "│")
+                assert rule.lstrip().startswith("├")
             assert table.max_scroll_y > 0
 
     asyncio.run(run())

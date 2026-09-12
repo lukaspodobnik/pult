@@ -57,7 +57,7 @@ def test_dashboard_widgets_and_time_updates(
 
     async def run():
         app = DashboardApp()
-        async with app.run_test() as pilot:
+        async with app.run_test(size=(206, 46)) as pilot:
             await pilot.pause()
             view = app.query_one(HomeView)
             assert app.query_one(SchoolYearProgress).parent is view
@@ -73,9 +73,13 @@ def test_dashboard_widgets_and_time_updates(
             assert not table.can_focus
             assert table.cursor_type == "none"
             assert [
-                line.rstrip()
-                for line in str(table.get_cell("1", "monday")).splitlines()
+                line.strip() for line in str(table.get_cell("1", "monday")).splitlines()
             ][:2] == ["5A · Ma", "101"]
+            cell_lines = str(table.get_cell("1", "monday")).splitlines()
+            for line in cell_lines[:2]:
+                left = len(line) - len(line.lstrip())
+                right = len(line) - len(line.rstrip())
+                assert abs(left - right) <= 1
             panel = app.query_one(TimetablePanel)
             current_style = panel.get_component_rich_style("timetable--current")
             row_style = panel.get_component_rich_style("timetable--period")
