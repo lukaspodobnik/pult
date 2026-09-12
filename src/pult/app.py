@@ -114,7 +114,8 @@ class PultApp(App):
         self.call_after_refresh(self.offer_school_year_change)
 
     def offer_school_year_change(self) -> None:
-        if not isinstance(self.screen, MainScreen):
+        # Ein verzögerter Aufruf kann noch während des App-Abbaus eintreffen.
+        if not self.screen_stack or not isinstance(self.screen, MainScreen):
             return
         if self.screen._pending_view_id is not None:
             self.set_timer(0.1, self.offer_school_year_change)

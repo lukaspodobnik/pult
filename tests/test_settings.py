@@ -161,3 +161,10 @@ def test_startup_year_offer(tmp_path, monkeypatch, confirm):
             )
 
     asyncio.run(run())
+
+
+def test_school_year_offer_ignores_empty_screen_stack():
+    app = PultApp()
+    assert not app.screen_stack
+    app.offer_school_year_change()
+    assert not app.screen_stack
