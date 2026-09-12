@@ -15,6 +15,7 @@ from pult.screens.setup_pult_screen import SetupScreen
 from pult.services.omarchy_theme import OmarchyThemeWatcher
 from pult.services.sequence_library import SequenceLibrary
 from pult.services.settings import get_suggested_school_year, update_settings
+from pult.services.themes import standard_theme
 
 
 class PultApp(App):
@@ -75,7 +76,9 @@ class PultApp(App):
         return self.sequence_library
 
     def on_mount(self) -> None:
-        self.theme = "gruvbox"
+        theme = standard_theme()
+        self.register_theme(theme)
+        self.theme = theme.name
         self.refresh_omarchy_theme()
         self.set_interval(1, self.refresh_omarchy_theme)
         self.app_config = load_app_config()

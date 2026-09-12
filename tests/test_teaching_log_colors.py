@@ -10,6 +10,7 @@ from pult.progress.class_progress import (
     TeachingLogEntry,
     TeachingOrigin,
 )
+from pult.services.themes import standard_theme
 from pult.views.teaching_log_view import TeachingLogView
 from pult.widgets.lesson_progress_bar import LessonProgressBar
 
@@ -47,9 +48,10 @@ def test_log_colors_match_progress_and_follow_theme(school_class, subject, seque
 
     async def run():
         app = ColorApp()
+        app.register_theme(standard_theme())
         async with app.run_test() as pilot:
             colors = []
-            for theme in ("gruvbox", "textual-light"):
+            for theme in ("pult", "textual-light"):
                 app.theme = theme
                 await pilot.pause()
                 bar = app.query_one(LessonProgressBar)

@@ -123,8 +123,9 @@ Enthalten sind Mathematik- und Informatiksequenzen der hinterlegten bayerischen
 Gymnasiallehrpläne und Kalender von **2025/26 bis 2029/30**. Nur Jahre mit gültigem lokalem
 Kalender sind auswählbar. Quellen stehen in den Kalenderdateien.
 
-Auf Omarchy folgt das Farbschema automatisch dem aktuellen Theme; sonst wird Gruvbox
-verwendet. Das Layout ist für etwa **206 × 46 Zeichen** ausgelegt. Neue Datenablagen enthalten elf Stundenzeiten. Die Übersicht zeigt mindestens
+Auf Omarchy folgt das Farbschema automatisch dem aktuellen Theme; sonst wird das eigene dunkle PULT-Theme
+verwendet: Anthrazit, hellgrauer Text und ein gedämpfter warmer Orangeton als Akzent.
+Beide Varianten nutzen dieselben Regeln für Flächen, Rahmen und Fokusmarkierungen. Das Layout ist für etwa **206 × 46 Zeichen** ausgelegt. Neue Datenablagen enthalten elf Stundenzeiten. Die Übersicht zeigt mindestens
 acht Stunden; spätere belegte Stunden werden im Stundenplan scrollbar ergänzt.
 
 ## Weitere Einstellungen

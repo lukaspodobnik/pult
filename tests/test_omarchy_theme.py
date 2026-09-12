@@ -100,7 +100,7 @@ def test_live_theme_keeps_modal_input_and_focus(
             assert (
                 app.theme.startswith("pult-omarchy-")
                 if valid_at_start
-                else app.theme == "gruvbox"
+                else app.theme == "pult"
             )
             modal = CancelLessonScreen("5A")
             await app.push_screen(modal)
@@ -157,3 +157,16 @@ def test_live_theme_keeps_modal_input_and_focus(
             )
 
     asyncio.run(run())
+
+
+def test_standard_theme_uses_same_rules_as_omarchy():
+    from dataclasses import replace
+
+    from pult.services.themes import PULT_PALETTE, standard_theme
+
+    standard = standard_theme()
+    assert standard.name == "pult"
+    assert standard.dark
+    assert standard == replace(theme_from_palette(PULT_PALETTE), name="pult")
+    assert standard.background == standard.surface
+    assert standard.variables["footer-background"] == standard.background
