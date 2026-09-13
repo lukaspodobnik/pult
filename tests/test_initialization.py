@@ -1,3 +1,6 @@
+from importlib.resources import files
+from pathlib import Path
+
 import pytest
 
 from pult.config import AppConfig, load_app_config
@@ -168,3 +171,53 @@ def test_material_directories_are_created_without_overwriting_content(
     initialize_pult(str(tmp_path), "nvim", "2026-2027")
     assert marker.read_text() == "Persönlich"
     assert not (tmp_path / "sequences/6/mathematik/formatbeispiel").exists()
+
+
+def test_initialization_copies_reference_documents(tmp_path, monkeypatch):
+    monkeypatch.setattr("pult.initialization.pult.save_app_config", lambda config: None)
+    initialize_pult(str(tmp_path), "nvim", "2026-2027")
+    defaults = files("pult.defaults")
+    names = [
+        "jahrgang-05.md",
+        "jahrgang-06.md",
+        "jahrgang-07.md",
+        "jahrgang-08.md",
+        "kompetenzen.md",
+        "anforderungsbereiche.md",
+        "leitideen.md",
+        "operatoren.md",
+    ]
+    paths = [f"curriculum/mathematik/{name}" for name in names]
+    paths.append("vorbereitung/materialvertrag.md")
+    for relative in paths:
+        assert (tmp_path / relative).read_bytes() == defaults.joinpath(
+            relative
+        ).read_bytes()
+    assert sorted(p.name for p in (tmp_path / "vorbereitung").iterdir()) == [
+        "materialvertrag.md"
+    ]
+    contract = Path(__file__).parents[1] / "docs/materialvertrag.md"
+    assert (tmp_path / paths[-1]).read_bytes() == contract.read_bytes()
+
+
+def test_reinitialization_preserves_reference_and_personal_files(tmp_path, monkeypatch):
+    monkeypatch.setattr("pult.initialization.pult.save_app_config", lambda config: None)
+    initialize_pult(str(tmp_path), "nvim", "2026-2027")
+    paths = [
+        "curriculum/mathematik/jahrgang-05.md",
+        "vorbereitung/materialvertrag.md",
+        "vorbereitung/vertrag.md",
+    ]
+    for relative in paths:
+        (tmp_path / relative).write_text("Persönlich")
+    missing = tmp_path / "curriculum/mathematik/operatoren.md"
+    missing.unlink()
+    initialize_pult(str(tmp_path), "nvim", "2026-2027")
+    for relative in paths:
+        assert (tmp_path / relative).read_text() == "Persönlich"
+    assert (
+        missing.read_bytes()
+        == files("pult.defaults")
+        .joinpath("curriculum/mathematik/operatoren.md")
+        .read_bytes()
+    )

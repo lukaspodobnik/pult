@@ -243,3 +243,8 @@ rechts die nächste Stunde über die gesamte Höhe. In niedrigeren Terminals wir
 der obere Rahmen gemeinsam mit den Navigationsblöcken verkleinert. Ansichten
 und Unterricht teilen sich seine Höhe; Verwaltung liegt auf Höhe des unteren
 Inhaltsblocks.
+
+Bei der Einrichtung werden außerdem die Curriculum-Referenzen unter `curriculum/`
+und der Materialvertrag unter `vorbereitung/materialvertrag.md` in der gewählten
+Datenablage angelegt. Vorhandene Dateien bleiben erhalten. Persönliche
+Vorbereitungsvorgaben werden nicht mitgeliefert.

@@ -30,6 +30,8 @@ DEFAULT_FILES = (
 DEFAULT_DIRECTORIES = (
     Path("sequences"),
     CALENDARS_DIRECTORY_NAME,
+    Path("curriculum"),
+    Path("vorbereitung"),
 )
 
 
