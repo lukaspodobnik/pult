@@ -70,6 +70,7 @@ class TeachingPicker(OptionList):
     def __init__(self, *, id: str | None = None) -> None:
         super().__init__(
             Option("Sequenzen", id="sequence-library"),
+            Option("Lehrplan", id="curriculum"),
             Option("Protokoll", id="teaching-log"),
             id=id,
         )

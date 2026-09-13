@@ -109,6 +109,12 @@ Die Eingabedialoge für Klassen, Stundenplaneinträge und Ausfälle bestätigen
   Stunden-IDs; die Stunden liegen in eigenen Ordnern. IDs bleiben stabil, da
   Protokolle darauf verweisen. Das neue Format ist im
   [Materialvertrag](docs/materialvertrag.md) beschrieben.
+- **Lehrplan:** Fach, Jahrgang und Abschnitt im linken Baum auswählen. Bereits das
+  Hervorheben zeigt den Inhalt rechts; bei Überschriften springt die Leseansicht
+  zum Abschnitt. Mathematik enthält außerdem Leitideen, Kompetenzen,
+  Anforderungsbereiche und Operatoren. Der Fokus bleibt im Baum; längere Texte
+  lassen sich mit der Maus scrollen. Esc schließt die Ansicht. Persönliche Dateien
+  unter `curriculum/` haben Vorrang vor mitgelieferten Defaults.
 - **Stundenplan:** Enter bearbeitet eine Zelle. „Speichern“ und Löschen sichern
   die Änderung sofort. Klasse, Fach und Raum werden beim nächsten Eintrag vorgeschlagen.
   „Zurück“ oder Esc verlässt die Übersicht; gespeicherte Änderungen bleiben erhalten.

@@ -51,6 +51,7 @@ from pult.screens.add_extra_lesson_screen import (
 from pult.screens.base_screen import PultScreen
 from pult.screens.cancel_lesson_screen import CancelLessonScreen
 from pult.screens.confirm_undo_screen import ConfirmUndoScreen
+from pult.screens.curriculum_screen import CurriculumScreen
 from pult.screens.edit_classes_screen import EditClassesScreen
 from pult.screens.edit_closures_screen import EditClosuresScreen
 from pult.screens.edit_timetable_screen import EditTimetableScreen
@@ -135,7 +136,7 @@ class MainScreen(PultScreen[None]):
         for widget in self.query("TimetablePanel, .sequence-list"):
             widget.styles.height = height
         for widget in self.query("#view-picker"):
-            widget.styles.height = height - 5
+            widget.styles.height = height - 6
 
     def action_go_home(self) -> None:
         """Wähle die Übersicht und setze den Fokus zurück auf den Ansichtenpicker."""
@@ -944,6 +945,8 @@ class MainScreen(PultScreen[None]):
         match option_id:
             case "edit-classes":
                 self.app.push_screen(EditClassesScreen(), self.classes_edited)
+            case "curriculum":
+                self.app.push_screen(CurriculumScreen())
             case "sequence-library":
                 self.app.push_screen(
                     SequenceLibraryScreen(), self.sequence_library_closed

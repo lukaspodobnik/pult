@@ -56,7 +56,7 @@ MainScreen #management-picker {
 }
 
 MainScreen #teaching-picker {
-    height: 4;
+    height: 5;
     margin-top: 1;
 }
 

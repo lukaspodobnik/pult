@@ -1,0 +1,10 @@
+CurriculumScreen #curriculum-workspace { height: 1fr; }
+CurriculumScreen #curriculum-navigation { width: 36; padding: 1; }
+CurriculumScreen #curriculum-tree { height: 1fr; border: round $primary; border-title-color: $text-accent; }
+CurriculumScreen #curriculum-content { width: 1fr; padding: 1 2; }
+CurriculumScreen #curriculum-reader { height: 1fr; padding: 1 2; background: $surface; border: round $primary; border-title-color: $text-accent; }
+CurriculumScreen Markdown { background: transparent; padding: 0; margin: 0; }
+CurriculumScreen MarkdownH1 { background: transparent; border: none; color: $text-accent; content-align: left middle; }
+CurriculumScreen MarkdownH2 { color: $text-accent; }
+CurriculumScreen #curriculum-tree, CurriculumScreen #curriculum-reader { background-tint: transparent; outline: none; border-title-style: none; }
+CurriculumScreen PultFooter { padding: 0 2 0 1; }
