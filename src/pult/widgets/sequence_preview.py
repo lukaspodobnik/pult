@@ -39,7 +39,11 @@ class SequencePreview(OptionList):
         for index, lesson in enumerate(sequence.lessons, start=1):
             if index > 1:
                 self.add_option(None)
-            self.add_option(Option(self.render_lesson(lesson, index), id=lesson.id))
+            self.add_option(
+                Option(
+                    self.render_lesson(lesson, index, show_phases=False), id=lesson.id
+                )
+            )
         if not sequence.lessons:
             self.add_option(
                 Option("Noch keine Unterrichtsstunden eingetragen.", disabled=True)
@@ -64,7 +68,9 @@ class SequencePreview(OptionList):
         return text
 
     @staticmethod
-    def render_lesson(lesson: Lesson, index: int | None = None) -> Text:
+    def render_lesson(
+        lesson: Lesson, index: int | None = None, *, show_phases: bool = True
+    ) -> Text:
         prefix = f"{index}. Stunde · " if index is not None else ""
         text = Text(f"{prefix}{lesson.title or UNTITLED_LESSON}\n", style="")
         text.stylize("bold", 0, len(text))
@@ -78,7 +84,7 @@ class SequencePreview(OptionList):
                 text.append("\n".join(f"• {value}" for value in values) + "\n")
             elif label == "Aufgaben":
                 text.append("\nNoch keine Aufgaben eingetragen.\n", style="italic")
-        if lesson.phases:
+        if show_phases and lesson.phases:
             text.append("\nVerlauf\n", style="bold")
             for phase in lesson.phases:
                 text.append(f"• {phase.title}: ", style="bold")
@@ -91,7 +97,7 @@ class SequencePreview(OptionList):
         return "\n\n".join(
             [cls.metadata(sequence)]
             + [
-                cls.render_lesson(lesson, index).plain
+                cls.render_lesson(lesson, index, show_phases=False).plain
                 for index, lesson in enumerate(sequence.lessons, start=1)
             ]
             + (
