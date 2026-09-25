@@ -7,7 +7,6 @@ from pult.curriculum.sequence import Sequence
 from pult.presentation import UNTITLED_LESSON, WEEKDAY_NAMES
 from pult.progress.class_progress import TeachingAction
 from pult.progress.queries import (
-    DailyAdditionalEntry,
     DailyScheduleSummary,
     DailyTimetableEntry,
     get_time_highlighted_occurrence,
@@ -114,46 +113,6 @@ class DailyScheduleRow(Horizontal):
         return lesson.title or UNTITLED_LESSON
 
 
-class DailyAdditionalRow(Horizontal):
-    def __init__(
-        self,
-        entry: DailyAdditionalEntry,
-        subjects_by_id: dict[str, Subject],
-    ) -> None:
-        super().__init__(classes="daily-additional-row")
-        self.entry = entry
-        self.subjects_by_id = subjects_by_id
-
-    def compose(self) -> ComposeResult:
-        yield Static("+", classes="day-status")
-        with Vertical(classes="day-entry-content"):
-            yield CappedText(
-                f"{self.entry.school_class_id} · "
-                f"{self.subjects_by_id[self.entry.log_entry.subject_id].short_name} "
-                "· Zusatzunterricht",
-                classes="day-entry-heading",
-            )
-            comment = CappedText(
-                self.entry.log_entry.comment, classes="day-entry-lesson"
-            )
-            comment.display = bool(self.entry.log_entry.comment)
-            yield comment
-
-    def update_data(
-        self, entry: DailyAdditionalEntry, subjects_by_id: dict[str, Subject]
-    ) -> None:
-        """Aktualisiere einen Zusatztermin einschließlich optionalem Kommentar."""
-        self.entry = entry
-        self.subjects_by_id = subjects_by_id
-        self.query_one(".day-entry-heading", Static).update(
-            f"{entry.school_class_id} · "
-            f"{subjects_by_id[entry.log_entry.subject_id].short_name} · Zusatzunterricht"
-        )
-        comment = self.query_one(".day-entry-lesson", Static)
-        comment.update(entry.log_entry.comment)
-        comment.display = bool(entry.log_entry.comment)
-
-
 class DailySchedulePanel(Vertical):
     """Zeige heutige Termine und markiere die zeitlich nächste Stunde."""
 
@@ -188,12 +147,6 @@ class DailySchedulePanel(Vertical):
                     self.sequences_by_key,
                 )
 
-            heading = Static("WEITERE EINTRÄGE", classes="daily-additional-heading")
-            heading.display = bool(daily_schedule.additional_entries)
-            yield heading
-            for entry in daily_schedule.additional_entries:
-                yield DailyAdditionalRow(entry, self.subjects_by_id)
-
     async def update_data(
         self,
         daily_schedule: DailyScheduleSummary,
@@ -212,8 +165,6 @@ class DailySchedulePanel(Vertical):
         self.query_one(
             ".dashboard-empty"
         ).display = not daily_schedule.timetable_entries
-        heading = self.query_one(".daily-additional-heading")
-        heading.display = bool(daily_schedule.additional_entries)
         rows = list(self.query(DailyScheduleRow))
         for row, entry in zip(rows, daily_schedule.timetable_entries):
             row.update_data(entry, subjects_by_id, sequences_by_key)
@@ -225,19 +176,6 @@ class DailySchedulePanel(Vertical):
                     DailyScheduleRow(e, subjects_by_id, sequences_by_key)
                     for e in daily_schedule.timetable_entries[len(rows) :]
                 ),
-                before=heading,
-            )
-        additional_rows = list(self.query(DailyAdditionalRow))
-        for row, entry in zip(additional_rows, daily_schedule.additional_entries):
-            row.update_data(entry, subjects_by_id)
-        for row in additional_rows[len(daily_schedule.additional_entries) :]:
-            await row.remove()
-        if len(daily_schedule.additional_entries) > len(additional_rows):
-            await content.mount(
-                *(
-                    DailyAdditionalRow(e, subjects_by_id)
-                    for e in daily_schedule.additional_entries[len(additional_rows) :]
-                )
             )
         if changed_day:
             content.scroll_home(animate=False)

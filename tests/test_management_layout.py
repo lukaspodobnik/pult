@@ -40,10 +40,10 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
             assert content.region.x == 2
             assert content.region.y == 1
             actions = screen.query_one(".management-actions")
-            assert actions.region.height == 1
+            assert actions.region.height == 3
             assert actions.region.y == content.region.bottom + 1
             buttons = list(actions.query(Button))
-            assert all(button.region.height == 1 for button in buttons)
+            assert all(button.region.height == 3 for button in buttons)
             assert buttons[-1].region.right == actions.region.right
             if screen_type is EditTimetableScreen:
                 content.focus()

@@ -4,13 +4,14 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.widgets import Button, Input, Label, Select, Static
+from textual.widgets import Input, Label, Select, Static
 
 from pult.presentation import WEEKDAYS
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
 from pult.school.timetable import TimetableEntry
 from pult.screens.base_screen import PultModalScreen
+from pult.widgets.button import Button
 from pult.widgets.form_dialog import FormDialog, FormFields
 from pult.widgets.scrolling import Horizontal
 

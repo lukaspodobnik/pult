@@ -181,8 +181,7 @@ HomeView #daily-schedule-entries {
     padding: 0 1 1 1;
 }
 
-HomeView .daily-schedule-row,
-HomeView .daily-additional-row {
+HomeView .daily-schedule-row {
     height: auto;
     min-height: 2;
     padding: 0 1;
@@ -213,10 +212,6 @@ HomeView .daily-schedule-row.continued .day-status {
 
 HomeView .daily-schedule-row.cancelled .day-status {
     color: $error;
-}
-
-HomeView .daily-additional-row .day-status {
-    color: $accent;
 }
 
 HomeView .day-period {
@@ -255,13 +250,6 @@ HomeView .next-lesson-tasks {
 
 HomeView .day-entry-lesson {
     color: $foreground-muted;
-}
-
-HomeView .daily-additional-heading {
-    height: 2;
-    margin-top: 1;
-    color: $foreground-muted;
-    text-style: bold;
 }
 
 EditTimetableScreen #edit-timetable-screen {

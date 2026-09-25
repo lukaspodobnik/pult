@@ -84,13 +84,27 @@ def test_dashboard_widgets_and_time_updates(
             current_style = panel.get_component_rich_style("timetable--current")
             row_style = panel.get_component_rich_style("timetable--period")
             assert current_style.bgcolor != row_style.bgcolor
-            assert table.get_cell("1", "monday").style == current_style
-            assert table.get_cell("1", "tuesday").style == row_style
+            assert (
+                table.get_cell("1", "monday").get_style_at_offset(app.console, 0)
+                == current_style
+            )
+            assert (
+                table.get_cell("1", "tuesday").get_style_at_offset(app.console, 0)
+                == row_style
+            )
             assert (
                 not current_style.bold
                 and not current_style.underline
                 and not current_style.reverse
             )
+            for column in ("monday", "tuesday", "period", "separator-0"):
+                cell = table.get_cell("1", column)
+                lines = cell.plain.split("\n")
+                second = len(lines[0]) + 1
+                third = second + len(lines[1]) + 1
+                assert cell.get_style_at_offset(app.console, second).bgcolor is not None
+                expected = row_style.bgcolor if column == "monday" else None
+                assert cell.get_style_at_offset(app.console, third).bgcolor == expected
             assert "1. Std." in str(table.ordered_rows[0].label)
             rows = list(app.query_one(DailySchedulePanel).query(DailyScheduleRow))
             assert [row.has_class("time-highlighted") for row in rows] == [True, False]
@@ -98,9 +112,15 @@ def test_dashboard_widgets_and_time_updates(
             Clock.current = datetime(2026, 9, 7, 8, 55)
             view.refresh_time_highlight()
             assert [row.has_class("time-highlighted") for row in rows] == [False, True]
-            assert table.get_cell("2", "monday").style == current_style
-            assert table.get_cell("1", "monday").style == row_style
-            assert table.get_cell("1", "tuesday").style == ""
+            assert (
+                table.get_cell("2", "monday").get_style_at_offset(app.console, 0)
+                == current_style
+            )
+            assert (
+                table.get_cell("1", "monday").get_style_at_offset(app.console, 0)
+                == row_style
+            )
+            assert not table.get_cell("1", "tuesday").spans
             view.refresh_time_highlight()
             assert table.row_count == len(periods)
 

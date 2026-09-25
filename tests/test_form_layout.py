@@ -56,13 +56,14 @@ def test_form_frames_actions_and_focus(tmp_path, monkeypatch, size):
                 assert dialog.region.y >= 0
                 assert dialog.region.bottom <= size[1]
                 actions = dialog.query_one(".form-actions")
-                assert actions.region.height == 1
+                assert actions.region.height == 3
                 assert actions.region.bottom <= dialog.content_region.bottom
                 buttons = list(actions.query("Button"))
                 for button in buttons:
+                    assert button.styles.border.top[0] == "round"
                     assert str(button.label) in button.render_line(0).text
                 assert all(
-                    b.region.width == 16 and b.region.height == 1 for b in buttons
+                    b.region.width == 16 and b.region.height == 3 for b in buttons
                 )
                 assert app.focused in list(dialog.query("Input, Select, SelectionList"))
                 if isinstance(screen, AddClosureScreen):

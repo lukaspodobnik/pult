@@ -257,3 +257,49 @@ def test_dashboard_combines_all_queries(
     )
     assert dashboard.next_planned_lesson.lesson.id == "lesson-1"
     assert dashboard.daily_schedule.timetable_entries[0].is_time_highlighted
+
+
+def test_daily_preview_keeps_duplicate_titles_and_does_not_advance_progress(
+    empty_progress, sequences, periods, school_class, school_calendar, timetable_entries
+):
+    from dataclasses import replace
+
+    sequences[0].lessons[1] = replace(
+        sequences[0].lessons[1], title=sequences[0].lessons[0].title
+    )
+    summary = get_daily_schedule(
+        datetime(2026, 9, 7, 8, 0),
+        sequences,
+        timetable_entries,
+        periods,
+        [school_class],
+        {"5A": empty_progress},
+        school_calendar,
+        [],
+        {"5A": []},
+    )
+    planned = [row.planned_lesson for row in summary.timetable_entries]
+    assert [item.lesson.id for item in planned] == ["lesson-1", "lesson-2"]
+    assert [item.lesson.title for item in planned] == ["Zahlen ordnen"] * 2
+    assert [item.period for item in planned] == [1, 2]
+    assert all(row.action is None for row in summary.timetable_entries)
+    assert empty_progress.entries == ()
+
+
+def test_daily_preview_stops_at_sequence_end(
+    empty_progress, sequences, periods, school_class, school_calendar, timetable_entries
+):
+    sequences[0].lessons.pop()
+    summary = get_daily_schedule(
+        datetime(2026, 9, 7, 8, 0),
+        sequences,
+        timetable_entries,
+        periods,
+        [school_class],
+        {"5A": empty_progress},
+        school_calendar,
+        [],
+        {"5A": []},
+    )
+    assert summary.timetable_entries[0].planned_lesson.lesson.id == "lesson-1"
+    assert summary.timetable_entries[1].planned_lesson is None

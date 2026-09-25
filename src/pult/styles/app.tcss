@@ -30,18 +30,17 @@ ConfirmationScreen .confirmation-message {
 }
 
 ConfirmationScreen .confirmation-actions {
-    height: 1;
-    margin-top: 2;
+    height: 3;
+    margin-top: 1;
     align-horizontal: right;
 }
 
 ConfirmationScreen .confirmation-actions Button {
     margin-left: 1;
-    height: 1;
+    height: 3;
     min-width: 0;
     width: 16;
-    border: none;
-    padding: 0 2;
+    padding: 0;
 }
 
 Header {
@@ -94,17 +93,16 @@ FormDialog .form-hint {
 }
 
 FormDialog .form-actions {
-    height: 1;
-    margin-top: 2;
+    height: 3;
+    margin-top: 1;
     align-horizontal: right;
 }
 
 FormDialog .form-actions Button {
     width: 16;
     min-width: 0;
-    height: 1;
-    border: none;
-    padding: 0 2;
+    height: 3;
+    padding: 0;
     margin-left: 1;
 }
 
@@ -149,7 +147,12 @@ Footer .footer-key--description {
 }
 
 Screen Button {
-    background: $foreground 12%;
+    border: round $border-blurred;
+    height: 3;
+    padding: 0;
+    background: transparent;
+    background-tint: transparent;
+    tint: transparent;
     color: $foreground;
     text-style: none;
 }
@@ -159,19 +162,49 @@ Screen Button.-error {
 }
 
 Screen Button:hover {
-    background: $foreground 20%;
+    border: round $border;
 }
 
 Screen Button:focus {
-    background: $primary;
-    color: auto 100%;
-    text-style: bold;
+    border: round $primary;
 }
 
 Screen Button:disabled {
-    background: $foreground 6%;
     color: $foreground-muted;
     text-style: dim;
+}
+
+/* Einheitliche Terminalrahmen: eine Zeichenzelle pro Ecke. */
+Input,
+TextArea,
+Checkbox,
+RadioButton,
+OptionList,
+SelectionList,
+Select > SelectCurrent,
+Select > SelectOverlay {
+    border: round $border-blurred;
+    background-tint: transparent;
+    tint: transparent;
+    outline: none;
+}
+
+Input:focus,
+TextArea:focus,
+Checkbox:focus,
+RadioButton:focus,
+OptionList:focus,
+SelectionList:focus,
+Select:focus > SelectCurrent {
+    border: round $border;
+}
+
+Input.-invalid {
+    border: round $error 60%;
+}
+
+Input.-invalid:focus {
+    border: round $error;
 }
 
 OptionList {
@@ -209,16 +242,15 @@ PultFooter FooterKey.quit-key {
 }
 
 .management-actions {
-    height: 1;
+    height: 3;
     margin-top: 1;
 }
 
 .management-actions Button {
-    height: 1;
+    height: 3;
     min-width: 0;
     width: auto;
-    border: none;
-    padding: 0 2;
+    padding: 0;
     margin-right: 1;
 }
 

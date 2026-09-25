@@ -118,8 +118,8 @@ class LessonScreen(PultScreen[Sequence]):
                 with Vertical(id="lesson-list-frame"):
                     yield OptionList(
                         *(
-                            Option(f"{i:02}  {lesson.title}", id=lesson.id)
-                            for i, lesson in enumerate(self.sequence.lessons, 1)
+                            Option(lesson.title, id=lesson.id)
+                            for lesson in self.sequence.lessons
                         ),
                         id="lesson-list",
                     )
@@ -278,8 +278,8 @@ class LessonScreen(PultScreen[Sequence]):
         with self.prevent(OptionList.OptionHighlighted):
             listing.clear_options()
             listing.add_options(
-                Option(f"{i:02}  {item.title}", id=item.id)
-                for i, item in enumerate(updated.lessons, 1)
+                Option(item.title, id=item.id)
+                for item in updated.lessons
             )
         self.query_one(SequenceContext).update_sequence(self.sequence)
         await self.refresh_contents()

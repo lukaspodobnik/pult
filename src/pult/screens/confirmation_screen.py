@@ -2,9 +2,10 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.widgets import Button, Static
+from textual.widgets import Static
 
 from pult.screens.base_screen import PultModalScreen
+from pult.widgets.button import Button
 from pult.widgets.scrolling import Horizontal, Vertical
 
 

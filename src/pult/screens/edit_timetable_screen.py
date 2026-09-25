@@ -4,7 +4,7 @@ from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import Button, Static
+from textual.widgets import Static
 
 from pult.presentation import WEEKDAYS
 from pult.school.period import Period, load_periods
@@ -22,6 +22,7 @@ from pult.screens.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
+from pult.widgets.button import Button
 from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import DataTable, Horizontal, Vertical
 

@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from textual import on
 from textual.app import ComposeResult
-from textual.widgets import Button, Static
+from textual.widgets import Static
 from textual.widgets.option_list import Option
 
 from pult.school.school_class import (
@@ -18,6 +18,7 @@ from pult.screens.base_screen import (
 )
 from pult.screens.confirmation_screen import ConfirmationScreen
 from pult.screens.setup_school_class_screen import SchoolClassSetupScreen
+from pult.widgets.button import Button
 from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 

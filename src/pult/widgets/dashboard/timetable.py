@@ -191,13 +191,16 @@ class TimetablePanel(Vertical):
                     self._cell(weekday, period.number, current_weekday, current_period)
                 )
 
-            row_label = self.get_highlighted_text(
-                f"{period.number}. Std.".center(12),
-                is_current_row=period.number == current_period,
+            label = (
+                f"{period.number}. Std.".center(12)
+                + f"\n{period.start:%H:%M}–{period.end:%H:%M} "
             )
-            row_label.append(f"\n{period.start:%H:%M}–{period.end:%H:%M} ", style="dim")
             if height > 2:
-                row_label.append("\n" + " " * 12)
+                label += "\n" + " " * 12
+            row_label = self.get_highlighted_text(
+                label, is_current_row=period.number == current_period
+            )
+            row_label.stylize("dim", 13, 25)
             table.add_row(
                 row_label,
                 *cells,
@@ -214,15 +217,15 @@ class TimetablePanel(Vertical):
         is_current_column: bool = False,
     ) -> Text:
         text = Text(content, no_wrap=True, overflow="ellipsis")
-        component = None
-        if is_current_row or is_current_column:
+        # Tagesmarkierung bleibt auch in den Abstandszeilen durchgehend.
+        if is_current_column:
+            text.style = self.get_component_rich_style("timetable--period")
+        if is_current_row:
             component = (
-                "timetable--current"
-                if is_current_row and is_current_column
-                else "timetable--period"
+                "timetable--current" if is_current_column else "timetable--period"
             )
-        if component is not None:
-            text.style = self.get_component_rich_style(component)
+            end = len("\n".join(content.split("\n")[:2]))
+            text.stylize(self.get_component_rich_style(component), 0, end)
         return text
 
 

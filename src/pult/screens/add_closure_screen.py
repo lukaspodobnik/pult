@@ -4,7 +4,6 @@ from typing import ClassVar
 from textual import on
 from textual.app import ComposeResult
 from textual.widgets import (
-    Button,
     Input,
     Label,
     Select,
@@ -20,6 +19,7 @@ from pult.screens.base_screen import (
     PultModalScreen,
 )
 from pult.services.closures import ScopedClosure, validate_closure
+from pult.widgets.button import Button
 from pult.widgets.form_dialog import FormDialog, FormFields
 from pult.widgets.scrolling import Horizontal, Vertical
 

@@ -5,12 +5,13 @@ from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
-from textual.widgets import Button, Checkbox, Input, Label, Select
+from textual.widgets import Checkbox, Input, Label, Select
 
 from pult.presentation import DATE_INPUT_HINT, format_date, parse_date
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
 from pult.screens.base_screen import PultModalScreen
+from pult.widgets.button import Button
 from pult.widgets.form_dialog import FormDialog, FormFields
 from pult.widgets.scrolling import Horizontal
 

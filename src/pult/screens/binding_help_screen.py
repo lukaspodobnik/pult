@@ -6,9 +6,10 @@ from rich.table import Table
 from rich.text import Text
 from textual import on
 from textual.binding import Binding
-from textual.widgets import Button, Input, Static, TextArea
+from textual.widgets import Input, Static, TextArea
 
 from pult.screens.base_screen import PultModalScreen
+from pult.widgets.button import Button
 from pult.widgets.form_dialog import FormDialog
 from pult.widgets.scrolling import Horizontal, VerticalScroll
 

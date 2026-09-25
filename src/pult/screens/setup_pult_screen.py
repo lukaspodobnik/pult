@@ -3,7 +3,7 @@ from pathlib import Path
 from textual import on
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Button, Input, Label, Select
+from textual.widgets import Input, Label, Select
 
 from pult.config import AppConfig
 from pult.initialization import (
@@ -15,6 +15,7 @@ from pult.school.school_year import (
     get_school_year_options,
 )
 from pult.services.settings import get_editor_options
+from pult.widgets.button import Button
 from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import Vertical
 

@@ -1,6 +1,6 @@
 """Schuljahresfortschritt, Tagesplan und nächste Lesson für Home."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 
 from pult.curriculum.sequence import Sequence
@@ -173,6 +173,40 @@ def get_daily_schedule(
         )
         if planned_lesson.date == current_date
     }
+    # Vorschau der weiteren heutigen Termine aus den offenen Stunden der
+    # aktiven Sequenz. Gleiche Titel sind unterschiedliche Stunden (IDs).
+    # Der gespeicherte Fortschritt wird durch diese Vorschau nicht verändert.
+    for first in tuple(planned_lessons_by_occurrence.values()):
+        progress = progresses_by_class_id[first.school_class_id]
+        sequence = next(
+            sequence
+            for sequence in sequences
+            if sequence.grade_level == first.grade_level
+            and sequence.subject_id == first.subject_id
+            and sequence.id == first.sequence_id
+        )
+        finished = {
+            entry.lesson_id
+            for entry in progress.entries
+            if entry.subject_id == first.subject_id
+            and entry.sequence_id == first.sequence_id
+            and entry.action in {TeachingAction.COMPLETED, TeachingAction.SKIPPED}
+        }
+        remaining = [lesson for lesson in sequence.lessons if lesson.id not in finished]
+        occurrences = [
+            entry
+            for entry in entries_for_today
+            if entry.school_class_id == first.school_class_id
+            and entry.subject_id == first.subject_id
+            and entry.period >= first.period
+            and (entry.school_class_id, entry.period)
+            not in logged_entries_by_occurrence
+        ]
+        for entry, lesson in zip(occurrences, remaining):
+            planned_lessons_by_occurrence[
+                (entry.school_class_id, entry.subject_id, entry.period)
+            ] = replace(first, lesson=lesson, period=entry.period)
+
     highlighted_occurrence = get_time_highlighted_occurrence(
         entries_for_today,
         periods,

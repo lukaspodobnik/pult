@@ -22,7 +22,6 @@ from pult.views.school_class_view import (
     SubjectProgressBlock,
 )
 from pult.widgets.dashboard.daily_schedule import (
-    DailyAdditionalRow,
     DailyScheduleRow,
 )
 from pult.widgets.dashboard.next_lesson import NextLessonPanel
@@ -206,8 +205,7 @@ def test_dashboard_updates_preserve_widgets_and_resize_rows(
             await view.update_data(entries, [subject], periods, sequences, with_log)
             assert row.has_class("cancelled")
             assert str(row.query_one(".day-status", Static).render()) == "×"
-            additional = view.query_one(DailyAdditionalRow)
-            assert additional.query_one(".day-entry-lesson").display
+            assert not view.query(".daily-additional-row, .daily-additional-heading")
             no_comment = replace(
                 with_log,
                 daily_schedule=replace(
@@ -218,13 +216,12 @@ def test_dashboard_updates_preserve_widgets_and_resize_rows(
                 ),
             )
             await view.update_data(entries, [subject], periods, sequences, no_comment)
-            assert view.query_one(DailyAdditionalRow) is additional
-            assert not additional.query_one(".day-entry-lesson").display
+            assert not view.query(".daily-additional-row, .daily-additional-heading")
             await view.update_data(
                 timetable_entries, [subject], periods, sequences, dashboard
             )
             assert not row.has_class("cancelled")
-            assert len(view.query(DailyAdditionalRow)) == 0
+            assert not view.query(".daily-additional-row, .daily-additional-heading")
             assert view.query_one(DailyScheduleRow) is row
             assert len(view.query(DailyScheduleRow)) == 2
             assert lesson_label.display
