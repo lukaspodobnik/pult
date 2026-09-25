@@ -115,7 +115,7 @@ HomeView #school-year-progress-percentage {
 
 HomeView #home-dashboard-content {
     height: 1fr;
-    min-height: 34;
+    min-height: 30;
     min-width: 120;
 }
 
@@ -159,7 +159,6 @@ HomeView .dashboard-empty {
     height: auto;
 }
 
-HomeView .next-lesson-heading,
 HomeView .next-lesson-name {
     text-style: bold;
 }
@@ -170,11 +169,39 @@ HomeView .dashboard-empty {
     color: $foreground-muted;
 }
 
-HomeView #daily-schedule {
+HomeView #home-dashboard-right {
     width: 2fr;
     height: 1fr;
-    min-height: 7;
 }
+
+HomeView #daily-schedule {
+    width: 1fr;
+    height: 21;
+    margin-bottom: 1;
+}
+
+HomeView #class-overview {
+    height: 1fr;
+    min-height: 8;
+    padding: 0 1;
+}
+
+HomeView #class-overview-headings {
+    border-bottom: solid $foreground 18%;
+    height: 2;
+    padding-right: 1;
+    text-style: none;
+    color: $foreground-muted;
+}
+
+HomeView #class-overview-rows { height: 1fr; scrollbar-gutter: stable; }
+HomeView .class-balance-row { height: 1; }
+HomeView .balance-class { width: 2fr; height: 1; }
+HomeView .balance-difference { width: 1fr; min-width: 12; height: 1; }
+HomeView .balance-assessments { width: 2fr; min-width: 19; height: 1; color: $foreground-muted; }
+HomeView .balance-difference.positive { color: $success; }
+HomeView .balance-difference.negative { color: $error; }
+
 
 HomeView #daily-schedule-entries {
     height: 1fr;
@@ -184,7 +211,7 @@ HomeView #daily-schedule-entries {
 HomeView .daily-schedule-row {
     height: auto;
     min-height: 2;
-    padding: 0 1;
+    padding: 0 1 0 0;
     margin-bottom: 1;
     border-left: thick transparent;
 }
@@ -196,7 +223,7 @@ HomeView .daily-schedule-row.time-highlighted {
 }
 
 HomeView .day-status {
-    width: 3;
+    width: 2;
     height: 1;
     text-align: center;
     text-style: bold;
@@ -215,7 +242,7 @@ HomeView .daily-schedule-row.cancelled .day-status {
 }
 
 HomeView .day-period {
-    width: 4;
+    width: 3;
     height: 1;
     text-align: right;
     margin-right: 1;
@@ -236,7 +263,8 @@ HomeView .next-lesson-name {
 }
 
 HomeView .next-lesson-heading {
-    color: $text-accent;
+    color: $foreground-muted;
+    text-style: none;
 }
 
 HomeView .next-lesson-spacer {

@@ -49,7 +49,7 @@ class TimetablePanel(Vertical):
     ) -> None:
         super().__init__(id="timetable-panel", classes="dashboard-panel")
         self.border_title = "STUNDENPLAN"
-        self.styles.height = 27
+        self.styles.height = 21
         self._column_width = 10
         self.periods = displayed_periods(periods, timetable_entries)
         self.subjects_by_id = subjects_by_id
@@ -86,7 +86,7 @@ class TimetablePanel(Vertical):
         """Aktualisiere Zellen; ändere die Tabellenstruktur nur bei neuen Stundenzeilen."""
         old_periods = self.periods
         self.periods = displayed_periods(periods, timetable_entries)
-        self.styles.height = 27
+        self.styles.height = 21
         self.subjects_by_id = subjects_by_id
         self.timetable_entries_by_slot = {
             (entry.weekday, entry.period): entry for entry in timetable_entries
@@ -262,5 +262,5 @@ def get_current_timetable_position(
 def displayed_periods(
     periods: list[Period], entries: list[TimetableEntry]
 ) -> list[Period]:
-    last = max(8, max((entry.period for entry in entries), default=0))
+    last = max(6, max((entry.period for entry in entries), default=0))
     return [period for period in periods if period.number <= last]

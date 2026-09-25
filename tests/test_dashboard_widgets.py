@@ -131,3 +131,39 @@ def test_dashboard_widgets_and_time_updates(
             assert app.refresh_requests == 1
 
     asyncio.run(run())
+
+
+def test_class_overview_updates_and_scrolls(subject):
+    from pult.progress.queries.dashboard import ClassBalance
+    from pult.widgets.dashboard.class_overview import ClassOverviewPanel
+
+    class OverviewApp(App):
+        CSS_PATH = "../src/pult/styles/home.tcss"
+        CSS = "ClassOverviewPanel { height: 10; }"
+
+        def compose(self):
+            yield ClassOverviewPanel((), {subject.id: subject})
+
+    async def run():
+        app = OverviewApp()
+        async with app.run_test(size=(90, 20)) as pilot:
+            panel = app.query_one(ClassOverviewPanel)
+            balances = tuple(
+                ClassBalance(f"{i}A", subject.id, i - 6) for i in range(1, 20)
+            )
+            await panel.update_data(balances, {subject.id: subject})
+            await pilot.pause()
+            assert len(panel.query(".class-balance-row")) == 19
+            assert panel.query_one(".balance-difference.negative").content == "-5 Std."
+            assert all(
+                w.content == "—"
+                for w in panel.query(".class-balance-row .balance-assessments")
+            )
+            await panel.update_data(
+                (ClassBalance("5A", subject.id, 2),), {subject.id: subject}
+            )
+            await pilot.pause()
+            assert len(panel.query(".class-balance-row")) == 1
+            assert panel.query_one(".balance-difference.positive").content == "+2 Std."
+
+    asyncio.run(run())

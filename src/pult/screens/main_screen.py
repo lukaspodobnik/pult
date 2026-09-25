@@ -131,12 +131,14 @@ class MainScreen(PultScreen[None]):
         self.call_after_refresh(self.align_dashboard)
 
     def align_dashboard(self) -> None:
-        # Ansichten und Unterricht teilen die Höhe des oberen Inhaltsrahmens.
+        # Die Übersicht zeigt sechs Stunden; ANSICHTEN erhält dieselbe Höhe.
         height = min(27, max(12, self.size.height - 17))
-        for widget in self.query("TimetablePanel, .sequence-list"):
+        for widget in self.query(".sequence-list"):
             widget.styles.height = height
         for widget in self.query("#view-picker"):
-            widget.styles.height = height - 6
+            widget.styles.height = (
+                21 if self.active_school_class_id is None else height - 6
+            )
 
     def action_go_home(self) -> None:
         """Wähle die Übersicht und setze den Fokus zurück auf den Ansichtenpicker."""

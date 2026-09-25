@@ -25,6 +25,7 @@ from .planning import (
     get_next_planned_lessons_for_class,
 )
 from .scheduling import WEEKDAYS
+from .summaries import get_class_progress_summary
 
 
 @dataclass(frozen=True)
@@ -67,10 +68,18 @@ class DailyScheduleSummary:
 
 
 @dataclass(frozen=True)
+class ClassBalance:
+    school_class_id: str
+    subject_id: str
+    difference: int
+
+
+@dataclass(frozen=True)
 class HomeDashboardSummary:
     school_year_progress: SchoolYearProgressSummary
     next_planned_lesson: PlannedLesson | None
     daily_schedule: DailyScheduleSummary
+    class_balances: tuple[ClassBalance, ...] = ()
 
 
 def get_school_year_progress(
@@ -254,6 +263,21 @@ def get_home_dashboard_summary(
 ) -> HomeDashboardSummary:
     """Fasse Schuljahr, nächste Lesson und Tagesplan für das Dashboard zusammen."""
     return HomeDashboardSummary(
+        class_balances=tuple(
+            ClassBalance(school_class.id, summary.subject_id, summary.lesson_balance)
+            for school_class in sorted(
+                school_classes, key=lambda item: (item.grade_level, item.id)
+            )
+            for summary in get_class_progress_summary(
+                progresses_by_class_id[school_class.id],
+                sequences,
+                timetable_entries,
+                school_class,
+                school_calendar,
+                school_closures,
+                class_closures_by_class_id.get(school_class.id, []),
+            )
+        ),
         school_year_progress=get_school_year_progress(
             school_calendar,
             current_datetime.date(),

@@ -87,8 +87,8 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert footer.content_region.x == views.region.x
             assert footer.content_region.right == daily.region.right
             assert views.region.y == timetable.region.y
-            assert teaching.region.bottom == timetable.region.bottom
-            assert management.region.y == next_lesson.region.y
+            assert views.region.bottom == timetable.region.bottom
+            assert teaching.region.y == next_lesson.region.y
             assert management.region.bottom >= next_lesson.region.bottom
             assert teaching.region.bottom < management.region.y
             table = timetable.query_one(DataTable)
@@ -98,7 +98,7 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert (
                 str(table.get_cell(str(periods[0].number), "separator-1")) == "│\n│\n│"
             )
-            assert timetable.region.height == min(27, size[1] - 17)
+            assert timetable.region.height == 21
             assert table.max_scroll_y > 0
             assert table.header_height == 2
             assert "─" in str(
@@ -111,11 +111,18 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             assert str(table.columns[separator_key].label) == "│\n┼"
             assert str(table.ordered_columns[0].label) == "\n" + "─" * 12
             assert "08:00–08:45" in str(table.ordered_rows[0].label)
-            assert timetable.region.x == next_lesson.region.x
-            assert timetable.region.width == next_lesson.region.width
+            assert daily.region.x == next_lesson.region.x
+            assert daily.region.width == next_lesson.region.width
             assert next_lesson.region.y > timetable.region.bottom
             assert daily.region.y == timetable.region.y
-            assert daily.region.bottom == next_lesson.region.bottom
+            assert daily.region.bottom == timetable.region.bottom
+            overview = home.query_one("#class-overview")
+            assert overview.region.y == next_lesson.region.y
+            assert overview.region.bottom == next_lesson.region.bottom
+            assert overview.region.x == timetable.region.x
+            assert len(overview.query(".class-balance-row")) == len(
+                home.dashboard.class_balances
+            )
             assert daily.region.x >= timetable.region.right
             for widget in (
                 home,
@@ -175,7 +182,7 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
             timetable.update_data([], home.subjects_by_id, periods)
             app.screen.align_dashboard()
             await pilot.pause()
-            assert table.row_count == 8
+            assert table.row_count == 6
             if size[1] >= 44:
                 assert table.max_scroll_y == 0
             await pilot.resize_terminal(100, 30)
@@ -211,8 +218,8 @@ def test_home_periods_expand_only_for_scheduled_late_lessons(tmp_path):
     config = prepare_root(tmp_path)
     periods = load_periods(config.root)
     assert [p.number for p in periods] == list(range(1, 12))
-    assert len(displayed_periods(periods, [])) == 8
-    for number in (9, 10, 11):
+    assert len(displayed_periods(periods, [])) == 6
+    for number in (7, 8, 9, 10, 11):
         assert (
             len(
                 displayed_periods(

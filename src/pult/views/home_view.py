@@ -11,6 +11,7 @@ from pult.progress.queries import (
 from pult.school.period import Period
 from pult.school.subject import Subject
 from pult.school.timetable import TimetableEntry
+from pult.widgets.dashboard.class_overview import ClassOverviewPanel
 from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
 from pult.widgets.dashboard.next_lesson import NextLessonPanel
 from pult.widgets.dashboard.school_year_progress import SchoolYearProgress
@@ -84,6 +85,9 @@ class HomeView(VerticalScroll, can_focus=False):
                 subjects_by_id,
                 sequences_by_key,
             )
+            await self.query_one(ClassOverviewPanel).update_data(
+                dashboard.class_balances, subjects_by_id
+            )
             await self.query_one(DailySchedulePanel).update_data(
                 dashboard.daily_schedule, subjects_by_id, sequences_by_key
             )
@@ -98,17 +102,21 @@ class HomeView(VerticalScroll, can_focus=False):
                 yield TimetablePanel(
                     self.timetable_entries, self.subjects_by_id, self.periods
                 )
+                yield ClassOverviewPanel(
+                    self.dashboard.class_balances, self.subjects_by_id
+                )
+            with Vertical(id="home-dashboard-right"):
+                yield DailySchedulePanel(
+                    self.dashboard.daily_schedule,
+                    self.subjects_by_id,
+                    self.sequences_by_key,
+                )
                 yield NextLessonPanel(
                     self.dashboard.next_planned_lesson,
                     self.dashboard.daily_schedule.date,
                     self.subjects_by_id,
                     self.sequences_by_key,
                 )
-            yield DailySchedulePanel(
-                self.dashboard.daily_schedule,
-                self.subjects_by_id,
-                self.sequences_by_key,
-            )
 
     def on_mount(self) -> None:
         self.refresh_time_highlight()

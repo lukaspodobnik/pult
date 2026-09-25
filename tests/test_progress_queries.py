@@ -303,3 +303,43 @@ def test_daily_preview_stops_at_sequence_end(
     )
     assert summary.timetable_entries[0].planned_lesson.lesson.id == "lesson-1"
     assert summary.timetable_entries[1].planned_lesson is None
+
+
+def test_dashboard_balances_follow_class_progress(
+    empty_progress,
+    sequences,
+    timetable_entries,
+    periods,
+    school_class,
+    school_calendar,
+    planned_lesson,
+):
+    from pult.progress.queries import get_class_progress_summary
+
+    progress = empty_progress
+    for _ in range(2):
+        dashboard = get_home_dashboard_summary(
+            datetime(2026, 9, 7, 8, 0),
+            {school_class.id: progress},
+            sequences,
+            timetable_entries,
+            periods,
+            [school_class],
+            school_calendar,
+            [],
+            {school_class.id: []},
+        )
+        expected = get_class_progress_summary(
+            progress,
+            sequences,
+            timetable_entries,
+            school_class,
+            school_calendar,
+            [],
+            [],
+        )[0]
+        assert len(dashboard.class_balances) == 1
+        balance = dashboard.class_balances[0]
+        assert (balance.school_class_id, balance.subject_id) == ("5A", "mathematik")
+        assert balance.difference == expected.lesson_balance
+        progress = complete_lesson(empty_progress, planned_lesson, sequences).progress
