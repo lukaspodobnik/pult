@@ -27,7 +27,7 @@ TeachingLogScreen #teaching-log-content {
 TeachingLogView {
     width: 1fr;
     height: 1fr;
-    padding: 1 2;
+    padding: 1 2 1 0;
 }
 
 TeachingLogScreen #teaching-log-class-picker,
@@ -54,7 +54,7 @@ App.-light-mode TeachingLogScreen #teaching-log-content:focus-within {
 TeachingLogView .teaching-log-entry {
     height: auto;
     margin-bottom: 1;
-    padding: 1 2;
+    padding: 1 2 1 1;
     background: $surface;
     border-left: thick $primary;
 }

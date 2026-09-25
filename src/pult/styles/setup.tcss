@@ -5,7 +5,7 @@ SetupScreen {
 SetupScreen #setup-form {
     width: 64;
     height: auto;
-    padding: 2 3;
+    padding: 2 3 2 2;
     background: $surface;
     border: round $primary;
 }
@@ -13,7 +13,7 @@ SetupScreen #setup-form {
 SetupScreen #setup-title {
     width: 1fr;
     height: 3;
-    content-align: center middle;
+    content-align: left middle;
     color: $text-accent;
     text-style: bold;
 }

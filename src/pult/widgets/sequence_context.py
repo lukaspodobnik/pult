@@ -15,7 +15,7 @@ class SequenceContext(Vertical):
     SequenceContext {
         height: auto;
         margin-bottom: 1;
-        padding: 1;
+        padding: 1 1 1 2;
         border: round $primary;
         border-title-color: $text-accent;
         background: $surface;

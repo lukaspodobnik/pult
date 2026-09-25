@@ -141,10 +141,10 @@ class EditTimetableScreen(PultScreen[None]):
     def _format_period(self, period: Period) -> Text:
         height = self._row_heights[period.number]
         result = Text("\n" * ((height - 3) // 2), no_wrap=True)
-        result.append(f"{period.number}. Stunde".center(13), style="bold")
+        result.append(f"{period.number}. Stunde".ljust(13), style="bold")
         result.append("\n")
         result.append(
-            f"{period.start:%H:%M}–{period.end:%H:%M}".center(13), style="dim"
+            f"{period.start:%H:%M}–{period.end:%H:%M}".ljust(13), style="dim"
         )
         return result
 
