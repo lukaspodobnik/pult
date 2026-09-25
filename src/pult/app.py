@@ -63,6 +63,14 @@ class PultApp(App):
         """Behandle h/j/k/l außerhalb von Textfeldern wie die Pfeiltasten."""
         if (
             isinstance(event, Key)
+            and self.screen_stack
+            and isinstance(self.screen, MainScreen)
+            and self.screen.startup_active
+            and event.key != "q"
+        ):
+            return
+        if (
+            isinstance(event, Key)
             and event.key in ("h", "j", "k", "l")
             and self.focused is not None
             and not isinstance(self.focused, (Input, TextArea))
@@ -129,14 +137,14 @@ class PultApp(App):
             or self.sequence_library.root != self.app_config.root
         ):
             self.sequence_library = SequenceLibrary(self.app_config.root)
-        self.push_screen(MainScreen())
+        self.push_screen(MainScreen(startup=True))
         self.call_after_refresh(self.offer_school_year_change)
 
     def offer_school_year_change(self) -> None:
         # Ein verzögerter Aufruf kann noch während des App-Abbaus eintreffen.
         if not self.screen_stack or not isinstance(self.screen, MainScreen):
             return
-        if self.screen._pending_view_id is not None:
+        if self.screen.startup_active or self.screen._pending_view_id is not None:
             self.set_timer(0.1, self.offer_school_year_change)
             return
         config = self.require_config()

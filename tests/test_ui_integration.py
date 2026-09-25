@@ -134,6 +134,7 @@ def test_management_opens_teaching_log_with_class_picker(tmp_path, monkeypatch):
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
+            await pilot.wait_for_scheduled_animations()
             picker = app.screen.query_one(TeachingPicker)
             picker.focus()
             option_ids = [
@@ -157,6 +158,7 @@ def test_class_view_log_binding_preselects_current_class(tmp_path, monkeypatch):
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
+            await pilot.wait_for_scheduled_animations()
             app.screen.query_one(ViewPicker).highlighted = 1
             # Der Befehl ist bis zum abgeschlossenen Ansichtswechsel gesperrt.
             for _ in range(20):

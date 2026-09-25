@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 from typing import ClassVar
@@ -76,6 +77,7 @@ from pult.widgets.app_logo import AppLogo
 from pult.widgets.footer import PultFooter
 from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
+from pult.widgets.startup_logo import StartupLogo
 
 
 @dataclass(frozen=True)
@@ -101,8 +103,12 @@ class MainScreen(PultScreen[None]):
         ("f2", "go_home", "Übersicht"),
     ]
 
-    def __init__(self) -> None:
+    def __init__(self, *, startup: bool = False) -> None:
         super().__init__()
+        self.startup_active = startup
+        self._startup_faded = False
+        self._startup_ready = False
+        self._startup_revealing = False
         self.school_classes_by_id: dict[str, SchoolClass] = {}
         self.active_school_class_id: str | None = None
         self.active_subject_id: str | None = None
@@ -122,10 +128,60 @@ class MainScreen(PultScreen[None]):
             yield content
 
         yield PultFooter()
+        if self.startup_active:
+            yield StartupLogo()
 
     def on_mount(self) -> None:
+        if self.startup_active:
+            self.query_one("#main").styles.opacity = 0
+            self.query_one(PultFooter).styles.opacity = 0
+            self.call_after_refresh(self._start_logo_fade)
         self.refresh_view_picker()
         self.query_one("#view-picker", ViewPicker).focus()
+
+    def _start_logo_fade(self) -> None:
+        self.query_one(StartupLogo).styles.animate(
+            "text_opacity",
+            0.0,
+            duration=0.65,
+            delay=0.25,
+            easing="in_out_sine",
+            on_complete=self._logo_faded,
+        )
+
+    def _logo_faded(self) -> None:
+        self._startup_faded = True
+        self._reveal_startup()
+
+    def _startup_view_ready(self) -> None:
+        self._startup_ready = True
+        self._reveal_startup()
+
+    def _reveal_startup(self) -> None:
+        if (
+            self.startup_active
+            and self._startup_faded
+            and self._startup_ready
+            and not self._startup_revealing
+        ):
+            self._startup_revealing = True
+            self.query_one(StartupLogo).remove()
+            self.query_one("#main").styles.animate(
+                "opacity",
+                1.0,
+                duration=0.15,
+                easing="in_out_sine",
+                on_complete=self._finish_startup,
+            )
+            self.query_one(PultFooter).styles.animate(
+                "opacity",
+                1.0,
+                duration=0.15,
+                easing="in_out_sine",
+            )
+
+    def _finish_startup(self) -> None:
+        self.startup_active = False
 
     def on_resize(self) -> None:
         self.call_after_refresh(self.align_dashboard)
@@ -205,6 +261,8 @@ class MainScreen(PultScreen[None]):
         finally:
             self._pending_view_id = None
             self.refresh_bindings()
+            if self.startup_active:
+                self.call_after_refresh(self._startup_view_ready)
 
     def on_screen_suspend(self) -> None:
         if self._view_timer is not None:
@@ -230,7 +288,8 @@ class MainScreen(PultScreen[None]):
         self.active_school_class_id = None
         self.active_subject_id = None
         config = self.app_config
-        try:
+
+        def load_dashboard():
             data = load_planning_data(config, sequences=self.sequence_library)
             periods = load_periods(config.root)
             subjects = load_subjects(config.root)
@@ -245,6 +304,15 @@ class MainScreen(PultScreen[None]):
                 data.school_closures,
                 data.class_closures_by_class_id,
             )
+            return data, periods, subjects, dashboard
+
+        try:
+            if self.startup_active:
+                data, periods, subjects, dashboard = await asyncio.to_thread(
+                    load_dashboard
+                )
+            else:
+                data, periods, subjects, dashboard = load_dashboard()
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(
                 f"Die Übersicht konnte nicht geladen werden: {error}", severity="error"
