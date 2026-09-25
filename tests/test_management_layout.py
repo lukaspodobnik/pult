@@ -14,7 +14,7 @@ from pult.screens.edit_timetable_screen import EditTimetableScreen
     "screen_type, selector, title",
     [
         (EditClassesScreen, "#school-classes", "KLASSEN"),
-        (EditClosuresScreen, "#closures", "AUSFÄLLE"),
+        (EditClosuresScreen, "#closures-frame", "AUSFÄLLE"),
         (EditTimetableScreen, "#edit-schedule", "STUNDENPLAN"),
     ],
 )
@@ -41,7 +41,12 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
             assert content.region.y == 1
             actions = screen.query_one(".management-actions")
             assert actions.region.height == 3
-            assert actions.region.y == content.region.bottom + 1
+            bottom_panel = (
+                screen.query_one("#closure-details")
+                if screen_type is EditClosuresScreen
+                else content
+            )
+            assert actions.region.y == bottom_panel.region.bottom + 1
             buttons = list(actions.query(Button))
             assert all(button.region.height == 3 for button in buttons)
             assert buttons[-1].region.right == actions.region.right
@@ -56,6 +61,8 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
                 buttons[-1].focus()
                 await pilot.pause()
                 assert not content.show_cursor
+            if screen_type is EditClosuresScreen:
+                content = screen.query_one("#closures")
             if screen_type is not EditTimetableScreen:
                 assert buttons[0].region.x == actions.region.x
                 assert str(buttons[-1].label) == "Zurück"
@@ -72,5 +79,57 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
                 assert not content.get_component_rich_style(
                     "option-list--option-highlighted"
                 ).bold
+
+    asyncio.run(run())
+
+
+def test_timetable_cross_stays_inside_cell_boundaries(tmp_path, monkeypatch):
+    from rich.style import Style
+
+    from pult.screens.edit_timetable_screen import EditableTimetable
+
+    config = prepare_root(tmp_path)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
+
+    async def run():
+        app = PultApp()
+        async with app.run_test(size=(180, 42)) as pilot:
+            await pilot.pause()
+            screen = EditTimetableScreen()
+            await app.push_screen(screen)
+            await pilot.pause()
+            table = screen.query_one(EditableTimetable)
+
+            def backgrounds(row, column, line_index=1):
+                width = 13 if column == -1 else screen._column_width
+                line = table._render_cell(row, column, Style(), width)[line_index]
+                return [segment.style.bgcolor for segment in line for _ in segment.text]
+
+            cross = table.get_component_rich_style("timetable--cross").bgcolor
+            selection = table.get_component_rich_style("timetable--selection").bgcolor
+            assert cross != selection
+            for column in (0, 2, 4):
+                table.move_cursor(row=2, column=column)
+                await pilot.pause()
+                start = 1 if column == 0 else 0
+                cell = backgrounds(2, column)
+                assert all(color == selection for color in cell[start:-1])
+                assert cell[-1] != selection
+                if start:
+                    assert cell[0] != selection
+                assert backgrounds(0, column)[start] == cross
+                assert backgrounds(2, (column + 1) % 5)[1] == cross
+                assert backgrounds(-1, column)[start] not in (cross, selection)
+                assert backgrounds(2, column, 2)[start] == cross
+                assert backgrounds(2, (column + 1) % 5, 2)[1] not in (cross, selection)
+                assert backgrounds(2, -1, 2)[0] not in (cross, selection)
+                assert backgrounds(2, -1)[0] == cross
+                assert backgrounds(0, (column + 1) % 5)[1] not in (cross, selection)
+            screen.query_one("#close-timetable").focus()
+            await pilot.pause()
+            assert backgrounds(2, 4)[1] not in (cross, selection)
+            table.focus()
+            await pilot.pause()
+            assert backgrounds(2, 4)[1] == selection
 
     asyncio.run(run())

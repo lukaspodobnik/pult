@@ -79,3 +79,37 @@ def test_default_date_search_and_empty_year(config, school_calendar):
     )
     with pytest.raises(ValueError, match="keinen verfügbaren"):
         get_default_closure_date(config, date(2026, 9, 7))
+
+
+def test_affected_lessons_respect_scope_calendar_and_boundaries(
+    school_calendar, timetable_entries
+):
+    from pult.school.timetable import TimetableEntry
+    from pult.services.closures import get_affected_lessons
+
+    closure = Closure(
+        "Zeitraum", ClosureKind.LOCAL, date(2026, 9, 1), date(2026, 9, 20)
+    )
+    timetable = [
+        *timetable_entries,
+        TimetableEntry("monday", 3, "5B", "mathematik", ""),
+    ]
+    all_lessons = get_affected_lessons(
+        ScopedClosure(closure, None), timetable, school_calendar
+    )
+    assert len(all_lessons) == 5
+    scoped = get_affected_lessons(
+        ScopedClosure(closure, "5A"), timetable, school_calendar
+    )
+    assert len(scoped) == 4
+    assert {day for day, _ in scoped} == {
+        date(2026, 9, 7),
+        date(2026, 9, 9),
+        date(2026, 9, 16),
+    }
+    assert all(lesson.school_class_id == "5A" for _, lesson in scoped)
+    assert (
+        get_affected_lessons(ScopedClosure(closure, "9Z"), timetable, school_calendar)
+        == ()
+    )
+    assert get_affected_lessons(ScopedClosure(closure, None), [], school_calendar) == ()

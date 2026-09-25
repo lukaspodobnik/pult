@@ -6,6 +6,7 @@ from datetime import date, timedelta
 from pult.config import AppConfig
 from pult.school.calendar import (
     Closure,
+    SchoolCalendar,
     has_school_day,
     is_school_day,
     load_class_closures,
@@ -14,6 +15,7 @@ from pult.school.calendar import (
     save_class_closures,
     save_school_closures,
 )
+from pult.school.timetable import TimetableEntry
 
 
 @dataclass(frozen=True)
@@ -95,3 +97,42 @@ def delete_closure(config: AppConfig, entry: ScopedClosure) -> None:
     closures = _load_scoped_closures(config, entry.school_class_id)
     closures.remove(entry.closure)
     _save_scoped_closures(config, entry.school_class_id, closures)
+
+
+def get_affected_lessons(
+    entry: ScopedClosure,
+    timetable: list[TimetableEntry],
+    calendar: SchoolCalendar,
+) -> tuple[tuple[date, TimetableEntry], ...]:
+    """Stundenplantermine im Ausfallzeitraum, ohne Wochenenden und Ferien.
+
+    Jeder Ausfall wird einzeln betrachtet; überlappende Ausfälle dürfen daher
+    denselben Termin ausweisen. Es handelt sich nicht um zusätzliche Ausfälle.
+    """
+    weekdays = ("monday", "tuesday", "wednesday", "thursday", "friday")
+    candidate = max(entry.closure.start, calendar.first_school_day)
+    end = min(entry.closure.end, calendar.last_school_day)
+    result = []
+    while candidate <= end:
+        if is_school_day(calendar, candidate):
+            result.extend(
+                (candidate, lesson)
+                for lesson in timetable
+                if lesson.weekday == weekdays[candidate.weekday()]
+                and (
+                    entry.school_class_id is None
+                    or lesson.school_class_id == entry.school_class_id
+                )
+            )
+        candidate += timedelta(days=1)
+    return tuple(
+        sorted(
+            result,
+            key=lambda item: (
+                item[0],
+                item[1].period,
+                item[1].school_class_id,
+                item[1].subject_id,
+            ),
+        )
+    )

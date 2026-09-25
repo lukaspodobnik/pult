@@ -1,11 +1,38 @@
 EditClosuresScreen #edit-closures-screen {
     height: 1fr;
     padding: 1 2;
+    overflow: auto auto;
 }
 
-EditClosuresScreen #closures {
+EditClosuresScreen #closures-frame,
+EditClosuresScreen #closure-details {
     height: 1fr;
     min-height: 8;
+    min-width: 86;
     border: round $primary;
     border-title-color: $text-accent;
+    padding: 0 1 0 2;
+    background: $surface;
 }
+
+EditClosuresScreen #closure-details {
+    height: 11;
+    margin-top: 1;
+}
+EditClosuresScreen #closure-details-text { height: auto; }
+EditClosuresScreen #closures-headings {
+    height: 2;
+    border-bottom: solid $foreground 18%;
+    padding-right: 1;
+    color: $foreground-muted;
+    text-style: none;
+}
+EditClosuresScreen #closures-empty { height: 1; color: $foreground-muted; }
+EditClosuresScreen #closures {
+    height: 1fr;
+    border: none;
+    padding: 0;
+    background: transparent;
+    scrollbar-gutter: stable;
+}
+EditClosuresScreen #closures > .option-list--option { padding: 0; }

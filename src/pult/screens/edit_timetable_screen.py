@@ -1,9 +1,13 @@
 from typing import ClassVar
 
+from rich.segment import Segment
+from rich.style import Style
 from rich.text import Text
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.coordinate import Coordinate
+from textual.strip import Strip
 from textual.widgets import Static
 
 from pult.presentation import WEEKDAYS
@@ -30,11 +34,80 @@ from pult.widgets.scrolling import DataTable, Horizontal, Vertical
 class EditableTimetable(DataTable):
     BINDINGS: ClassVar = [Binding("enter", "select_cursor", "Stunde bearbeiten")]
 
+    COMPONENT_CLASSES = {"timetable--cross", "timetable--selection"}
+    DEFAULT_CSS = """
+    EditableTimetable > .timetable--cross {
+        background: $surface;
+        background-tint: $primary 12%;
+    }
+    EditableTimetable > .timetable--selection {
+        background: $surface;
+        background-tint: $primary 32%;
+    }
+    """
+
     def on_focus(self) -> None:
         self.show_cursor = True
+        self.refresh()
 
     def on_blur(self) -> None:
         self.show_cursor = False
+        self.refresh()
+
+    def watch_cursor_coordinate(
+        self, old_coordinate: Coordinate, new_coordinate: Coordinate
+    ) -> None:
+        super().watch_cursor_coordinate(old_coordinate, new_coordinate)
+        # Das gesamte Kreuz ändert sich, nicht nur die alte und neue Zelle.
+        self.refresh()
+
+    def _render_cell(
+        self,
+        row_index: int,
+        column_index: int,
+        base_style: Style,
+        width: int,
+        cursor: bool = False,
+        hover: bool = False,
+    ) -> list[list[Segment]]:
+        # Textual zeichnet sonst den Cursor einschließlich der Trennzeichen.
+        lines = super()._render_cell(
+            row_index, column_index, base_style, width, False, False
+        )
+        if row_index == -1 or not self.has_focus or not self.show_cursor:
+            return lines
+        selected_row = row_index == self.cursor_row
+        selected_column = column_index == self.cursor_column
+        if not (selected_row or selected_column):
+            return lines
+        # Die erste Spalte enthält auch die linke Trennlinie, alle Tageszellen
+        # enthalten rechts eine Trennlinie. Diese behalten ihren Hintergrund.
+        start = 1 if column_index == 0 else 0
+        end = width - 1 if column_index >= 0 else width
+        result = []
+        text_offset = max(0, (len(lines) - 2) // 2)
+        for index, segments in enumerate(lines):
+            in_selected_row = selected_row and text_offset <= index < text_offset + 2
+            if not (in_selected_row or selected_column):
+                result.append(segments)
+                continue
+            component = (
+                "timetable--selection"
+                if in_selected_row and selected_column
+                else "timetable--cross"
+            )
+            highlight = Style(bgcolor=self.get_component_rich_style(component).bgcolor)
+            strip = Strip(segments)
+            interior = Strip(
+                Segment(text, (style or Style()) + highlight, control)
+                for text, style, control in strip.crop(start, end)
+            )
+            result.append(
+                list(
+                    Strip.join([strip.crop(0, start), interior, strip.crop(end, width)])
+                )
+            )
+        return result
 
 
 class EditTimetableScreen(PultScreen[None]):
@@ -140,12 +213,10 @@ class EditTimetableScreen(PultScreen[None]):
 
     def _format_period(self, period: Period) -> Text:
         height = self._row_heights[period.number]
-        result = Text("\n" * ((height - 3) // 2), no_wrap=True)
+        result = Text("\n" * ((height - 2) // 2), no_wrap=True)
         result.append(f"{period.number}. Stunde".ljust(13), style="bold")
         result.append("\n")
-        result.append(
-            f"{period.start:%H:%M}–{period.end:%H:%M}".ljust(13), style="dim"
-        )
+        result.append(f"{period.start:%H:%M}–{period.end:%H:%M}".ljust(13), style="dim")
         return result
 
     def _format_cell(
