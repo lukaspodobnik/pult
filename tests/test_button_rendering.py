@@ -7,7 +7,7 @@ from textual.widgets import Input
 from pult.widgets.button import Button
 
 
-def test_button_highlight_stays_inside_frame():
+def test_button_highlights_only_frame():
     class TestApp(App):
         CSS_PATH = "../src/pult/styles/app.tcss"
 
@@ -19,6 +19,7 @@ def test_button_highlight_stays_inside_frame():
         app = TestApp()
         async with app.run_test() as pilot:
             button = app.query_one(Button)
+            borders = {}
             for state in ("normal", "focus", "hover", "active", "disabled"):
                 if state == "focus":
                     button.focus()
@@ -31,6 +32,7 @@ def test_button_highlight_stays_inside_frame():
                     button.remove_class("-active")
                     button.disabled = True
                 await pilot.pause()
+                borders[state] = button.styles.border.top[1]
                 lines = button.render_lines(
                     Region(0, 0, button.region.width, button.region.height)
                 )
@@ -48,9 +50,9 @@ def test_button_highlight_stays_inside_frame():
                 assert middle[-1].style.bgcolor == background, state
                 assert "Speichern" in lines[1].text
                 assert all(
-                    (segment.style.bgcolor != background)
-                    == (state in {"focus", "hover", "active"})
-                    for segment in middle[1:-1]
+                    segment.style.bgcolor == background for segment in middle[1:-1]
                 ), state
+            assert borders["focus"] != borders["hover"]
+            assert borders["normal"] == borders["disabled"]
 
     asyncio.run(run())

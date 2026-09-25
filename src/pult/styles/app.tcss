@@ -165,11 +165,19 @@ Screen Button:hover {
     border: round $border;
 }
 
-Screen Button:focus {
-    border: round $primary;
+Screen Button:focus,
+Screen Button.-active {
+    border: round $primary-lighten-2;
+    text-style: bold;
+}
+
+App.-light-mode Screen Button:focus,
+App.-light-mode Screen Button.-active {
+    border: round $primary-darken-2;
 }
 
 Screen Button:disabled {
+    border: round $border-blurred;
     color: $foreground-muted;
     text-style: dim;
 }

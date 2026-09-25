@@ -32,6 +32,7 @@ from pult.services.closures import (
     get_default_closure_date,
 )
 from pult.widgets.button import Button
+from pult.widgets.detail_table import format_detail_table
 from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical, VerticalScroll
 
@@ -170,6 +171,7 @@ class EditClosuresScreen(PultScreen[None]):
             self.call_after_refresh(self.refresh_columns)
 
     def refresh_columns(self) -> None:
+        self.update_details()
         listing = self.query_one("#closures", OptionList)
         self.query_one("#closures-headings", Static).update(self._headings())
         for key, entry in self.entries_by_option_id.items():
@@ -197,7 +199,12 @@ class EditClosuresScreen(PultScreen[None]):
                     f"{format_date(day):<16} {lesson.period:<8} {lesson.school_class_id:<10} {self.subjects[lesson.subject_id].name}"
                     for day, lesson in lessons
                 )
-        self.query_one("#closure-details-text", Static).update(text)
+        widget = self.query_one("#closure-details-text", Static)
+        widget.update(
+            format_detail_table(text, widget.content_size.width)
+            if entry is not None and self.affected[entry]
+            else text
+        )
         self.query_one("#closure-details", VerticalScroll).scroll_home(animate=False)
 
     @on(OptionList.OptionHighlighted, "#closures")

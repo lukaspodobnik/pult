@@ -1,11 +1,35 @@
 EditClassesScreen #edit-classes-screen {
     height: 1fr;
     padding: 1 2;
+    overflow: auto auto;
 }
 
-EditClassesScreen #school-classes {
+EditClassesScreen #classes-frame,
+EditClassesScreen #class-timetable-details {
     height: 1fr;
     min-height: 8;
+    min-width: 80;
     border: round $primary;
     border-title-color: $text-accent;
+    padding: 0 1 0 2;
+    background: $surface;
 }
+
+EditClassesScreen #class-timetable-details { height: 11; margin-top: 1; }
+EditClassesScreen #class-timetable-text { height: auto; }
+EditClassesScreen #classes-headings {
+    height: 2;
+    border-bottom: solid $foreground 18%;
+    padding-right: 1;
+    color: $foreground-muted;
+    text-style: none;
+}
+EditClassesScreen #classes-empty { height: 1; color: $foreground-muted; }
+EditClassesScreen #school-classes {
+    height: 1fr;
+    border: none;
+    padding: 0;
+    background: transparent;
+    scrollbar-gutter: stable;
+}
+EditClassesScreen #school-classes > .option-list--option { padding: 0; }

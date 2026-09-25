@@ -13,7 +13,7 @@ from pult.screens.edit_timetable_screen import EditTimetableScreen
 @pytest.mark.parametrize(
     "screen_type, selector, title",
     [
-        (EditClassesScreen, "#school-classes", "KLASSEN"),
+        (EditClassesScreen, "#classes-frame", "KLASSEN"),
         (EditClosuresScreen, "#closures-frame", "AUSFÄLLE"),
         (EditTimetableScreen, "#edit-schedule", "STUNDENPLAN"),
     ],
@@ -44,6 +44,8 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
             bottom_panel = (
                 screen.query_one("#closure-details")
                 if screen_type is EditClosuresScreen
+                else screen.query_one("#class-timetable-details")
+                if screen_type is EditClassesScreen
                 else content
             )
             assert actions.region.y == bottom_panel.region.bottom + 1
@@ -63,6 +65,8 @@ def test_management_layout(tmp_path, monkeypatch, screen_type, selector, title):
                 assert not content.show_cursor
             if screen_type is EditClosuresScreen:
                 content = screen.query_one("#closures")
+            elif screen_type is EditClassesScreen:
+                content = screen.query_one("#school-classes")
             if screen_type is not EditTimetableScreen:
                 assert buttons[0].region.x == actions.region.x
                 assert str(buttons[-1].label) == "Zurück"

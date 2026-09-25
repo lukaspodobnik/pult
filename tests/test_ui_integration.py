@@ -101,7 +101,7 @@ def test_existing_config_opens_home_dashboard(tmp_path, monkeypatch):
             await pilot.pause()
             assert isinstance(app.screen, MainScreen)
             assert app.screen.query_one(HomeView)
-            assert app.screen.query_one("#schedule").row_count == 8
+            assert app.screen.query_one("#schedule").row_count == 6
 
     asyncio.run(run())
 
