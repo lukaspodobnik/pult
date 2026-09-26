@@ -3,6 +3,18 @@
 from dataclasses import dataclass
 from datetime import date, time
 from enum import StrEnum
+from pathlib import Path
+from tomllib import TOMLDecodeError
+from typing import Any
+
+from pult.school.school_class import get_school_class_path
+from pult.storage import load_toml, save_toml
+
+ASSESSMENTS_FILE_NAME = Path("assessments.toml")
+
+
+class AssessmentsFileError(ValueError):
+    """Die Leistungsnachweisdatei enthält ungültige Daten."""
 
 
 class AssessmentKind(StrEnum):
@@ -81,3 +93,97 @@ class Assessment:
             raise ValueError(
                 "Eine Unterrichtsstunde darf nicht mehrfach belegt werden."
             )
+
+
+def get_assessments_path(root: Path, year: str, school_class_id: str) -> Path:
+    """Gib den Pfad der Leistungsnachweise einer Klasse im Schuljahr zurück."""
+    return (
+        get_school_class_path(root, year, school_class_id).parent
+        / ASSESSMENTS_FILE_NAME
+    )
+
+
+def load_assessments(root: Path, year: str, school_class_id: str) -> list[Assessment]:
+    """Lade chronologisch; eine fehlende Datei bedeutet noch keine Termine."""
+    path = get_assessments_path(root, year, school_class_id)
+    try:
+        data = load_toml(path)
+    except FileNotFoundError:
+        return []
+    except TOMLDecodeError as error:
+        raise AssessmentsFileError(f"Ungültiges TOML in {path}: {error}") from error
+
+    try:
+        rows = data.get("assessments")
+        if not isinstance(rows, list):
+            raise AssessmentsFileError(
+                "Die Liste 'assessments' fehlt oder ist ungültig."
+            )
+        entries = [_load_assessment(row, index) for index, row in enumerate(rows, 1)]
+        _validate_assessment_ids(entries)
+    except AssessmentsFileError as error:
+        raise AssessmentsFileError(f"{path}: {error}") from error
+    return sorted(entries, key=lambda entry: (entry.date, entry.start, entry.id))
+
+
+def save_assessments(
+    root: Path, year: str, school_class_id: str, assessments: list[Assessment]
+) -> None:
+    """Ersetze die Termine einer bestehenden Klasse in chronologischer Reihenfolge."""
+    _validate_assessment_ids(assessments)
+    rows: list[dict[str, Any]] = []
+    for entry in sorted(assessments, key=lambda item: (item.date, item.start, item.id)):
+        row: dict[str, Any] = {
+            "id": entry.id,
+            "subject_id": entry.subject_id,
+            "kind": entry.kind.value,
+            "title": entry.title,
+            "date": entry.date,
+            "start": entry.start,
+            "duration_minutes": entry.duration_minutes,
+            "occupied_periods": list(entry.occupied_periods),
+        }
+        if entry.group_id is not None:
+            row["group_id"] = entry.group_id
+        rows.append(row)
+    save_toml(get_assessments_path(root, year, school_class_id), {"assessments": rows})
+
+
+def _load_assessment(row: object, index: int) -> Assessment:
+    if not isinstance(row, dict):
+        raise AssessmentsFileError(
+            f"Eintrag {index} in 'assessments' muss eine Tabelle sein."
+        )
+    try:
+        day = row["date"]
+        start = row["start"]
+        periods = row.get("occupied_periods", [])
+        if not isinstance(periods, list):
+            raise TypeError("'occupied_periods' muss eine Liste sein.")
+        return Assessment(
+            id=row["id"],
+            subject_id=row["subject_id"],
+            kind=AssessmentKind(row["kind"]),
+            title=row["title"],
+            date=date.fromisoformat(day) if isinstance(day, str) else day,
+            start=time.fromisoformat(start) if isinstance(start, str) else start,
+            duration_minutes=row["duration_minutes"],
+            occupied_periods=tuple(periods),
+            group_id=row.get("group_id"),
+        )
+    except KeyError as error:
+        raise AssessmentsFileError(
+            f"Eintrag {index}: Pflichtfeld {error} fehlt."
+        ) from error
+    except (TypeError, ValueError) as error:
+        raise AssessmentsFileError(f"Eintrag {index} ist ungültig: {error}") from error
+
+
+def _validate_assessment_ids(entries: list[Assessment]) -> None:
+    seen: set[str] = set()
+    for index, entry in enumerate(entries, 1):
+        if entry.id in seen:
+            raise AssessmentsFileError(
+                f"Eintrag {index}: Die ID '{entry.id}' kommt mehrfach vor."
+            )
+        seen.add(entry.id)
