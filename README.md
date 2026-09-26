@@ -16,10 +16,10 @@ auf Basis von Textual, mit Vorlagen für Mathematik und Informatik am bayerische
 ## Starten
 
 Voraussetzungen: [uv](https://docs.astral.sh/uv/) und ein Terminal mit
-Unicode-Unterstützung. PULT 1.1.1 nach Veröffentlichung direkt aus dem GitHub-Release installieren:
+Unicode-Unterstützung. PULT 1.2.0 nach Veröffentlichung direkt aus dem GitHub-Release installieren:
 
 ```sh
-uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.1.1/pult-1.1.1-py3-none-any.whl
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.2.0/pult-1.2.0-py3-none-any.whl
 pult
 ```
 
