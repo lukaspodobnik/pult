@@ -143,8 +143,11 @@ zwei kleinen schriftlichen LNWs pro Jahr als anpassbarem Schulstandard.
 Beim Einrichten eines Jahres wird die zuletzt gespeicherte frühere Konfiguration
 übernommen, andernfalls gelten die mitgelieferten Standards. Bestehende Dateien
 werden nicht überschrieben. Altbestände ohne Datei nutzen beim Laden dieselbe
-Auswahl, ohne dabei Dateien zu schreiben. Die Bearbeitung in den Einstellungen und
-die Anzeige der Mindestzahlen werden in einem folgenden Schritt angebunden.
+Auswahl, ohne dabei Dateien zu schreiben. Unter **Einstellungen → Leistungsnachweise** lassen sich die Vorgaben für das dort
+ausgewählte Schuljahr bearbeiten: Fach wählen, Mindestzahlen je Jahrgangsstufe
+eintragen und erlaubte Arten über den jeweiligen Button auswählen. Leere Felder
+bedeuten keine Mindestvorgabe. Speichern im Dialog übernimmt alle Fächer direkt;
+Abbrechen verwirft den Entwurf. Die Anzeige der Zähler folgt separat.
 
 Enthalten sind Mathematik- und Informatiksequenzen der hinterlegten bayerischen
 Gymnasiallehrpläne und Kalender von **2025/26 bis 2029/30**. Nur Jahre mit gültigem lokalem

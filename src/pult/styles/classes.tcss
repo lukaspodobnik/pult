@@ -70,3 +70,12 @@ EditAssessmentScreen .assessment-field { width: 1fr; height: auto; }
 EditAssessmentScreen .assessment-field { padding-right: 1; }
 
 EditAssessmentsScreen #delete-assessment { margin-right: 4; }
+
+EditAssessmentRequirementsScreen #requirements-dialog .form-fields {
+    height: 1fr;
+    max-height: 100%;
+}
+EditAssessmentRequirementsScreen #requirements-error {
+    height: auto;
+    color: $error;
+}
