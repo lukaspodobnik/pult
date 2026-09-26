@@ -60,7 +60,7 @@ class ClassOverviewPanel(Vertical):
             yield Static("Klasse", classes="balance-class")
             yield Static("Fach", classes="balance-subject")
             yield Static("Differenz", classes="balance-difference")
-            yield Static("Leistungsnachweise", classes="balance-assessments")
+            yield Static("Leistungsnachweise:", classes="balance-assessments")
             yield Static("Groß", classes="balance-large")
             yield Static("Klein", classes="balance-small")
         with VerticalScroll(id="class-overview-rows", can_focus=False):

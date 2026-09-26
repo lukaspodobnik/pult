@@ -198,9 +198,9 @@ HomeView #class-overview-rows { height: 1fr; scrollbar-gutter: stable; }
 HomeView .class-balance-row { height: 1; }
 HomeView .balance-class { width: 8; height: 1; }
 HomeView .balance-subject { width: 1fr; min-width: 8; height: 1; }
-HomeView .balance-large, HomeView .balance-small { width: 7; height: 1; }
+HomeView .balance-large, HomeView .balance-small { width: 7; height: 1; text-align: center; }
 HomeView .balance-difference { width: 12; height: 1; }
-HomeView .balance-assessments { width: 2fr; min-width: 22; height: 1; color: $foreground-muted; }
+HomeView .balance-assessments { width: 21; height: 1; color: $foreground-muted; }
 HomeView .balance-difference.positive { color: $success; }
 HomeView .balance-difference.negative { color: $error; }
 
