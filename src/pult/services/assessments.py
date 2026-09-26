@@ -14,7 +14,13 @@ from pult.progress.class_progress import (
     load_class_progress,
     save_class_progress,
 )
-from pult.school.assessment import Assessment, load_assessments, save_assessments
+from pult.school.assessment import (
+    Assessment,
+    AssessmentKind,
+    load_assessments,
+    save_assessments,
+)
+from pult.school.assessment_requirements import load_assessment_requirements
 from pult.school.calendar import load_school_calendar
 from pult.school.school_class import load_school_class, load_school_classes
 from pult.school.timetable import get_timetable_path, load_timetable
@@ -112,10 +118,39 @@ def list_assessments(config: AppConfig) -> list[ScopedAssessment]:
     )
 
 
+def allowed_assessment_kinds(
+    config: AppConfig, class_id: str, subject_id: str
+) -> tuple[AssessmentKind, ...]:
+    school_class = load_school_class(config.root, config.active_school_year, class_id)
+    if subject_id not in school_class.subject_ids:
+        return ()
+    return next(
+        (
+            entry.allowed_kinds
+            for entry in load_assessment_requirements(
+                config.root, config.active_school_year
+            )
+            if entry.subject_id == subject_id
+            and entry.grade_level == school_class.grade_level
+        ),
+        (),
+    )
+
+
+def assessment_kind_issue(
+    config: AppConfig, class_id: str, entry: Assessment
+) -> str | None:
+    if entry.kind not in allowed_assessment_kinds(config, class_id, entry.subject_id):
+        return f"{entry.kind.label} ist für dieses Fach und diese Jahrgangsstufe nicht erlaubt. Bitte die LNW-Vorgaben in den Einstellungen prüfen."
+    return None
+
+
 def validate_assessment(config: AppConfig, class_id: str, entry: Assessment) -> None:
     school_class = load_school_class(config.root, config.active_school_year, class_id)
     if entry.subject_id not in school_class.subject_ids:
         raise ValueError("Das Fach ist dieser Klasse nicht zugeordnet.")
+    if issue := assessment_kind_issue(config, class_id, entry):
+        raise ValueError(issue)
     calendar = load_school_calendar(config.root, config.active_school_year)
     if not calendar.first_school_day <= entry.date <= calendar.last_school_day:
         raise ValueError(

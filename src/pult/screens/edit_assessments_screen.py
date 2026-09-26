@@ -16,6 +16,7 @@ from pult.screens.edit_assessment_screen import EditAssessmentScreen
 from pult.services.assessment_conflicts import assessment_conflicts
 from pult.services.assessments import (
     ScopedAssessment,
+    assessment_kind_issue,
     complete_assessment,
     delete_assessment,
     list_assessments,
@@ -41,6 +42,7 @@ class EditAssessmentsScreen(PultScreen[None]):
         self.entries: list[ScopedAssessment] = []
         self.selected_key: tuple[str, str] | None = None
         self.subjects: dict[str, str] = {}
+        self.kind_issues: dict[tuple[str, str], str | None] = {}
         self.conflicts: dict[tuple[str, str], tuple[Closure, ...]] = {}
 
     def compose(self) -> ComposeResult:
@@ -73,6 +75,12 @@ class EditAssessmentsScreen(PultScreen[None]):
     def reload_entries(self) -> None:
         try:
             self.entries = list_assessments(self.app_config)
+            self.kind_issues = {
+                (item.school_class_id, item.assessment.id): assessment_kind_issue(
+                    self.app_config, item.school_class_id, item.assessment
+                )
+                for item in self.entries
+            }
             self.conflicts = {
                 (item.school_class_id, item.assessment.id): assessment_conflicts(
                     self.app_config, item.school_class_id, item.assessment
@@ -121,12 +129,16 @@ class EditAssessmentsScreen(PultScreen[None]):
 
     def row(self, item: ScopedAssessment) -> Text:
         entry = item.assessment
+        key = (item.school_class_id, entry.id)
+        marker = "⚠ " if self.kind_issues.get(key) or self.conflicts.get(key) else ""
+        if entry.completed_on:
+            marker += "✓ "
         return self.columns(
             (
                 format_date(entry.date),
                 item.school_class_id,
                 self.subjects.get(entry.subject_id, entry.subject_id),
-                f"{'✓ ' if entry.completed_on else '⚠ ' if self.conflicts.get((item.school_class_id, entry.id)) else ''}{item.number}. {entry.kind.abbreviation}",
+                f"{marker}{item.number}. {entry.kind.abbreviation}",
                 entry.title,
             )
         )
@@ -177,6 +189,8 @@ class EditAssessmentsScreen(PultScreen[None]):
             )
             if entry.completed_on is not None:
                 text += f"\nDurchgeführt am {format_date(entry.completed_on)}"
+            if issue := self.kind_issues.get((item.school_class_id, entry.id)):
+                text += f"\n⚠ {issue}"
             for closure in self.conflicts.get((item.school_class_id, entry.id), ()):
                 text += f"\n⚠ Terminkonflikt: {closure.name} ({format_date(closure.start)} – {format_date(closure.end)})"
         self.query_one("#assessment-details-text", Static).update(text)

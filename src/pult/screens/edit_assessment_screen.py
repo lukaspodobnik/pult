@@ -15,6 +15,7 @@ from pult.screens.base_screen import PultModalScreen
 from pult.services.assessment_conflicts import assessment_conflicts, conflict_message
 from pult.services.assessments import (
     ScopedAssessment,
+    allowed_assessment_kinds,
     available_periods,
     store_assessment,
 )
@@ -79,10 +80,12 @@ class EditAssessmentScreen(PultModalScreen[bool]):
                         )
                 yield Label("Art")
                 yield Select(
-                    [(kind.label, kind.value) for kind in AssessmentKind],
-                    value=entry.kind.value if entry else "sa",
-                    allow_blank=False,
+                    [],
+                    prompt="Art wählen",
                     id="assessment-kind",
+                )
+                yield Static(
+                    "", id="assessment-kind-hint", classes="form-hint", markup=False
                 )
                 yield Label("Bezeichnung")
                 yield Input(
@@ -147,15 +150,18 @@ class EditAssessmentScreen(PultModalScreen[bool]):
 
     @on(Select.Changed, "#assessment-kind")
     def kind_changed(self, event: Select.Changed) -> None:
-        if event.value == self._last_kind:
+        self.update_duration(event.value)
+
+    def update_duration(self, kind: object) -> None:
+        if kind is Select.NULL or kind == self._last_kind:
             return
-        self._last_kind = event.value
+        self._last_kind = kind
         durations = {
             AssessmentKind.IMPROMPTU_TEST.value: 20,
             AssessmentKind.SCHOOL_EXAM.value: 45,
             AssessmentKind.ANNOUNCED_TEST.value: 30,
         }
-        duration = durations.get(str(event.value))
+        duration = durations.get(str(kind))
         if duration is not None:
             self.query_one("#assessment-duration", Input).value = str(duration)
 
@@ -181,13 +187,66 @@ class EditAssessmentScreen(PultModalScreen[bool]):
             if desired in school_class.subject_ids
             else school_class.subject_ids[0]
         )
+        self.update_kinds()
         self.update_groups()
         self.update_periods()
 
     @on(Select.Changed, "#assessment-subject")
     def subject_changed(self) -> None:
+        self.update_kinds()
         self.update_groups()
         self.update_periods()
+
+    def update_kinds(self) -> None:
+        class_id = self.query_one("#assessment-class", Select).value
+        subject_id = self.query_one("#assessment-subject", Select).value
+        if subject_id is Select.NULL or not subject_id:
+            return
+        select = self.query_one("#assessment-kind", Select)
+        hint = self.query_one("#assessment-kind-hint", Static)
+        try:
+            kinds = allowed_assessment_kinds(
+                self.app_config, str(class_id), str(subject_id)
+            )
+        except (OSError, ValueError) as error:
+            kinds = ()
+            message = str(error)
+        else:
+            message = (
+                ""
+                if kinds
+                else "Keine erlaubten Arten hinterlegt. Bitte die LNW-Vorgaben in den Einstellungen prüfen."
+            )
+        context = (class_id, subject_id, kinds)
+        if context == getattr(self, "_kind_context", None):
+            return
+        first = not hasattr(self, "_kind_context")
+        self._kind_context = context
+        previous = (
+            self.selected.assessment.kind.value
+            if first and self.selected
+            else select.value
+        )
+        allowed = [kind.value for kind in kinds]
+        invalid_existing = (
+            self.selected is not None
+            and self.selected.assessment.subject_id == subject_id
+            and self.selected.assessment.kind not in kinds
+        )
+        if invalid_existing and self.selected is not None:
+            message = f"Bisher: {self.selected.assessment.kind.label} (nicht mehr erlaubt). Bitte eine erlaubte Art wählen."
+        desired = (
+            previous
+            if previous in allowed
+            else (Select.NULL if invalid_existing or not allowed else allowed[0])
+        )
+        with self.prevent(Select.Changed):
+            select.set_options([(kind.label, kind.value) for kind in kinds])
+            select.value = desired
+        select.disabled = not kinds
+        hint.update(message)
+        hint.display = bool(message)
+        self.update_duration(desired)
 
     @on(Input.Changed, "#assessment-date")
     def date_changed(self) -> None:
@@ -283,10 +342,13 @@ class EditAssessmentScreen(PultModalScreen[bool]):
             )
             if period is None:
                 raise ValueError("Bitte eine Beginnstunde auswählen.")
+            kind = self.query_one("#assessment-kind", Select).value
+            if kind is Select.NULL:
+                raise ValueError("Bitte eine erlaubte Art auswählen.")
             entry = Assessment(
                 id=self.selected.assessment.id if self.selected else uuid4().hex,
                 subject_id=str(self.query_one("#assessment-subject", Select).value),
-                kind=AssessmentKind(self.query_one("#assessment-kind", Select).value),
+                kind=AssessmentKind(kind),
                 title=value("title"),
                 date=parse_date(value("date")),
                 start=period.start,
