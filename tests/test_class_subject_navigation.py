@@ -25,6 +25,7 @@ def test_class_subject_options_and_selection_survive_refresh(tmp_path, monkeypat
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.3)
+            await pilot.wait_for_scheduled_animations()
             screen = app.screen
             picker = screen.query_one(ViewPicker)
 

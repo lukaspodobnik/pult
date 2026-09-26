@@ -1,0 +1,229 @@
+from typing import ClassVar
+
+from rich.text import Text
+from textual import on
+from textual.app import ComposeResult
+from textual.widgets import Static
+from textual.widgets.option_list import Option
+
+from pult.presentation import format_date
+from pult.school.school_class import load_school_classes
+from pult.school.subject import load_subjects
+from pult.screens.base_screen import PultScreen
+from pult.screens.confirmation_screen import ConfirmationScreen
+from pult.screens.edit_assessment_screen import EditAssessmentScreen
+from pult.services.assessments import (
+    ScopedAssessment,
+    delete_assessment,
+    list_assessments,
+)
+from pult.widgets.button import Button
+from pult.widgets.footer import PultFooter
+from pult.widgets.scrolling import Horizontal, OptionList, Vertical, VerticalScroll
+
+
+class EditAssessmentsScreen(PultScreen[None]):
+    BINDINGS: ClassVar = [
+        ("a", "create", "Anlegen"),
+        ("e", "edit", "Bearbeiten"),
+        ("d", "delete", "Löschen"),
+        ("escape", "cancel", "Zurück"),
+    ]
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.entries: list[ScopedAssessment] = []
+        self.selected_key: tuple[str, str] | None = None
+        self.subjects: dict[str, str] = {}
+
+    def compose(self) -> ComposeResult:
+        with Vertical(id="assessments-screen"):
+            with Vertical(id="assessments-frame") as frame:
+                frame.border_title = "LEISTUNGSNACHWEISE"
+                yield Static(id="assessments-headings")
+                yield Static(
+                    "Noch keine Leistungsnachweise geplant.", id="assessments-empty"
+                )
+                yield OptionList(id="assessments-list")
+            with VerticalScroll(id="assessment-details", can_focus=False) as details:
+                details.border_title = "TERMINDETAILS"
+                yield Static(id="assessment-details-text", markup=False)
+            with Horizontal(classes="management-actions"):
+                yield Button("Anlegen", id="create-assessment")
+                yield Button("Bearbeiten", id="edit-assessment", disabled=True)
+                yield Button(
+                    "Löschen", id="delete-assessment", variant="error", disabled=True
+                )
+                yield Static(classes="action-spacer")
+                yield Button("Zurück", id="close-assessments")
+        yield PultFooter()
+
+    def on_mount(self) -> None:
+        self.reload_entries()
+
+    def reload_entries(self) -> None:
+        try:
+            self.entries = list_assessments(self.app_config)
+            self.subjects = {
+                item.id: item.name for item in load_subjects(self.app_config.root)
+            }
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+        keys = [(item.school_class_id, item.assessment.id) for item in self.entries]
+        if self.selected_key not in keys:
+            self.selected_key = keys[0] if keys else None
+        listing = self.query_one("#assessments-list", OptionList)
+        listing.clear_options()
+        listing.add_options(
+            Option(self.row(item), id=str(index))
+            for index, item in enumerate(self.entries)
+        )
+        listing.highlighted = (
+            keys.index(self.selected_key) if self.selected_key else None
+        )
+        self.query_one("#assessments-empty").display = not self.entries
+        self.query_one("#assessments-headings", Static).update(
+            self.columns(("Datum", "Klasse", "Fach", "Nr. / Art", "Bezeichnung"))
+        )
+        for name in ("edit", "delete"):
+            self.query_one(f"#{name}-assessment", Button).disabled = not self.entries
+        self.update_details()
+        listing.focus()
+
+    def columns(self, values: tuple[str, ...]) -> Text:
+        width = max(92, self.query_one("#assessments-list").content_size.width)
+        widths = (12, 7, 32, 14, max(19, width - 73))
+        result = Text(no_wrap=True, overflow="ellipsis")
+        for index, (value, size) in enumerate(zip(values, widths)):
+            part = Text(value)
+            part.truncate(size, overflow="ellipsis")
+            part.align("left", size)
+            if index:
+                result.append("  ")
+            result.append_text(part)
+        return result
+
+    def row(self, item: ScopedAssessment) -> Text:
+        entry = item.assessment
+        return self.columns(
+            (
+                format_date(entry.date),
+                item.school_class_id,
+                self.subjects.get(entry.subject_id, entry.subject_id),
+                f"{item.number}. {entry.kind.abbreviation}",
+                entry.title,
+            )
+        )
+
+    def selected(self) -> ScopedAssessment | None:
+        return next(
+            (
+                item
+                for item in self.entries
+                if (item.school_class_id, item.assessment.id) == self.selected_key
+            ),
+            None,
+        )
+
+    def update_details(self) -> None:
+        item = self.selected()
+        text = "Noch keine Leistungsnachweise geplant."
+        if item:
+            entry = item.assessment
+            linked = [
+                other.assessment
+                for other in self.entries
+                if other.school_class_id == item.school_class_id
+                and other.assessment.subject_id == entry.subject_id
+                and other.assessment.id != entry.id
+                and entry.group_id
+                and other.assessment.group_id == entry.group_id
+            ]
+            text = f"{item.number}. {entry.kind.label} · {entry.title}\n"
+            text += f"{item.school_class_id} · {self.subjects.get(entry.subject_id, entry.subject_id)}\n\n"
+            text += f"{format_date(entry.date, with_weekday=True)} · {entry.start:%H:%M} Uhr · {entry.duration_minutes} Minuten\n"
+            text += "Belegte Unterrichtsstunden: " + (
+                ", ".join(map(str, entry.occupied_periods))
+                if entry.occupied_periods
+                else "keine (außerhalb des eigenen Unterrichts)"
+            )
+            text += "\nVerknüpft: " + (
+                "; ".join(
+                    f"{format_date(other.date)} · {other.title}" for other in linked
+                )
+                or "—"
+            )
+        self.query_one("#assessment-details-text", Static).update(text)
+
+    @on(OptionList.OptionHighlighted, "#assessments-list")
+    def highlighted(self, event: OptionList.OptionHighlighted) -> None:
+        if event.option_id is not None and int(event.option_id) < len(self.entries):
+            item = self.entries[int(event.option_id)]
+            self.selected_key = item.school_class_id, item.assessment.id
+            self.update_details()
+
+    @on(OptionList.OptionSelected, "#assessments-list")
+    def open_selected(self) -> None:
+        self.action_edit()
+
+    def on_resize(self) -> None:
+        if self.is_mounted:
+            self.call_after_refresh(self.refresh_columns)
+
+    def refresh_columns(self) -> None:
+        self.query_one("#assessments-headings", Static).update(
+            self.columns(("Datum", "Klasse", "Fach", "Nr. / Art", "Bezeichnung"))
+        )
+        listing = self.query_one("#assessments-list", OptionList)
+        for index, item in enumerate(self.entries):
+            listing.replace_option_prompt(str(index), self.row(item))
+
+    def saved(self, changed: bool | None) -> None:
+        if changed:
+            self.reload_entries()
+
+    @on(Button.Pressed, "#create-assessment")
+    def action_create(self) -> None:
+        if not load_school_classes(
+            self.app_config.root, self.app_config.active_school_year
+        ):
+            self.notify("Bitte zuerst eine Klasse anlegen.")
+            return
+        self.app.push_screen(EditAssessmentScreen(), self.saved)
+
+    @on(Button.Pressed, "#edit-assessment")
+    def action_edit(self) -> None:
+        if item := self.selected():
+            self.app.push_screen(EditAssessmentScreen(item), self.saved)
+
+    @on(Button.Pressed, "#delete-assessment")
+    def action_delete(self) -> None:
+        item = self.selected()
+        if item is None:
+            return
+
+        def confirmed(result: bool | None) -> None:
+            if result:
+                try:
+                    delete_assessment(
+                        self.app_config, item.school_class_id, item.assessment.id
+                    )
+                except (OSError, ValueError) as error:
+                    self.notify(str(error), severity="error")
+                    return
+                self.reload_entries()
+
+        self.app.push_screen(
+            ConfirmationScreen(
+                "Leistungsnachweis löschen",
+                f"{item.number}. {item.assessment.kind.label} · {item.assessment.title}\n{item.school_class_id} · {format_date(item.assessment.date)}",
+                confirm_id="confirm-assessment-deletion",
+                cancel_id="cancel-assessment-deletion",
+            ),
+            confirmed,
+        )
+
+    @on(Button.Pressed, "#close-assessments")
+    def action_cancel(self) -> None:
+        self.dismiss()

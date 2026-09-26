@@ -51,7 +51,7 @@ App.-light-mode MainScreen #management-picker:focus {
 
 MainScreen #management-picker {
     height: 1fr;
-    min-height: 7;
+    min-height: 8;
     margin-top: 1;
 }
 

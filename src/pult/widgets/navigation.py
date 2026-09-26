@@ -83,6 +83,7 @@ class ManagementPicker(OptionList):
             Option("Klassen", id="edit-classes"),
             Option("Stundenplan", id="edit-timetable"),
             Option("Ausfälle", id="edit-closures"),
+            Option("Leistungsnachweise", id="edit-assessments"),
             None,
             Option("Einstellungen", id="settings"),
             id=id,
@@ -94,8 +95,8 @@ class ManagementPicker(OptionList):
         self.call_after_refresh(self.align_settings)
 
     def align_settings(self) -> None:
-        # Vier Einträge und eine Trennlinie; der freie Platz liegt vor der Linie.
-        rows = max(0, self.content_size.height - 5)
+        # Fünf Einträge und eine Trennlinie; der freie Platz liegt vor der Linie.
+        rows = max(0, self.content_size.height - 6)
         if rows == self._spacer_rows:
             return
         selected = (
@@ -111,6 +112,7 @@ class ManagementPicker(OptionList):
                     Option("Klassen", id="edit-classes"),
                     Option("Stundenplan", id="edit-timetable"),
                     Option("Ausfälle", id="edit-closures"),
+                    Option("Leistungsnachweise", id="edit-assessments"),
                 ]
             )
             if rows:

@@ -53,6 +53,7 @@ from pult.screens.base_screen import PultScreen
 from pult.screens.cancel_lesson_screen import CancelLessonScreen
 from pult.screens.confirm_undo_screen import ConfirmUndoScreen
 from pult.screens.curriculum_screen import CurriculumScreen
+from pult.screens.edit_assessments_screen import EditAssessmentsScreen
 from pult.screens.edit_classes_screen import EditClassesScreen
 from pult.screens.edit_closures_screen import EditClosuresScreen
 from pult.screens.edit_timetable_screen import EditTimetableScreen
@@ -1013,6 +1014,8 @@ class MainScreen(PultScreen[None]):
             return
 
         match option_id:
+            case "edit-assessments":
+                self.app.push_screen(EditAssessmentsScreen())
             case "edit-classes":
                 self.app.push_screen(EditClassesScreen(), self.classes_edited)
             case "curriculum":

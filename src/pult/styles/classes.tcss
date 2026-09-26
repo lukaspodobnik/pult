@@ -33,3 +33,38 @@ EditClassesScreen #school-classes {
     scrollbar-gutter: stable;
 }
 EditClassesScreen #school-classes > .option-list--option { padding: 0; }
+
+
+    EditAssessmentScreen Label { height: auto; margin-top: 1; color: $foreground-muted; }
+    EditAssessmentScreen #assessment-periods { height: auto; max-height: 6; }
+    EditAssessmentScreen #assessment-period-hint { height: auto; color: $foreground-muted; }
+
+
+
+    EditAssessmentsScreen #assessments-screen { height: 1fr; padding: 1 2; overflow: auto auto; }
+    EditAssessmentsScreen #assessments-frame,
+    EditAssessmentsScreen #assessment-details {
+        height: 1fr; min-height: 8; min-width: 100;
+        border: round $primary; border-title-color: $text-accent;
+        padding: 0 1 0 2; background: $surface;
+    }
+    EditAssessmentsScreen #assessment-details { height: 11; margin-top: 1; }
+    EditAssessmentsScreen #assessment-details-text { height: auto; }
+    EditAssessmentsScreen #assessments-headings {
+        height: 2; border-bottom: solid $foreground 18%; padding-right: 1;
+        color: $foreground-muted; text-style: none;
+    }
+    EditAssessmentsScreen #assessments-empty { height: 1; color: $foreground-muted; }
+    EditAssessmentsScreen #assessments-list {
+        height: 1fr; border: none; padding: 0; background: transparent; scrollbar-gutter: stable;
+    }
+    EditAssessmentsScreen #assessments-list > .option-list--option { padding: 0; }
+
+
+EditAssessmentScreen #assessment-dialog { width: 86; padding: 1 2; }
+EditAssessmentScreen #assessment-dialog .form-fields { max-height: 60vh; }
+EditAssessmentScreen Label { height: 1; margin: 0; }
+EditAssessmentScreen Input, EditAssessmentScreen Select { margin: 0; }
+EditAssessmentScreen .assessment-row { height: auto; }
+EditAssessmentScreen .assessment-field { width: 1fr; height: auto; }
+EditAssessmentScreen .assessment-field { padding-right: 1; }
