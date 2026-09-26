@@ -7,6 +7,7 @@ from textual.widgets import Static
 from textual.widgets.option_list import Option
 
 from pult.presentation import format_date
+from pult.school.assessment_requirements import load_assessment_requirements
 from pult.school.calendar import Closure
 from pult.school.school_class import load_school_classes
 from pult.school.subject import load_subjects
@@ -14,6 +15,7 @@ from pult.screens.base_screen import PultScreen
 from pult.screens.confirmation_screen import ConfirmationScreen
 from pult.screens.edit_assessment_screen import EditAssessmentScreen
 from pult.services.assessment_conflicts import assessment_conflicts
+from pult.services.assessment_planning import get_assessment_planning_gaps
 from pult.services.assessments import (
     ScopedAssessment,
     assessment_kind_issue,
@@ -54,9 +56,17 @@ class EditAssessmentsScreen(PultScreen[None]):
                     "Noch keine Leistungsnachweise geplant.", id="assessments-empty"
                 )
                 yield OptionList(id="assessments-list")
-            with VerticalScroll(id="assessment-details", can_focus=False) as details:
-                details.border_title = "TERMINDETAILS"
-                yield Static(id="assessment-details-text", markup=False)
+            with Horizontal(id="assessment-summary"):
+                with VerticalScroll(
+                    id="assessment-details", can_focus=False
+                ) as details:
+                    details.border_title = "TERMINDETAILS"
+                    yield Static(id="assessment-details-text", markup=False)
+                with Vertical(id="assessment-planning") as planning:
+                    planning.border_title = "NOCH ZU PLANEN"
+                    yield Static(id="assessment-planning-headings")
+                    with VerticalScroll(id="assessment-planning-rows", can_focus=False):
+                        yield Static(id="assessment-planning-text", markup=False)
             with Horizontal(classes="management-actions"):
                 yield Button("Anlegen", id="create-assessment")
                 yield Button("Bearbeiten", id="edit-assessment", disabled=True)
@@ -93,6 +103,12 @@ class EditAssessmentsScreen(PultScreen[None]):
         except (OSError, ValueError) as error:
             self.notify(str(error), severity="error")
             return
+        try:
+            self.update_planning()
+        except (OSError, ValueError) as error:
+            self.query_one("#assessment-planning-text", Static).update(
+                f"Planung konnte nicht geprüft werden: {error}"
+            )
         keys = [(item.school_class_id, item.assessment.id) for item in self.entries]
         if self.selected_key not in keys:
             self.selected_key = keys[0] if keys else None
@@ -113,6 +129,55 @@ class EditAssessmentsScreen(PultScreen[None]):
             self.query_one(f"#{name}-assessment", Button).disabled = not self.entries
         self.update_details()
         listing.focus()
+
+    def update_planning(self) -> None:
+        classes = load_school_classes(
+            self.app_config.root, self.app_config.active_school_year
+        )
+        requirements = load_assessment_requirements(
+            self.app_config.root, self.app_config.active_school_year
+        )
+        gaps = get_assessment_planning_gaps(
+            classes,
+            requirements,
+            self.entries,
+            {key for key, conflicts in self.conflicts.items() if conflicts},
+        )
+        headings = self.query_one("#assessment-planning-headings", Static)
+        headings.display = bool(gaps)
+        headings.update(self.planning_columns(("Klasse", "Fach", "Groß", "Klein")))
+        text = Text()
+        for index, gap in enumerate(gaps):
+            if index:
+                text.append("\n")
+            text.append_text(
+                self.planning_columns(
+                    (
+                        gap.school_class_id,
+                        self.subjects.get(gap.subject_id, gap.subject_id),
+                        str(gap.large) if gap.large else "—",
+                        str(gap.small) if gap.small else "—",
+                    )
+                )
+            )
+        if not gaps:
+            text.append(
+                "Alle Mindestzahlen sind durch geplante oder durchgeführte LNWs abgedeckt."
+                if classes
+                else "Noch keine Klassen angelegt."
+            )
+        self.query_one("#assessment-planning-text", Static).update(text)
+
+    def planning_columns(self, values: tuple[str, str, str, str]) -> Text:
+        width = max(30, self.query_one("#assessment-planning-rows").content_size.width)
+        widths = (8, max(10, width - 22), 7, 7)
+        text = Text(no_wrap=True, overflow="ellipsis")
+        for index, (value, size) in enumerate(zip(values, widths)):
+            part = Text(value)
+            part.truncate(size - 1, overflow="ellipsis")
+            part.align("center" if index >= 2 else "left", size)
+            text.append_text(part)
+        return text
 
     def columns(self, values: tuple[str, ...]) -> Text:
         width = max(92, self.query_one("#assessments-list").content_size.width)
@@ -211,6 +276,10 @@ class EditAssessmentsScreen(PultScreen[None]):
             self.call_after_refresh(self.refresh_columns)
 
     def refresh_columns(self) -> None:
+        try:
+            self.update_planning()
+        except (OSError, ValueError):
+            pass
         self.query_one("#assessments-headings", Static).update(
             self.columns(("Datum", "Klasse", "Fach", "Nr. / Art", "Bezeichnung"))
         )
