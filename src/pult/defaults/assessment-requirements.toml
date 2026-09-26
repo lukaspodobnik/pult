@@ -1,0 +1,142 @@
+# Ausgangswerte für das bayerische G9 ab 2026/27, je Schuljahr.
+# Schulaufgaben: GSO § 22; kleine LNWs Q13/gA: § 21 Abs. 3 (schriftlich in 13/2).
+# https://www.gesetze-bayern.de/Content/Document/BayGSO-22
+# https://www.gesetze-bayern.de/Content/Document/BayGSO-21
+# Informatik bis 11: konfigurierbarer Schulstandard von 2 kleinen schriftlichen
+# LNWs pro Jahr, keine Behauptung einer landesweiten gesetzlichen Mindestzahl.
+# Fehlende Kategorie in minimums = keine Mindestvorgabe, ausdrücklich 0 ist möglich.
+# Erlaubte Arten sind unabhängig davon. JST zählen niemals zu den Mindestzahlen.
+# Keine Halbjahresprüfung. Schulische Ersatzregelungen sind hier nicht abgebildet.
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 5
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 4 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 6
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 4 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 7
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 4 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 8
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 3 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 9
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 3 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 10
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 3 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 11
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 3 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 12
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 2 }
+
+[[requirements]]
+subject_id = "mathematik"
+grade_level = 13
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 2 }
+
+[[requirements]]
+subject_id = "mathematik-vertiefung"
+grade_level = 12
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 2 }
+
+[[requirements]]
+subject_id = "nut-informatik"
+grade_level = 6
+allowed_kinds = ["ex", "akl", "jst"]
+minimums = { small_written = 2 }
+
+[[requirements]]
+subject_id = "nut-informatik"
+grade_level = 7
+allowed_kinds = ["ex", "akl", "jst"]
+minimums = { small_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-ntg"
+grade_level = 9
+allowed_kinds = ["ex", "akl", "jst"]
+minimums = { small_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-ntg"
+grade_level = 10
+allowed_kinds = ["ex", "akl", "jst"]
+minimums = { small_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-ntg"
+grade_level = 11
+allowed_kinds = ["ex", "akl", "jst"]
+minimums = { small_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-spaet-beginnend"
+grade_level = 11
+allowed_kinds = ["ex", "akl", "jst"]
+minimums = { small_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-spaet-beginnend"
+grade_level = 12
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-spaet-beginnend"
+grade_level = 13
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 1, small_written = 1 }
+
+[[requirements]]
+subject_id = "informatik-grundlegendes-anforderungsniveau"
+grade_level = 12
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-grundlegendes-anforderungsniveau"
+grade_level = 13
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 1, small_written = 1 }
+
+[[requirements]]
+subject_id = "informatik-erhoehtes-anforderungsniveau"
+grade_level = 12
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 2 }
+
+[[requirements]]
+subject_id = "informatik-erhoehtes-anforderungsniveau"
+grade_level = 13
+allowed_kinds = ["sa", "ex", "akl", "jst"]
+minimums = { large_written = 2 }
+

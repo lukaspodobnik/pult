@@ -4,6 +4,7 @@ from pathlib import Path
 
 from pult.config import AppConfig, save_app_config
 from pult.initialization.school_year import initialize_school_year
+from pult.school.assessment_requirements import AssessmentRequirementsFileError
 from pult.school.calendar import (
     CALENDARS_DIRECTORY_NAME,
     CalendarFileError,
@@ -61,7 +62,7 @@ def initialize_pult(root: str, editor: str, year: str) -> AppConfig:
         _create_default_directories(root_path)
         _create_material_directories(root_path)
         initialize_school_year(root_path, year)
-    except (OSError, CalendarFileError) as error:
+    except (OSError, CalendarFileError, AssessmentRequirementsFileError) as error:
         raise SetupError(
             f"Das Datenverzeichnis konnte nicht initialisiert werden: {error}"
         ) from error

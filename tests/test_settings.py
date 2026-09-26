@@ -92,6 +92,7 @@ def test_settings_screen_switches_year_without_restart(tmp_path, monkeypatch):
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause(0.3)
+            await pilot.wait_for_scheduled_animations()
             main = app.screen
             await app.push_screen(SettingsScreen(), main.settings_changed)
             await pilot.pause()

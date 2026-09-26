@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pult.school.assessment_requirements import initialize_assessment_requirements
 from pult.school.calendar import (
     create_empty_school_closures,
     load_school_calendar,
@@ -23,3 +24,4 @@ def initialize_school_year(root: Path, year: str) -> None:
 
     create_empty_timetable(get_timetable_path(root, year))
     create_empty_school_closures(root, year)
+    initialize_assessment_requirements(root, year)

@@ -134,6 +134,18 @@ Konfiguration: `~/.config/pult/config.toml`. Das gewählte Datenverzeichnis enth
 `calendars/` und Jahresdaten in `school-years/<Jahr>/`. Stundenpläne sind CSV, übrige
 Fachdaten TOML. **Sichere das gesamte Datenverzeichnis** vor größeren manuellen Änderungen.
 
+LNW-Vorgaben liegen je Schuljahr in `assessment-requirements.toml`. Jeder Eintrag
+enthält `subject_id`, `grade_level`, `allowed_kinds` und die jährlichen Mindestzahlen
+in `minimums` (`large_written` / `small_written`). Eine fehlende Mindestzahl bedeutet
+keine Vorgabe; erlaubte Arten werden unabhängig davon festgelegt. Jahrgangsstufentests
+werden keiner Mindestzahl angerechnet. Informatik bis Jahrgangsstufe 11 startet mit
+zwei kleinen schriftlichen LNWs pro Jahr als anpassbarem Schulstandard.
+Beim Einrichten eines Jahres wird die zuletzt gespeicherte frühere Konfiguration
+übernommen, andernfalls gelten die mitgelieferten Standards. Bestehende Dateien
+werden nicht überschrieben. Altbestände ohne Datei nutzen beim Laden dieselbe
+Auswahl, ohne dabei Dateien zu schreiben. Die Bearbeitung in den Einstellungen und
+die Anzeige der Mindestzahlen werden in einem folgenden Schritt angebunden.
+
 Enthalten sind Mathematik- und Informatiksequenzen der hinterlegten bayerischen
 Gymnasiallehrpläne und Kalender von **2025/26 bis 2029/30**. Nur Jahre mit gültigem lokalem
 Kalender sind auswählbar. Quellen stehen in den Kalenderdateien.
