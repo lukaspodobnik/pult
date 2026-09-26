@@ -32,6 +32,7 @@ def test_curriculum_highlight_navigation(tmp_path, monkeypatch):
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
             await pilot.pause()
+            await pilot.wait_for_scheduled_animations()
             picker = app.screen.query_one(TeachingPicker)
             picker.focus()
             picker.highlighted = picker.get_option_index("curriculum")

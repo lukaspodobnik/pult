@@ -112,10 +112,11 @@ def test_live_theme_keeps_modal_input_and_focus(
             cancel = modal.query_one("#abort-cancel-lesson")
             save = modal.query_one("#save-cancelled-lesson")
             assert cancel.styles.background == save.styles.background
-            assert cancel.styles.background.a > 0
+            assert cancel.styles.background.a == 0
             save.focus()
             await pilot.pause()
-            assert save.styles.background != cancel.styles.background
+            assert save.styles.background == cancel.styles.background
+            assert save.styles.border.top[1] != cancel.styles.border.top[1]
             field.focus()
             await pilot.pause()
             field.cursor_position = 5

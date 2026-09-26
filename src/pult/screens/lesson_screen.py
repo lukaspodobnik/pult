@@ -278,8 +278,7 @@ class LessonScreen(PultScreen[Sequence]):
         with self.prevent(OptionList.OptionHighlighted):
             listing.clear_options()
             listing.add_options(
-                Option(item.title, id=item.id)
-                for item in updated.lessons
+                Option(item.title, id=item.id) for item in updated.lessons
             )
         self.query_one(SequenceContext).update_sequence(self.sequence)
         await self.refresh_contents()

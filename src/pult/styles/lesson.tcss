@@ -32,3 +32,6 @@ LessonMaterial MarkdownH2 { color: $text-accent; }
 LessonScreen .lesson-phase-title { height: auto; color: $text-accent; text-style: bold; margin-bottom: 1; }
 LessonScreen .lesson-phase-body { height: auto; }
 LessonScreen .lesson-phase-divider { height: 1; margin: 1 0 0 0; color: $foreground 18%; }
+
+/* Gleicher Rahmen wie der Sequenzkopf, auch bei fokussierter Aufgabenliste. */
+TaskScreen #task-list, TaskScreen #task-list:focus { border: round $primary; }

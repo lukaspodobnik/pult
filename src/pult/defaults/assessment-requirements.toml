@@ -139,4 +139,3 @@ subject_id = "informatik-erhoehtes-anforderungsniveau"
 grade_level = 13
 allowed_kinds = ["sa", "ex", "akl", "jst"]
 minimums = { large_written = 2 }
-

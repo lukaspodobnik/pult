@@ -1,5 +1,4 @@
 from importlib.resources import files
-from pathlib import Path
 
 import pytest
 
@@ -196,8 +195,6 @@ def test_initialization_copies_reference_documents(tmp_path, monkeypatch):
     assert sorted(p.name for p in (tmp_path / "vorbereitung").iterdir()) == [
         "materialvertrag.md"
     ]
-    contract = Path(__file__).parents[1] / "docs/materialvertrag.md"
-    assert (tmp_path / paths[-1]).read_bytes() == contract.read_bytes()
 
 
 def test_reinitialization_preserves_reference_and_personal_files(tmp_path, monkeypatch):

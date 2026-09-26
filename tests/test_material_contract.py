@@ -186,6 +186,7 @@ def test_material_summary_in_home_and_class_view(planned_lesson, sequences, subj
     assert "next-lesson-material" not in home._texts()
     summary = SimpleNamespace(
         next_planned_lesson=planned_lesson,
+        next_scheduled_assessment=None,
         sequences=[
             SimpleNamespace(
                 sequence_id=sequences[0].id,

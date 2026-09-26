@@ -106,11 +106,13 @@ class SubjectProgressBlock(Vertical):
                 with capacity:
                     with Vertical(classes="capacity-summary"):
                         yield from self._compose_capacity()
-                        yield Static(
+                        assessment = Static(
                             self._assessment_text(),
                             classes="class-assessment",
                             markup=False,
                         )
+                        assessment.display = bool(self._assessment_text())
+                        yield assessment
             next_lesson = VerticalScroll(classes="class-next-lesson")
             next_lesson.border_title = "NÄCHSTE STUNDE"
             next_lesson.can_focus = False
@@ -223,7 +225,9 @@ class SubjectProgressBlock(Vertical):
         self.query_one(".lesson-capacity").border_title = (
             "ÜBERSICHT" if summary.has_assessments else "STUNDENBILANZ"
         )
-        self.query_one(".class-assessment", Static).update(self._assessment_text())
+        assessment = self.query_one(".class-assessment", Static)
+        assessment.update(self._assessment_text())
+        assessment.display = bool(self._assessment_text())
         for name, text in self._next_lesson_texts().items():
             widget = self.query_one(f".{name}", Static)
             widget.update(text)

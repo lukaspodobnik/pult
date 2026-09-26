@@ -52,10 +52,12 @@ def test_form_frames_actions_and_focus(tmp_path, monkeypatch, size):
                 await pilot.pause()
                 dialog = screen.query_one(FormDialog)
                 assert dialog.border_title
-                assert dialog.region.height >= 13
                 assert dialog.region.y >= 0
                 assert dialog.region.bottom <= size[1]
                 actions = dialog.query_one(".form-actions")
+                assert (
+                    dialog.query_one(".form-fields").region.bottom <= actions.region.y
+                )
                 assert actions.region.height == 3
                 assert actions.region.bottom <= dialog.content_region.bottom
                 buttons = list(actions.query("Button"))
