@@ -149,7 +149,7 @@ class MainScreen(PultScreen[None]):
             "text_opacity",
             0.0,
             duration=0.65,
-            delay=0.25,
+            delay=0.4,
             easing="in_out_sine",
             on_complete=self._logo_faded,
         )
@@ -174,15 +174,15 @@ class MainScreen(PultScreen[None]):
             self.query_one("#main").styles.animate(
                 "opacity",
                 1.0,
-                duration=0.15,
-                easing="in_out_sine",
+                duration=0.25,
+                easing="out_sine",
                 on_complete=self._finish_startup,
             )
             self.query_one(PultFooter).styles.animate(
                 "opacity",
                 1.0,
-                duration=0.15,
-                easing="in_out_sine",
+                duration=0.25,
+                easing="out_sine",
             )
 
     def _finish_startup(self) -> None:

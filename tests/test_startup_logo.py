@@ -39,7 +39,7 @@ def test_startup_waits_for_dashboard_without_blocking_fade(tmp_path, monkeypatch
                 assert logo.styles.text_opacity == 1
                 await asyncio.sleep(0.4)
                 assert not screen._startup_faded
-                await asyncio.sleep(0.6)
+                await asyncio.sleep(0.85)
                 assert screen._startup_faded
                 assert screen.startup_active
                 assert logo.styles.text_opacity == 0
