@@ -121,6 +121,7 @@ def multi_class_config(tmp_path, monkeypatch):
 
 async def ready(app, pilot):
     await pilot.pause(0.3)
+    await pilot.wait_for_scheduled_animations()
     for _ in range(40):
         if app.screen._pending_view_id is None:
             return app.screen

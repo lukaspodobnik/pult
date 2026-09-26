@@ -7,6 +7,7 @@ from pult.curriculum.sequence import Lesson, Sequence
 from pult.progress.class_progress import (
     ClassProgress,
 )
+from pult.school.assessment import Assessment
 from pult.school.calendar import (
     Closure,
     SchoolCalendar,
@@ -37,6 +38,7 @@ def get_next_planned_lessons_for_class(
     school_calendar: SchoolCalendar,
     school_closures: list[Closure],
     class_closures: list[Closure],
+    assessments: list[Assessment] | None = None,
 ) -> list[PlannedLesson]:
     """Berechne für jedes Fach einer Klasse die nächste geplante Lesson."""
     planned_lessons = []
@@ -58,6 +60,7 @@ def get_next_planned_lessons_for_class(
             subject_id,
             school_calendar,
             [*school_closures, *class_closures],
+            assessments or [],
         )
         if occurrence is None:
             continue
@@ -98,6 +101,7 @@ def get_next_planned_lesson_for_class(
     school_calendar: SchoolCalendar,
     school_closures: list[Closure],
     class_closures: list[Closure],
+    assessments: list[Assessment] | None = None,
 ) -> PlannedLesson | None:
     """Gib die zeitlich nächste geplante Lesson einer Klasse zurück."""
     planned_lessons = get_next_planned_lessons_for_class(
@@ -108,6 +112,7 @@ def get_next_planned_lesson_for_class(
         school_calendar,
         school_closures,
         class_closures,
+        assessments,
     )
     return planned_lessons[0] if planned_lessons else None
 
@@ -120,6 +125,7 @@ def get_next_planned_lesson(
     school_calendar: SchoolCalendar,
     school_closures: list[Closure],
     class_closures_by_class_id: dict[str, list[Closure]],
+    assessments_by_class_id: dict[str, list[Assessment]] | None = None,
 ) -> PlannedLesson | None:
     """Gib die global nächste geplante Lesson über alle Klassen zurück."""
     planned_lessons = []
@@ -133,6 +139,7 @@ def get_next_planned_lesson(
             school_calendar,
             school_closures,
             class_closures_by_class_id[school_class.id],
+            (assessments_by_class_id or {}).get(school_class.id, []),
         )
         if planned_lesson is not None:
             planned_lessons.append(planned_lesson)

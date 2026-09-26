@@ -42,6 +42,7 @@ from pult.progress.queries import (
     get_next_planned_lessons_for_class,
     get_suggested_next_sequence,
 )
+from pult.progress.queries.assessments import PlannedAssessment, next_event
 from pult.school.period import load_periods
 from pult.school.school_class import SchoolClass, load_school_classes
 from pult.school.subject import load_subjects
@@ -68,6 +69,7 @@ from pult.screens.set_active_sequence_screen import (
 )
 from pult.screens.settings_screen import SettingsScreen
 from pult.screens.teaching_log_screen import TeachingLogScreen
+from pult.services.assessments import complete_assessment, reopen_assessment
 from pult.services.progress import (
     load_class_progress_data,
     load_planning_data,
@@ -114,6 +116,7 @@ class MainScreen(PultScreen[None]):
         self.active_school_class_id: str | None = None
         self.active_subject_id: str | None = None
         self._pending_view_id: str | None = None
+        self._last_assessment_completion: tuple[str, str] | None = None
         self._view_timer: Timer | None = None
 
     def compose(self) -> ComposeResult:
@@ -304,6 +307,7 @@ class MainScreen(PultScreen[None]):
                 data.school_calendar,
                 data.school_closures,
                 data.class_closures_by_class_id,
+                data.assessments_by_class_id,
             )
             return data, periods, subjects, dashboard
 
@@ -380,6 +384,7 @@ class MainScreen(PultScreen[None]):
                 data.school_calendar,
                 data.school_closures,
                 data.class_closures_by_class_id[school_class.id],
+                data.assessments_by_class_id[school_class.id],
             )
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(
@@ -435,6 +440,14 @@ class MainScreen(PultScreen[None]):
         ):
             # Während Highlight und Ansicht auseinanderliegen, keine falsche Klasse ändern.
             return None
+        if action in {
+            "skip_next_lesson",
+            "continue_next_lesson",
+            "cancel_next_lesson",
+        } and isinstance(self.displayed_next_lesson(), PlannedAssessment):
+            return False
+        if action == "undo_last_entry" and self.active_school_class_id is None:
+            return self._last_assessment_completion is not None
         if action == "open_next_lesson":
             return self.displayed_next_lesson() is not None
         if action in {
@@ -449,17 +462,26 @@ class MainScreen(PultScreen[None]):
     def refresh_focused_bindings(self) -> None:
         self.refresh_bindings()
 
-    def displayed_next_lesson(self) -> PlannedLesson | None:
+    def displayed_next_lesson(self) -> PlannedLesson | PlannedAssessment | None:
         """Verwende genau die Stunde der sichtbaren Übersicht, ohne neu zu planen."""
         if self.active_school_class_id is None:
             views = self.query(HomeView)
-            return views.first().dashboard.next_planned_lesson if views else None
+            return (
+                next_event(
+                    views.first().dashboard.next_planned_lesson,
+                    views.first().dashboard.next_scheduled_assessment,
+                )
+                if views
+                else None
+            )
         views = self.query(SchoolClassView)
         if not views:
             return None
         return next(
             (
-                summary.next_planned_lesson
+                next_event(
+                    summary.next_planned_lesson, summary.next_scheduled_assessment
+                )
                 for summary in views.first().progress_summaries
                 if summary.subject_id == self.active_subject_id
             ),
@@ -471,6 +493,11 @@ class MainScreen(PultScreen[None]):
             return
         planned = self.displayed_next_lesson()
         if planned is None:
+            return
+        if isinstance(planned, PlannedAssessment):
+            screen = EditAssessmentsScreen()
+            screen.selected_key = (planned.school_class_id, planned.assessment.id)
+            self.app.push_screen(screen, self.timetable_edit_finished)
             return
         sequence = next(
             (
@@ -512,6 +539,7 @@ class MainScreen(PultScreen[None]):
         sequences: list[Sequence],
     ) -> None:
         """Validiere und speichere Fortschritt und aktualisiere danach die View."""
+        self._last_assessment_completion = None
         config = self.app_config
         validate_class_progress(progress, school_class, sequences)
         save_class_progress(
@@ -524,6 +552,11 @@ class MainScreen(PultScreen[None]):
 
     def load_planned_lesson_context(self) -> PlannedLessonContext | None:
         """Lade den Kontext für die nächste globale oder klassenbezogene Lesson."""
+        if isinstance(self.displayed_next_lesson(), PlannedAssessment):
+            self.notify(
+                "Für einen Leistungsnachweis bitte Abschließen oder die Terminverwaltung verwenden."
+            )
+            return None
         config = self.app_config
 
         try:
@@ -542,6 +575,7 @@ class MainScreen(PultScreen[None]):
                     data.school_calendar,
                     data.school_closures,
                     data.class_closures_by_class_id,
+                    data.assessments_by_class_id,
                 )
             else:
                 class_id = self.active_school_class_id
@@ -556,6 +590,7 @@ class MainScreen(PultScreen[None]):
                             data.school_calendar,
                             data.school_closures,
                             data.class_closures_by_class_id[class_id],
+                            data.assessments_by_class_id[class_id],
                         )
                         if lesson.subject_id == self.active_subject_id
                     ),
@@ -586,6 +621,22 @@ class MainScreen(PultScreen[None]):
         )
 
     async def action_complete_next_lesson(self) -> None:
+        planned = self.displayed_next_lesson()
+        if isinstance(planned, PlannedAssessment):
+            try:
+                complete_assessment(
+                    self.app_config, planned.school_class_id, planned.assessment.id
+                )
+            except (OSError, ValueError) as error:
+                self.notify(str(error), severity="error")
+                return
+            self._last_assessment_completion = (
+                planned.school_class_id,
+                planned.assessment.id,
+            )
+            await self.refresh_current_view()
+            self.notify(f"{planned.label}: durchgeführt und protokolliert.")
+            return
         context = self.load_planned_lesson_context()
         if context is None:
             return
@@ -798,6 +849,23 @@ class MainScreen(PultScreen[None]):
         )
 
     async def action_undo_last_entry(self) -> None:
+        if self.active_school_class_id is None and self._last_assessment_completion:
+            class_id, assessment_id = self._last_assessment_completion
+
+            async def confirmed(result: bool | None) -> None:
+                if result:
+                    try:
+                        reopen_assessment(self.app_config, class_id, assessment_id)
+                    except (OSError, ValueError) as error:
+                        self.notify(str(error), severity="error")
+                        return
+                    self._last_assessment_completion = None
+                    await self.refresh_current_view()
+
+            self.app.push_screen(
+                ConfirmUndoScreen(class_id, "Leistungsnachweis"), confirmed
+            )
+            return
         if self.active_school_class_id is None or self.active_subject_id is None:
             return
 
@@ -1015,7 +1083,9 @@ class MainScreen(PultScreen[None]):
 
         match option_id:
             case "edit-assessments":
-                self.app.push_screen(EditAssessmentsScreen())
+                self.app.push_screen(
+                    EditAssessmentsScreen(), self.timetable_edit_finished
+                )
             case "edit-classes":
                 self.app.push_screen(EditClassesScreen(), self.classes_edited)
             case "curriculum":

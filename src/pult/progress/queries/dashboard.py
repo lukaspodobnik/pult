@@ -10,6 +10,7 @@ from pult.progress.class_progress import (
     TeachingLogEntry,
     TeachingOrigin,
 )
+from pult.school.assessment import Assessment
 from pult.school.calendar import (
     Closure,
     SchoolCalendar,
@@ -19,6 +20,7 @@ from pult.school.period import Period
 from pult.school.school_class import SchoolClass
 from pult.school.timetable import TimetableEntry
 
+from .assessments import PlannedAssessment, next_assessment, numbered_assessments
 from .planning import (
     PlannedLesson,
     get_next_planned_lesson,
@@ -48,9 +50,15 @@ class DailyTimetableEntry:
     log_entry: TeachingLogEntry | None
     planned_lesson: PlannedLesson | None
     is_time_highlighted: bool
+    assessment: PlannedAssessment | None = None
 
     @property
     def action(self) -> TeachingAction | None:
+        if (
+            self.assessment is not None
+            and self.assessment.assessment.completed_on is not None
+        ):
+            return TeachingAction.ASSESSMENT_COMPLETED
         return self.log_entry.action if self.log_entry is not None else None
 
 
@@ -65,6 +73,7 @@ class DailyScheduleSummary:
     date: date
     timetable_entries: tuple[DailyTimetableEntry, ...]
     additional_entries: tuple[DailyAdditionalEntry, ...]
+    external_assessments: tuple[PlannedAssessment, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -72,6 +81,7 @@ class ClassBalance:
     school_class_id: str
     subject_id: str
     difference: int
+    next_assessment: PlannedAssessment | None = None
 
 
 @dataclass(frozen=True)
@@ -80,6 +90,7 @@ class HomeDashboardSummary:
     next_planned_lesson: PlannedLesson | None
     daily_schedule: DailyScheduleSummary
     class_balances: tuple[ClassBalance, ...] = ()
+    next_scheduled_assessment: PlannedAssessment | None = None
 
 
 def get_school_year_progress(
@@ -115,8 +126,24 @@ def get_daily_schedule(
     school_calendar: SchoolCalendar,
     school_closures: list[Closure],
     class_closures_by_class_id: dict[str, list[Closure]],
+    assessments_by_class_id: dict[str, list[Assessment]] | None = None,
 ) -> DailyScheduleSummary:
     """Berechne heutige Termine samt Protokollstatus und Zeitmarkierung."""
+    assessments_by_class_id = assessments_by_class_id or {}
+    todays_assessments = [
+        item
+        for class_id, assessments in assessments_by_class_id.items()
+        for item in numbered_assessments(class_id, assessments)
+        if item.assessment.date == current_datetime.date()
+    ]
+    external = tuple(
+        item for item in todays_assessments if not item.assessment.occupied_periods
+    )
+    assessment_slots = {
+        (item.school_class_id, item.assessment.subject_id, period): item
+        for item in todays_assessments
+        for period in item.assessment.occupied_periods
+    }
     current_date = current_datetime.date()
     additional_entries = _get_daily_additional_entries(
         current_date,
@@ -132,6 +159,7 @@ def get_daily_schedule(
             date=current_date,
             timetable_entries=(),
             additional_entries=additional_entries,
+            external_assessments=external,
         )
 
     weekday = WEEKDAYS[current_date.weekday()]
@@ -179,6 +207,7 @@ def get_daily_schedule(
             school_calendar,
             school_closures,
             class_closures_by_class_id.get(school_class.id, []),
+            assessments_by_class_id.get(school_class.id, []),
         )
         if planned_lesson.date == current_date
     }
@@ -208,6 +237,8 @@ def get_daily_schedule(
             if entry.school_class_id == first.school_class_id
             and entry.subject_id == first.subject_id
             and entry.period >= first.period
+            and (entry.school_class_id, entry.subject_id, entry.period)
+            not in assessment_slots
             and (entry.school_class_id, entry.period)
             not in logged_entries_by_occurrence
         ]
@@ -230,6 +261,9 @@ def get_daily_schedule(
         timetable_entries=tuple(
             DailyTimetableEntry(
                 timetable_entry=entry,
+                assessment=assessment_slots.get(
+                    (entry.school_class_id, entry.subject_id, entry.period)
+                ),
                 grade_level=school_classes_by_id[entry.school_class_id].grade_level,
                 log_entry=logged_entries_by_occurrence.get(
                     (entry.school_class_id, entry.period)
@@ -247,6 +281,7 @@ def get_daily_schedule(
             for entry in entries_for_today
         ),
         additional_entries=additional_entries,
+        external_assessments=external,
     )
 
 
@@ -260,11 +295,42 @@ def get_home_dashboard_summary(
     school_calendar: SchoolCalendar,
     school_closures: list[Closure],
     class_closures_by_class_id: dict[str, list[Closure]],
+    assessments_by_class_id: dict[str, list[Assessment]] | None = None,
 ) -> HomeDashboardSummary:
     """Fasse Schuljahr, nächste Lesson und Tagesplan für das Dashboard zusammen."""
+    candidates = [
+        candidate
+        for school_class in school_classes
+        for subject_id in school_class.subject_ids
+        if (
+            candidate := next_assessment(
+                school_class.id,
+                subject_id,
+                (assessments_by_class_id or {}).get(school_class.id, []),
+                scheduled_only=True,
+                timetable=timetable_entries,
+                calendar=school_calendar,
+                closures=[
+                    *school_closures,
+                    *class_closures_by_class_id.get(school_class.id, []),
+                ],
+            )
+        )
+        is not None
+    ]
     return HomeDashboardSummary(
+        next_scheduled_assessment=min(
+            candidates,
+            key=lambda item: (item.assessment.date, item.period, item.school_class_id),
+            default=None,
+        ),
         class_balances=tuple(
-            ClassBalance(school_class.id, summary.subject_id, summary.lesson_balance)
+            ClassBalance(
+                school_class.id,
+                summary.subject_id,
+                summary.lesson_balance,
+                summary.next_assessment,
+            )
             for school_class in sorted(
                 school_classes, key=lambda item: (item.grade_level, item.id)
             )
@@ -276,6 +342,7 @@ def get_home_dashboard_summary(
                 school_calendar,
                 school_closures,
                 class_closures_by_class_id.get(school_class.id, []),
+                (assessments_by_class_id or {}).get(school_class.id, []),
             )
         ),
         school_year_progress=get_school_year_progress(
@@ -290,6 +357,7 @@ def get_home_dashboard_summary(
             school_calendar,
             school_closures,
             class_closures_by_class_id,
+            assessments_by_class_id,
         ),
         daily_schedule=get_daily_schedule(
             current_datetime,
@@ -301,6 +369,7 @@ def get_home_dashboard_summary(
             school_calendar,
             school_closures,
             class_closures_by_class_id,
+            assessments_by_class_id,
         ),
     )
 

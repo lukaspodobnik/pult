@@ -123,3 +123,5 @@ TeachingLogScreen .teaching-log-empty {
     padding: 1 2;
     color: $foreground-muted;
 }
+
+TeachingLogView .teaching-log-entry.assessment-completed { border-left: thick $success; }

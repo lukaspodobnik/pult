@@ -170,3 +170,5 @@ SchoolClassView .sequence-progress.active .progress-heading,
 SchoolClassView .sequence-progress.active .progress-title {
     height: auto;
 }
+
+SchoolClassView .class-assessment { height: auto; margin-top: 1; }

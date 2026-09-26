@@ -23,6 +23,7 @@ class TeachingOrigin(StrEnum):
     SCHEDULED = "scheduled"
     ADDITIONAL = "additional"
     NONE = "none"
+    ASSESSMENT = "assessment"
 
 
 class TeachingAction(StrEnum):
@@ -31,6 +32,7 @@ class TeachingAction(StrEnum):
     CONTINUED = "continued"
     CANCELLED = "cancelled"
     OTHER = "other"
+    ASSESSMENT_COMPLETED = "assessment-completed"
 
 
 @dataclass(frozen=True)
@@ -61,6 +63,8 @@ class TeachingLogEntry:
     comment: str = ""
     lesson_id: str | None = None
     period: int | None = None
+    assessment_id: str | None = None
+    assessment_periods: tuple[int, ...] = ()
 
     def __post_init__(self) -> None:
         if type(self.date) is not date:
@@ -74,11 +78,14 @@ class TeachingLogEntry:
             "subject_id",
             validate_id(self.subject_id, "Die Fach-ID"),
         )
-        object.__setattr__(
-            self,
-            "sequence_id",
-            validate_id(self.sequence_id, "Die Sequenz-ID"),
-        )
+        if self.action is not TeachingAction.ASSESSMENT_COMPLETED:
+            object.__setattr__(
+                self, "sequence_id", validate_id(self.sequence_id, "Die Sequenz-ID")
+            )
+        elif self.sequence_id != "":
+            raise ValueError(
+                "Ein Leistungsnachweis gehört keiner Unterrichtssequenz an."
+            )
         object.__setattr__(self, "comment", self.comment.strip())
 
         if not isinstance(self.action, TeachingAction):
@@ -104,6 +111,32 @@ class TeachingLogEntry:
         self._validate_action()
 
     def _validate_action(self) -> None:
+        if self.action is TeachingAction.ASSESSMENT_COMPLETED:
+            if (
+                self.origin is not TeachingOrigin.ASSESSMENT
+                or not isinstance(self.assessment_id, str)
+                or not self.assessment_id.strip()
+            ):
+                raise ValueError(
+                    "Ein LNW-Abschluss benötigt Herkunft und Leistungsnachweis-ID."
+                )
+            if self.lesson_id is not None or self.period is not None:
+                raise ValueError(
+                    "Ein LNW-Abschluss darf keine Unterrichtseinheit abschließen."
+                )
+            if not isinstance(self.assessment_periods, tuple) or any(
+                type(p) is not int or p < 1 for p in self.assessment_periods
+            ):
+                raise ValueError("Ungültige Unterrichtsstunden im LNW-Protokoll.")
+            if len(set(self.assessment_periods)) != len(self.assessment_periods):
+                raise ValueError("LNW-Stunden dürfen nicht doppelt vorkommen.")
+            return
+        if (
+            self.assessment_id is not None
+            or self.assessment_periods
+            or self.origin is TeachingOrigin.ASSESSMENT
+        ):
+            raise ValueError("LNW-Metadaten sind nur für einen LNW-Abschluss zulässig.")
         actions_with_lesson = {
             TeachingAction.COMPLETED,
             TeachingAction.SKIPPED,
@@ -183,6 +216,21 @@ class ClassProgress:
                 "Ein Stundenplantermin darf nur einmal protokolliert werden."
             )
 
+        assessment_ids = [
+            entry.assessment_id for entry in self.entries if entry.assessment_id
+        ]
+        if len(set(assessment_ids)) != len(assessment_ids):
+            raise ValueError(
+                "Ein Leistungsnachweis darf nur einmal abgeschlossen werden."
+            )
+        booked = scheduled_occurrences + [
+            (entry.date, period)
+            for entry in self.entries
+            for period in entry.assessment_periods
+        ]
+        if len(set(booked)) != len(booked):
+            raise ValueError("Eine Unterrichtsstunde ist bereits protokolliert.")
+
         progressed_lessons = [
             (entry.subject_id, entry.sequence_id, entry.lesson_id)
             for entry in self.entries
@@ -248,6 +296,9 @@ def validate_class_progress(
                 f"Das Fach '{entry.subject_id}' gehört nicht zur Klasse "
                 f"'{school_class.id}'."
             )
+
+        if entry.action is TeachingAction.ASSESSMENT_COMPLETED:
+            continue
 
         key = (entry.subject_id, entry.sequence_id)
         sequence = sequences_by_key.get(key)
@@ -372,7 +423,7 @@ def _load_teaching_log_entry(data: Any, index: int) -> TeachingLogEntry:
         "origin",
         "comment",
     }
-    optional_keys = {"lesson_id", "period"}
+    optional_keys = {"lesson_id", "period", "assessment_id", "assessment_periods"}
     _require_allowed_keys(
         data,
         required_keys,
@@ -389,6 +440,8 @@ def _load_teaching_log_entry(data: Any, index: int) -> TeachingLogEntry:
         comment=_require_string(data, "comment"),
         lesson_id=_optional_string(data, "lesson_id"),
         period=_optional_integer(data, "period"),
+        assessment_id=_optional_string(data, "assessment_id"),
+        assessment_periods=tuple(data.get("assessment_periods", [])),
     )
 
 
@@ -405,6 +458,9 @@ def _serialize_teaching_log_entry(entry: TeachingLogEntry) -> dict[str, Any]:
         data["lesson_id"] = entry.lesson_id
     if entry.period is not None:
         data["period"] = entry.period
+    if entry.assessment_id is not None:
+        data["assessment_id"] = entry.assessment_id
+        data["assessment_periods"] = list(entry.assessment_periods)
     return data
 
 

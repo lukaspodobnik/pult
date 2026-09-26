@@ -18,12 +18,14 @@ ACTION_LABELS = {
     TeachingAction.CONTINUED: "Fortgesetzt",
     TeachingAction.CANCELLED: "Ausgefallen",
     TeachingAction.OTHER: "Zusatzunterricht",
+    TeachingAction.ASSESSMENT_COMPLETED: "Durchgeführt",
 }
 
 ORIGIN_LABELS = {
     TeachingOrigin.SCHEDULED: "Stundenplantermin",
     TeachingOrigin.ADDITIONAL: "Zusatztermin",
     TeachingOrigin.NONE: "Ohne Termin",
+    TeachingOrigin.ASSESSMENT: "Leistungsnachweis",
 }
 
 
@@ -32,7 +34,7 @@ class TeachingLogEntryBlock(Vertical):
         self,
         entry: TeachingLogEntry,
         subject: Subject,
-        sequence: Sequence,
+        sequence: Sequence | None,
     ) -> None:
         super().__init__(classes=f"teaching-log-entry {entry.action.value}")
         self.entry = entry
@@ -52,10 +54,20 @@ class TeachingLogEntryBlock(Vertical):
             )
             yield Static(occurrence, classes="teaching-log-period")
 
-        yield Static(
-            f"{self.sequence.curriculum_section_id} · {self.sequence.title}",
-            classes="teaching-log-sequence",
-        )
+        if self.sequence is not None:
+            yield Static(
+                f"{self.sequence.curriculum_section_id} · {self.sequence.title}",
+                classes="teaching-log-sequence",
+            )
+        if self.entry.assessment_id:
+            yield Static(
+                "Belegte Stunden: "
+                + (
+                    ", ".join(map(str, self.entry.assessment_periods))
+                    or "keine (externer Termin)"
+                ),
+                classes="teaching-log-sequence",
+            )
 
         lesson_title = self._get_lesson_title()
         if lesson_title is not None:
@@ -73,7 +85,7 @@ class TeachingLogEntryBlock(Vertical):
             )
 
     def _get_lesson_title(self) -> str | None:
-        if self.entry.lesson_id is None:
+        if self.entry.lesson_id is None or self.sequence is None:
             return None
 
         lesson = next(
@@ -133,5 +145,5 @@ class TeachingLogView(VerticalScroll):
             yield TeachingLogEntryBlock(
                 entry,
                 self.subjects_by_id[entry.subject_id],
-                self.sequences_by_key[(entry.subject_id, entry.sequence_id)],
+                self.sequences_by_key.get((entry.subject_id, entry.sequence_id)),
             )

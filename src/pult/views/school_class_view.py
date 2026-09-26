@@ -10,6 +10,7 @@ from pult.progress.queries import (
     SequenceProgressSummary,
     SubjectProgressSummary,
 )
+from pult.progress.queries.assessments import PlannedAssessment, next_event
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
 from pult.widgets.lesson_progress_bar import LessonProgressBar
@@ -99,10 +100,17 @@ class SubjectProgressBlock(Vertical):
                     for sequence in self.summary.sequences:
                         yield SequenceProgressBlock(sequence)
                 capacity = Vertical(classes="lesson-capacity")
-                capacity.border_title = "STUNDENBILANZ"
+                capacity.border_title = (
+                    "ÜBERSICHT" if self.summary.has_assessments else "STUNDENBILANZ"
+                )
                 with capacity:
                     with Vertical(classes="capacity-summary"):
                         yield from self._compose_capacity()
+                        yield Static(
+                            self._assessment_text(),
+                            classes="class-assessment",
+                            markup=False,
+                        )
             next_lesson = VerticalScroll(classes="class-next-lesson")
             next_lesson.border_title = "NÄCHSTE STUNDE"
             next_lesson.can_focus = False
@@ -144,6 +152,14 @@ class SubjectProgressBlock(Vertical):
             if classes == "available-periods":
                 yield Rule(classes="capacity-divider")
 
+    def _assessment_text(self) -> str:
+        item = self.summary.next_assessment
+        return (
+            f"Nächster LNW: {format_date(item.assessment.date)} · {item.label}"
+            if item
+            else ""
+        )
+
     def _compose_next_lesson(self) -> ComposeResult:
         for name, text in self._next_lesson_texts().items():
             widget = Static(text, classes=name, markup=False)
@@ -160,9 +176,23 @@ class SubjectProgressBlock(Vertical):
             ),
             "",
         )
-        planned_lesson = self.summary.next_planned_lesson
+        planned_lesson = next_event(
+            self.summary.next_planned_lesson, self.summary.next_scheduled_assessment
+        )
         if planned_lesson is None:
             texts["next-lesson-empty"] = NO_NEXT_LESSON
+            return texts
+
+        if isinstance(planned_lesson, PlannedAssessment):
+            entry = planned_lesson.assessment
+            texts["next-lesson-sequence"] = planned_lesson.label
+            texts["next-lesson-date"] = (
+                f"{format_date(entry.date, with_weekday=True)} · {planned_lesson.period}. Stunde"
+            )
+            texts["next-lesson-preview"] = (
+                f"{entry.duration_minutes} Minuten · Belegte Stunden: "
+                + ", ".join(map(str, entry.occupied_periods))
+            )
             return texts
 
         sequence = next(
@@ -190,6 +220,10 @@ class SubjectProgressBlock(Vertical):
             return
         self.subject = subject
         self.summary = summary
+        self.query_one(".lesson-capacity").border_title = (
+            "ÜBERSICHT" if summary.has_assessments else "STUNDENBILANZ"
+        )
+        self.query_one(".class-assessment", Static).update(self._assessment_text())
         for name, text in self._next_lesson_texts().items():
             widget = self.query_one(f".{name}", Static)
             widget.update(text)

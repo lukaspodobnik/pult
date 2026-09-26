@@ -9,6 +9,7 @@ from pult.progress.class_progress import (
     load_class_progress,
     validate_class_progress,
 )
+from pult.school.assessment import Assessment
 from pult.school.calendar import (
     Closure,
     SchoolCalendar,
@@ -22,6 +23,7 @@ from pult.school.timetable import (
     get_timetable_path,
     load_timetable,
 )
+from pult.services.assessments import load_effective_assessments
 
 
 @dataclass(frozen=True)
@@ -40,6 +42,7 @@ class PlanningData:
     school_calendar: SchoolCalendar
     school_closures: list[Closure]
     class_closures_by_class_id: dict[str, list[Closure]]
+    assessments_by_class_id: dict[str, list[Assessment]]
 
 
 def load_class_progress_data(
@@ -86,6 +89,12 @@ def load_planning_data(
         for school_class in classes
     }
     return PlanningData(
+        assessments_by_class_id={
+            school_class.id: load_effective_assessments(
+                config, school_class.id, progress=progresses[school_class.id]
+            )
+            for school_class in classes
+        },
         sequences=sequences,
         school_classes=classes,
         progresses_by_class_id=progresses,

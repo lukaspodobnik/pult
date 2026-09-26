@@ -311,3 +311,6 @@ EditTimetableScreen #edit-schedule > .datatable--hover {
     background: transparent;
     background-tint: transparent;
 }
+
+HomeView .daily-external-assessments { height: auto; }
+HomeView .daily-schedule-row.assessment-completed .day-status { color: $success; }

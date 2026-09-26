@@ -18,6 +18,7 @@ from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
 ACTION_ICONS = {
     TeachingAction.COMPLETED: "✓",
+    TeachingAction.ASSESSMENT_COMPLETED: "✓",
     TeachingAction.CONTINUED: "↻",
     TeachingAction.CANCELLED: "×",
 }
@@ -93,6 +94,8 @@ class DailyScheduleRow(Horizontal):
         lesson.display = title is not None
 
     def _get_lesson_title(self) -> str | None:
+        if self.daily_entry.assessment is not None:
+            return self.daily_entry.assessment.label
         if self.daily_entry.planned_lesson is not None:
             return self.daily_entry.planned_lesson.lesson.title or UNTITLED_LESSON
 
@@ -138,7 +141,10 @@ class DailySchedulePanel(Vertical):
             empty = Static(
                 "Heute ist kein Unterricht geplant.", classes="dashboard-empty"
             )
-            empty.display = not daily_schedule.timetable_entries
+            empty.display = (
+                not daily_schedule.timetable_entries
+                and not daily_schedule.external_assessments
+            )
             yield empty
             for entry in daily_schedule.timetable_entries:
                 yield DailyScheduleRow(
@@ -146,6 +152,18 @@ class DailySchedulePanel(Vertical):
                     self.subjects_by_id,
                     self.sequences_by_key,
                 )
+
+            yield Static(
+                self._external_text(),
+                classes="daily-external-assessments",
+                markup=False,
+            )
+
+    def _external_text(self) -> str:
+        return "\n".join(
+            f"{'✓' if item.assessment.completed_on else ' '} {item.assessment.start:%H:%M} · {item.school_class_id} · {item.label} (extern)"
+            for item in self.daily_schedule.external_assessments
+        )
 
     async def update_data(
         self,
@@ -162,9 +180,13 @@ class DailySchedulePanel(Vertical):
             f"HEUTE · {WEEKDAY_NAMES[daily_schedule.date.weekday()].upper()}"
         )
         content = self.query_one("#daily-schedule-entries", VerticalScroll)
-        self.query_one(
-            ".dashboard-empty"
-        ).display = not daily_schedule.timetable_entries
+        self.query_one(".dashboard-empty").display = (
+            not daily_schedule.timetable_entries
+            and not daily_schedule.external_assessments
+        )
+        self.query_one(".daily-external-assessments", Static).update(
+            self._external_text()
+        )
         rows = list(self.query(DailyScheduleRow))
         for row, entry in zip(rows, daily_schedule.timetable_entries):
             row.update_data(entry, subjects_by_id, sequences_by_key)
@@ -176,6 +198,7 @@ class DailySchedulePanel(Vertical):
                     DailyScheduleRow(e, subjects_by_id, sequences_by_key)
                     for e in daily_schedule.timetable_entries[len(rows) :]
                 ),
+                before=self.query_one(".daily-external-assessments"),
             )
         if changed_day:
             content.scroll_home(animate=False)

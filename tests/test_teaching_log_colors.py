@@ -37,6 +37,17 @@ def test_log_colors_match_progress_and_follow_theme(school_class, subject, seque
             period=None if action is TeachingAction.SKIPPED else 1,
         )
         for action in TeachingAction
+        if action is not TeachingAction.ASSESSMENT_COMPLETED
+    ) + (
+        TeachingLogEntry(
+            date(2026, 9, 7),
+            subject.id,
+            "",
+            TeachingAction.ASSESSMENT_COMPLETED,
+            TeachingOrigin.ASSESSMENT,
+            assessment_id="sa-1",
+            assessment_periods=(2,),
+        ),
     )
 
     class ColorApp(App):
@@ -66,6 +77,7 @@ def test_log_colors_match_progress_and_follow_theme(school_class, subject, seque
                         ).color
                     )
                 for action, variable in (
+                    ("assessment-completed", "success"),
                     ("continued", "secondary"),
                     ("cancelled", "error"),
                 ):

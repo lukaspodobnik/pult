@@ -13,6 +13,7 @@ from pult.presentation import (
 from pult.progress.queries import (
     PlannedLesson,
 )
+from pult.progress.queries.assessments import PlannedAssessment
 from pult.school.subject import Subject
 from pult.widgets.scrolling import VerticalScroll
 
@@ -22,7 +23,7 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
 
     def __init__(
         self,
-        planned_lesson: PlannedLesson | None,
+        planned_lesson: PlannedLesson | PlannedAssessment | None,
         today: date,
         subjects_by_id: dict[str, Subject],
         sequences_by_key: dict[tuple[int, str, str], Sequence],
@@ -44,7 +45,7 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
 
     def update_data(
         self,
-        planned_lesson: PlannedLesson | None,
+        planned_lesson: PlannedLesson | PlannedAssessment | None,
         today: date,
         subjects_by_id: dict[str, Subject],
         sequences_by_key: dict[tuple[int, str, str], Sequence],
@@ -74,6 +75,20 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
         planned_lesson = self.planned_lesson
         if planned_lesson is None:
             texts["dashboard-empty"] = NO_NEXT_LESSON
+            return texts
+
+        if isinstance(planned_lesson, PlannedAssessment):
+            entry = planned_lesson.assessment
+            texts["next-lesson-heading"] = (
+                f"{planned_lesson.school_class_id} · {self.subjects_by_id[entry.subject_id].name}"
+            )
+            texts["next-lesson-name"] = planned_lesson.label
+            texts["next-lesson-occurrence"] = (
+                f"{format_date(entry.date, with_weekday=True)} · {planned_lesson.period}. Stunde · {entry.duration_minutes} Minuten"
+            )
+            texts["next-lesson-tasks"] = "Belegte Stunden: " + ", ".join(
+                map(str, entry.occupied_periods)
+            )
             return texts
 
         subject = self.subjects_by_id[planned_lesson.subject_id]

@@ -16,8 +16,10 @@ from pult.screens.edit_assessment_screen import EditAssessmentScreen
 from pult.services.assessment_conflicts import assessment_conflicts
 from pult.services.assessments import (
     ScopedAssessment,
+    complete_assessment,
     delete_assessment,
     list_assessments,
+    reopen_assessment,
 )
 from pult.widgets.button import Button
 from pult.widgets.footer import PultFooter
@@ -27,6 +29,8 @@ from pult.widgets.scrolling import Horizontal, OptionList, Vertical, VerticalScr
 class EditAssessmentsScreen(PultScreen[None]):
     BINDINGS: ClassVar = [
         ("a", "create", "Anlegen"),
+        ("n", "complete", "Abschließen"),
+        ("p", "reopen", "Rückgängig"),
         ("e", "edit", "Bearbeiten"),
         ("d", "delete", "Löschen"),
         ("escape", "cancel", "Zurück"),
@@ -57,6 +61,8 @@ class EditAssessmentsScreen(PultScreen[None]):
                 yield Button(
                     "Löschen", id="delete-assessment", variant="error", disabled=True
                 )
+                yield Button("Abschließen", id="complete-assessment", disabled=True)
+                yield Button("Rückgängig", id="reopen-assessment", disabled=True)
                 yield Static(classes="action-spacer")
                 yield Button("Zurück", id="close-assessments")
         yield PultFooter()
@@ -120,7 +126,7 @@ class EditAssessmentsScreen(PultScreen[None]):
                 format_date(entry.date),
                 item.school_class_id,
                 self.subjects.get(entry.subject_id, entry.subject_id),
-                f"{'⚠ ' if self.conflicts.get((item.school_class_id, entry.id)) else ''}{item.number}. {entry.kind.abbreviation}",
+                f"{'✓ ' if entry.completed_on else '⚠ ' if self.conflicts.get((item.school_class_id, entry.id)) else ''}{item.number}. {entry.kind.abbreviation}",
                 entry.title,
             )
         )
@@ -137,6 +143,12 @@ class EditAssessmentsScreen(PultScreen[None]):
 
     def update_details(self) -> None:
         item = self.selected()
+        completed = item is not None and item.assessment.completed_on is not None
+        for action in ("edit", "delete", "complete"):
+            self.query_one(f"#{action}-assessment", Button).disabled = (
+                item is None or completed
+            )
+        self.query_one("#reopen-assessment", Button).disabled = not completed
         text = "Noch keine Leistungsnachweise geplant."
         if item:
             entry = item.assessment
@@ -207,7 +219,7 @@ class EditAssessmentsScreen(PultScreen[None]):
 
     @on(Button.Pressed, "#edit-assessment")
     def action_edit(self) -> None:
-        if item := self.selected():
+        if (item := self.selected()) and item.assessment.completed_on is None:
             self.app.push_screen(EditAssessmentScreen(item), self.saved)
 
     @on(Button.Pressed, "#delete-assessment")
@@ -233,6 +245,51 @@ class EditAssessmentsScreen(PultScreen[None]):
                 f"{item.number}. {item.assessment.kind.label} · {item.assessment.title}\n{item.school_class_id} · {format_date(item.assessment.date)}",
                 confirm_id="confirm-assessment-deletion",
                 cancel_id="cancel-assessment-deletion",
+            ),
+            confirmed,
+        )
+
+    @on(Button.Pressed, "#complete-assessment")
+    def action_complete(self) -> None:
+        item = self.selected()
+        if item is None:
+            return
+        try:
+            complete_assessment(
+                self.app_config, item.school_class_id, item.assessment.id
+            )
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+            return
+        self.reload_entries()
+        self.notify(
+            "Leistungsnachweis durchgeführt und im Unterrichtsprotokoll gespeichert."
+        )
+
+    @on(Button.Pressed, "#reopen-assessment")
+    def action_reopen(self) -> None:
+        item = self.selected()
+        if item is None or item.assessment.completed_on is None:
+            return
+
+        def confirmed(result: bool | None) -> None:
+            if not result:
+                return
+            try:
+                reopen_assessment(
+                    self.app_config, item.school_class_id, item.assessment.id
+                )
+            except (OSError, ValueError) as error:
+                self.notify(str(error), severity="error")
+                return
+            self.reload_entries()
+
+        self.app.push_screen(
+            ConfirmationScreen(
+                "LNW-Abschluss zurücknehmen",
+                f"{item.number}. {item.assessment.kind.label} · {item.assessment.title}\nDer Protokolleintrag wird zurückgenommen und der Termin wieder geöffnet.",
+                confirm_id="confirm-assessment-reopen",
+                cancel_id="cancel-assessment-reopen",
             ),
             confirmed,
         )

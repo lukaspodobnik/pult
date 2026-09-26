@@ -50,6 +50,7 @@ def test_dashboard_geometry_focus_and_overflow(tmp_path, monkeypatch, size):
         app = PultApp()
         async with app.run_test(size=size) as pilot:
             await pilot.pause(0.4)
+            await pilot.wait_for_scheduled_animations()
             for _ in range(40):
                 if app.screen._pending_view_id is None:
                     break

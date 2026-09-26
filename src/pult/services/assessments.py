@@ -6,6 +6,14 @@ from datetime import date
 
 from pult.config import AppConfig
 from pult.presentation import WEEKDAYS
+from pult.progress.class_progress import (
+    ClassProgress,
+    TeachingAction,
+    TeachingLogEntry,
+    TeachingOrigin,
+    load_class_progress,
+    save_class_progress,
+)
 from pult.school.assessment import Assessment, load_assessments, save_assessments
 from pult.school.calendar import load_school_calendar
 from pult.school.school_class import load_school_class, load_school_classes
@@ -19,13 +27,77 @@ class ScopedAssessment:
     number: int
 
 
+def load_effective_assessments(
+    config: AppConfig, class_id: str, *, progress: ClassProgress | None = None
+) -> list[Assessment]:
+    # Das Protokoll ist die maßgebliche Quelle für per App abgeschlossene LNWs.
+    # Dadurch ändern Abschluss und Rücknahme jeweils nur eine Datei.
+    entries = load_assessments(config.root, config.active_school_year, class_id)
+    if progress is None:
+        progress = load_class_progress(config.root, config.active_school_year, class_id)
+    completed = {
+        entry.assessment_id: entry.date
+        for entry in progress.entries
+        if entry.assessment_id
+    }
+    return [
+        replace(entry, completed_on=completed.get(entry.id, entry.completed_on))
+        for entry in entries
+    ]
+
+
+def complete_assessment(config: AppConfig, class_id: str, assessment_id: str) -> None:
+    entries = load_effective_assessments(config, class_id)
+    entry = next((item for item in entries if item.id == assessment_id), None)
+    if entry is None or entry.completed_on is not None:
+        raise ValueError("Der Leistungsnachweis fehlt oder ist bereits abgeschlossen.")
+    validate_assessment(config, class_id, entry)
+    progress = load_class_progress(config.root, config.active_school_year, class_id)
+    number = next(
+        item.number
+        for item in list_assessments(config)
+        if item.school_class_id == class_id and item.assessment.id == assessment_id
+    )
+    log = TeachingLogEntry(
+        date=entry.date,
+        subject_id=entry.subject_id,
+        sequence_id="",
+        action=TeachingAction.ASSESSMENT_COMPLETED,
+        origin=TeachingOrigin.ASSESSMENT,
+        comment=f"{number}. {entry.kind.label} · {entry.title} · {entry.start:%H:%M} Uhr · {entry.duration_minutes} Minuten",
+        assessment_id=entry.id,
+        assessment_periods=entry.occupied_periods,
+    )
+    save_class_progress(
+        config.root,
+        config.active_school_year,
+        class_id,
+        ClassProgress(progress.active_sequences, (*progress.entries, log)),
+    )
+
+
+def reopen_assessment(config: AppConfig, class_id: str, assessment_id: str) -> None:
+    progress = load_class_progress(config.root, config.active_school_year, class_id)
+    if not any(item.assessment_id == assessment_id for item in progress.entries):
+        raise ValueError("Kein LNW-Abschluss im Protokoll gefunden.")
+    save_class_progress(
+        config.root,
+        config.active_school_year,
+        class_id,
+        ClassProgress(
+            progress.active_sequences,
+            tuple(
+                item for item in progress.entries if item.assessment_id != assessment_id
+            ),
+        ),
+    )
+
+
 def list_assessments(config: AppConfig) -> list[ScopedAssessment]:
     result = []
     for school_class in load_school_classes(config.root, config.active_school_year):
         counters = defaultdict(int)
-        for entry in load_assessments(
-            config.root, config.active_school_year, school_class.id
-        ):
+        for entry in load_effective_assessments(config, school_class.id):
             key = (entry.subject_id, entry.kind)
             counters[key] += 1
             result.append(ScopedAssessment(school_class.id, entry, counters[key]))
@@ -77,6 +149,11 @@ def available_periods(
 def store_assessment(
     config: AppConfig, class_id: str, entry: Assessment, *, creating: bool
 ) -> None:
+    if any(
+        item.id == entry.id and item.completed_on is not None
+        for item in load_effective_assessments(config, class_id)
+    ):
+        raise ValueError("Bitte den LNW-Abschluss vor dem Bearbeiten zurücknehmen.")
     validate_assessment(config, class_id, entry)
     entries = load_assessments(config.root, config.active_school_year, class_id)
     exists = any(item.id == entry.id for item in entries)
@@ -113,6 +190,11 @@ def store_assessment(
 
 
 def delete_assessment(config: AppConfig, class_id: str, entry_id: str) -> None:
+    if any(
+        item.id == entry_id and item.completed_on is not None
+        for item in load_effective_assessments(config, class_id)
+    ):
+        raise ValueError("Bitte den LNW-Abschluss vor dem Löschen zurücknehmen.")
     entries = load_assessments(config.root, config.active_school_year, class_id)
     remaining = [item for item in entries if item.id != entry_id]
     if len(entries) == len(remaining):

@@ -4,6 +4,7 @@ from rich.cells import cell_len
 from textual.app import ComposeResult
 from textual.widgets import Static
 
+from pult.presentation import format_date
 from pult.progress.queries.dashboard import ClassBalance
 from pult.school.subject import Subject
 from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
@@ -45,7 +46,13 @@ class ClassOverviewPanel(Vertical):
                     f"{balance.difference:+d} Std.",
                     classes=f"balance-difference {sign}",
                 )
-                yield Static("—", classes="balance-assessments")
+                yield Static(
+                    f"{format_date(balance.next_assessment.assessment.date)} · {balance.next_assessment.number}. {balance.next_assessment.assessment.kind.abbreviation}"
+                    if balance.next_assessment
+                    else "—",
+                    classes="balance-assessments",
+                    markup=False,
+                )
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="class-overview-headings"):

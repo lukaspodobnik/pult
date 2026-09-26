@@ -1,11 +1,13 @@
 """Unterrichtstermine und verfügbare Stunden im Schulkalender."""
 
+from collections.abc import Sequence
 from datetime import date, timedelta
 
 from pult.progress.class_progress import (
     ClassProgress,
     TeachingOrigin,
 )
+from pult.school.assessment import Assessment
 from pult.school.calendar import (
     Closure,
     SchoolCalendar,
@@ -31,8 +33,21 @@ def get_next_scheduled_occurrence(
     subject_id: str,
     school_calendar: SchoolCalendar,
     local_closures: list[Closure],
+    assessments: Sequence[Assessment] = (),
 ) -> tuple[date, int] | None:
     """Finde den ersten unverbrauchten Unterrichtstermin bis Schuljahresende."""
+    reserved = {
+        (a.date, period)
+        for a in assessments
+        if a.subject_id == subject_id
+        for period in a.occupied_periods
+    }
+    reserved.update(
+        (entry.date, period)
+        for entry in progress.entries
+        if entry.subject_id == subject_id
+        for period in entry.assessment_periods
+    )
     matching_entries = _get_matching_timetable_entries(
         timetable_entries,
         school_class_id,
@@ -63,7 +78,7 @@ def get_next_scheduled_occurrence(
 
         for entry in weekday_entries:
             occurrence = (candidate_date, entry.period)
-            if occurrence > after:
+            if occurrence > after and occurrence not in reserved:
                 return occurrence
 
         candidate_date += timedelta(days=1)
@@ -78,8 +93,21 @@ def count_available_scheduled_occurrences(
     subject_id: str,
     school_calendar: SchoolCalendar,
     local_closures: list[Closure],
+    assessments: Sequence[Assessment] = (),
 ) -> int:
     """Zähle unverbrauchte, kalenderbereinigte Termine bis Schuljahresende."""
+    reserved = {
+        (a.date, period)
+        for a in assessments
+        if a.subject_id == subject_id
+        for period in a.occupied_periods
+    }
+    reserved.update(
+        (entry.date, period)
+        for entry in progress.entries
+        if entry.subject_id == subject_id
+        for period in entry.assessment_periods
+    )
     matching_entries = _get_matching_timetable_entries(
         timetable_entries,
         school_class_id,
@@ -98,6 +126,7 @@ def count_available_scheduled_occurrences(
             weekday = WEEKDAYS[candidate_date.weekday()]
             available_count += sum(
                 (candidate_date, entry.period) > after
+                and (candidate_date, entry.period) not in reserved
                 for entry in matching_entries
                 if entry.weekday == weekday
             )

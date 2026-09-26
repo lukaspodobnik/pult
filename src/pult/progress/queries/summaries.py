@@ -7,6 +7,7 @@ from pult.progress.class_progress import (
     ClassProgress,
     TeachingAction,
 )
+from pult.school.assessment import Assessment
 from pult.school.calendar import (
     Closure,
     SchoolCalendar,
@@ -14,6 +15,7 @@ from pult.school.calendar import (
 from pult.school.school_class import SchoolClass
 from pult.school.timetable import TimetableEntry
 
+from .assessments import PlannedAssessment, next_assessment
 from .planning import PlannedLesson, get_next_planned_lessons_for_class
 from .scheduling import count_available_scheduled_occurrences
 
@@ -44,6 +46,9 @@ class SubjectProgressSummary:
     available_period_count: int
     next_planned_lesson: PlannedLesson | None
     sequences: tuple[SequenceProgressSummary, ...]
+    next_scheduled_assessment: PlannedAssessment | None = None
+    next_assessment: PlannedAssessment | None = None
+    has_assessments: bool = False
 
     @property
     def progressed_lesson_count(self) -> int:
@@ -66,6 +71,7 @@ def get_class_progress_summary(
     school_calendar: SchoolCalendar,
     school_closures: list[Closure],
     class_closures: list[Closure],
+    assessments: list[Assessment] | None = None,
 ) -> tuple[SubjectProgressSummary, ...]:
     """Berechne Fortschritt, Stundenbilanz und nächste Lesson pro Fach."""
     relevant_sequences = [
@@ -86,6 +92,7 @@ def get_class_progress_summary(
             school_calendar,
             school_closures,
             class_closures,
+            assessments,
         )
     }
     active_sequence_ids_by_subject_id = {
@@ -150,9 +157,25 @@ def get_class_progress_summary(
                     subject_id,
                     school_calendar,
                     [*school_closures, *class_closures],
+                    assessments or [],
                 ),
                 next_planned_lesson=next_lessons_by_subject_id.get(subject_id),
                 sequences=tuple(sequence_summaries),
+                has_assessments=any(
+                    item.subject_id == subject_id for item in assessments or []
+                ),
+                next_assessment=next_assessment(
+                    school_class.id, subject_id, assessments or []
+                ),
+                next_scheduled_assessment=next_assessment(
+                    school_class.id,
+                    subject_id,
+                    assessments or [],
+                    scheduled_only=True,
+                    timetable=timetable_entries,
+                    calendar=school_calendar,
+                    closures=[*school_closures, *class_closures],
+                ),
             )
         )
 

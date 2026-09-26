@@ -8,6 +8,7 @@ from pult.curriculum.sequence import Sequence
 from pult.progress.queries import (
     HomeDashboardSummary,
 )
+from pult.progress.queries.assessments import next_event
 from pult.school.period import Period
 from pult.school.subject import Subject
 from pult.school.timetable import TimetableEntry
@@ -80,7 +81,9 @@ class HomeView(VerticalScroll, can_focus=False):
                 timetable_entries, subjects_by_id, periods
             )
             self.query_one(NextLessonPanel).update_data(
-                dashboard.next_planned_lesson,
+                next_event(
+                    dashboard.next_planned_lesson, dashboard.next_scheduled_assessment
+                ),
                 dashboard.daily_schedule.date,
                 subjects_by_id,
                 sequences_by_key,
@@ -112,7 +115,10 @@ class HomeView(VerticalScroll, can_focus=False):
                     self.sequences_by_key,
                 )
                 yield NextLessonPanel(
-                    self.dashboard.next_planned_lesson,
+                    next_event(
+                        self.dashboard.next_planned_lesson,
+                        self.dashboard.next_scheduled_assessment,
+                    ),
                     self.dashboard.daily_schedule.date,
                     self.subjects_by_id,
                     self.sequences_by_key,
