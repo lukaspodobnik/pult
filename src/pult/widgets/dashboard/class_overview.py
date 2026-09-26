@@ -1,6 +1,5 @@
-"""Klassenbilanz mit reservierter Spalte für Leistungsnachweise."""
+"""Klassenbilanz mit nächstem Leistungsnachweis und Abschlusszahlen."""
 
-from rich.cells import cell_len
 from textual.app import ComposeResult
 from textual.widgets import Static
 
@@ -22,17 +21,16 @@ class ClassOverviewPanel(Vertical):
     def rows(self):
         if not self.balances:
             yield Static("Noch keine Klassen angelegt.", classes="dashboard-empty")
-        class_width = max(
-            (cell_len(balance.school_class_id) for balance in self.balances), default=0
-        )
         for balance in self.balances:
-            class_label = balance.school_class_id + " " * (
-                class_width - cell_len(balance.school_class_id)
-            )
             with Horizontal(classes="class-balance-row"):
                 yield Static(
-                    f"{class_label} · {self.subjects[balance.subject_id].short_name}",
+                    balance.school_class_id,
                     classes="balance-class",
+                    markup=False,
+                )
+                yield Static(
+                    self.subjects[balance.subject_id].short_name,
+                    classes="balance-subject",
                     markup=False,
                 )
                 sign = (
@@ -54,11 +52,17 @@ class ClassOverviewPanel(Vertical):
                     markup=False,
                 )
 
+                yield Static(balance.large_assessments.label, classes="balance-large")
+                yield Static(balance.small_assessments.label, classes="balance-small")
+
     def compose(self) -> ComposeResult:
         with Horizontal(id="class-overview-headings"):
-            yield Static("Klasse · Fach", classes="balance-class")
+            yield Static("Klasse", classes="balance-class")
+            yield Static("Fach", classes="balance-subject")
             yield Static("Differenz", classes="balance-difference")
             yield Static("Leistungsnachweise", classes="balance-assessments")
+            yield Static("Groß", classes="balance-large")
+            yield Static("Klein", classes="balance-small")
         with VerticalScroll(id="class-overview-rows", can_focus=False):
             yield from self.rows()
 

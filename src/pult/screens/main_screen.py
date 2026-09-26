@@ -43,6 +43,7 @@ from pult.progress.queries import (
     get_suggested_next_sequence,
 )
 from pult.progress.queries.assessments import PlannedAssessment, next_event
+from pult.school.assessment_requirements import load_assessment_requirements
 from pult.school.period import load_periods
 from pult.school.school_class import SchoolClass, load_school_classes
 from pult.school.subject import load_subjects
@@ -308,6 +309,7 @@ class MainScreen(PultScreen[None]):
                 data.school_closures,
                 data.class_closures_by_class_id,
                 data.assessments_by_class_id,
+                load_assessment_requirements(config.root, config.active_school_year),
             )
             return data, periods, subjects, dashboard
 

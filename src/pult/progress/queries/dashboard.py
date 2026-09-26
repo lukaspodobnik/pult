@@ -10,7 +10,12 @@ from pult.progress.class_progress import (
     TeachingLogEntry,
     TeachingOrigin,
 )
-from pult.school.assessment import Assessment
+from pult.school.assessment import Assessment, AssessmentKind
+from pult.school.assessment_requirements import (
+    AssessmentCategory,
+    AssessmentRequirement,
+    assessment_category,
+)
 from pult.school.calendar import (
     Closure,
     SchoolCalendar,
@@ -77,11 +82,57 @@ class DailyScheduleSummary:
 
 
 @dataclass(frozen=True)
+class AssessmentCount:
+    completed: int = 0
+    minimum: int | None = None
+    allowed: bool = True
+
+    @property
+    def label(self) -> str:
+        if not self.allowed:
+            return "—"
+        if self.minimum is None:
+            return str(self.completed)
+        return f"{self.completed}/{self.minimum}"
+
+
+def assessment_count(
+    subject_id: str,
+    grade_level: int,
+    category: AssessmentCategory,
+    assessments: list[Assessment],
+    requirements: list[AssessmentRequirement],
+) -> AssessmentCount:
+    rule = next(
+        (
+            rule
+            for rule in requirements
+            if (rule.subject_id, rule.grade_level) == (subject_id, grade_level)
+        ),
+        None,
+    )
+    return AssessmentCount(
+        completed=sum(
+            entry.subject_id == subject_id
+            and entry.completed_on is not None
+            and assessment_category(entry.kind) == category
+            for entry in assessments
+        ),
+        minimum=rule.minimum_for(category) if rule else None,
+        allowed=category != AssessmentCategory.LARGE_WRITTEN
+        or rule is None
+        or AssessmentKind.SCHOOL_EXAM in rule.allowed_kinds,
+    )
+
+
+@dataclass(frozen=True)
 class ClassBalance:
     school_class_id: str
     subject_id: str
     difference: int
     next_assessment: PlannedAssessment | None = None
+    large_assessments: AssessmentCount = AssessmentCount()
+    small_assessments: AssessmentCount = AssessmentCount()
 
 
 @dataclass(frozen=True)
@@ -296,6 +347,7 @@ def get_home_dashboard_summary(
     school_closures: list[Closure],
     class_closures_by_class_id: dict[str, list[Closure]],
     assessments_by_class_id: dict[str, list[Assessment]] | None = None,
+    assessment_requirements: list[AssessmentRequirement] | None = None,
 ) -> HomeDashboardSummary:
     """Fasse Schuljahr, nächste Lesson und Tagesplan für das Dashboard zusammen."""
     candidates = [
@@ -329,7 +381,31 @@ def get_home_dashboard_summary(
                 school_class.id,
                 summary.subject_id,
                 summary.lesson_balance,
-                summary.next_assessment,
+                next_assessment(
+                    school_class.id,
+                    summary.subject_id,
+                    [
+                        entry
+                        for entry in (assessments_by_class_id or {}).get(
+                            school_class.id, []
+                        )
+                        if entry.kind != AssessmentKind.YEAR_GROUP_TEST
+                    ],
+                ),
+                assessment_count(
+                    summary.subject_id,
+                    school_class.grade_level,
+                    AssessmentCategory.LARGE_WRITTEN,
+                    (assessments_by_class_id or {}).get(school_class.id, []),
+                    assessment_requirements or [],
+                ),
+                assessment_count(
+                    summary.subject_id,
+                    school_class.grade_level,
+                    AssessmentCategory.SMALL_WRITTEN,
+                    (assessments_by_class_id or {}).get(school_class.id, []),
+                    assessment_requirements or [],
+                ),
             )
             for school_class in sorted(
                 school_classes, key=lambda item: (item.grade_level, item.id)
