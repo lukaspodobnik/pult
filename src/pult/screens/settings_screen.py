@@ -26,7 +26,7 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
     DEFAULT_CSS = """
     SettingsScreen #edit-periods, SettingsScreen #edit-requirements, SettingsScreen #show-about {
         width: 100%;
-        margin-top: 1;
+        margin: 0;
     }
     """
 
@@ -47,10 +47,6 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
                     value=config.active_school_year,
                     allow_blank=False,
                     id="settings-year",
-                )
-                yield Static(
-                    "Vorhandene Jahresdaten bleiben erhalten. Neue Jahre beginnen mit einem leeren Stundenplan und ohne Klassen.",
-                    classes="form-hint",
                 )
                 yield Button("Leistungsnachweise", id="edit-requirements")
                 yield Button("Stundenzeiten", id="edit-periods")

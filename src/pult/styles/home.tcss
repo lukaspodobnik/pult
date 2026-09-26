@@ -316,3 +316,9 @@ EditTimetableScreen #edit-schedule > .datatable--hover {
 
 HomeView .daily-external-assessments { height: auto; }
 HomeView .daily-schedule-row.assessment-completed .day-status { color: $success; }
+
+/* Ohne Tageszeile fehlt die linke Statuskante; denselben Texteinsatz beibehalten. */
+HomeView #daily-schedule-entries > .dashboard-empty,
+HomeView #daily-schedule-entries > .daily-external-assessments {
+    padding-left: 1;
+}

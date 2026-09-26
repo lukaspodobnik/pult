@@ -156,9 +156,8 @@ class EditAssessmentRequirementsScreen(PultModalScreen[bool]):
         with FormDialog("LEISTUNGSNACHWEISE", id="requirements-dialog", wide=True):
             with FormFields(classes="form-fields"):
                 yield Static(
-                    f"Schuljahr {format_school_year(self.year)} · Mindestzahlen pro Jahr\n"
-                    "Groß: SA · Klein: EX und AKL · Leer: keine Mindestvorgabe.\n"
-                    "Speichern gilt direkt für dieses Schuljahr. JST zählen nicht mit.",
+                    f"Schuljahr {format_school_year(self.year)} · Speichern gilt direkt.\n"
+                    "Jahresminimum: Groß = SA, Klein = EX + AKL. Leer = keine Vorgabe.",
                     classes="form-hint",
                 )
                 if self.subject_ids:
@@ -197,7 +196,7 @@ class EditAssessmentRequirementsScreen(PultModalScreen[bool]):
         for row in self.query(RequirementRow):
             row.display = row.entry.subject_id == event.value
         count = sum(entry.subject_id == event.value for entry in self.entries)
-        self.query_one("#requirements-dialog").styles.height = 20 + 3 * count
+        self.query_one("#requirements-dialog").styles.height = 18 + 3 * count
 
     @on(Button.Pressed, "#cancel-requirements")
     def action_cancel(self) -> None:

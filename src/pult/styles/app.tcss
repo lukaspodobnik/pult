@@ -18,7 +18,7 @@ ConfirmationScreen .confirmation-dialog {
     width: 68;
     max-width: 95%;
     height: auto;
-    min-height: 13;
+    min-height: 0;
     padding: 1 2;
     border: round $primary;
     border-title-color: $text-accent;
@@ -56,7 +56,7 @@ FormDialog {
     width: 68;
     max-width: 95%;
     height: auto;
-    min-height: 13;
+    min-height: 0;
     max-height: 95%;
     padding: 1 2;
     border: round $primary;
@@ -77,7 +77,7 @@ FormDialog .form-fields {
 FormDialog .field-label,
 FormDialog .closure-field-label {
     height: 1;
-    margin-top: 1;
+    margin: 0;
     color: $foreground-muted;
 }
 
@@ -126,7 +126,7 @@ FormDialog .date-field:first-child {
 
 FormDialog #subjects {
     height: 8;
-    margin: 1 0;
+    margin: 0;
     border: round $primary;
     border-title-color: $text-accent;
 }
@@ -285,4 +285,15 @@ TeachingLogScreen PultFooter {
 LessonScreen PultFooter,
 TaskScreen PultFooter {
     padding: 0 1;
+}
+
+/* Kompakte Formularfelder; Abstand nur zwischen Gruppen und zur Aktionsleiste. */
+FormDialog Input, FormDialog Select, FormDialog .form-fields Button {
+    margin: 0;
+}
+SettingsScreen #edit-requirements { margin-top: 1; }
+
+EditPeriodsScreen #periods-dialog .form-fields {
+    height: 1fr;
+    max-height: 100%;
 }

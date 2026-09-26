@@ -28,10 +28,6 @@ class SelectNextSequenceScreen(PultModalScreen[str | None]):
             "Nächste Sequenz wählen", id="select-next-sequence-dialog", wide=True
         ):
             with FormFields(classes="form-fields"):
-                yield Label(
-                    "Die vorgeschlagene nächste Sequenz ist vorausgewählt.",
-                    classes="form-hint",
-                )
                 yield Label("Sequenz", classes="field-label")
                 yield Select(
                     [

@@ -29,11 +29,11 @@ class EditPeriodsScreen(PultModalScreen[bool]):
         self.periods = periods
 
     def compose(self) -> ComposeResult:
-        with FormDialog("STUNDENZEITEN", id="periods-dialog"):
+        with FormDialog("STUNDENZEITEN", id="periods-dialog") as dialog:
+            dialog.styles.height = 3 * len(self.periods) + 11
             with FormFields(classes="form-fields"):
                 yield Static(
-                    "Gilt für alle Schuljahre. Zeiten im Format HH:MM. "
-                    "Speichern übernimmt die Zeiten direkt; Stundennummern bleiben erhalten.",
+                    "HH:MM · Speichern gilt direkt für alle Schuljahre.",
                     classes="form-hint",
                 )
                 yield Static(

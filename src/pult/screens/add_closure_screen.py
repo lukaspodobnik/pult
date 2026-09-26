@@ -72,7 +72,6 @@ class AddClosureScreen(PultModalScreen[ScopedClosure | None]):
                             placeholder=DATE_INPUT_HINT,
                             id="closure-end",
                         )
-                yield Label(DATE_INPUT_HINT, classes="form-hint")
 
             with Horizontal(id="add-closure-actions", classes="form-actions"):
                 yield Button("Abbrechen", id="cancel-closure")
