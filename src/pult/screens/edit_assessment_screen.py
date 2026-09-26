@@ -12,6 +12,7 @@ from pult.school.period import load_periods
 from pult.school.school_class import load_school_classes
 from pult.school.subject import load_subjects
 from pult.screens.base_screen import PultModalScreen
+from pult.services.assessment_conflicts import assessment_conflicts, conflict_message
 from pult.services.assessments import (
     ScopedAssessment,
     available_periods,
@@ -296,6 +297,9 @@ class EditAssessmentScreen(PultModalScreen[bool]):
                     )
                 ),
                 group_id=str(self.query_one("#assessment-group", Select).value) or None,
+                completed_on=self.selected.assessment.completed_on
+                if self.selected
+                else None,
             )
             store_assessment(
                 self.app_config,
@@ -306,6 +310,25 @@ class EditAssessmentScreen(PultModalScreen[bool]):
         except (OSError, TypeError, ValueError) as error:
             self.notify(str(error), severity="error")
             return
+        class_id = str(self.query_one("#assessment-class", Select).value)
+        try:
+            conflicts = assessment_conflicts(self.app_config, class_id, entry)
+        except (OSError, ValueError) as error:
+            self.notify(
+                f"Gespeichert. Kollisionsprüfung nicht möglich: {error}",
+                severity="warning",
+            )
+        else:
+            if conflicts:
+                self.notify(
+                    "\n".join(
+                        conflict_message(class_id, entry, closure)
+                        for closure in conflicts
+                    ),
+                    title="Gespeichert · Terminkonflikt",
+                    severity="warning",
+                    timeout=12,
+                )
         self.dismiss(True)
 
     @on(Button.Pressed, "#cancel-assessment")

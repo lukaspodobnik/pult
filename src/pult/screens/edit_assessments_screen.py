@@ -7,11 +7,13 @@ from textual.widgets import Static
 from textual.widgets.option_list import Option
 
 from pult.presentation import format_date
+from pult.school.calendar import Closure
 from pult.school.school_class import load_school_classes
 from pult.school.subject import load_subjects
 from pult.screens.base_screen import PultScreen
 from pult.screens.confirmation_screen import ConfirmationScreen
 from pult.screens.edit_assessment_screen import EditAssessmentScreen
+from pult.services.assessment_conflicts import assessment_conflicts
 from pult.services.assessments import (
     ScopedAssessment,
     delete_assessment,
@@ -35,6 +37,7 @@ class EditAssessmentsScreen(PultScreen[None]):
         self.entries: list[ScopedAssessment] = []
         self.selected_key: tuple[str, str] | None = None
         self.subjects: dict[str, str] = {}
+        self.conflicts: dict[tuple[str, str], tuple[Closure, ...]] = {}
 
     def compose(self) -> ComposeResult:
         with Vertical(id="assessments-screen"):
@@ -64,6 +67,12 @@ class EditAssessmentsScreen(PultScreen[None]):
     def reload_entries(self) -> None:
         try:
             self.entries = list_assessments(self.app_config)
+            self.conflicts = {
+                (item.school_class_id, item.assessment.id): assessment_conflicts(
+                    self.app_config, item.school_class_id, item.assessment
+                )
+                for item in self.entries
+            }
             self.subjects = {
                 item.id: item.name for item in load_subjects(self.app_config.root)
             }
@@ -111,7 +120,7 @@ class EditAssessmentsScreen(PultScreen[None]):
                 format_date(entry.date),
                 item.school_class_id,
                 self.subjects.get(entry.subject_id, entry.subject_id),
-                f"{item.number}. {entry.kind.abbreviation}",
+                f"{'⚠ ' if self.conflicts.get((item.school_class_id, entry.id)) else ''}{item.number}. {entry.kind.abbreviation}",
                 entry.title,
             )
         )
@@ -154,6 +163,10 @@ class EditAssessmentsScreen(PultScreen[None]):
                 )
                 or "—"
             )
+            if entry.completed_on is not None:
+                text += f"\nDurchgeführt am {format_date(entry.completed_on)}"
+            for closure in self.conflicts.get((item.school_class_id, entry.id), ()):
+                text += f"\n⚠ Terminkonflikt: {closure.name} ({format_date(closure.start)} – {format_date(closure.end)})"
         self.query_one("#assessment-details-text", Static).update(text)
 
     @on(OptionList.OptionHighlighted, "#assessments-list")

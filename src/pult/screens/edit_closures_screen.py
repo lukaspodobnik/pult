@@ -24,6 +24,7 @@ from pult.screens.base_screen import (
 from pult.screens.confirm_closure_deletion_screen import (
     ConfirmClosureDeletionScreen,
 )
+from pult.services.assessment_conflicts import closure_conflicts, conflict_message
 from pult.services.closures import (
     ScopedClosure,
     add_closure,
@@ -246,6 +247,29 @@ class EditClosuresScreen(PultScreen[None]):
         self.notify(
             "Geplanter Ausfall gespeichert. Die Terminplanung berücksichtigt ihn ab sofort."
         )
+        try:
+            conflicts = closure_conflicts(self.app_config, result)
+        except (OSError, ValueError) as error:
+            self.notify(
+                f"Ausfall gespeichert. Kollisionsprüfung nicht möglich: {error}",
+                severity="warning",
+            )
+        else:
+            if conflicts:
+                self.notify(
+                    "\n".join(
+                        conflict_message(
+                            item.school_class_id,
+                            item.assessment,
+                            result.closure,
+                            number=item.number,
+                        )
+                        for item in conflicts
+                    ),
+                    title="Ausfall gespeichert · Terminkonflikt",
+                    severity="warning",
+                    timeout=12,
+                )
 
     @on(Button.Pressed, "#delete-closure")
     def delete_closure_pressed(self) -> None:

@@ -1,7 +1,8 @@
 """Geplante schriftliche Leistungsnachweise einer Klasse im Schuljahr."""
 
 from dataclasses import dataclass
-from datetime import date, time
+from datetime import date as Date
+from datetime import time
 from enum import StrEnum
 from pathlib import Path
 from tomllib import TOMLDecodeError
@@ -56,11 +57,12 @@ class Assessment:
     subject_id: str
     kind: AssessmentKind
     title: str
-    date: date
+    date: Date
     start: time
     duration_minutes: int
     occupied_periods: tuple[int, ...] = ()
     group_id: str | None = None
+    completed_on: Date | None = None
 
     def __post_init__(self) -> None:
         for field in ("id", "subject_id", "title", "group_id"):
@@ -75,8 +77,10 @@ class Assessment:
 
         if not isinstance(self.kind, AssessmentKind):
             raise TypeError("Die Art des Leistungsnachweises ist ungültig.")
-        if type(self.date) is not date:
+        if type(self.date) is not Date:
             raise TypeError("Der Termin muss ein Datum ohne Uhrzeit sein.")
+        if self.completed_on is not None and type(self.completed_on) is not Date:
+            raise TypeError("Das Abschlussdatum muss ein Datum ohne Uhrzeit sein.")
         if not isinstance(self.start, time) or self.start.tzinfo is not None:
             raise TypeError("Der Beginn muss eine lokale Uhrzeit sein.")
         if type(self.duration_minutes) is not int or self.duration_minutes < 1:
@@ -145,6 +149,8 @@ def save_assessments(
         }
         if entry.group_id is not None:
             row["group_id"] = entry.group_id
+        if entry.completed_on is not None:
+            row["completed_on"] = entry.completed_on
         rows.append(row)
     save_toml(get_assessments_path(root, year, school_class_id), {"assessments": rows})
 
@@ -158,6 +164,7 @@ def _load_assessment(row: object, index: int) -> Assessment:
         day = row["date"]
         start = row["start"]
         periods = row.get("occupied_periods", [])
+        completed_on = row.get("completed_on")
         if not isinstance(periods, list):
             raise TypeError("'occupied_periods' muss eine Liste sein.")
         return Assessment(
@@ -165,11 +172,14 @@ def _load_assessment(row: object, index: int) -> Assessment:
             subject_id=row["subject_id"],
             kind=AssessmentKind(row["kind"]),
             title=row["title"],
-            date=date.fromisoformat(day) if isinstance(day, str) else day,
+            date=Date.fromisoformat(day) if isinstance(day, str) else day,
             start=time.fromisoformat(start) if isinstance(start, str) else start,
             duration_minutes=row["duration_minutes"],
             occupied_periods=tuple(periods),
             group_id=row.get("group_id"),
+            completed_on=Date.fromisoformat(completed_on)
+            if isinstance(completed_on, str)
+            else completed_on,
         )
     except KeyError as error:
         raise AssessmentsFileError(
