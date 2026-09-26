@@ -68,3 +68,5 @@ EditAssessmentScreen Input, EditAssessmentScreen Select { margin: 0; }
 EditAssessmentScreen .assessment-row { height: auto; }
 EditAssessmentScreen .assessment-field { width: 1fr; height: auto; }
 EditAssessmentScreen .assessment-field { padding-right: 1; }
+
+EditAssessmentsScreen #delete-assessment { margin-right: 4; }
