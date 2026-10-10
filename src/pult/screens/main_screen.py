@@ -55,6 +55,7 @@ from pult.screens.base_screen import PultScreen
 from pult.screens.cancel_lesson_screen import CancelLessonScreen
 from pult.screens.confirm_undo_screen import ConfirmUndoScreen
 from pult.screens.curriculum_screen import CurriculumScreen
+from pult.screens.distribution_screen import DistributionScreen
 from pult.screens.edit_assessments_screen import EditAssessmentsScreen
 from pult.screens.edit_classes_screen import EditClassesScreen
 from pult.screens.edit_closures_screen import EditClosuresScreen
@@ -198,7 +199,7 @@ class MainScreen(PultScreen[None]):
             widget.styles.height = height
         for widget in self.query("#view-picker"):
             widget.styles.height = (
-                21 if self.active_school_class_id is None else height - 6
+                21 if self.active_school_class_id is None else height - 7
             )
 
     def action_go_home(self) -> None:
@@ -1111,6 +1112,12 @@ class MainScreen(PultScreen[None]):
                 self.app.push_screen(
                     EditClosuresScreen(),
                     self.closures_edited,
+                )
+            case "distribution":
+                self.app.push_screen(
+                    DistributionScreen(
+                        self.active_school_class_id, subject_id=self.active_subject_id
+                    )
                 )
             case "teaching-log":
                 self.app.push_screen(TeachingLogScreen())

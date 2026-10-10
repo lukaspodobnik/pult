@@ -167,7 +167,7 @@ Rechts steht das breite Dokument, mit dem Sequenznamen als Rahmentitel.
 - **Leertaste:** Vorbereitung / Planung mit Zielen und Verlauf wechseln.
 - **e:** Vorbereitung bearbeiten; in der Planung Ziele oder Verlauf auswählen.
 - **r:** Materialliste bearbeiten; Links sind im Materialkasten direkt zu öffnen.
-- **m:** `stunde.toml` mit Titel und Aufgabenverweisen bearbeiten.
+- **m:** `stunde.toml` mit Titel, Aufgabenverweisen und optionalen `hinweise` bearbeiten (z. B. `hinweise = "Computerraum · Übungstheke"`).
 - **a:** Aufgabenbibliothek der Sequenz öffnen; die erste vorgemerkte Aufgabe wird ausgewählt.
 - **Escape:** Zurückkehren; beim Rückweg aus Aufgaben bleiben Modus und Leseposition erhalten.
 
@@ -278,3 +278,24 @@ Alle Schriftdateien und Renderer-Bestandteile funktionieren offline.
 Avenir Next wird ausschließlich aus einer vorhandenen lokalen Installation
 verwendet und nicht mitgeliefert. Quellen und Lizenzen: siehe `SOURCES.md` und
 `src/pult/assets/fonts/`.
+
+### Stoffverteilungsplan
+
+Unter **UNTERRICHT → Stoffverteilungsplan** zeigt PULT den Jahresplan für die
+ausgewählte Klasse und das Fach. Protokollierter Unterricht bleibt erhalten;
+offene Stunden werden ab der aktiven Sequenz in Lehrplanreihenfolge auf die
+verbleibenden Termine verteilt. Fortsetzungen und Zusatzunterricht zählen als
+Unterrichtszeit; übersprungene Stunden, Ausfälle und Leistungsnachweise nicht.
+Die Nummerierung beginnt bei jedem Sequenzwechsel erneut bei 1.
+
+Ferien erscheinen als eine Abschnittszeile, Feiertage und lokale Ausfälle als
+Termine ohne Nummer. Alle Leistungsnachweise der Klasse werden angezeigt, auch
+Termine anderer Fächer oder außerhalb eigener Unterrichtsstunden. Nur belegte
+eigene Stunden verdrängen Unterricht. Die Anmerkungen stammen aus optionalen
+`hinweise` in `stunde.toml` und vorhandenen Protokoll-/Kalenderangaben.
+
+Die Prognose folgt dem letzten verbuchten Unterrichtstermin,
+nicht dem heutigen Datum. Frühere Lücken heißen „Nicht protokolliert“; nach
+Ausschöpfen der Sequenzstunden bleiben Termine als „Noch nicht verplant“ sichtbar.
+Der Plan wird beim erneuten Öffnen aus aktuellen Daten berechnet und nicht als
+eigene Datei gespeichert. Ein PDF-Export folgt separat.

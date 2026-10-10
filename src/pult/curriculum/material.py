@@ -13,10 +13,18 @@ from pult.storage import load_toml, save_toml
 
 
 def lesson_metadata_source(lesson: "Lesson") -> str:
-    """Nur Titel und geordnete Aufgabenverweise gehören in die Metadaten."""
-    return tomli_w.dumps(
-        {"titel": lesson.title, "aufgaben": [t.id for t in lesson.tasks]}
-    )
+    """Titel, Aufgabenverweise und optionale organisatorische Hinweise."""
+    return tomli_w.dumps(lesson_metadata(lesson))
+
+
+def lesson_metadata(lesson: "Lesson") -> dict[str, Any]:
+    data: dict[str, Any] = {
+        "titel": lesson.title,
+        "aufgaben": [t.id for t in lesson.tasks],
+    }
+    if lesson.notes:
+        data["hinweise"] = lesson.notes
+    return data
 
 
 ID_PATTERN = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
@@ -103,7 +111,12 @@ class Lesson:
     material_source: str | None = field(default=None, compare=False, repr=False)
     phases_source: str | None = field(default=None, compare=False, repr=False)
 
+    notes: str = ""
+
     def __post_init__(self) -> None:
+        if not isinstance(self.notes, str):
+            raise ValueError("Die Hinweise müssen ein Text sein.")
+        self.notes = " ".join(self.notes.split())
         self.id = validate_id(self.id, "Die Stunden-ID")
         self.title = require_text({"titel": self.title}, "titel").strip()
         self.goals = [v.strip() for v in text_list({"ziele": self.goals}, "ziele")]
@@ -275,7 +288,7 @@ def load_lesson(directory: Path, lesson_id: str, tasks: dict[str, Task]) -> Less
     path = material_path(directory, "stunden", lesson_id, "stunde.toml")
     try:
         data = load_toml(path)
-        reject_unknown(data, {"titel", "aufgaben"})
+        reject_unknown(data, {"titel", "aufgaben", "hinweise"})
         resolved = []
         for task_id in reference_ids(data, "aufgaben"):
             if task_id not in tasks:
@@ -308,6 +321,7 @@ def load_lesson(directory: Path, lesson_id: str, tasks: dict[str, Task]) -> Less
             sources["ziele.md"],
             sources["material.md"],
             sources["verlauf.md"],
+            notes=data.get("hinweise", ""),
         )
     except (OSError, ValueError, TypeError, KeyError) as error:
         raise ValueError(f"Stunde '{path}': {error}") from error
@@ -388,5 +402,5 @@ def save_lesson_metadata(directory: Path, lesson: Lesson) -> None:
     lesson.__post_init__()
     save_toml(
         material_path(directory, "stunden", lesson.id, "stunde.toml"),
-        {"titel": lesson.title, "aufgaben": [t.id for t in lesson.tasks]},
+        lesson_metadata(lesson),
     )

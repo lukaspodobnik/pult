@@ -29,7 +29,7 @@ class LessonScreen(PultScreen[Sequence]):
         ("a", "open_tasks", "Aufgaben öffnen"),
         ("e", "edit_preparation", "Bearbeiten"),
         ("r", "edit_material", "Material bearbeiten"),
-        ("m", "edit_metadata", "Stundentitel"),
+        ("m", "edit_metadata", "Titel / Hinweise"),
     ]
 
     def __init__(self, sequence: Sequence, lesson_id: str):

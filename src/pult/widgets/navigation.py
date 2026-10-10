@@ -71,6 +71,7 @@ class TeachingPicker(OptionList):
         super().__init__(
             Option("Sequenzen", id="sequence-library"),
             Option("Lehrplan", id="curriculum"),
+            Option("Stoffverteilungsplan", id="distribution"),
             Option("Protokoll", id="teaching-log"),
             id=id,
         )

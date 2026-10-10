@@ -278,7 +278,8 @@ PultFooter {
 
 MainScreen PultFooter,
 SequenceLibraryScreen PultFooter,
-TeachingLogScreen PultFooter {
+TeachingLogScreen PultFooter,
+DistributionScreen PultFooter {
     padding: 0 2 0 1;
 }
 

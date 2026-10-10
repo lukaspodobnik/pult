@@ -33,6 +33,7 @@ class PultApp(App):
         "styles/setup.tcss",
         "styles/school_year_setup.tcss",
         "styles/teaching_log.tcss",
+        "styles/distribution.tcss",
     ]
 
     TITLE = "PULT"

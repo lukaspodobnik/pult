@@ -1,0 +1,27 @@
+DistributionScreen #distribution-screen { height: 1fr; }
+DistributionScreen #distribution-navigation { width: 40; max-width: 35%; padding: 1; height: 1fr; }
+DistributionScreen #distribution-class-picker { height: 1fr; border: round $primary; border-title-color: $text-accent; border-title-style: none; }
+DistributionScreen #distribution-content { width: 1fr; height: 1fr; margin: 1 2; border: round $primary; border-title-color: $text-accent; border-title-style: none; }
+DistributionScreen #distribution-class-picker:focus,
+DistributionScreen #distribution-content:focus-within { border: round $primary-lighten-2; border-title-color: $primary-lighten-2; }
+App.-light-mode DistributionScreen #distribution-class-picker:focus,
+App.-light-mode DistributionScreen #distribution-content:focus-within { border: round $primary-darken-2; border-title-color: $primary-darken-2; }
+DistributionView { width: 1fr; height: 1fr; padding: 0 1; }
+DistributionView .distribution-body { height: 1fr; scrollbar-gutter: stable; }
+DistributionView .distribution-row { height: auto; min-height: 1; padding: 0 1; }
+DistributionView .distribution-row > Static { height: auto; padding-right: 1; }
+DistributionView .distribution-number { width: 4; }
+DistributionView .distribution-weekday { width: 4; }
+DistributionView .distribution-date { width: 12; }
+DistributionView .distribution-title { width: 3fr; }
+DistributionView .distribution-notes { width: 2fr; color: $foreground-muted; }
+DistributionView .distribution-section { width: 1fr; }
+DistributionView .heading { height: 2; border-bottom: solid $foreground 18%; color: $foreground-muted; scrollbar-gutter: stable; }
+DistributionView .sequence { margin-top: 1; background: $primary 15%; color: $text-accent; text-style: bold; }
+DistributionView .holiday { margin: 1 0; background: $secondary 12%; color: $secondary; }
+DistributionView .assessment { background: $warning 12%; color: $warning; }
+DistributionView .cancelled, DistributionView .unrecorded { color: $foreground-muted; }
+DistributionView .distribution-empty { height: auto; padding: 1; color: $foreground-muted; }
+
+App.-light-mode DistributionView .holiday { color: $secondary-darken-2; }
+App.-light-mode DistributionView .assessment { color: $warning-darken-2; }

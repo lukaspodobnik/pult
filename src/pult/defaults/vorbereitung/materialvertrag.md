@@ -9,7 +9,7 @@ IDs bestehen aus Kleinbuchstaben, Zahlen und einzelnen Bindestrichen.
 
 Unter `stunden/<Stunden-ID>/` liegen fünf Dateien:
 
-- `stunde.toml`: ausschließlich `titel` und `aufgaben` (geordnete Aufgaben-IDs).
+- `stunde.toml`: `titel`, `aufgaben` (geordnete Aufgaben-IDs) und optional `hinweise`.
 - `vorbereitung.md`: freies Markdown für Hefteinträge, Übungen und Notizen.
 - `ziele.md`: eine flache ungeordnete Liste; Inline-Markdown ist erlaubt.
 - `verlauf.md`: Phasen als `# Überschrift`, darunter beliebiger Markdown-Inhalt.
@@ -22,6 +22,7 @@ Materiallinks gehören in `material.md`, nicht in die Vorbereitung.
 ```toml
 titel = "Brüche vergleichen"
 aufgaben = ["vergleichen", "vertiefen"]
+hinweise = "Übungstheke · Computerraum"
 ```
 
 ```markdown
@@ -76,7 +77,7 @@ Die Unterrichtsansicht zeigt links die einzeiligen, bei Bedarf abgeschnittenen
 Stundentitel und darunter immer das Material. Rechts steht das Dokument; der
 Rahmentitel ist der Sequenzname. **Leertaste** wechselt zwischen Vorbereitung
 und Planung. **e** bearbeitet den sichtbaren Inhalt, bei Planung nach Dateiauswahl.
-**r** bearbeitet Material, **m** den Stundentitel. **Tab** wechselt den Fokus;
+**r** bearbeitet Material, **m** Titel und Hinweise. **Tab** wechselt den Fokus;
 Pfeile und Bildtasten scrollen den fokussierten Bereich. Die Rückkehr aus den
 Aufgaben erhält Modus und Leseposition der Stunde.
 
