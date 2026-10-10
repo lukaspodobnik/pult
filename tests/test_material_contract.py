@@ -67,33 +67,19 @@ def test_material_roundtrip_shared_tasks_and_order(tmp_path):
     assert reordered.lessons[1].preparation == original.lessons[0].preparation
 
 
-def test_optional_files_and_material_only_preparation(tmp_path):
+def test_preparation_remains_free_and_material_separate(tmp_path):
     _, path = store(tmp_path)
-    lesson_path = path.parent / "stunden/erweitern/stunde.toml"
-    save_toml(lesson_path, {"titel": "Offene Stunde", "material": ["Schere"]})
-    (lesson_path.parent / "vorbereitung.md").unlink()
-    lesson = load_sequence(tmp_path, 6, "mathematik", "brueche").lessons[0]
-    assert lesson.tasks == lesson.goals == lesson.phases == []
-    assert lesson.preparation is None
-    assert lesson.preparation_markdown() == "## Benötigtes Material\n\n- Schere"
-    assert not (lesson_path.parent / "vorbereitung.md").exists()
-    empty = Lesson("frei", "Projektarbeit")
-    assert empty.preparation_markdown() == ""
-
-
-def test_material_section_is_derived_and_solutions_are_optional(tmp_path):
-    _, path = store(tmp_path)
-    (path.parent / "aufgaben/vergleichen/loesung.md").unlink()
+    folder = path.parent / "stunden/erweitern"
+    (folder / "vorbereitung.md").unlink()
     loaded = load_sequence(tmp_path, 6, "mathematik", "brueche")
-    lesson = loaded.lessons[0]
-    before = (path.parent / "stunden/erweitern/vorbereitung.md").read_bytes()
-    assert lesson.preparation_markdown().startswith("## Benötigtes Material")
-    assert lesson.tasks[0].solution is None
+    assert loaded.lessons[0].preparation_markdown() == ""
+    assert loaded.lessons[0].material == ["Papierstreifen", "Schere"]
     assert "Papierstreifen" in SequencePreview.render_sequence(loaded)
-    assert "Anteile erklären" in SequencePreview.render_sequence(loaded)
+    assert "vergleichen" not in SequencePreview.render_sequence(loaded)
+    assert set(load_toml(folder / "stunde.toml")) == {"titel", "aufgaben"}
+    before = (folder / "ziele.md").read_bytes()
     save_sequence(tmp_path, loaded)
-    assert (path.parent / "stunden/erweitern/vorbereitung.md").read_bytes() == before
-    assert not (path.parent / "aufgaben/vergleichen/loesung.md").exists()
+    assert (folder / "ziele.md").read_bytes() == before
 
 
 @pytest.mark.parametrize(
@@ -213,33 +199,93 @@ def test_neutral_example_matches_contract():
     ).is_file()
 
 
-def test_empty_lesson_template_can_activate_suggested_phases(tmp_path):
-    from pult.curriculum.material import load_lesson, save_lesson
+def test_starter_files_are_short_and_never_overwrite(tmp_path):
+    from pult.curriculum.material import initialize_lesson_files, load_lesson
 
-    lesson = Lesson("neu", "Neue Stunde")
-    save_lesson(tmp_path, lesson)
-    path = tmp_path / "stunden/neu/stunde.toml"
-    source = path.read_text()
-    assert load_lesson(tmp_path, "neu", {}) == lesson
-    assert load_toml(path) == {
-        "titel": "Neue Stunde",
-        "ziele": [],
-        "material": [],
+    initialize_lesson_files(tmp_path, "neu")
+    folder = tmp_path / "stunden/neu"
+    assert load_toml(folder / "stunde.toml") == {
+        "titel": "Noch nicht vorbereitet",
         "aufgaben": [],
-        "phasen": [],
     }
-    # Genau die im Dateihinweis beschriebenen Bearbeitungsschritte ausführen.
-    prefix, proposals = source.split("# [[phasen]]", 1)
-    active = prefix.replace("phasen = []\n", "") + "[[phasen]]"
-    active += "\n".join(line.removeprefix("# ") for line in proposals.splitlines())
-    active = active.replace('text = ""', 'text = "Gemeinsam bearbeiten."')
-    path.write_text(active)
-    loaded = load_lesson(tmp_path, "neu", {})
-    assert [phase.title for phase in loaded.phases] == [
-        "Einstieg",
-        "Erarbeitung",
-        "Übung",
-        "Auswertung",
-        "Schluss",
-    ]
-    assert not (path.parent / "vorbereitung.md").exists()
+    assert (folder / "vorbereitung.md").read_text() == "# Noch nicht vorbereitet\n"
+    assert (
+        folder / "ziele.md"
+    ).read_text() == "- Die Schüler können\n- Die Schüler können\n"
+    assert (folder / "verlauf.md").read_text() == "# Einstieg\n"
+    assert (folder / "material.md").read_text() == ""
+    assert load_lesson(tmp_path, "neu", {}).phases == [Phase("Einstieg", "")]
+    (folder / "vorbereitung.md").write_text("Eigene Vorbereitung")
+    initialize_lesson_files(tmp_path, "neu")
+    assert (folder / "vorbereitung.md").read_text() == "Eigene Vorbereitung"
+
+
+@pytest.mark.parametrize(
+    "source", ["# Ziel", "1. Ziel", "- Ziel\n  - Unterziel", "Text\n\n- Ziel", "- "]
+)
+def test_goals_reject_non_flat_lists(source):
+    from pult.curriculum.material import unordered_items
+
+    with pytest.raises(ValueError, match="ziele.md"):
+        unordered_items(source, "ziele.md")
+
+
+def test_phase_parser_handles_code_and_preserves_body():
+    from pult.curriculum.material import parse_phases
+
+    source = (
+        "\n# Einstieg\n\nText mit $x$.\n\n```python\n## kein Heading\n```\n\n# Übung\n"
+    )
+    phases = parse_phases(source)
+    assert [p.title for p in phases] == ["Einstieg", "Übung"]
+    assert "## kein Heading" in phases[0].text
+    assert phases[1].text == ""
+
+
+@pytest.mark.parametrize(
+    "source",
+    ["Text\n# Einstieg", "## Einstieg", "# Einstieg\n## Übung", "Phase\n====", "#"],
+)
+def test_phase_parser_rejects_invalid_headings(source):
+    from pult.curriculum.material import parse_phases
+
+    with pytest.raises(ValueError):
+        parse_phases(source)
+
+
+def test_material_links_are_named_and_separate_from_preparation():
+    from pult.curriculum.material import material_entries
+
+    entries = material_entries(
+        "- Schere\n- [Keynote](../../dateien/beispiel.key)\n- [Webseite](https://example.org)\n"
+    )
+    assert [e.label for e in entries] == ["Schere", "Keynote", "Webseite"]
+    assert entries[1].target == "../../dateien/beispiel.key"
+
+
+def test_task_assignment_only_changes_metadata(tmp_path):
+    from pult.curriculum.material import save_lesson_metadata
+
+    sequence, path = store(tmp_path)
+    folder = path.parent / "stunden/erweitern"
+    before = {p.name: p.read_bytes() for p in folder.glob("*.md")}
+    sequence.lessons[0].tasks = []
+    save_lesson_metadata(path.parent, sequence.lessons[0])
+    assert load_toml(folder / "stunde.toml")["aufgaben"] == []
+    assert {p.name: p.read_bytes() for p in folder.glob("*.md")} == before
+
+
+def test_explicit_new_hours_get_same_starters_after_validation(tmp_path):
+    sequence, path = store(tmp_path)
+    data = load_toml(path)
+    data["stunden"].append("weitere")
+    save_toml(path, data)
+    loaded = load_sequence(tmp_path, 6, "mathematik", "brueche", create_missing=True)
+    assert loaded.lessons[-1].title == "Noch nicht vorbereitet"
+    assert (path.parent / "stunden/weitere/verlauf.md").read_text() == "# Einstieg\n"
+    data["stunden"].append("ungueltig")
+    data["subject_id"] = "informatik"
+    save_toml(path, data)
+    with pytest.raises(SequenceFileError):
+        load_sequence(tmp_path, 6, "mathematik", "brueche", create_missing=True)
+    assert not (path.parent / "stunden/ungueltig").exists()

@@ -69,3 +69,22 @@ def test_views_are_reused_and_hidden_home_does_not_steal_selection(
             assert len(switcher.children) == 2
 
     asyncio.run(run())
+
+
+def test_shutdown_during_mount_does_not_activate_removed_view():
+    from types import SimpleNamespace
+
+    from pult.screens.main_screen import MainScreen
+
+    app = SimpleNamespace(is_running=True)
+    content = SimpleNamespace(current=None)
+
+    async def add_content(view, *, id):
+        # Closing the app may remove the children during an awaited mount.
+        app.is_running = False
+
+    content.add_content = add_content
+    screen = SimpleNamespace(app=app, query_one=lambda *args: content)
+    view = SimpleNamespace(is_mounted=False, id="HomeView")
+    asyncio.run(MainScreen.switch_view(screen, view))
+    assert content.current is None

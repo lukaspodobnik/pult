@@ -13,6 +13,7 @@ from pult.presentation import format_school_year
 from pult.screens.confirmation_screen import ConfirmationScreen
 from pult.screens.main_screen import MainScreen
 from pult.screens.setup_pult_screen import SetupScreen
+from pult.services.document_rendering import DocumentRenderer
 from pult.services.omarchy_theme import OmarchyThemeWatcher
 from pult.services.sequence_library import SequenceLibrary
 from pult.services.settings import get_suggested_school_year, update_settings
@@ -81,6 +82,7 @@ class PultApp(App):
 
     def __init__(self) -> None:
         super().__init__()
+        self.document_renderer = DocumentRenderer()
         self.app_config: AppConfig | None = None
         self.sequence_library: SequenceLibrary | None = None
         self.omarchy_theme = OmarchyThemeWatcher()
@@ -189,3 +191,6 @@ class PultApp(App):
         assert app_config is not None
         self.app_config = app_config
         self.show_initial_screen()
+
+    async def on_unmount(self) -> None:
+        await self.document_renderer.close()

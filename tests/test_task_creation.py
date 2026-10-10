@@ -11,7 +11,7 @@ from pult.app import PultApp
 from pult.curriculum.sequence import load_sequence, save_sequence
 from pult.screens.task_screen import TaskScreen
 from pult.services.task_creation import create_task_files
-from pult.widgets.lesson_material import LessonMaterial
+from pult.widgets.document_viewer import DocumentViewer
 
 
 def test_create_task_files_preserves_existing_tasks(tmp_path):
@@ -77,10 +77,12 @@ def test_create_task_opens_both_files_and_renders_one_entry(tmp_path, monkeypatc
                 "Brüche vergleichen"
             )
             assert picker.get_option_at_index(picker.highlighted).id == screen.task_id
-            material = list(screen.query(LessonMaterial))
-            assert len(material) == 2
+            material = list(screen.query(DocumentViewer))
+            assert len(material) == 1
             assert material[0].source.endswith("Vergleiche die Brüche.")
-            assert material[1].source == "Ein Halb ist größer."
+            await pilot.press("s")
+            await pilot.pause()
+            assert screen.query_one(DocumentViewer).source == "Ein Halb ist größer."
             assert (
                 screen.query_one("#task-content").border_title == "Brüche vergleichen"
             )

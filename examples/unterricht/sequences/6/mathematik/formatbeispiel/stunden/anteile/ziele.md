@@ -1,0 +1,1 @@
+- Gleiche Anteile trotz unterschiedlicher Einteilung erkennen.

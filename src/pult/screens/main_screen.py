@@ -283,10 +283,13 @@ class MainScreen(PultScreen[None]):
 
     async def switch_view(self, view: Widget) -> None:
         """Binde eine View einmal ein und schalte anschließend nur ihre Sichtbarkeit."""
+        if not self.app.is_running:
+            return
         content = self.query_one("#content", ContentSwitcher)
         if not view.is_mounted:
             await content.add_content(view, id=type(view).__name__)
-        content.current = view.id
+        if self.app.is_running:
+            content.current = view.id
 
     async def show_home_view(self) -> None:
         """Lade alle Dashboarddaten neu und zeige anschließend die HomeView."""
@@ -326,6 +329,8 @@ class MainScreen(PultScreen[None]):
             )
             return
 
+        if not self.app.is_running:
+            return
         self.school_classes_by_id = {
             school_class.id: school_class for school_class in data.school_classes
         }
@@ -344,6 +349,8 @@ class MainScreen(PultScreen[None]):
                 data.timetable_entries, subjects, periods, data.sequences, dashboard
             )
         await self.switch_view(view)
+        if not self.app.is_running:
+            return
         # Gleiche Rahmenhöhen, auch wenn die Anzahl der Stunden geändert wird.
         self.align_dashboard()
         view.refresh_time_highlight()

@@ -10,15 +10,19 @@ from textual import on
 from textual.widgets import Static
 from textual.widgets.option_list import Option
 
-from pult.curriculum.material import Task, material_path, validate_id
+from pult.curriculum.material import (
+    Task,
+    material_path,
+    save_lesson_metadata,
+    validate_id,
+)
 from pult.curriculum.sequence import Sequence, load_sequence
 from pult.screens.base_screen import PultScreen
 from pult.screens.create_task_screen import CreateTaskScreen
-from pult.screens.lesson_screen import LessonPane
 from pult.screens.select_task_file_screen import SelectTaskFileScreen
 from pult.services.task_creation import create_task_files
+from pult.widgets.document_viewer import DocumentPane, DocumentViewer
 from pult.widgets.footer import PultFooter
-from pult.widgets.lesson_material import LessonMaterial
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 from pult.widgets.sequence_context import SequenceContext
 
@@ -28,11 +32,13 @@ class TaskScreen(PultScreen[Sequence]):
         ("escape", "close", "Zurück"),
         ("e", "edit_task", "Bearbeiten"),
         ("n", "create_task", "Neue Aufgabe"),
+        ("s", "toggle_solution", "Aufgabe / Lösung"),
+        ("v", "assign_task", "Vormerken / entfernen"),
     ]
     DEFAULT_CSS = """
     TaskScreen { padding: 1 0 0 0; }
     TaskScreen #task-workspace { height: 1fr; padding: 0 1; margin-bottom: 1; }
-    TaskScreen #task-navigation { width: 28; margin-right: 1; }
+    TaskScreen #task-navigation { width: 34; max-width:35%; margin-right: 1; }
     TaskScreen #task-list { height: 1fr; border: round $primary; }
     TaskScreen #task-list:focus {
         border: round $primary;
@@ -44,12 +50,19 @@ class TaskScreen(PultScreen[Sequence]):
     TaskScreen #task-content { width: 1fr; }
     """
 
-    def __init__(self, sequence: Sequence, directory):
+    def __init__(self, sequence: Sequence, directory, *, lesson_id: str | None = None):
         super().__init__()
         self.sequence = sequence
         self.directory = directory
+        self.lesson_id = lesson_id
+        self.show_solution = False
         self.tasks = self.read_tasks()
-        self.task_id = self.tasks[0].id if self.tasks else None
+        lesson = next((item for item in sequence.lessons if item.id == lesson_id), None)
+        self.task_id = (
+            lesson.tasks[0].id
+            if lesson and lesson.tasks
+            else (self.tasks[0].id if self.tasks else None)
+        )
 
     def read_tasks(self) -> list[Task]:
         folder = material_path(self.directory, "aufgaben")
@@ -89,9 +102,16 @@ class TaskScreen(PultScreen[Sequence]):
         assigned = {
             task.id for lesson in self.sequence.lessons for task in lesson.tasks
         }
+        lesson = next(
+            (item for item in self.sequence.lessons if item.id == self.lesson_id), None
+        )
+        bookmarked = {task.id for task in lesson.tasks} if lesson else set()
         for task in self.tasks:
-            label = Text(self.task_title(task))
-            if task.id not in assigned:
+            label = Text(no_wrap=True, overflow="ellipsis")
+            if task.id in bookmarked:
+                label.append("✓ ", style="bold")
+            label.append(self.task_title(task))
+            if self.lesson_id is None and task.id not in assigned:
                 label.append("\nNoch nicht zugeordnet", style="dim")
             yield Option(label, id=task.id)
 
@@ -102,18 +122,51 @@ class TaskScreen(PultScreen[Sequence]):
                 "Noch keine Aufgaben in dieser Sequenz vorhanden.", markup=False
             )
             return
-        yield LessonMaterial(
-            task.text,
-            material_path(self.directory, "aufgaben", task.id, "aufgabe.md"),
-            self.directory,
-        )
-        if task.solution is not None:
-            yield Static("Lösung", classes="lesson-solution-title")
-            yield LessonMaterial(
-                task.solution,
-                material_path(self.directory, "aufgaben", task.id, "loesung.md"),
+        filename = "loesung.md" if self.show_solution else "aufgabe.md"
+        source = task.solution if self.show_solution else task.text
+        if source is None:
+            yield Static("Noch keine Lösung vorhanden.", markup=False)
+        else:
+            yield DocumentViewer(
+                source,
+                material_path(self.directory, "aufgaben", task.id, filename),
                 self.directory,
             )
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "assign_task":
+            return self.lesson_id is not None
+        return True
+
+    async def action_toggle_solution(self):
+        self.show_solution = not self.show_solution
+        await self.refresh_material()
+
+    async def action_assign_task(self):
+        task = self.selected_task
+        lesson = next(
+            (item for item in self.sequence.lessons if item.id == self.lesson_id), None
+        )
+        if task is None or lesson is None:
+            return
+        previous = lesson.tasks[:]
+        lesson.tasks = (
+            [item for item in lesson.tasks if item.id != task.id]
+            if any(item.id == task.id for item in lesson.tasks)
+            else [*lesson.tasks, task]
+        )
+        try:
+            save_lesson_metadata(self.directory, lesson)
+        except (OSError, ValueError) as error:
+            lesson.tasks = previous
+            self.notify(str(error), severity="error")
+            return
+        self.pult_app.require_sequence_library().invalidate()
+        picker = self.query_one("#task-list", OptionList)
+        with self.prevent(OptionList.OptionHighlighted):
+            picker.clear_options()
+            picker.add_options(self.options())
+            picker.highlighted = picker.get_option_index(task.id)
 
     def compose(self):
         with Horizontal(id="task-workspace"):
@@ -122,34 +175,48 @@ class TaskScreen(PultScreen[Sequence]):
                     self.sequence, self.app_config.root, id="task-sequence"
                 )
                 yield OptionList(*self.options(), id="task-list")
-            with LessonPane(id="task-content"):
+            with DocumentPane(id="task-content"):
                 yield from self.material()
         yield PultFooter()
 
     def on_mount(self):
-        self.query_one("#task-content", LessonPane).can_focus = False
         self.query_one("#task-sequence").border_title = "SEQUENZ"
         self.query_one("#task-list").border_title = "AUFGABEN"
+        lesson = next(
+            (item for item in self.sequence.lessons if item.id == self.lesson_id), None
+        )
+        if lesson:
+            self.query_one("#task-list").border_subtitle = f"Für: {lesson.title}"
+        self.query_one("#task-content").border_subtitle = "Aufgabe"
         self.query_one("#task-content").border_title = (
             self.task_title(self.selected_task) if self.selected_task else "AUFGABEN"
         )
-        self.query_one(OptionList).focus()
+        picker = self.query_one(OptionList)
+        with self.prevent(OptionList.OptionHighlighted):
+            if self.task_id is not None:
+                picker.highlighted = picker.get_option_index(self.task_id)
+        picker.focus()
 
     @on(OptionList.OptionHighlighted, "#task-list")
     async def highlight_task(self, event: OptionList.OptionHighlighted):
         event.stop()
-        if event.option.id == self.task_id:
+        if (
+            event.option_index != self.query_one("#task-list", OptionList).highlighted
+            or event.option.id == self.task_id
+        ):
             return
         self.task_id = event.option.id
+        self.show_solution = False
         await self.refresh_material()
 
     async def refresh_material(self):
-        pane = self.query_one("#task-content", LessonPane)
+        pane = self.query_one("#task-content", DocumentPane)
         await pane.remove_children()
         await pane.mount(*self.material())
         pane.border_title = (
             self.task_title(self.selected_task) if self.selected_task else "AUFGABEN"
         )
+        pane.border_subtitle = "Lösung" if self.show_solution else "Aufgabe"
         pane.scroll_home(animate=False)
 
     def action_close(self):

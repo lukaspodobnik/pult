@@ -12,14 +12,14 @@ def test_sequence_preview_structure_and_empty_state(sequences):
     assert sequence.title not in markdown
     assert markdown.count(". Stunde ·") == len(sequence.lessons)
     assert "1. Stunde · Zahlen ordnen" in markdown
-    assert "Aufgaben\n• aufgabe-1" in markdown
+    assert "Aufgaben" not in markdown
     assert "Benötigtes Material\n• Schere" in markdown
     assert "Verlauf" not in markdown
     assert "Einstieg" not in markdown
     assert "Zahlenkarten gemeinsam ordnen." not in markdown
     assert (
         "Zahlenkarten gemeinsam ordnen."
-        in SequencePreview.render_lesson(sequence.lessons[0]).plain
+        not in SequencePreview.render_lesson(sequence.lessons[0]).plain
     )
     empty = SequencePreview.render_sequence(
         replace(sequence, lessons=[], recommended_lesson_count=None)

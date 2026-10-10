@@ -1,255 +1,112 @@
-# Materialvertrag für Unterrichtsmaterialien
+# Unterrichtsmaterialien in PULT
 
-Status: implementierter Materialvertrag für PULT 1.1.0.
-Datenmodell, Laden/Speichern und Defaults sind umgesetzt. Klassenansicht
-und Sequenzvorschau lesen Materiallisten aus dem Stundenmodell. Die Unterrichtsansicht ist über Enter in der Sequenzvorschau erreichbar, einschließlich
-Vorbereitungs-Editor und lokalem Formelrenderer. Weitere Zugänge sind **o** aus Home- und Klassenansicht sowie **a** für den
-Aufgabenviewer aus der Sequenzbibliothek.
-Die Beispieldaten des Darstellungsprototyps verwenden weiterhin ihr eigenes Format.
+Jede Sequenz liegt unter `sequences/<Jahrgang>/<Fach>/<Sequenz-ID>/`.
+`sequenz.toml` beschreibt die Sequenz und ihre geordneten Stunden-IDs. Klassen und
+Schuljahre verweisen auf diese IDs; Unterrichtsinhalte gehören zur Sequenzbibliothek.
+IDs bestehen aus Kleinbuchstaben, Zahlen und einzelnen Bindestrichen.
 
-## Grundprinzip
+## Dateien einer Stunde
 
-TOML beschreibt die Struktur; Markdown enthält die Inhalte. Pult dient der
-Organisation, Darstellung und dem Öffnen der Dateien im konfigurierten Editor.
-Das Format schreibt keine Unterrichtsform vor und gilt fachübergreifend.
-Unterricht wird allgemein vorbereitet, nicht für eine konkrete Klasse.
+Unter `stunden/<Stunden-ID>/` liegen fünf Dateien:
 
-Es gibt drei Einheiten: Sequenz, Stunde und Aufgabe.
+- `stunde.toml`: ausschließlich `titel` und `aufgaben` (geordnete Aufgaben-IDs).
+- `vorbereitung.md`: freies Markdown für Hefteinträge, Übungen und Notizen.
+- `ziele.md`: eine flache ungeordnete Liste; Inline-Markdown ist erlaubt.
+- `verlauf.md`: Phasen als `# Überschrift`, darunter beliebiger Markdown-Inhalt.
+- `material.md`: eine flache ungeordnete Liste aus Dingen und benannten Links.
 
-## Ordnerstruktur
-
-```text
-bruchzahlen/
-├── sequenz.toml
-├── stunden/
-│   ├── brueche-erweitern/
-│   │   ├── stunde.toml
-│   │   └── vorbereitung.md
-│   └── brueche-kuerzen/
-│       ├── stunde.toml
-│       └── vorbereitung.md
-├── aufgaben/
-│   ├── anteile-vergleichen/
-│   │   ├── aufgabe.md
-│   │   └── loesung.md
-│   └── gezielt-erweitern/
-│       ├── aufgabe.md
-│       └── loesung.md
-└── dateien/
-    └── bruchstreifen.svg
-```
-
-Ordnernamen entsprechen den stabilen IDs. Stunden- und Aufgaben-IDs werden
-innerhalb ihrer Sequenz aufgelöst. Titeländerungen und Umsortierungen verändern
-keine IDs. Lesbare Nummerierungen sind Anzeigeinformationen, keine Identität.
-
-## Sequenz
-
-Die Sequenz behält ihre Angaben wie Titel, Fach und Jahrgang. Ihre geordnete
-Stundenliste enthält IDs statt eingebetteter Stundenbeschreibungen.
+Die Vorbereitung beginnt als Konvention mit `# Stundentitel`. Das wird nicht
+validiert. Markdown-Tabellen, Code, lokale Abbildungen und TeX sind erlaubt.
+Materiallinks gehören in `material.md`, nicht in die Vorbereitung.
 
 ```toml
-id = "bruchzahlen"
-curriculum_section_id = "M6 1"
-subject_id = "mathematik"
-grade_level = 6
-titel = "Bruchzahlen"
-stunden = ["brueche-erweitern", "brueche-kuerzen"]
+titel = "Brüche vergleichen"
+aufgaben = ["vergleichen", "vertiefen"]
 ```
 
-Die äußere Ablage bleibt `sequences/<Jahrgang>/<Fach-ID>/<Sequenz-ID>/`.
-`curriculum_section_id`, `subject_id` und `grade_level` behalten die bisherigen
-Feldnamen. Optional bleiben `recommended_lesson_count` sowie das gemeinsame Paar
-`chapter_id`/`chapter_title` erhalten. Bei angegebener empfohlener Stundenzahl muss
-weiterhin mindestens eine Planungsstunde existieren. Die geladenen
-`Sequence.lessons` enthalten aufgelöste `Lesson`-Objekte; `Lesson.tasks` enthält
-sequenzweit gemeinsam geladene `Task`-Objekte. Die Datei selbst speichert nur IDs.
-Die Sequenzbibliothek bleibt der zentrale Überblick und lädt die referenzierten
-Stunden. Zusammenfassungen werden aus den Stundendaten erzeugt, nicht zusätzlich
-als eigener Überblick gepflegt.
-
-## Stunde
-
-Die ID ergibt sich aus dem Stundenordner. `stunde.toml` enthält den Titel,
-Lernziele, benötigtes Material, geordnete Aufgabenverweise und geordnete Phasen.
-
-```toml
-titel = "Brüche erweitern"
-
-ziele = [
-    "Gleichwertige Brüche am Flächenmodell erklären.",
-    "Brüche mit einem vorgegebenen Faktor erweitern.",
-]
-
-material = [
-    "Zwei gleich große Papierstreifen",
-    "Schere",
-    "Arbeitsblatt „Bruchteile“, ein Exemplar pro Schüler",
-]
-
-aufgaben = ["anteile-vergleichen", "gezielt-erweitern"]
-
-[[phasen]]
-titel = "Einstieg"
-text = "Zwei gleich große Papierstreifen unterschiedlich einteilen lassen."
-
-[[phasen]]
-titel = "Erarbeitung"
-text = "Die Einteilungen vergleichen und gemeinsam die Erweiterungsregel entwickeln."
-
-[[phasen]]
-titel = "Sicherung"
-text = "Regel und Beispiel an der Tafel festhalten."
+```markdown
+- Die Schüler können gleichwertige Brüche erkennen.
+- Die Schüler können ihre Ergebnisse begründen.
 ```
 
-`titel` ist erforderlich. `ziele`, `material`, `aufgaben` und `phasen` sind
-optional und werden bei Fehlen als leere Listen geladen. Jede angegebene Phase
-hat einen Titel und einen Text. Zeitangaben sind nicht Bestandteil des Verlaufs.
-Die Reihenfolge der Phasen und Aufgaben entspricht der jeweiligen Liste.
+Der Verlauf beginnt mit einer nicht leeren `#`-Überschrift. Weitere Überschriften
+müssen ebenfalls `#` verwenden; `##`, `###` und Setext-Überschriften sind nicht
+erlaubt. Überschriften innerhalb von Codeblöcken zählen nicht als Phasen.
+Eine Phase darf zunächst leer bleiben. Eine vollständig leere Planungsdatei ist
+auch gültig. PULT zeigt Ziele und Verlauf zusammen, den Verlauf als Tabelle
+mit den Spalten Phase und Inhalt.
 
-Die leeren Defaults und der Stundenschreiber geben alle optionalen Listen
-explizit an. Bei leerem Verlauf folgen kommentierte Vorschläge für Einstieg,
-Erarbeitung, Übung, Auswertung und Schluss. Zum Aktivieren zuerst `phasen = []`
-entfernen, dann bei den gewünschten Phasen die führenden `#` entfernen und
-einen nicht leeren Beschreibungstext eintragen. Die Vorschläge sind kein
-verpflichtender Ablauf. Eine vollständige leere Vorlage liegt unter
-[`examples/unterricht/stunde-vorlage.toml`](../examples/unterricht/stunde-vorlage.toml).
-Bestehende persönliche Dateien werden nicht automatisch auf diese Vorlage umgestellt.
+```markdown
+# Einstieg
 
-Aufgaben sind direkt über die Stunde erreichbar; Verweise über Phasen sind
-nicht erforderlich. Klassen, konkrete Termine, Fortschritt, Ausfälle und
-Unterrichtsprotokolle gehören nicht in diese Materialdateien. Pults bestehende
-Organisation einschließlich `skip`, `continue` und Zusatzstunden bleibt zuständig.
+- Brüche mit Papierstreifen vergleichen.
 
-## Vorbereitung
+# Übung
 
-`vorbereitung.md` ist der feste, aber optionale Begleiter einer Stunde. Sie hat
-keine vorgeschriebenen Abschnitte. Möglich sind Definitionen, Merksätze,
-Beispiele, Abbildungen, Gesprächsimpulse, Hinweise zur Verwendung von Material
-oder Fundorte externer Dateien, etwa einer Präsentation auf dem iPad.
+Die Aufgabe aus der Bibliothek gemeinsam besprechen.
+```
 
-Pult öffnet die Datei zur Bearbeitung im konfigurierten Editor. Eine Stunde darf
-auch ohne Vorbereitungsdatei existieren. Leere Inhalte ändern das Layout nicht;
-wo nötig erscheint ein kurzer Leerhinweis.
+Materialeinträge dürfen höchstens einen Link enthalten. Dateilinks beziehen sich
+auf die Materialdatei und müssen innerhalb des Sequenzordners bleiben.
+Externe Links verwenden `https://` oder `http://`. Lokale Dateien öffnen sich mit
+der dafür eingerichteten Anwendung, Webseiten mit dem Standardbrowser.
 
-## Benötigtes Material
+```markdown
+- Schere
+- Kleber
+- [Präsentation](../../dateien/brueche.key)
+- [Übungsseite](https://example.org/uebung)
+```
 
-Die einzige strukturierte Quelle ist `material` in `stunde.toml`. Die
-Stunden-Dataclass erhält dafür eine Liste von Zeichenketten, standardmäßig leer.
-Gemeint sind Dinge zum Bereitlegen oder Mitnehmen; Aufgabenverweise bleiben
-separat. Es gibt keine Auswertung bestimmter Markdown-Überschriften.
+## Aufgaben
 
-Die Liste wird einmal gepflegt und mehrfach angezeigt:
+Aufgaben liegen unter `aufgaben/<Aufgaben-ID>/aufgabe.md`; `loesung.md` ist optional.
+Beide Dateien sind freies Markdown. Ein `# Titel` im Aufgabentext liefert den
+Anzeigenamen. Eine Aufgabe darf in mehreren Stunden verwendet werden.
 
-- **Stundenansicht:** Pult setzt am Anfang der Vorbereitungsansicht automatisch
-  einen kompakten Abschnitt „Benötigtes Material“. Danach folgt der Inhalt von
-  `vorbereitung.md`. Es entsteht kein zusätzlicher Rahmen.
-- **Klassenansicht, nächste Stunde:** Materialliste im vollständigen Stundenüberblick.
-  Die kompakte Homeview zeigt keine Materialliste.
-- **Sequenzplan:** Material in der Zusammenfassung der jeweiligen Stunde.
+In der Sequenzbibliothek und der Unterrichtsansicht öffnet **a** die Aufgaben.
+Von einer Stunde aus wird ihre erste vorgemerkte Aufgabe ausgewählt. **v** merkt
+die ausgewählte Aufgabe für diese Stunde vor oder entfernt die Zuordnung.
+Die Reihenfolge entspricht der Reihenfolge des Vormerkens. Die reine Auswahl
+ändert keine Zuordnung. **s** wechselt zwischen Aufgabe und Lösung.
 
-Bei leerer Liste entfällt der Materialabschnitt beziehungsweise die Materialzeile.
-Auch ohne `vorbereitung.md` wird eine vorhandene Materialliste angezeigt.
-Der automatisch angezeigte Abschnitt wird nicht in die Markdown-Datei geschrieben.
-Hinweise zur Verwendung des Materials stehen weiterhin in der Vorbereitung;
-eine doppelte Pflege der Liste ist nicht vorgesehen.
+## Darstellung und Bedienung
 
-## Aufgaben und Lösungen
+Die Unterrichtsansicht zeigt links die einzeiligen, bei Bedarf abgeschnittenen
+Stundentitel und darunter immer das Material. Rechts steht das Dokument; der
+Rahmentitel ist der Sequenzname. **Leertaste** wechselt zwischen Vorbereitung
+und Planung. **e** bearbeitet den sichtbaren Inhalt, bei Planung nach Dateiauswahl.
+**r** bearbeitet Material, **m** den Stundentitel. **Tab** wechselt den Fokus;
+Pfeile und Bildtasten scrollen den fokussierten Bereich. Die Rückkehr aus den
+Aufgaben erhält Modus und Leseposition der Stunde.
 
-Aufgaben liegen auf Sequenzebene und können aus mehreren Stunden referenziert
-werden. Jeder Aufgabenordner enthält `aufgabe.md` und optional `loesung.md`.
-Die Ordner-ID bleibt stabil. Die Aufgabenliste der Stunde bestimmt die
-Anzeigereihenfolge. Eine spätere Arbeitsheftnummerierung verändert keine IDs.
+Der gemeinsame Dokumentbetrachter wird auch für Aufgaben, Lösungen und Lehrpläne
+verwendet. Der Lehrplanbaum enthält nur Fach und Jahrgang. Eine Sprungfunktion
+innerhalb der Dokumente gibt es nicht.
 
-In der Aufgabenansicht folgt die Lösung unmittelbar auf ihren Aufgabentext.
-Ein zusätzlicher Knopf zum Einblenden ist nicht nötig, da die Ansicht für die
-Lehrkraft bestimmt ist. Fehlt eine Lösung, wird kein Lösungsinhalt erfunden.
+Markdown, TeX und Bilder werden offline in einem unsichtbaren Chromium-Prozess
+zusammen gesetzt. Das Dokument wird in voller Breite und lesbarer Größe als
+scrollbare Bildabschnitte angezeigt. Ghostty verwendet das Kitty-Grafikprotokoll,
+Foot Sixel. In anderen Terminals ohne passende Grafikunterstützung sowie bei
+fehlendem Renderer verwendet PULT eine Textansicht. Formeln bleiben dort als
+TeX-Quelltext lesbar. Links im Dokumentbild sind nicht anklickbar; dafür gibt es
+den separaten Materialbereich.
 
-Im Aufgabenviewer erstellt **n** nach Eingabe eines Titels einen neuen, eindeutigen
-Aufgabenordner mit beiden Dateien. `aufgabe.md` beginnt mit `# Titel`,
-`loesung.md` ist zunächst leer. Beide Dateien werden gemeinsam im konfigurierten
-Editor geöffnet. Bei gleichen Titeln erhalten neue Ordner einen Zahlensuffix;
-bestehende Aufgaben werden nicht überschrieben. In der Liste steht der Titel
-aus der ersten Markdown-Überschrift, ersatzweise die ID. Die neue Aufgabe ist
-zunächst keiner Stunde zugeordnet; die Zuordnung erfolgt über `aufgaben` in
-`stunde.toml`.
+## Neue Stunden und Muster
 
-## Gemeinsamer Markdown-Vertrag
+Die mitgelieferten Sequenzen enthalten nur die Stunden-IDs. Bei der Einrichtung
+entstehen die fünf Dateien durch eine gemeinsame Routine; vorhandene Dateien
+werden nicht überschrieben. Neue Stunden-IDs in einer bearbeiteten Sequenz werden
+nach der Validierung mit derselben Routine ergänzt.
 
-Für Vorbereitung, Aufgabentext und Lösung gilt dieselbe Darstellung:
+Die Muster sind bewusst kurz:
 
-- Überschriften, Absätze, Hervorhebungen, Listen, Links und einfache Tabellen.
-- Inline-Mathematik mit `$…$`, abgesetzte Mathematik mit `$$…$$`.
-- Mehrzeilige Umformungen, beispielsweise mit LaTeX-`aligned`.
-- Codeblöcke mit Sprachangabe, etwa `python` oder `java`, mit Syntaxhervorhebung.
-- Bilder über relative Dateipfade, bezogen auf die jeweilige Markdown-Datei.
+- TOML: Titel „Noch nicht vorbereitet“, leere Aufgabenliste, keine Kommentare.
+- Vorbereitung: `# Noch nicht vorbereitet`.
+- Ziele: zweimal `- Die Schüler können`.
+- Verlauf: `# Einstieg`.
+- Material: leer.
 
-Gewöhnlicher Text und Code bleiben Terminaltext. Mathematische Formeln erhalten
-die vereinbarte Computer-Modern-basierte Schrift. Der Renderer verwendet einen
-etablierten Markdown-Parser. Die Unterstützung konkreter Bildformate wird bei
-der Integration geprüft; der Beispielpfad legt noch keine vollständige
-Terminalunterstützung für SVG fest.
-
-Lokale Begleitdateien liegen unter `dateien/`. Fundorte auf anderen Geräten
-können einfache Hinweise im Vorbereitungstext sein. Pult muss externe
-Präsentationen oder andere Begleitdateien nicht selbst darstellen können.
-
-## Stundenansicht und Zusammenfassungen
-
-Das gemeinsam erprobte Layout bleibt die Grundlage:
-
-- Links: eigener Sequenzrahmen mit Metainformationen, darunter Stundenliste.
-- Mitte: Vorbereitung oder Aufgaben; Stundentitel im Rahmen und dezenter
-  Hinweis auf die aktive Ansicht. Lösungen direkt unter den Aufgaben.
-- Rechts: getrennte Rahmen für Ziele und Verlauf. Der Verlauf zeigt fette
-  Phasenüberschriften und darunter Text, ohne Zeitspalte.
-- Oben bleibt eine Terminalzeile frei. Unten steht der Footer in der letzten
-  Terminalzeile, mit einer freien Zeile zwischen den Inhaltskästen und dem Footer.
-
-Die Anordnung ist fachübergreifend gleich. Benötigtes Material erscheint im
-Vorbereitungsbereich wie oben beschrieben. Zusammenfassungen in anderen Views
-nutzen dieselben strukturierten Stundendaten. Die optischen Feinheiten werden
-bei der Integration an das bestehende Pult-Styling angepasst.
-
-## Auslieferung und Umfang
-
-Die öffentlichen Defaults enthalten die allgemeine Lehrplanstruktur und leere
-Planungsstunden, keine persönliche Unterrichtsvorbereitung. Ein neutrales,
-vollständiges Formatmuster liegt unter `examples/unterricht/`, außerhalb der
-Defaults und der automatisch eingerichteten Sequenzbibliothek.
-
-Bei der Einrichtung werden die Defaults weiterhin nach den bisherigen Kopierregeln
-übernommen. Zusätzlich entstehen in jedem Sequenzordner die leeren Verzeichnisse
-`stunden/`, `aufgaben/` und `dateien/`, sofern sie fehlen. Vorhandene Dateien
-bleiben erhalten; Beispielaufgaben werden nicht in jede Sequenz kopiert.
-
-Eigene Vorbereitungen, Aufgaben, Lösungen und Begleitdateien werden ausschließlich
-in der persönlichen Datenablage außerhalb des Repositorys gepflegt. Es gibt
-keine Rückübertragung in die Defaults und keine Veröffentlichung durch Pult.
-Eine Migration bestehender Unterrichtsmaterialien ist nicht vorgesehen.
-
-Nicht Bestandteil dieser Erweiterung sind KI-Erzeugung innerhalb von Pult,
-KI-Kontextdateien, gesonderte fachliche oder didaktische Hintergrunddateien und
-Export. Unterrichtsmaterialien können außerhalb von Pult mit KI-Unterstützung
-erstellt und anschließend von der Lehrkraft geprüft und weiterentwickelt werden.
-
-
-## Verhalten der Datenablage
-
-Unbekannte TOML-Felder, leere Pflichttitel, ungültige oder doppelte Verweise und
-fehlende referenzierte Stunden-/Aufgabendateien werden als Fehler mit Dateipfad
-angezeigt. Referenz-IDs müssen bereits der kanonischen Kleinschreibung entsprechen.
-Optionale Markdown-Dateien dürfen fehlen; vorhandener Markdown-Quelltext wird
-unverändert geladen und gespeichert. Relative Bildverweise bleiben dadurch erhalten.
-Entfernte Referenzen löschen keine verwaisten Stunden- oder Aufgabenordner.
-Wird eine optionale Datei im Modell ausdrücklich auf `None` gesetzt und dieses
-Modell gespeichert, wird diese Datei entfernt. Leerer Text bleibt eine leere Datei.
-
-Die 116 mitgelieferten Sequenzen behalten ihre bisherigen Metadaten und 1645
-Planungsstunden-IDs. Die bisherigen leeren Titel heißen jetzt „Noch nicht
-vorbereitet“, weil `titel` im Vertrag ein nicht leerer Pflichttext ist.
-
-Alte flache Sequenzdateien werden ausdrücklich als altes Format gemeldet.
-Bestehende persönliche Daten werden nicht automatisch umgeschrieben. Zum
-Ausprobieren dieser Entwicklung ist eine frisch eingerichtete Datenablage nötig;
-die bisherigen Kopierregeln bleiben erhalten; leere Materialordner werden ergänzt.
+Nach dem Editor lädt PULT die Dateien neu und validiert sie. Bei Fehlern bleibt
+die letzte gültige Ansicht geöffnet. PULT repariert persönliche Dateien nicht
+automatisch. Eine Übernahme alter TOML-Ziele oder -Phasen ist nicht vorgesehen.

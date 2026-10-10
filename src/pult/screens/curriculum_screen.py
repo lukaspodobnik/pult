@@ -1,26 +1,26 @@
-"""Fachbezogenes Nachschlagewerk für Lehrpläne und Unterrichtsgrundlagen."""
+"""Lehrpläne nach Fach und Jahrgang, ohne Gliederungs- oder Sprungbaum."""
 
 from dataclasses import dataclass
 from importlib.resources import files
 from pathlib import Path
 from typing import ClassVar
 
-from markdown_it import MarkdownIt
 from textual import on
-from textual.app import ComposeResult
-from textual.widgets import MarkdownViewer
+from textual.widgets import Static
 
 from pult.school.subject import load_subjects
 from pult.screens.base_screen import PultScreen
+from pult.widgets.document_viewer import DocumentPane, DocumentViewer
 from pult.widgets.footer import PultFooter
-from pult.widgets.scrolling import EdgeScrollbars, Horizontal, Tree, Vertical
+from pult.widgets.scrolling import Horizontal, Tree, Vertical
 
 
 @dataclass(frozen=True)
 class CurriculumEntry:
     title: str
     source: str
-    heading: int | None = None
+    path: Path
+    directory: Path
 
 
 class CurriculumTree(Tree[CurriculumEntry | None]):
@@ -31,55 +31,44 @@ class CurriculumTree(Tree[CurriculumEntry | None]):
         self.border_title = "LEHRPLAN"
 
 
-class CurriculumReader(
-    EdgeScrollbars, MarkdownViewer, can_focus=False, can_focus_children=False
-):
-    """Lesebereich mit Scrollleisten am Rahmen und ohne eigenen Fokus."""
-
-
 def curriculum_documents(root: Path, subject_id: str) -> dict[str, str]:
-    """Persönliche Dateien haben Vorrang; Defaults bleiben unverändert."""
+    """Nur Jahrgangsdokumente; persönliche Dateien haben Vorrang."""
     documents: dict[str, str] = {}
     bundled = files("pult.defaults").joinpath("curriculum", subject_id)
     if bundled.is_dir():
-        for path in sorted(bundled.iterdir(), key=lambda item: item.name):
-            if path.is_file() and path.name.endswith(".md"):
+        for path in bundled.iterdir():
+            if (
+                path.is_file()
+                and path.name.startswith("jahrgang-")
+                and path.name.endswith(".md")
+            ):
                 documents[path.name] = path.read_text(encoding="utf-8")
     personal = root / "curriculum" / subject_id
-    if personal.is_dir():
-        for path in sorted(personal.glob("*.md")):
-            documents[path.name] = path.read_text(encoding="utf-8")
+    for path in personal.glob("jahrgang-*.md"):
+        documents[path.name] = path.read_text(encoding="utf-8")
     return documents
 
 
 class CurriculumScreen(PultScreen[None]):
-    BINDINGS: ClassVar = [
-        ("escape", "close", "Zurück"),
-    ]
+    BINDINGS: ClassVar = [("escape", "close", "Zurück")]
 
     def __init__(self):
         super().__init__()
-        self.current_source: str | None = None
+        self.current_entry: CurriculumEntry | None = None
 
-    def compose(self) -> ComposeResult:
+    def compose(self):
         with Horizontal(id="curriculum-workspace"):
             with Vertical(id="curriculum-navigation"):
                 yield CurriculumTree(id="curriculum-tree")
             with Vertical(id="curriculum-content"):
-                yield CurriculumReader(
-                    "Fach und Inhalt links auswählen.",
-                    show_table_of_contents=False,
-                    open_links=False,
-                    id="curriculum-reader",
-                )
+                with DocumentPane(id="curriculum-reader"):
+                    yield Static("Fach und Jahrgang links auswählen.")
         yield PultFooter()
 
-    async def on_mount(self) -> None:
-        self.query_one(MarkdownViewer).document.can_focus = False
+    def on_mount(self):
         tree = self.query_one(CurriculumTree)
         for subject in sorted(
-            load_subjects(self.app_config.root),
-            key=lambda subject: subject.name.casefold(),
+            load_subjects(self.app_config.root), key=lambda s: s.name.casefold()
         ):
             try:
                 documents = curriculum_documents(self.app_config.root, subject.id)
@@ -90,87 +79,40 @@ class CurriculumScreen(PultScreen[None]):
                 )
                 continue
             if documents:
-                self.add_subject(tree.root.add(subject.name), documents)
+                self.add_subject(
+                    tree.root.add(subject.name, expand=True), documents, subject.id
+                )
         tree.root.expand()
         if tree.root.children:
             tree.move_cursor(tree.root.children[0])
-        else:
-            await self.query_one(MarkdownViewer).document.update(
-                "Es sind keine Lehrplandokumente vorhanden."
-            )
         tree.focus()
 
-    def add_subject(self, subject_node, documents: dict[str, str]) -> None:
-        curriculum = subject_node.add("Lehrpläne", expand=True)
-        names = {
-            "leitideen.md": "Leitideen",
-            "kompetenzen.md": "Kompetenzen",
-            "anforderungsbereiche.md": "Anforderungsbereiche",
-            "operatoren.md": "Operatoren",
-        }
-        ordered = sorted(name for name in documents if name.startswith("jahrgang-"))
-        ordered += [name for name in names if name in documents]
-        ordered += sorted(set(documents) - set(ordered))
-        for name in ordered:
-            source = documents[name]
-            is_grade = name.startswith("jahrgang-")
-            title = names.get(name, name.removesuffix(".md"))
-            if is_grade and name[9:-3].isdigit():
-                title = f"{int(name[9:-3])}. Jahrgangsstufe"
-            parent = curriculum if is_grade else subject_node
-            node = parent.add(title, CurriculumEntry(title, source))
-            stack = [(0, node)]
-            heading_index = 0
-            tokens = MarkdownIt().parse(source)
-            for index, token in enumerate(tokens):
-                if token.type != "heading_open":
-                    continue
-                level = int(token.tag[1:])
-                heading_title = tokens[index + 1].content
-                current_index = heading_index
-                heading_index += 1
-                if level == 1:
-                    continue
-                while len(stack) > 1 and stack[-1][0] >= level:
-                    stack.pop()
-                child = stack[-1][1].add(
-                    heading_title,
-                    CurriculumEntry(heading_title, source, current_index),
-                )
-                stack.append((level, child))
-
-            def finish(branch):
-                for child in branch.children:
-                    finish(child)
-                if not branch.children:
-                    branch.allow_expand = False
-
-            finish(node)
-        if not curriculum.children:
-            curriculum.remove()
+    def add_subject(self, subject_node, documents: dict[str, str], subject_id: str):
+        for grade in range(5, 14):
+            name = f"jahrgang-{grade:02}.md"
+            if name not in documents:
+                continue
+            personal = self.app_config.root / "curriculum" / subject_id / name
+            bundled = Path(
+                str(files("pult.defaults").joinpath("curriculum", subject_id, name))
+            )
+            path = personal if personal.exists() else bundled
+            title = f"{grade}. Jahrgangsstufe"
+            subject_node.add_leaf(
+                title, CurriculumEntry(title, documents[name], path, path.parent)
+            )
 
     @on(Tree.NodeHighlighted, "#curriculum-tree")
-    async def entry_highlighted(self, event: Tree.NodeHighlighted) -> None:
+    async def entry_highlighted(self, event: Tree.NodeHighlighted):
         entry = event.node.data
-        if not isinstance(entry, CurriculumEntry):
+        if not isinstance(entry, CurriculumEntry) or entry == self.current_entry:
             return
-        reader = self.query_one(MarkdownViewer)
-        if self.current_source != entry.source:
-            self.current_source = entry.source
-            await reader.document.update(entry.source)
+        self.current_entry = entry
+        reader = self.query_one("#curriculum-reader", DocumentPane)
+        await reader.remove_children()
+        await reader.mount(DocumentViewer(entry.source, entry.path, entry.directory))
         reader.border_title = entry.title
-        if entry.heading is None:
-            reader.scroll_home(animate=False)
-        else:
-            headings = list(
-                reader.document.query(
-                    "MarkdownH1, MarkdownH2, MarkdownH3, MarkdownH4, MarkdownH5, MarkdownH6"
-                )
-            )
-            if entry.heading < len(headings):
-                self.call_after_refresh(
-                    headings[entry.heading].scroll_visible, top=True, animate=False
-                )
+        reader.scroll_home(animate=False)
 
-    def action_close(self) -> None:
+    def action_close(self):
         self.dismiss()

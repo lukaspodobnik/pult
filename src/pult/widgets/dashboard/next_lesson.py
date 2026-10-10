@@ -103,7 +103,7 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
         )
         if planned_lesson.lesson.tasks:
             texts["next-lesson-tasks"] = (
-                "Aufgaben: " + planned_lesson.lesson.task_summary
+                f"{len(planned_lesson.lesson.tasks)} Aufgaben vorgemerkt"
             )
         return texts
 

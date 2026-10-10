@@ -1,10 +1,13 @@
 import re
 from dataclasses import dataclass
+from importlib.resources import files
 from pathlib import Path
 from typing import Any
 
 from pult.curriculum.material import Lesson as Lesson
 from pult.curriculum.material import (
+    default_lesson,
+    initialize_lesson_files,
     load_lesson,
     reference_ids,
     reject_unknown,
@@ -144,6 +147,8 @@ def load_sequence(
     grade_level: int,
     subject_id: str,
     sequence_id: str,
+    *,
+    create_missing: bool = False,
 ) -> Sequence:
     """Lade und validiere eine Sequenz einschließlich ihres Ablageorts."""
     path = get_sequence_path(root, grade_level, subject_id, sequence_id)
@@ -166,6 +171,7 @@ def load_sequence(
         )
         lessons_data = reference_ids(data, "stunden")
         tasks = {}
+        bundled = root.resolve() == Path(str(files("pult.defaults"))).resolve()
 
         sequence = Sequence(
             id=_require_string(data, "id"),
@@ -177,7 +183,16 @@ def load_sequence(
                 data, "recommended_lesson_count"
             ),
             lessons=[
-                load_lesson(path.parent, lesson_id, tasks) for lesson_id in lessons_data
+                default_lesson(lesson_id)
+                if (
+                    bundled
+                    or create_missing
+                    and not (
+                        path.parent / "stunden" / lesson_id / "stunde.toml"
+                    ).exists()
+                )
+                else load_lesson(path.parent, lesson_id, tasks)
+                for lesson_id in lessons_data
             ],
             chapter_id=_optional_string(data, "chapter_id"),
             chapter_title=_optional_string(data, "chapter_title"),
@@ -196,6 +211,9 @@ def load_sequence(
             f"Die Angaben in '{path}' stimmen nicht mit ihrem Ablageort überein."
         )
 
+    if create_missing:
+        for lesson in sequence.lessons:
+            initialize_lesson_files(path.parent, lesson.id)
     return sequence
 
 

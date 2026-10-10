@@ -3,6 +3,7 @@ from importlib.resources.abc import Traversable
 from pathlib import Path
 
 from pult.config import AppConfig, save_app_config
+from pult.curriculum.material import initialize_lesson_files, reference_ids
 from pult.initialization.school_year import initialize_school_year
 from pult.school.assessment_requirements import AssessmentRequirementsFileError
 from pult.school.calendar import (
@@ -11,6 +12,7 @@ from pult.school.calendar import (
 )
 from pult.school.period import PERIODS_FILE_NAME as periods_file
 from pult.school.subject import SUBJECTS_FILE_NAME as subject_file
+from pult.storage import load_toml
 
 
 class SetupError(Exception):
@@ -120,6 +122,8 @@ def _create_material_directories(root_path: Path) -> None:
     for sequence_file in (root_path / "sequences").glob("*/*/*/sequenz.toml"):
         for name in ("stunden", "aufgaben", "dateien"):
             (sequence_file.parent / name).mkdir(exist_ok=True)
+        for lesson_id in reference_ids(load_toml(sequence_file), "stunden"):
+            initialize_lesson_files(sequence_file.parent, lesson_id)
 
 
 def _copy_default_directory(source: Traversable, destination: Path) -> None:

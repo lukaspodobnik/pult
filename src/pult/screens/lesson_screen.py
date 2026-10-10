@@ -1,4 +1,4 @@
-"""Unterrichtsansicht einer Sequenz, geöffnet auf einer bestimmten Stunde."""
+"""Unterrichtsansicht mit freier Vorbereitung, Planung und separatem Material."""
 
 import shlex
 import shutil
@@ -6,46 +6,43 @@ import subprocess
 from pathlib import Path
 from typing import ClassVar
 
+from rich.text import Text
 from textual import on
-from textual.widgets import Rule, Static
+from textual.binding import Binding
+from textual.widgets import Button, Static
 from textual.widgets.option_list import Option
 
-from pult.curriculum.material import Lesson, material_path
+from pult.curriculum.material import Lesson, initialize_lesson_files, material_path
 from pult.curriculum.sequence import Sequence, get_sequence_path, load_sequence
 from pult.screens.base_screen import PultScreen
-from pult.screens.select_task_file_screen import SelectTaskFileScreen
+from pult.screens.select_lesson_file_screen import SelectLessonFileScreen
+from pult.widgets.document_viewer import DocumentPane, DocumentViewer
 from pult.widgets.footer import PultFooter
-from pult.widgets.lesson_material import LessonMaterial
-from pult.widgets.scrolling import Horizontal, OptionList, Vertical, VerticalScroll
-from pult.widgets.sequence_context import SequenceContext
-
-
-class LessonPane(VerticalScroll):
-    can_focus = True
-    can_focus_children = False
+from pult.widgets.materials import MaterialsPane
+from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
 class LessonScreen(PultScreen[Sequence]):
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
-        ("space", "toggle_material", "Vorbereitung / Aufgaben"),
+        Binding("space", "toggle_material", "Vorbereitung / Planung", priority=True),
+        ("a", "open_tasks", "Aufgaben öffnen"),
         ("e", "edit_preparation", "Bearbeiten"),
-        ("m", "edit_metadata", "Stundendaten"),
+        ("r", "edit_material", "Material bearbeiten"),
+        ("m", "edit_metadata", "Stundentitel"),
     ]
 
     def __init__(self, sequence: Sequence, lesson_id: str):
         super().__init__()
         if not any(lesson.id == lesson_id for lesson in sequence.lessons):
             raise ValueError("Die ausgewählte Stunde ist nicht mehr vorhanden.")
-        self.sequence = sequence
-        self.lesson_id = lesson_id
-        self.show_tasks = False
+        self.sequence, self.lesson_id = sequence, lesson_id
+        self.show_planning = False
 
     @property
     def lesson(self) -> Lesson | None:
         return next(
-            (lesson for lesson in self.sequence.lessons if lesson.id == self.lesson_id),
-            None,
+            (item for item in self.sequence.lessons if item.id == self.lesson_id), None
         )
 
     @property
@@ -57,193 +54,158 @@ class LessonScreen(PultScreen[Sequence]):
             self.sequence.id,
         ).parent
 
-    def source(self, text: str, *parts: str) -> LessonMaterial:
-        return LessonMaterial(
-            text, material_path(self.directory, *parts), self.directory
-        )
+    def options(self):
+        for item in self.sequence.lessons:
+            yield Option(
+                Text(item.title, no_wrap=True, overflow="ellipsis"), id=item.id
+            )
 
-    def preparation(self):
+    def document(self, planning: bool = False):
         lesson = self.lesson
         if lesson is None:
-            yield Static("Noch keine Stunden vorhanden.", classes="lesson-empty")
-        else:
-            text = lesson.preparation_markdown()
-            if text:
-                yield self.source(text, "stunden", lesson.id, "vorbereitung.md")
-            else:
-                yield Static(
-                    "Noch keine Vorbereitung vorhanden. Mit e im Editor anlegen.",
-                    classes="lesson-empty",
-                )
-
-    def tasks(self):
-        lesson = self.lesson
-        if lesson is None or not lesson.tasks:
-            yield Static("Noch keine Aufgaben zugeordnet.", classes="lesson-empty")
-            return
-        for task in lesson.tasks:
-            yield Rule(classes="lesson-task-divider")
-            yield self.source(task.text, "aufgaben", task.id, "aufgabe.md")
-            if task.solution is not None:
-                yield Static("Lösung", classes="lesson-solution-title")
-                yield self.source(task.solution, "aufgaben", task.id, "loesung.md")
-
-    def goals(self) -> str:
-        return (
-            "\n\n".join(f"• {goal}" for goal in self.lesson.goals)
-            if self.lesson and self.lesson.goals
-            else "Noch keine Ziele eingetragen."
+            return Static("Noch keine Stunden vorhanden.", classes="lesson-empty")
+        return DocumentViewer(
+            lesson.preparation_markdown(),
+            material_path(
+                self.directory,
+                "stunden",
+                lesson.id,
+                "verlauf.md" if planning else "vorbereitung.md",
+            ),
+            self.directory,
+            planning=lesson if planning else None,
         )
 
-    def phases(self):
-        phases = self.lesson.phases if self.lesson else []
-        if not phases:
-            yield Static("Noch kein Verlauf eingetragen.", classes="lesson-empty")
-        for index, phase in enumerate(phases, 1):
-            if index > 1:
-                yield Rule(classes="lesson-phase-divider")
-            yield Static(
-                phase.title,
-                classes="lesson-phase-title",
-                markup=False,
-            )
-            yield Static(phase.text, classes="lesson-phase-body", markup=False)
+    def materials(self):
+        return MaterialsPane(
+            self.lesson.material_markdown() if self.lesson else "",
+            material_path(self.directory, "stunden", self.lesson_id, "material.md"),
+            self.directory,
+            id="lesson-materials",
+        )
 
     def compose(self):
         with Horizontal(id="lesson-workspace"):
             with Vertical(id="lesson-navigation"):
-                yield SequenceContext(
-                    self.sequence, self.app_config.root, id="lesson-sequence"
-                )
                 with Vertical(id="lesson-list-frame"):
-                    yield OptionList(
-                        *(
-                            Option(lesson.title, id=lesson.id)
-                            for lesson in self.sequence.lessons
-                        ),
-                        id="lesson-list",
-                    )
+                    yield OptionList(*self.options(), id="lesson-list")
+                with Vertical(id="lesson-material-frame"):
+                    yield self.materials()
             with Vertical(id="lesson-primary"):
-                with LessonPane(id="lesson-preparation"):
-                    yield from self.preparation()
-                with LessonPane(id="lesson-tasks"):
-                    yield from self.tasks()
-            with Vertical(id="lesson-orientation"):
-                with LessonPane(id="lesson-goals"):
-                    yield Static(self.goals(), id="lesson-goals-text", markup=False)
-                with LessonPane(id="lesson-schedule"):
-                    with Vertical(id="lesson-phases-text"):
-                        yield from self.phases()
+                with Horizontal(id="lesson-mode"):
+                    yield Button("Vorbereitung", id="mode-preparation", compact=True)
+                    yield Button("Planung", id="mode-planning", compact=True)
+                with DocumentPane(id="lesson-preparation"):
+                    yield self.document()
+                with DocumentPane(id="lesson-planning"):
+                    yield self.document(planning=True)
         yield PultFooter()
 
     def on_mount(self):
-        for pane in self.query(LessonPane):
-            pane.can_focus = False
-        for selector, title in [
-            ("lesson-sequence", "SEQUENZ"),
-            ("lesson-list-frame", "STUNDEN"),
-            ("lesson-goals", "ZIELE"),
-            ("lesson-schedule", "VERLAUF"),
-        ]:
-            self.query_one("#" + selector).border_title = title
+        self.query_one("#lesson-list-frame").border_title = "STUNDEN"
         self.update_view()
+        self.query_one("#lesson-list").focus()
 
     def update_view(self):
-        self.query_one("#lesson-preparation").display = not self.show_tasks
-        self.query_one("#lesson-tasks").display = self.show_tasks
-        for selector, label in [
+        self.query_one("#lesson-preparation").display = not self.show_planning
+        self.query_one("#lesson-planning").display = self.show_planning
+        for selector, label in (
             ("lesson-preparation", "Vorbereitung"),
-            ("lesson-tasks", "Aufgaben"),
-        ]:
+            ("lesson-planning", "Planung"),
+        ):
             pane = self.query_one("#" + selector)
-            pane.border_title = (
-                self.lesson.title if self.lesson else self.sequence.title
-            )
+            pane.border_title = self.sequence.title
             pane.border_subtitle = label
+        self.query_one("#mode-preparation", Button).variant = (
+            "default" if self.show_planning else "primary"
+        )
+        self.query_one("#mode-planning", Button).variant = (
+            "primary" if self.show_planning else "default"
+        )
         listing = self.query_one("#lesson-list", OptionList)
         if self.lesson:
             with self.prevent(OptionList.OptionHighlighted):
                 listing.highlighted = listing.get_option_index(self.lesson.id)
-        listing.focus()
+
+    @on(Button.Pressed, "#mode-preparation, #mode-planning")
+    def select_mode(self, event: Button.Pressed):
+        self.show_planning = event.button.id == "mode-planning"
+        self.update_view()
 
     @on(OptionList.OptionHighlighted, "#lesson-list")
     async def select_lesson(self, event: OptionList.OptionHighlighted):
         event.stop()
-        listing = self.query_one("#lesson-list", OptionList)
         if (
-            event.option_index != listing.highlighted
+            event.option_index != self.query_one("#lesson-list", OptionList).highlighted
             or event.option.id == self.lesson_id
         ):
             return
         self.lesson_id = str(event.option.id)
-        self.show_tasks = False
+        self.show_planning = False
         await self.refresh_contents()
 
     async def refresh_contents(self):
-        for selector, widgets in [
-            ("lesson-preparation", list(self.preparation())),
-            ("lesson-tasks", list(self.tasks())),
-        ]:
-            pane = self.query_one("#" + selector, LessonPane)
+        for selector, planning in (
+            ("lesson-preparation", False),
+            ("lesson-planning", True),
+        ):
+            pane = self.query_one("#" + selector, DocumentPane)
             await pane.remove_children()
-            await pane.mount(*widgets)
+            await pane.mount(self.document(planning))
             pane.scroll_home(animate=False)
-        self.query_one("#lesson-goals-text", Static).update(self.goals())
-        phases = self.query_one("#lesson-phases-text", Vertical)
-        await phases.remove_children()
-        await phases.mount(*self.phases())
-        for selector in ["lesson-goals", "lesson-schedule"]:
-            self.query_one("#" + selector, LessonPane).scroll_home(animate=False)
+        frame = self.query_one("#lesson-material-frame", Vertical)
+        await frame.remove_children()
+        await frame.mount(self.materials())
         self.update_view()
 
     def action_close(self):
         self.dismiss(self.sequence)
 
     def action_toggle_material(self):
-        self.show_tasks = not self.show_tasks
+        self.show_planning = not self.show_planning
         self.update_view()
 
-    async def action_edit_preparation(self):
-        if self.show_tasks:
-            if self.lesson is None or not self.lesson.tasks:
-                self.notify("Dieser Stunde sind noch keine Aufgaben zugeordnet.")
-                return
-            self.app.push_screen(
-                SelectTaskFileScreen(self.lesson.tasks), self.task_file_selected
-            )
-            return
-        await self.edit("vorbereitung.md")
+    def action_open_tasks(self):
+        from pult.screens.task_screen import TaskScreen
 
-    async def task_file_selected(self, selection: tuple[str, str] | None):
-        if selection is not None:
-            task_id, filename = selection
-            await self.edit(filename, task_id=task_id)
+        try:
+            self.app.push_screen(
+                TaskScreen(self.sequence, self.directory, lesson_id=self.lesson_id),
+                self.tasks_closed,
+            )
+        except (OSError, ValueError) as error:
+            self.notify(str(error), severity="error")
+
+    def tasks_closed(self, sequence: Sequence | None):
+        if sequence is not None:
+            self.sequence = sequence
+        # The existing document widgets, mode and scroll position remain mounted.
+
+    async def action_edit_preparation(self):
+        if self.show_planning:
+            self.app.push_screen(SelectLessonFileScreen(), self.file_selected)
+        else:
+            await self.edit("vorbereitung.md")
+
+    async def file_selected(self, filename: str | None):
+        if filename is not None:
+            await self.edit(filename)
+
+    async def action_edit_material(self):
+        await self.edit("material.md")
 
     async def action_edit_metadata(self):
         await self.edit("stunde.toml")
 
-    async def edit(self, filename: str, *, task_id: str | None = None):
-        lesson = self.lesson
-        if lesson is None:
-            return
-        if task_id is not None and not any(task.id == task_id for task in lesson.tasks):
+    async def edit(self, filename: str):
+        if self.lesson is None:
             return
         try:
             command = shlex.split(self.app_config.editor)
             if not command or shutil.which(command[0]) is None:
-                self.notify(
-                    "Der konfigurierte Editor wurde nicht gefunden.", severity="error"
-                )
-                return
-            path = material_path(
-                self.directory,
-                "aufgaben" if task_id is not None else "stunden",
-                task_id if task_id is not None else lesson.id,
-                filename,
-            )
-            if filename in {"vorbereitung.md", "loesung.md"} and not path.exists():
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.touch(exist_ok=False)
+                raise ValueError("Der konfigurierte Editor wurde nicht gefunden.")
+            initialize_lesson_files(self.directory, self.lesson_id)
+            path = material_path(self.directory, "stunden", self.lesson_id, filename)
             with self.app.suspend():
                 result = subprocess.run([*command, str(path)], check=False)
             if result.returncode:
@@ -277,8 +239,5 @@ class LessonScreen(PultScreen[Sequence]):
         listing = self.query_one("#lesson-list", OptionList)
         with self.prevent(OptionList.OptionHighlighted):
             listing.clear_options()
-            listing.add_options(
-                Option(item.title, id=item.id) for item in updated.lessons
-            )
-        self.query_one(SequenceContext).update_sequence(self.sequence)
+            listing.add_options(self.options())
         await self.refresh_contents()

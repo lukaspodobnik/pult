@@ -189,6 +189,7 @@ class SequenceLibraryScreen(PultScreen[None]):
                 sequence.grade_level,
                 sequence.subject_id,
                 sequence.id,
+                create_missing=True,
             )
         except SequenceFileError as error:
             self.notify(str(error), severity="error", timeout=10)

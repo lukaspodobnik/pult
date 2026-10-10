@@ -68,6 +68,9 @@ def prepare_root(root: Path) -> AppConfig:
     shutil.copy2(defaults / "periods.toml", root / "periods.toml")
     shutil.copytree(defaults / "sequences", root / "sequences")
     shutil.copytree(defaults / "calendars", root / "calendars")
+    from pult.initialization.pult import _create_material_directories
+
+    _create_material_directories(root)
     (root / "school-years").mkdir()
     initialize_school_year(root, "2026-2027")
     initialize_school_class(

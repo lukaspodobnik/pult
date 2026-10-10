@@ -1,0 +1,2 @@
+- Zwei gleich große Papierstreifen
+- Buntstift

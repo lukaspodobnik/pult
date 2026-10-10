@@ -7,6 +7,16 @@ def main() -> None:
     from .services.material_rendering import initialize_graphics
 
     initialize_graphics()
+    import asyncio
+
     from .app import PultApp
 
-    PultApp().run()
+    app = PultApp()
+
+    async def run() -> None:
+        try:
+            await app.run_async()
+        finally:
+            await app.document_renderer.close()
+
+    asyncio.run(run())

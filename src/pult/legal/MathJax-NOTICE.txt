@@ -1,9 +1,8 @@
-This distribution includes MathJax 3.2.2 (mathjax-full), licensed under Apache-2.0.
+This distribution includes MathJax 3.2.2, licensed under Apache-2.0.
 Project: https://www.mathjax.org/
-Source: https://github.com/mathjax/MathJax-src/tree/3.2.2
+Source: https://github.com/mathjax/MathJax/tree/3.2.2
+Bundle: https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js
 
-PULT bundles selected MathJax JavaScript modules with a local stdin/stdout wrapper.
-Build inputs and instructions are in tools/math-renderer/ in the PULT source repository.
-The wrapper and generated SVG sizing are PULT modifications; upstream module code
-is included unminified in assets/math-renderer.cjs with module path comments.
-See MathJax-Apache-2.0.txt for the full license.
+The unmodified browser bundle is included in assets/mathjax/tex-svg-full.js.
+PULT supplies document CSS and a local Python/Playwright rendering service.
+See MathJax-Apache-2.0.txt and assets/mathjax/LICENSE for the full license.

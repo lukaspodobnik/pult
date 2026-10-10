@@ -147,40 +147,67 @@ folgt der Auswahl. Mit Tab in die Vorschau wechseln, mit ↑/↓ eine Stunde aus
 und mit Enter den Unterrichtsviewer öffnen. `e` auf einer Sequenz öffnet ihre
 TOML-Datei im Editor; nach der Rückkehr wird sie neu geladen und validiert.
 
-Unter **Unterricht → Lehrplan** folgt die Leseansicht der Auswahl im Baum.
-Mathematik enthält zusätzlich Leitideen, Kompetenzen, Anforderungsbereiche und
-Operatoren. Persönliche Dateien unter `curriculum/` haben Vorrang vor den Defaults.
+Unter **Unterricht → Lehrplan** wählst du direkt Fach und Jahrgang. Der vollständige
+Lehrplan erscheint im gemeinsamen Dokumentbetrachter. Persönliche Dateien unter
+`curriculum/` haben Vorrang vor den Defaults; weitere Gliederungsebenen entfallen.
 
-Die mitgelieferten Sequenzen enthalten Lehrplanstruktur und leere Planungsstunden.
-Eigene Inhalte bleiben im persönlichen Datenverzeichnis. Aufbau und stabile IDs
-sind im [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md) beschrieben;
-ein [neutrales Beispiel](examples/unterricht/README.md) zeigt das Dateiformat.
+Die mitgelieferten Sequenzen enthalten die Lehrplanstruktur und Stunden-IDs.
+Eine gemeinsame Routine legt die fünf kurzen Musterdateien jeder Stunde bei der
+Einrichtung an, ohne persönliche Dateien zu überschreiben. Dateiformat und
+Validierung beschreibt der [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md);
+ein [neutrales Beispiel](examples/unterricht/README.md) zeigt eigene Inhalte.
 
-### Unterrichts- und Aufgabenviewer
+### Unterrichts- und Aufgabenansicht
 
-- **Leertaste:** Zwischen Vorbereitung und Aufgaben wechseln; Lösungen stehen unter den Aufgaben.
-- **e:** Den sichtbaren Inhalt im Editor bearbeiten, bei Aufgaben nach Auswahl von Aufgabe oder Lösung.
-- **m:** `stunde.toml` für Titel, Ziele, Material, Aufgabenverweise und Phasen bearbeiten.
-- **Escape:** Zur vorherigen Ansicht zurückkehren.
+Links stehen einzeilige Stundentitel und ein immer sichtbarer Materialkasten.
+Rechts steht das breite Dokument, mit dem Sequenznamen als Rahmentitel.
 
-In der Sequenzbibliothek öffnet `a` alle Aufgaben der Sequenz, auch noch keiner
-Stunde zugeordnete. Dort bearbeitet `e` eine Aufgabe oder Lösung; `n` legt nach
-Eingabe eines Titels eine neue Aufgabe an und öffnet beide Dateien im Editor.
-Die Zuordnung zu Stunden erfolgt in `stunde.toml` unter `aufgaben`. Änderungen an
-einer Aufgabe gelten für alle Stunden, die darauf verweisen. Längere Inhalte lassen
-sich mit der Maus scrollen.
+- **Leertaste:** Vorbereitung / Planung mit Zielen und Verlauf wechseln.
+- **e:** Vorbereitung bearbeiten; in der Planung Ziele oder Verlauf auswählen.
+- **r:** Materialliste bearbeiten; Links sind im Materialkasten direkt zu öffnen.
+- **m:** `stunde.toml` mit Titel und Aufgabenverweisen bearbeiten.
+- **a:** Aufgabenbibliothek der Sequenz öffnen; die erste vorgemerkte Aufgabe wird ausgewählt.
+- **Escape:** Zurückkehren; beim Rückweg aus Aufgaben bleiben Modus und Leseposition erhalten.
+
+`vorbereitung.md` ist frei gestaltbar. Als Konvention steht der Stundentitel als
+`#`-Überschrift am Anfang. `ziele.md` enthält eine ungeordnete Liste.
+`verlauf.md` verwendet ausschließlich `#` als Phasenüberschrift; die Inhalte
+erscheinen in einer Tabelle. `material.md` enthält eine ungeordnete Liste aus
+Dingen und benannten Datei- oder Webseitenlinks. Materiallinks gehören hierher.
+
+Auch aus der Sequenzbibliothek öffnet **a** alle Aufgaben. Dort bearbeitet **e**
+eine Aufgabe oder Lösung; **n** legt eine neue Aufgabe an. **s** blendet gezielt
+die Lösung ein. Mit Stundenkontext merkt **v** eine Aufgabe vor oder entfernt
+sie aus der Stunde. Die Auswahl allein verändert keine Zuordnung.
+Die Vorschau der Sequenzbibliothek zeigt Ziele, keine Aufgaben-IDs.
 
 Nach dem Editor lädt PULT die Dateien neu. Bei Fehlern bleibt der letzte gültige
-Stand sichtbar; die betroffene Datei wird gemeldet und nicht automatisch zurückgesetzt.
+Stand sichtbar; die betroffene Datei wird gemeldet.
 
-Grafische Formeln und SVG-Abbildungen benötigen **Node.js**, **rsvg-convert**
-(unter Arch: `nodejs` und `librsvg`) und ein Terminal mit passender Bildunterstützung,
-etwa Foot mit Sixel. MathJax ist enthalten; npm und Browser sind zur Benutzung
-nicht nötig. Ohne Grafikunterstützung erscheinen Formelquellen bzw. Bildhinweise.
-Mathematik in verschachtelten Listen und Tabellen ist noch nicht vollständig unterstützt.
-Bilder werden relativ zur Markdown-Datei innerhalb des Sequenzordners aufgelöst.
-Gerenderte Bilder liegen unter `$XDG_CACHE_HOME/pult/materials` bzw.
-`~/.cache/pult/materials`.
+### Schöne Dokumente im Terminal
+
+Der gemeinsame Betrachter setzt Markdown, Tabellen, TeX (`$...$`, `$$...$$`)
+und lokale Bilder mit **Playwright und Chromium**. Ein Browserfenster öffnet sich
+dabei nicht. Einmalig nach der Installation:
+
+```sh
+python -m playwright install chromium --only-shell
+```
+
+Unter Linux gegebenenfalls `python -m playwright install-deps chromium` für die
+Browser-Systembibliotheken ausführen. Das Dokument wird in voller verfügbarer
+Breite gesetzt, in Bildabschnitte geteilt und in lesbarer Größe gescrollt.
+Theme- und Breitenänderungen lösen eine neue Darstellung aus. **Ghostty** nutzt
+das Kitty-Grafikprotokoll, **Foot** Sixel. Ohne passenden Grafikmodus oder Browser
+bleibt PULT mit einer Textansicht nutzbar; TeX wird dann als Quelltext angezeigt.
+
+MathJax ist lokal enthalten. Eigene Node.js-/npm-Projekte und `rsvg-convert` sind
+nicht mehr nötig. Playwright bringt intern eine Node-Laufzeit mit, MathJax läuft
+als JavaScript im unsichtbaren Browser. Dokumente werden offline gerendert;
+Bilder müssen relativ zur Markdown-Datei im jeweiligen Sequenz- bzw.
+Lehrplanordner liegen. Links im Dokumentbild öffnen sich nicht; nutze dafür
+`material.md`. Der Cache liegt unter `$XDG_CACHE_HOME/pult/documents` bzw.
+`~/.cache/pult/documents`.
 
 ## Daten und Darstellung
 

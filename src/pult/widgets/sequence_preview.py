@@ -1,6 +1,7 @@
 from rich.text import Text
 from textual.widgets.option_list import Option
 
+from pult.curriculum.material import material_entries
 from pult.curriculum.sequence import Lesson, Sequence
 from pult.presentation import UNTITLED_LESSON
 from pult.widgets.scrolling import OptionList
@@ -39,11 +40,7 @@ class SequencePreview(OptionList):
         for index, lesson in enumerate(sequence.lessons, start=1):
             if index > 1:
                 self.add_option(None)
-            self.add_option(
-                Option(
-                    self.render_lesson(lesson, index, show_phases=False), id=lesson.id
-                )
-            )
+            self.add_option(Option(self.render_lesson(lesson, index), id=lesson.id))
         if not sequence.lessons:
             self.add_option(
                 Option("Noch keine Unterrichtsstunden eingetragen.", disabled=True)
@@ -68,27 +65,20 @@ class SequencePreview(OptionList):
         return text
 
     @staticmethod
-    def render_lesson(
-        lesson: Lesson, index: int | None = None, *, show_phases: bool = True
-    ) -> Text:
+    def render_lesson(lesson: Lesson, index: int | None = None) -> Text:
         prefix = f"{index}. Stunde · " if index is not None else ""
         text = Text(f"{prefix}{lesson.title or UNTITLED_LESSON}\n", style="")
         text.stylize("bold", 0, len(text))
         for label, values in [
-            ("Aufgaben", [task.id for task in lesson.tasks]),
             ("Ziele", lesson.goals),
-            ("Benötigtes Material", lesson.material),
+            (
+                "Benötigtes Material",
+                [entry.label for entry in material_entries(lesson.material_markdown())],
+            ),
         ]:
             if values:
                 text.append(f"\n{label}\n", style="bold")
                 text.append("\n".join(f"• {value}" for value in values) + "\n")
-            elif label == "Aufgaben":
-                text.append("\nNoch keine Aufgaben eingetragen.\n", style="italic")
-        if show_phases and lesson.phases:
-            text.append("\nVerlauf\n", style="bold")
-            for phase in lesson.phases:
-                text.append(f"• {phase.title}: ", style="bold")
-                text.append(phase.text + "\n")
         return text
 
     @classmethod
@@ -97,7 +87,7 @@ class SequencePreview(OptionList):
         return "\n\n".join(
             [cls.metadata(sequence)]
             + [
-                cls.render_lesson(lesson, index, show_phases=False).plain
+                cls.render_lesson(lesson, index).plain
                 for index, lesson in enumerate(sequence.lessons, start=1)
             ]
             + (

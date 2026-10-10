@@ -1,13 +1,15 @@
 # AUR-Paketierung
 
-## Zurückgestellt für PULT 1.1.1
+## Zurückgestellte AUR-Veröffentlichung
 
-Für 1.1.1 ist nur die Veröffentlichung über GitHub vorgesehen. Ein AUR-Paket
+Die aktuelle Entwicklung wird nicht über die historischen AUR-Dateien paketiert. Ein AUR-Paket
 wird derzeit nicht veröffentlicht; die folgenden Paketdateien bleiben auf 1.0.1.
 
 Bei einer späteren AUR-Veröffentlichung müssen neben Version und Archivprüfsumme
 auch die seit 1.1.0 hinzugekommenen Python-Laufzeitabhängigkeiten und optionalen
-Grafikvoraussetzungen berücksichtigt werden. Danach `.SRCINFO` neu erzeugen und
+Grafikvoraussetzungen berücksichtigt werden. Der neue Dokumentbetrachter benötigt
+Playwright und eine separat installierte Chromium-Headless-Shell, kein eigenes
+Node.js-/npm-Projekt und kein librsvg. Danach `.SRCINFO` neu erzeugen und
 Arch-Bau sowie Installation prüfen. Die historischen Prüfergebnisse unten gelten
 nicht für den aktuellen Release-Stand.
 

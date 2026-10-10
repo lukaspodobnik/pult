@@ -138,14 +138,17 @@ PULT liefert nur den erzeugten Schriftzug mit, nicht die Schriftdateien oder
 den Generator. Die Herkunftsangabe beansprucht keine Urheberschaft an der Schrift.
 
 
-## Formelrenderer im Unterrichtsviewer
+## Dokumentrenderer
 
-MathJax 3.2.2 (`mathjax-full`) wird als lokales JavaScript-Bundle mitgeliefert,
-unter Apache-2.0. Quelle: https://github.com/mathjax/MathJax-src/tree/3.2.2.
-Das Bundle verwendet die TeX-Schrift (Computer-Modern-basiert) und die TeX-Pakete
-base, ams, newcommand und configmacros. PULT ergänzt einen lokalen stdin/stdout-
-Wrapper und die SVG-Größenumrechnung. Build-Anleitung: `tools/math-renderer/README.md`.
-Vollständiger Lizenztext und Hinweisdatei: `src/pult/legal/MathJax-Apache-2.0.txt`
-und `src/pult/legal/MathJax-NOTICE.txt`. Esbuild dient ausschließlich dem Build.
-Node.js und librsvg/rsvg-convert werden als externe Programme verwendet und sind
-nicht in den Python-Paketen gebündelt.
+MathJax 3.2.2 wird als lokales Browser-Bundle `tex-svg-full.js` unter
+`src/pult/assets/mathjax/` mitgeliefert, unter Apache-2.0.
+Quelle: https://github.com/mathjax/MathJax/tree/3.2.2 und
+https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js.
+Der Lizenztext liegt neben dem Bundle sowie unter
+`src/pult/legal/MathJax-Apache-2.0.txt`; der Herkunftshinweis unter
+`src/pult/legal/MathJax-NOTICE.txt` bleibt erhalten.
+
+Playwright ist eine externe Python-Abhängigkeit unter Apache-2.0. Seine interne
+Node-Laufzeit gehört zur Playwright-Distribution. Chromium wird gesondert durch
+Playwright installiert und nicht mit dem PULT-Wheel gebündelt.
+Der frühere Node-/librsvg-Wrapper und sein npm-Build wurden entfernt.

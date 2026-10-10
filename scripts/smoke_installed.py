@@ -41,7 +41,7 @@ async def smoke(app: PultApp, root: Path) -> None:
             ):
                 break
         assert isinstance(app.screen, MainScreen)
-        assert app.require_config().root == root / "data"
+        assert app.require_config().root.resolve() == (root / "data").resolve()
         assert len(load_sequence_library(root / "data")) == 116
         await app.push_screen(AboutScreen())
         await pilot.pause()
@@ -63,7 +63,7 @@ async def smoke(app: PultApp, root: Path) -> None:
         assert isinstance(second.screen, MainScreen)
         assert second.screen.query("TimetablePanel")
         assert second.screen._pending_view_id is None
-        assert second.require_config().root == root / "data"
+        assert second.require_config().root.resolve() == (root / "data").resolve()
 
 
 def main() -> None:
@@ -86,7 +86,11 @@ def main() -> None:
             if len(sys.argv) > 1:
                 # Durchlaufe den echten installierten Einstiegspunkt headless.
                 entry = Path(sys.argv[1]).resolve()
-                PultApp.run = lambda self: asyncio.run(smoke(self, root))
+
+                async def run_headless(self):
+                    await smoke(self, root)
+
+                PultApp.run_async = run_headless
                 try:
                     runpy.run_path(str(entry), run_name="__main__")
                 except SystemExit as error:
