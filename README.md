@@ -253,3 +253,28 @@ Gewährleistung bereitgestellt, soweit gesetzlich zulässig.
 [Quellen und Fremdbestandteile](SOURCES.md) dokumentiert Lehrplanvorlagen,
 Kalenderdaten und Bibliotheken. **Einstellungen → Über PULT / Lizenz** zeigt
 Version, Quellen und Lizenztext auch offline.
+
+
+### Dokumentschrift
+
+Unter **Einstellungen → Dokumentschrift** gilt die Auswahl gemeinsam für
+Vorbereitung, Planung, Aufgaben, Lösungen und Lehrpläne:
+
+- **Automatisch** (Standard): Avenir Next, wenn alle benötigten Schriftschnitte
+  verfügbar sind; sonst Source Sans 3.
+- **Avenir Next**: nur auswählbar, wenn im lokalen Renderer verfügbar.
+- **Source Sans 3**: immer verfügbar, lokal mitgeliefert.
+
+Die Wahl wird in der globalen `config.toml` als `document_font` gespeichert
+(`auto`, `avenir-next` oder `source-sans-3`). Bestehende Konfigurationen ohne
+Eintrag verwenden automatisch den Standard. Falls eine gespeicherte Avenir-Wahl
+auf einem anderen Gerät nicht verfügbar ist, greift Source Sans 3.
+Ein Wechsel wirkt ohne Neustart auf die Dokumentansichten.
+
+Fließtext und Überschriften verwenden dieselbe Schriftfamilie, Überschriften
+Halbfett (600), Hervorhebungen Medium (500). Code verwendet die mitgelieferte
+JetBrains Mono und Pygments-Syntaxfarben; MathJax behält seine Formelschrift.
+Alle Schriftdateien und Renderer-Bestandteile funktionieren offline.
+Avenir Next wird ausschließlich aus einer vorhandenen lokalen Installation
+verwendet und nicht mitgeliefert. Quellen und Lizenzen: siehe `SOURCES.md` und
+`src/pult/assets/fonts/`.

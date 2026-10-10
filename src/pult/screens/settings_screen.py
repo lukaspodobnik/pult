@@ -41,6 +41,19 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
                     allow_blank=False,
                     id="settings-editor",
                 )
+                yield Label("Dokumentschrift", classes="field-label")
+                yield Select(
+                    [("Automatisch", "auto"), ("Source Sans 3", "source-sans-3")],
+                    value=(
+                        config.document_font
+                        if config.document_font != "avenir-next"
+                        else "auto"
+                    ),
+                    allow_blank=False,
+                    disabled=True,
+                    id="settings-document-font",
+                )
+                yield Static("Schriftverfügbarkeit wird geprüft …", id="font-status")
                 yield Label("Schuljahr", classes="field-label")
                 yield Select(
                     get_school_year_options(config.root),
@@ -55,6 +68,28 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
                 yield Static(classes="form-action-spacer")
                 yield Button("Abbrechen", id="cancel-settings")
                 yield Button("Speichern", variant="primary", id="save-settings")
+
+    def on_mount(self) -> None:
+        self.call_after_refresh(self.load_font_options)
+
+    async def load_font_options(self) -> None:
+        available = await self.pult_app.document_renderer.avenir_available()
+        if not self.is_mounted:
+            return
+        picker = self.query_one("#settings-document-font", Select)
+        options = [("Automatisch", "auto")]
+        if available:
+            options.append(("Avenir Next", "avenir-next"))
+        options.append(("Source Sans 3", "source-sans-3"))
+        picker.set_options(options)
+        saved = self.app_config.document_font
+        picker.value = saved if available or saved != "avenir-next" else "auto"
+        picker.disabled = False
+        self.query_one("#font-status", Static).update(
+            "Automatisch: Avenir Next"
+            if available
+            else "Automatisch: Source Sans 3 · Avenir Next nicht verfügbar"
+        )
 
     @on(Button.Pressed, "#cancel-settings")
     def action_cancel(self) -> None:
@@ -99,10 +134,19 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
     def save_settings(self) -> None:
         editor = self.query_one("#settings-editor", Select).value
         year = self.query_one("#settings-year", Select).value
-        if editor is Select.NULL or year is Select.NULL:
+        font_picker = self.query_one("#settings-document-font", Select)
+        font = font_picker.value
+        if (
+            font_picker.disabled
+            or editor is Select.NULL
+            or year is Select.NULL
+            or font is Select.NULL
+        ):
             return
         try:
-            updated = update_settings(self.app_config, str(editor), str(year))
+            updated = update_settings(
+                self.app_config, str(editor), str(year), str(font)
+            )
         except (OSError, ValueError) as error:
             self.notify(
                 f"Einstellungen konnten nicht gespeichert werden: {error}",

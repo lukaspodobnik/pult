@@ -5,6 +5,7 @@ from pult.config import AppConfig, save_app_config
 from pult.initialization.school_year import initialize_school_year
 from pult.school.calendar import load_school_calendar
 from pult.school.school_year import get_school_year_options
+from pult.services.document_fonts import validate_document_font
 
 EDITOR_OPTIONS = [
     ("Neovim (btw)", "nvim"),
@@ -24,14 +25,21 @@ def get_editor_options(current: str = "nvim") -> list[tuple[str, str]]:
     return options
 
 
-def update_settings(config: AppConfig, editor: str, year: str) -> AppConfig:
+def update_settings(
+    config: AppConfig, editor: str, year: str, document_font: str | None = None
+) -> AppConfig:
     """Bereite das gewählte Jahr ohne Überschreiben vor; speichere erst danach."""
     if not editor.strip():
         raise ValueError("Bitte wähle einen Editor aus.")
     if year not in {value for _, value in get_school_year_options(config.root)}:
         raise ValueError("Für dieses Schuljahr ist kein gültiger Kalender vorhanden.")
+    font = validate_document_font(
+        config.document_font if document_font is None else document_font
+    )
     initialize_school_year(config.root, year)
-    updated = replace(config, editor=editor, active_school_year=year)
+    updated = replace(
+        config, editor=editor, active_school_year=year, document_font=font
+    )
     save_app_config(updated)
     return updated
 

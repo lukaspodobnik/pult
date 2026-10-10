@@ -152,3 +152,23 @@ Playwright ist eine externe Python-Abhängigkeit unter Apache-2.0. Seine interne
 Node-Laufzeit gehört zur Playwright-Distribution. Chromium wird gesondert durch
 Playwright installiert und nicht mit dem PULT-Wheel gebündelt.
 Der frühere Node-/librsvg-Wrapper und sein npm-Build wurden entfernt.
+
+
+## Dokumentschriften und Syntaxhervorhebung
+
+Source Sans 3 und JetBrains Mono (normal und kursiv als variable
+TrueType-Schriften) werden unter `src/pult/assets/fonts/` mitgeliefert.
+
+- Source Sans 3: https://github.com/adobe-fonts/source-sans/tree/release/VF.
+  Lizenz: SIL Open Font License 1.1; unveränderter Lizenztext mit
+  Urheberrechtsangabe: `src/pult/assets/fonts/SourceSans3-OFL.txt`.
+- JetBrains Mono 2.304:
+  https://github.com/JetBrains/JetBrainsMono/tree/v2.304/fonts/variable.
+  Lizenz: SIL Open Font License 1.1; unveränderter Lizenztext mit
+  Urheberrechtsangabe: `src/pult/assets/fonts/JetBrainsMono-OFL.txt`.
+
+Avenir Next wird ausschließlich aus lokal installierten Systemschriften geladen;
+PULT liefert keine Avenir-Schriftdateien mit.
+
+Die Syntaxhervorhebung verwendet die externe Python-Abhängigkeit Pygments
+(BSD-2-Clause): https://pygments.org/.

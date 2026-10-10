@@ -133,3 +133,28 @@ def test_material_box_stable_when_empty(tmp_path, monkeypatch):
             assert listing.virtual_size.height == listing.option_count
 
     asyncio.run(run())
+
+
+def test_document_font_change_invalidates_open_viewer(tmp_path, monkeypatch):
+    from dataclasses import replace
+
+    config = prepare_root(tmp_path)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
+    example = Path(__file__).parents[1] / "examples/unterricht"
+    sequence = load_sequence(example, 6, "mathematik", "formatbeispiel")
+    save_sequence(tmp_path, sequence)
+
+    async def run():
+        app = PultApp()
+        async with app.run_test(size=(110, 36)) as pilot:
+            await pilot.pause()
+            await app.push_screen(LessonScreen(sequence, sequence.lessons[0].id))
+            await pilot.pause(0.4)
+            viewer = app.screen.query(DocumentViewer).first()
+            before = viewer.signature
+            app.app_config = replace(config, document_font="source-sans-3")
+            viewer.schedule_render()
+            assert viewer.signature != before
+            assert viewer.signature[3] == "source-sans-3"
+
+    asyncio.run(run())

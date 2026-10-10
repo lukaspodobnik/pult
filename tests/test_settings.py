@@ -169,3 +169,65 @@ def test_school_year_offer_ignores_empty_screen_stack():
     assert not app.screen_stack
     app.offer_school_year_change()
     assert not app.screen_stack
+
+
+@pytest.mark.parametrize("available", [True, False])
+def test_document_font_picker_persists_choice(tmp_path, monkeypatch, available):
+    config = prepare_root(tmp_path)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
+    monkeypatch.setattr("pult.app.get_suggested_school_year", lambda *_: None)
+    monkeypatch.setattr(
+        "pult.config.app_config.APP_CONFIG_PATH", tmp_path / "config.toml"
+    )
+
+    async def availability(_):
+        return available
+
+    monkeypatch.setattr(
+        "pult.services.document_rendering.DocumentRenderer.avenir_available",
+        availability,
+    )
+
+    async def run():
+        app = PultApp()
+        async with app.run_test(size=(140, 42)) as pilot:
+            await pilot.pause(0.3)
+            main = app.screen
+            await app.push_screen(SettingsScreen(), main.settings_changed)
+            await pilot.pause()
+            picker = app.screen.query_one("#settings-document-font", Select)
+            assert not picker.disabled
+            choice = "avenir-next" if available else "source-sans-3"
+            picker.value = choice
+            await pilot.click("#save-settings")
+            await pilot.pause(0.3)
+            assert app.require_config().document_font == choice
+            assert load_app_config().document_font == choice
+
+    asyncio.run(run())
+
+
+def test_old_config_defaults_to_automatic_font(tmp_path, monkeypatch):
+    path = tmp_path / "config.toml"
+    path.write_text(
+        'root = "/tmp/pult"\neditor = "nano"\nactive_school_year = "2026-2027"\n'
+    )
+    monkeypatch.setattr("pult.config.app_config.APP_CONFIG_PATH", path)
+    assert load_app_config().document_font == "auto"
+
+
+def test_font_validation_preserves_saved_settings(tmp_path, monkeypatch):
+    config = prepare_root(tmp_path)
+    path = tmp_path / "config.toml"
+    monkeypatch.setattr("pult.config.app_config.APP_CONFIG_PATH", path)
+    updated = update_settings(
+        config, config.editor, config.active_school_year, "source-sans-3"
+    )
+    original = path.read_bytes()
+    with pytest.raises(ValueError):
+        update_settings(updated, config.editor, config.active_school_year, "unknown")
+    assert path.read_bytes() == original
+    assert (
+        update_settings(updated, "nano", config.active_school_year).document_font
+        == "source-sans-3"
+    )
