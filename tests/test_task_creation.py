@@ -83,9 +83,7 @@ def test_create_task_opens_both_files_and_renders_one_entry(tmp_path, monkeypatc
             await pilot.press("s")
             await pilot.pause()
             assert screen.query_one(DocumentViewer).source == "Ein Halb ist größer."
-            assert (
-                screen.query_one("#task-content").border_title == "Brüche vergleichen"
-            )
+            assert screen.query_one("#task-content").border_title == sequence.title
             assert not any(
                 task.id == screen.task_id
                 for lesson in screen.sequence.lessons

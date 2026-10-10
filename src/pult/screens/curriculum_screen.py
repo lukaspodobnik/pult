@@ -58,7 +58,7 @@ class CurriculumScreen(PultScreen[None]):
 
     def compose(self):
         with Horizontal(id="curriculum-workspace"):
-            with Vertical(id="curriculum-navigation"):
+            with Vertical(id="curriculum-navigation", classes="teaching-navigation"):
                 yield CurriculumTree(id="curriculum-tree")
             with Vertical(id="curriculum-content"):
                 with DocumentPane(id="curriculum-reader"):
@@ -79,9 +79,7 @@ class CurriculumScreen(PultScreen[None]):
                 )
                 continue
             if documents:
-                self.add_subject(
-                    tree.root.add(subject.name, expand=True), documents, subject.id
-                )
+                self.add_subject(tree.root.add(subject.name), documents, subject.id)
         tree.root.expand()
         if tree.root.children:
             tree.move_cursor(tree.root.children[0])

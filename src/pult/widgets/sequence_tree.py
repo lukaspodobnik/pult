@@ -16,7 +16,7 @@ class SequenceTree(Tree[Sequence | None]):
         self.root.expand()
 
     def populate(self, sequences: list[Sequence], subjects: list[Subject]) -> None:
-        """Befülle den Baum nach Fach, Jahrgangsstufe, Kapitel und Sequenz."""
+        """Befülle den Baum nach Fach, Jahrgangsstufe und nummeriertem Lehrplanpunkt."""
         self.root.remove_children()
 
         subjects_by_id = {subject.id: subject for subject in subjects}
@@ -62,7 +62,6 @@ class SequenceTree(Tree[Sequence | None]):
         grade_node: TreeNode[Sequence | None],
         sequences: list[Sequence],
     ) -> None:
-        chapter_nodes: dict[str, TreeNode[Sequence | None]] = {}
         sorted_sequences = sorted(
             sequences,
             key=lambda sequence: (
@@ -72,17 +71,9 @@ class SequenceTree(Tree[Sequence | None]):
         )
 
         for sequence in sorted_sequences:
-            if sequence.chapter_id is None:
-                grade_node.add_leaf(sequence.title, data=sequence)
-                continue
+            grade_node.add_leaf(SequenceTree.sequence_label(sequence), data=sequence)
 
-            chapter_node = chapter_nodes.get(sequence.chapter_id)
-            if chapter_node is None:
-                assert sequence.chapter_title is not None
-                chapter_node = grade_node.add(
-                    sequence.chapter_title,
-                    expand=True,
-                )
-                chapter_nodes[sequence.chapter_id] = chapter_node
-
-            chapter_node.add_leaf(sequence.title, data=sequence)
+    @staticmethod
+    def sequence_label(sequence: Sequence) -> str:
+        number = sequence.curriculum_section_id.split(" ", maxsplit=1)[1]
+        return f"{number} {sequence.title}"

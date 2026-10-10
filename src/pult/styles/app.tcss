@@ -297,3 +297,11 @@ EditPeriodsScreen #periods-dialog .form-fields {
     height: 1fr;
     max-height: 100%;
 }
+
+/* Unterricht und beide Bibliotheken teilen dieselbe Navigationsbreite. */
+.teaching-navigation {
+    width: 40;
+    max-width: 35%;
+    height: 1fr;
+    margin-right: 1;
+}

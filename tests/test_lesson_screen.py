@@ -40,10 +40,12 @@ def test_lesson_modes_material_tasks_and_editing(tmp_path, monkeypatch):
             assert not screen.query("SequenceContext")
             assert not screen.query("#lesson-goals, #lesson-schedule")
             assert screen.query_one(MaterialsPane).display
-            assert screen.query_one("#lesson-navigation").region.width == 34
+            assert screen.query_one("#lesson-navigation").region.width == 40
             pane = screen.query_one("#lesson-preparation", DocumentPane)
             assert pane.border_title == sequence.title
             assert pane.region.width > 100
+            assert pane.region.y == screen.query_one("#lesson-list-frame").region.y
+            assert not screen.query("#mode-preparation, #mode-planning")
             assert all(
                 "Benötigtes Material" not in w.source
                 for w in screen.query(DocumentViewer)
@@ -112,6 +114,7 @@ def test_material_box_stable_when_empty(tmp_path, monkeypatch):
     from pult.curriculum.sequence import load_sequence_library
 
     sequence = load_sequence_library(tmp_path)[0]
+    sequence.lessons[0].title = "Ein sehr langer Stundentitel " * 12 + "\nWeitere Zeile"
 
     async def run():
         app = PultApp()
@@ -124,5 +127,9 @@ def test_material_box_stable_when_empty(tmp_path, monkeypatch):
                 str(listing.get_option_at_index(i).prompt).count("\n") == 0
                 for i in range(listing.option_count)
             )
+            assert listing.virtual_size.height == listing.option_count
+            await pilot.resize_terminal(70, 30)
+            await pilot.pause()
+            assert listing.virtual_size.height == listing.option_count
 
     asyncio.run(run())

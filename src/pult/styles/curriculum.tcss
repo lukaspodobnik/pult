@@ -1,5 +1,4 @@
 CurriculumScreen #curriculum-workspace { height: 1fr; padding: 1 1; }
-CurriculumScreen #curriculum-navigation { width: 30; max-width:35%; margin-right:1; }
 CurriculumScreen #curriculum-tree { height: 1fr; border: round $primary; border-title-color: $text-accent; }
 CurriculumScreen #curriculum-content { width: 1fr; }
 CurriculumScreen #curriculum-tree { background-tint: transparent; outline: none; border-title-style: none; }

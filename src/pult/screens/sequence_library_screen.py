@@ -33,7 +33,7 @@ class SequenceLibraryScreen(PultScreen[None]):
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="sequence-library"):
-            with Vertical(id="sequence-navigation"):
+            with Vertical(id="sequence-navigation", classes="teaching-navigation"):
                 yield SequenceTree(id="sequence-tree")
 
             with Container(id="sequence-content"):
@@ -119,7 +119,7 @@ class SequenceLibraryScreen(PultScreen[None]):
                 node.data.id,
             ) == (updated.grade_level, updated.subject_id, updated.id):
                 node.data = updated
-                node.set_label(updated.title)
+                node.set_label(SequenceTree.sequence_label(updated))
             for child in node.children:
                 update_node(child)
 
@@ -202,7 +202,7 @@ class SequenceLibraryScreen(PultScreen[None]):
             return
 
         node.data = updated_sequence
-        node.set_label(updated_sequence.title)
+        node.set_label(SequenceTree.sequence_label(updated_sequence))
 
         preview = self.query_one("#sequence-preview", SequencePreview)
         preview.show_sequence(updated_sequence)

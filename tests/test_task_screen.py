@@ -41,6 +41,13 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             assert str(
                 screen.query_one(OptionList).get_option(screen.task_id).prompt
             ).startswith("✓ ")
+            assert not screen.query("SequenceContext")
+            assert screen.query_one("#task-content").border_title == sequence.title
+            assert (
+                screen.query_one("#task-list").region.y
+                == screen.query_one("#task-content").region.y
+            )
+            assert screen.query_one("#task-navigation").region.width == 40
             task = screen.selected_task
             assert screen.query_one(DocumentViewer).source == task.text
             await pilot.press("s")

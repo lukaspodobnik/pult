@@ -1,10 +1,13 @@
+SequenceLibraryScreen { padding: 1 0 0 0; }
+
 SequenceLibraryScreen #sequence-library {
     height: 1fr;
+    padding: 0 1;
+    margin-bottom: 1;
 }
 
 SequenceLibraryScreen #sequence-navigation {
-    width: 36;
-    padding: 1;
+    padding: 0;
     background: $background;
 }
 
@@ -16,7 +19,7 @@ SequenceLibraryScreen #sequence-tree {
 
 SequenceLibraryScreen #sequence-content {
     width: 1fr;
-    padding: 1 2;
+    padding: 0;
 }
 
 SequenceLibraryScreen #sequence-preview {

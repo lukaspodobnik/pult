@@ -1,15 +1,12 @@
 LessonScreen { padding: 1 0 0 0; }
 LessonScreen #lesson-workspace { height: 1fr; padding: 0 1; margin-bottom: 1; }
-LessonScreen #lesson-navigation { width: 34; max-width: 35%; height: 1fr; margin-right: 1; }
 LessonScreen #lesson-list-frame { height: 1fr; padding: 0 1; border: round $primary; background: $surface; }
-LessonScreen #lesson-list { height: 1fr; border: none; background: transparent; padding: 0; }
+LessonScreen #lesson-list { height: 1fr; border: none; background: transparent; padding: 0; text-wrap: nowrap; text-overflow: clip; }
 LessonScreen #lesson-list:focus { border: none; outline: none; background-tint: transparent; }
-LessonScreen #lesson-list > .option-list--option { padding: 0; }
+LessonScreen #lesson-list > .option-list--option { padding: 0; text-wrap: nowrap; text-overflow: clip; }
 LessonScreen #lesson-list > .option-list--option-highlighted,
 LessonScreen #lesson-list > .option-list--option-hover-highlighted { background: $primary 16%; color: $text; text-style: bold; }
 LessonScreen #lesson-material-frame {height:12; margin-top:1;}
 LessonScreen #lesson-materials {height:100%;}
 LessonScreen #lesson-primary { width: 1fr; height: 1fr; }
-LessonScreen #lesson-mode {height:1; margin-bottom:1;}
-LessonScreen #lesson-mode Button {height:1; min-height:1; border:none; margin-right:2; width:auto; padding:0 1;}
 .lesson-empty { height: auto; color: $text-muted; }

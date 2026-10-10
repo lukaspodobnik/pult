@@ -81,6 +81,25 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             assert app.focused is tree
             assert tree.cursor_node is tree.root.children[0]
             assert all(not node.is_expanded for node in tree.root.children)
+            assert screen.query_one("#sequence-navigation").region.width == 40
+            assert tree.region.width == 40
+            mathematics = next(
+                node for node in tree.root.children if node.label.plain == "Mathematik"
+            )
+            grade = next(
+                node
+                for node in mathematics.children
+                if node.label.plain == "7. Jahrgangsstufe"
+            )
+            assert (
+                grade.children[0].label.plain
+                == "1.1 Aufstellen und Interpretieren von Termen"
+            )
+            assert grade.children[1].label.plain == "1.2 Umformen von Termen"
+            assert all(
+                node.data is not None and not node.children for node in grade.children
+            )
+            assert all(not node.label.plain.startswith("M7") for node in grade.children)
 
             def leaves(node):
                 if node.data is not None:
@@ -137,7 +156,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
                 assert updated in screen.sequence_library
                 assert library_loader.call_count == 2
                 assert node.data == updated
-                assert node.label.plain == updated.title
+                assert node.label.plain == SequenceTree.sequence_label(updated)
                 notifications.assert_not_called()
                 preview = screen.query_one(SequencePreview)
                 assert preview.border_title == updated.title

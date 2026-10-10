@@ -34,6 +34,7 @@ def test_curriculum_flat_grade_tree_and_shared_viewer(tmp_path, monkeypatch):
             await app.push_screen(screen)
             await pilot.pause()
             tree = screen.query_one(CurriculumTree)
+            assert all(not node.is_expanded for node in tree.root.children)
             subject = next(
                 n for n in tree.root.children if str(n.label) == "Mathematik"
             )
@@ -41,7 +42,9 @@ def test_curriculum_flat_grade_tree_and_shared_viewer(tmp_path, monkeypatch):
                 f"{i}. Jahrgangsstufe" for i in range(5, 14)
             ]
             assert all(not n.children and not n.allow_expand for n in subject.children)
-            tree.move_cursor(subject.children[0])
+            tree.move_cursor(subject)
+            await pilot.pause()
+            await pilot.press("space", "down")
             await pilot.pause()
             assert "Mathematik 5" in screen.query_one(DocumentViewer).source
             tree.move_cursor(subject.children[-1])

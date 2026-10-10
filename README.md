@@ -142,12 +142,14 @@ durchgeführter und konfliktfrei geplanter, erlaubter LNWs zur Jahresmindestzahl
 
 ## Sequenzen und Unterrichtsmaterialien
 
-Unter **Unterricht → Sequenzen** Fach, Jahrgang und Abschnitt wählen. Die Vorschau
+Unter **Unterricht → Sequenzen** Fach, Jahrgang und nummerierten Lehrplanpunkt wählen.
+Kapitelüberschriften werden nicht als zusätzliche Ebene angezeigt. Die Vorschau
 folgt der Auswahl. Mit Tab in die Vorschau wechseln, mit ↑/↓ eine Stunde auswählen
 und mit Enter den Unterrichtsviewer öffnen. `e` auf einer Sequenz öffnet ihre
 TOML-Datei im Editor; nach der Rückkehr wird sie neu geladen und validiert.
 
-Unter **Unterricht → Lehrplan** wählst du direkt Fach und Jahrgang. Der vollständige
+Unter **Unterricht → Lehrplan** wählst du direkt Fach und Jahrgang. Die Fächer
+sind beim Öffnen eingeklappt. Der vollständige
 Lehrplan erscheint im gemeinsamen Dokumentbetrachter. Persönliche Dateien unter
 `curriculum/` haben Vorrang vor den Defaults; weitere Gliederungsebenen entfallen.
 

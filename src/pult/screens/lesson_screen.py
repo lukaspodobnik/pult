@@ -9,7 +9,7 @@ from typing import ClassVar
 from rich.text import Text
 from textual import on
 from textual.binding import Binding
-from textual.widgets import Button, Static
+from textual.widgets import Static
 from textual.widgets.option_list import Option
 
 from pult.curriculum.material import Lesson, initialize_lesson_files, material_path
@@ -57,7 +57,8 @@ class LessonScreen(PultScreen[Sequence]):
     def options(self):
         for item in self.sequence.lessons:
             yield Option(
-                Text(item.title, no_wrap=True, overflow="ellipsis"), id=item.id
+                Text(" ".join(item.title.split()), no_wrap=True, overflow="crop"),
+                id=item.id,
             )
 
     def document(self, planning: bool = False):
@@ -86,15 +87,12 @@ class LessonScreen(PultScreen[Sequence]):
 
     def compose(self):
         with Horizontal(id="lesson-workspace"):
-            with Vertical(id="lesson-navigation"):
+            with Vertical(id="lesson-navigation", classes="teaching-navigation"):
                 with Vertical(id="lesson-list-frame"):
                     yield OptionList(*self.options(), id="lesson-list")
                 with Vertical(id="lesson-material-frame"):
                     yield self.materials()
             with Vertical(id="lesson-primary"):
-                with Horizontal(id="lesson-mode"):
-                    yield Button("Vorbereitung", id="mode-preparation", compact=True)
-                    yield Button("Planung", id="mode-planning", compact=True)
                 with DocumentPane(id="lesson-preparation"):
                     yield self.document()
                 with DocumentPane(id="lesson-planning"):
@@ -116,21 +114,10 @@ class LessonScreen(PultScreen[Sequence]):
             pane = self.query_one("#" + selector)
             pane.border_title = self.sequence.title
             pane.border_subtitle = label
-        self.query_one("#mode-preparation", Button).variant = (
-            "default" if self.show_planning else "primary"
-        )
-        self.query_one("#mode-planning", Button).variant = (
-            "primary" if self.show_planning else "default"
-        )
         listing = self.query_one("#lesson-list", OptionList)
         if self.lesson:
             with self.prevent(OptionList.OptionHighlighted):
                 listing.highlighted = listing.get_option_index(self.lesson.id)
-
-    @on(Button.Pressed, "#mode-preparation, #mode-planning")
-    def select_mode(self, event: Button.Pressed):
-        self.show_planning = event.button.id == "mode-planning"
-        self.update_view()
 
     @on(OptionList.OptionHighlighted, "#lesson-list")
     async def select_lesson(self, event: OptionList.OptionHighlighted):

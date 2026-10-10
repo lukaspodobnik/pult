@@ -24,7 +24,6 @@ from pult.services.task_creation import create_task_files
 from pult.widgets.document_viewer import DocumentPane, DocumentViewer
 from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
-from pult.widgets.sequence_context import SequenceContext
 
 
 class TaskScreen(PultScreen[Sequence]):
@@ -38,7 +37,6 @@ class TaskScreen(PultScreen[Sequence]):
     DEFAULT_CSS = """
     TaskScreen { padding: 1 0 0 0; }
     TaskScreen #task-workspace { height: 1fr; padding: 0 1; margin-bottom: 1; }
-    TaskScreen #task-navigation { width: 34; max-width:35%; margin-right: 1; }
     TaskScreen #task-list { height: 1fr; border: round $primary; }
     TaskScreen #task-list:focus {
         border: round $primary;
@@ -170,17 +168,13 @@ class TaskScreen(PultScreen[Sequence]):
 
     def compose(self):
         with Horizontal(id="task-workspace"):
-            with Vertical(id="task-navigation"):
-                yield SequenceContext(
-                    self.sequence, self.app_config.root, id="task-sequence"
-                )
+            with Vertical(id="task-navigation", classes="teaching-navigation"):
                 yield OptionList(*self.options(), id="task-list")
             with DocumentPane(id="task-content"):
                 yield from self.material()
         yield PultFooter()
 
     def on_mount(self):
-        self.query_one("#task-sequence").border_title = "SEQUENZ"
         self.query_one("#task-list").border_title = "AUFGABEN"
         lesson = next(
             (item for item in self.sequence.lessons if item.id == self.lesson_id), None
@@ -188,9 +182,7 @@ class TaskScreen(PultScreen[Sequence]):
         if lesson:
             self.query_one("#task-list").border_subtitle = f"Für: {lesson.title}"
         self.query_one("#task-content").border_subtitle = "Aufgabe"
-        self.query_one("#task-content").border_title = (
-            self.task_title(self.selected_task) if self.selected_task else "AUFGABEN"
-        )
+        self.query_one("#task-content").border_title = self.sequence.title
         picker = self.query_one(OptionList)
         with self.prevent(OptionList.OptionHighlighted):
             if self.task_id is not None:
@@ -213,9 +205,7 @@ class TaskScreen(PultScreen[Sequence]):
         pane = self.query_one("#task-content", DocumentPane)
         await pane.remove_children()
         await pane.mount(*self.material())
-        pane.border_title = (
-            self.task_title(self.selected_task) if self.selected_task else "AUFGABEN"
-        )
+        pane.border_title = self.sequence.title
         pane.border_subtitle = "Lösung" if self.show_solution else "Aufgabe"
         pane.scroll_home(animate=False)
 
@@ -301,7 +291,6 @@ class TaskScreen(PultScreen[Sequence]):
             )
             return
         self.sequence, self.tasks = sequence, tasks
-        self.query_one(SequenceContext).update_sequence(sequence)
         if not any(task.id == self.task_id for task in tasks):
             self.task_id = tasks[0].id if tasks else None
         picker = self.query_one(OptionList)
