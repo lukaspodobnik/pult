@@ -169,7 +169,10 @@ def document_html(
     h1 {{font-size:2.05em;margin:0 0 .75em}} h2 {{font-size:1.35em;margin:1.8em 0 .65em}}
     h3 {{font-size:1.08em;margin:1.4em 0 .5em}} p {{margin:.75em 0 1em}}
     strong,b {{font-weight:500}}
-    li {{margin:.35em 0}} ul,ol {{padding-left:1.4em}}
+    li {{margin:.2em 0}} ul,ol {{padding-left:1.4em}}
+    li > p {{margin:.4em 0}}
+    li > p:first-child {{margin-top:0}} li > p:last-child {{margin-bottom:0}}
+    li > ul,li > ol {{margin:.2em 0}}
     a {{color:{accent};text-decoration:none;border-bottom:1px dotted {accent}}}
     blockquote {{margin:1.2em 0;padding:.15em 1em;border-left:3px solid {accent};
       background:color-mix(in srgb,{accent} 7%,{bg})}}
