@@ -7,7 +7,7 @@ from test_ui_integration import prepare_root
 from textual.widgets import OptionList
 
 from pult.app import PultApp
-from pult.curriculum.material import Task
+from pult.curriculum.material import Task, TaskMetadata, save_task
 from pult.curriculum.sequence import load_sequence, save_sequence
 from pult.screens.lesson_screen import LessonScreen
 from pult.screens.select_lesson_file_screen import SelectLessonFileScreen
@@ -23,12 +23,24 @@ def test_lesson_modes_material_tasks_and_editing(tmp_path, monkeypatch):
     example = Path(__file__).parents[1] / "examples/unterricht"
     sequence = load_sequence(example, 6, "mathematik", "formatbeispiel")
     sequence.lessons[0].preparation = "# Test\n\n" + "Langer Text.\n\n" * 100
-    sequence.lessons[0].tasks = [Task("zweitens", "# Zugeordnete Aufgabe", "Lösung")]
+    sequence.lessons[0].tasks = [
+        Task(
+            "zweitens",
+            "# Zugeordnete Aufgabe",
+            "Lösung",
+            metadata=TaskMetadata("Zugeordnete Aufgabe", ["K5"], "I"),
+        )
+    ]
     save_sequence(tmp_path, sequence)
     directory = tmp_path / "sequences/6/mathematik/formatbeispiel"
-    extra = directory / "aufgaben/erstens"
-    extra.mkdir()
-    (extra / "aufgabe.md").write_text("# Andere Aufgabe")
+    save_task(
+        directory,
+        Task(
+            "erstens",
+            "# Andere Aufgabe",
+            metadata=TaskMetadata("Andere Aufgabe", ["K1"], "II"),
+        ),
+    )
 
     async def run():
         app = PultApp()

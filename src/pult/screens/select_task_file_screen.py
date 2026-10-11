@@ -26,22 +26,27 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
 
     def on_mount(self):
         if self.choose_file:
-            picker = self.query_one(OptionList)
-            picker.clear_options()
-            picker.add_options(
-                [
-                    Option("Aufgabentext", id="aufgabe.md"),
-                    Option("Lösung", id="loesung.md"),
-                ]
-            )
-            picker.border_title = self.task_id or ""
-            picker.highlighted = 0
+            self.show_files()
+
+    def show_files(self):
+        picker = self.query_one(OptionList)
+        picker.clear_options()
+        picker.add_options(
+            [
+                Option("Aufgabentext", id="aufgabe.md"),
+                Option("Lösung", id="loesung.md"),
+                Option("Titel und Einordnung", id="aufgabe.toml"),
+            ]
+        )
+        task = next(task for task in self.tasks if task.id == self.task_id)
+        picker.border_title = Text(task.metadata.title)
+        picker.highlighted = 0
 
     def compose(self):
         with FormDialog("Aufgabe bearbeiten", id="task-file-dialog"):
             yield OptionList(
                 *(
-                    Option(Text(f"{i} · {task.id}"), id=task.id)
+                    Option(Text(f"{i} · {task.metadata.title}"), id=task.id)
                     for i, task in enumerate(self.tasks, 1)
                 ),
                 id="task-file-picker",
@@ -54,16 +59,7 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
             self.dismiss((self.task_id, str(event.option.id)))
             return
         self.task_id = str(event.option.id)
-        picker = self.query_one(OptionList)
-        picker.clear_options()
-        picker.add_options(
-            [
-                Option("Aufgabentext", id="aufgabe.md"),
-                Option("Lösung", id="loesung.md"),
-            ]
-        )
-        picker.border_title = self.task_id
-        picker.highlighted = 0
+        self.show_files()
 
     def action_back(self):
         if self.task_id is None or self.choose_file:
@@ -74,7 +70,7 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
         picker = self.query_one(OptionList)
         picker.clear_options()
         picker.add_options(
-            Option(Text(f"{i} · {task.id}"), id=task.id)
+            Option(Text(f"{i} · {task.metadata.title}"), id=task.id)
             for i, task in enumerate(self.tasks, 1)
         )
         picker.border_title = ""

@@ -55,9 +55,27 @@ zugeordneten Anwendung, Webseiten im Standardbrowser.
 
 ## Aufgaben und Markdown
 
-Aufgaben liegen unter `aufgaben/<Aufgaben-ID>/aufgabe.md`; `loesung.md` ist optional.
-Beides ist freies Markdown. Eine `#`-Überschrift liefert den Anzeigenamen.
-Aufgaben können mehreren Stunden derselben Sequenz zugeordnet sein.
+Unter `aufgaben/<Aufgaben-ID>/` liegen `aufgabe.toml`, `aufgabe.md` und optional
+`loesung.md`. Beide Markdown-Dateien sind frei gestaltbar. Der Anzeigename stammt
+aus `aufgabe.toml`; eine Überschrift im Aufgabentext ist optional. Aufgaben können
+mehreren Stunden derselben Sequenz zugeordnet sein.
+
+```toml
+titel = "Nullstellen bestimmen"
+kompetenzen = ["K5"]
+anforderungsbereich = "I"
+```
+
+Alle drei Felder sind Pflicht: ein nicht leerer Titel, eine Liste aus ein bis drei
+verschiedenen, nicht leeren Kompetenzbezeichnungen und genau ein Anforderungsbereich
+als `"I"`, `"II"` oder `"III"`. Weitere Felder sind nicht erlaubt. Kompetenzbezeichnungen
+richten sich nach dem Fach; vorzugsweise eine oder zwei Hauptkompetenzen wählen.
+
+Die Gesamtaufgabe erhält den höchsten Bereich ihrer Teilaufgaben: III vor II vor I.
+Gemischte Teilaufgaben bleiben zusammen. Diese grobe Einordnung wird von der
+Lehrkraft oder der vorbereitenden KI angegeben; PULT prüft die Form, nicht den
+fachlichen Inhalt. Für LNWs ist eine gesonderte Einordnung der Teilaufgaben nötig.
+Kompetenzen und Anforderungsbereich gehören nicht in den Schülertext.
 
 Markdown unterstützt Tabellen, Codeblöcke mit Sprachangabe, TeX als `$…$` bzw.
 `$$…$$` und lokale Bilder (SVG, PNG, JPEG, WebP). Bildpfade sind relativ zur
@@ -75,6 +93,12 @@ Dateien an. Vorhandene Inhalte bleiben erhalten. Die Muster enthalten nur:
 - `ziele.md`: zweimal `- Die Schüler können`.
 - `verlauf.md`: `# Einstieg`.
 - `material.md`: leer.
+
+Beim Anlegen einer Aufgabe werden Titel, Hauptkompetenzen und Anforderungsbereich
+abgefragt. PULT erstellt die drei Aufgabendateien und öffnet sie im Editor.
+Unter „Bearbeiten → Titel und Einordnung“ lässt sich `aufgabe.toml` später ändern.
+Bestehende Aufgaben benötigen ebenfalls diese Datei; PULT ergänzt keine
+fachlichen Angaben automatisch.
 
 Nach dem Bearbeiten validiert PULT die Dateien. Bei Fehlern bleibt die letzte
 gültige Ansicht sichtbar; die Datei wird nicht automatisch korrigiert.

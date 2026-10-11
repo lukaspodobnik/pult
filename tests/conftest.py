@@ -2,7 +2,7 @@ from datetime import date, time
 
 import pytest
 
-from pult.curriculum.material import Task
+from pult.curriculum.material import Task, TaskMetadata
 from pult.curriculum.sequence import Lesson, Sequence
 from pult.progress.class_progress import ActiveSequence, ClassProgress
 from pult.progress.queries import PlannedLesson
@@ -60,7 +60,16 @@ def sequences() -> list[Sequence]:
             recommended_lesson_count=2,
             lessons=[
                 Lesson(
-                    "lesson-1", "Zahlen ordnen", [Task("aufgabe-1", "Aufgabe 1")], ""
+                    "lesson-1",
+                    "Zahlen ordnen",
+                    [
+                        Task(
+                            "aufgabe-1",
+                            "Aufgabe 1",
+                            metadata=TaskMetadata("Zahlen ordnen", ["K5"], "I"),
+                        )
+                    ],
+                    "",
                 ),
                 Lesson("lesson-2", "Zahlen runden", [], "Hinweis"),
             ],

@@ -79,13 +79,54 @@ class Phase:
 
 
 @dataclass
+class TaskMetadata:
+    title: str
+    competencies: list[str]
+    requirement_level: str
+
+    def __post_init__(self) -> None:
+        self.title = " ".join(require_text({"titel": self.title}, "titel").split())
+        self.competencies = [
+            value.strip()
+            for value in text_list({"kompetenzen": self.competencies}, "kompetenzen")
+        ]
+        if not 1 <= len(self.competencies) <= 3:
+            raise ValueError(
+                "'kompetenzen' muss eine bis drei Hauptkompetenzen enthalten."
+            )
+        if len(set(self.competencies)) != len(self.competencies):
+            raise ValueError("'kompetenzen' darf keine doppelten Einträge enthalten.")
+        if self.requirement_level not in ("I", "II", "III"):
+            raise ValueError("'anforderungsbereich' muss 'I', 'II' oder 'III' sein.")
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "TaskMetadata":
+        reject_unknown(data, {"titel", "kompetenzen", "anforderungsbereich"})
+        return cls(data["titel"], data["kompetenzen"], data["anforderungsbereich"])
+
+    def to_dict(self) -> dict[str, Any]:
+        self.__post_init__()
+        return {
+            "titel": self.title,
+            "kompetenzen": self.competencies,
+            "anforderungsbereich": self.requirement_level,
+        }
+
+
+@dataclass
 class Task:
     id: str
     text: str
     solution: str | None = None
+    metadata: TaskMetadata = field(kw_only=True)
 
     def __post_init__(self) -> None:
         self.id = validate_id(self.id, "Die Aufgaben-ID")
+        if not isinstance(self.metadata, TaskMetadata):
+            raise ValueError(
+                "Die Aufgabe benötigt Titel, Kompetenzen und Anforderungsbereich."
+            )
+        self.metadata.__post_init__()
         if not isinstance(self.text, str) or (
             self.solution is not None and not isinstance(self.solution, str)
         ):
@@ -276,6 +317,20 @@ def optional_markdown(path: Path) -> str | None:
         return None
 
 
+def load_task(directory: Path, task_id: str) -> Task:
+    if validate_id(task_id, "Die Aufgaben-ID") != task_id:
+        raise ValueError(f"Ungültige Aufgaben-ID: {task_id}")
+    path = material_path(directory, "aufgaben", task_id, "aufgabe.toml")
+    try:
+        metadata = TaskMetadata.from_dict(load_toml(path))
+        path = material_path(directory, "aufgaben", task_id, "aufgabe.md")
+        text = path.read_text(encoding="utf-8")
+        path = material_path(directory, "aufgaben", task_id, "loesung.md")
+        return Task(task_id, text, optional_markdown(path), metadata=metadata)
+    except (OSError, ValueError, TypeError, KeyError) as error:
+        raise ValueError(f"Aufgabe '{path}': {error}") from error
+
+
 def load_lesson(directory: Path, lesson_id: str, tasks: dict[str, Task]) -> Lesson:
     path = material_path(directory, "stunden", lesson_id, "stunde.toml")
     try:
@@ -284,17 +339,7 @@ def load_lesson(directory: Path, lesson_id: str, tasks: dict[str, Task]) -> Less
         resolved = []
         for task_id in reference_ids(data, "aufgaben"):
             if task_id not in tasks:
-                task_path = material_path(directory, "aufgaben", task_id, "aufgabe.md")
-                try:
-                    tasks[task_id] = Task(
-                        task_id,
-                        task_path.read_text(encoding="utf-8"),
-                        optional_markdown(
-                            material_path(directory, "aufgaben", task_id, "loesung.md")
-                        ),
-                    )
-                except (OSError, ValueError) as error:
-                    raise ValueError(f"Aufgabe '{task_path}': {error}") from error
+                tasks[task_id] = load_task(directory, task_id)
             resolved.append(tasks[task_id])
         folder = material_path(directory, "stunden", lesson_id)
         sources = {
@@ -327,6 +372,17 @@ def save_markdown(path: Path, source: str | None) -> None:
         save_text(path, source)
 
 
+def save_task(directory: Path, task: Task) -> None:
+    task.__post_init__()
+    metadata = material_path(directory, "aufgaben", task.id, "aufgabe.toml")
+    text = material_path(directory, "aufgaben", task.id, "aufgabe.md")
+    solution = material_path(directory, "aufgaben", task.id, "loesung.md")
+    metadata.parent.mkdir(parents=True, exist_ok=True)
+    save_toml(metadata, task.metadata.to_dict())
+    save_markdown(text, task.text)
+    save_markdown(solution, task.solution)
+
+
 def save_lesson(directory: Path, lesson: Lesson) -> None:
     lesson.__post_init__()
     path = material_path(directory, "stunden", lesson.id, "stunde.toml")
@@ -343,13 +399,7 @@ def save_lesson(directory: Path, lesson: Lesson) -> None:
         lesson.preparation,
     )
     for task in lesson.tasks:
-        task.__post_init__()
-        save_markdown(
-            material_path(directory, "aufgaben", task.id, "aufgabe.md"), task.text
-        )
-        save_markdown(
-            material_path(directory, "aufgaben", task.id, "loesung.md"), task.solution
-        )
+        save_task(directory, task)
 
 
 DEFAULT_TITLE = "Noch nicht vorbereitet"

@@ -12,9 +12,10 @@ from textual.widgets.option_list import Option
 
 from pult.curriculum.material import (
     Task,
+    TaskMetadata,
+    load_task,
     material_path,
     save_lesson_metadata,
-    validate_id,
 )
 from pult.curriculum.sequence import Sequence, load_sequence
 from pult.screens.base_screen import PultScreen
@@ -70,31 +71,12 @@ class TaskScreen(PultScreen[Sequence]):
         for entry in sorted(folder.iterdir(), key=lambda item: item.name):
             if not entry.is_dir() or entry.name.startswith("."):
                 continue
-            if validate_id(entry.name, "Aufgaben-ID") != entry.name:
-                raise ValueError(f"Ungültige Aufgaben-ID: {entry.name}")
-            text = material_path(self.directory, "aufgaben", entry.name, "aufgabe.md")
-            solution = material_path(
-                self.directory, "aufgaben", entry.name, "loesung.md"
-            )
-            tasks.append(
-                Task(
-                    entry.name,
-                    text.read_text(encoding="utf-8"),
-                    solution.read_text(encoding="utf-8") if solution.exists() else None,
-                )
-            )
+            tasks.append(load_task(self.directory, entry.name))
         return tasks
 
     @property
     def selected_task(self):
         return next((task for task in self.tasks if task.id == self.task_id), None)
-
-    @staticmethod
-    def task_title(task: Task) -> str:
-        for line in task.text.splitlines():
-            if line.startswith("# ") and line[2:].strip():
-                return line[2:].strip()
-        return task.id
 
     def options(self):
         assigned = {
@@ -108,7 +90,7 @@ class TaskScreen(PultScreen[Sequence]):
             label = Text(no_wrap=True, overflow="ellipsis")
             if task.id in bookmarked:
                 label.append("✓ ", style="bold")
-            label.append(self.task_title(task))
+            label.append(task.metadata.title)
             if self.lesson_id is None and task.id not in assigned:
                 label.append("\nNoch nicht zugeordnet", style="dim")
             yield Option(label, id=task.id)
@@ -130,6 +112,14 @@ class TaskScreen(PultScreen[Sequence]):
                 material_path(self.directory, "aufgaben", task.id, filename),
                 self.directory,
             )
+
+    def material_subtitle(self) -> Text:
+        label = "Lösung" if self.show_solution else "Aufgabe"
+        task = self.selected_task
+        if task is not None:
+            metadata = task.metadata
+            label += f" · AFB {metadata.requirement_level} · {', '.join(metadata.competencies)}"
+        return Text(label)
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         if action == "assign_task":
@@ -181,7 +171,7 @@ class TaskScreen(PultScreen[Sequence]):
         )
         if lesson:
             self.query_one("#task-list").border_subtitle = f"Für: {lesson.title}"
-        self.query_one("#task-content").border_subtitle = "Aufgabe"
+        self.query_one("#task-content").border_subtitle = self.material_subtitle()
         self.query_one("#task-content").border_title = self.sequence.title
         picker = self.query_one(OptionList)
         with self.prevent(OptionList.OptionHighlighted):
@@ -206,7 +196,7 @@ class TaskScreen(PultScreen[Sequence]):
         await pane.remove_children()
         await pane.mount(*self.material())
         pane.border_title = self.sequence.title
-        pane.border_subtitle = "Lösung" if self.show_solution else "Aufgabe"
+        pane.border_subtitle = self.material_subtitle()
         pane.scroll_home(animate=False)
 
     def action_close(self):
@@ -222,18 +212,17 @@ class TaskScreen(PultScreen[Sequence]):
     def action_create_task(self):
         self.app.push_screen(CreateTaskScreen(), self.create_task)
 
-    async def create_task(self, title: str | None):
-        if title is None:
+    async def create_task(self, metadata: TaskMetadata | None):
+        if metadata is None:
             return
         try:
             command = shlex.split(self.app_config.editor)
             if not command or shutil.which(command[0]) is None:
                 raise ValueError("Der konfigurierte Editor wurde nicht gefunden.")
-            task_id, paths = create_task_files(self.directory, title)
+            task_id, paths = create_task_files(self.directory, metadata)
         except (OSError, ValueError) as error:
             self.notify(str(error), severity="error")
             return
-        self.task_id = task_id
         try:
             with self.app.suspend():
                 result = subprocess.run(
@@ -249,7 +238,7 @@ class TaskScreen(PultScreen[Sequence]):
                 f"Die Aufgabe wurde angelegt, aber der Editor konnte nicht geöffnet werden: {error}",
                 severity="error",
             )
-        await self.reload_tasks()
+        await self.reload_tasks(select_task_id=task_id)
 
     async def edit_file(self, selection: tuple[str, str] | None):
         if selection is None:
@@ -274,9 +263,8 @@ class TaskScreen(PultScreen[Sequence]):
             return
         await self.reload_tasks()
 
-    async def reload_tasks(self):
+    async def reload_tasks(self, *, select_task_id: str | None = None):
         try:
-            self.pult_app.require_sequence_library().invalidate()
             sequence = load_sequence(
                 self.app_config.root,
                 self.sequence.grade_level,
@@ -290,7 +278,10 @@ class TaskScreen(PultScreen[Sequence]):
                 severity="error",
             )
             return
+        self.pult_app.require_sequence_library().invalidate()
         self.sequence, self.tasks = sequence, tasks
+        if select_task_id is not None:
+            self.task_id = select_task_id
         if not any(task.id == self.task_id for task in tasks):
             self.task_id = tasks[0].id if tasks else None
         picker = self.query_one(OptionList)

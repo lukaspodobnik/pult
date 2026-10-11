@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from pult.curriculum.material import Lesson, Phase, Task
+from pult.curriculum.material import Lesson, Phase, Task, TaskMetadata
 from pult.curriculum.sequence import (
     Sequence,
     SequenceFileError,
@@ -20,6 +20,7 @@ def sample():
         "vergleichen",
         "Vergleiche $\\frac{1}{2}$ und $\\frac{2}{4}$.\n",
         "```python\nprint(1 / 2 == 2 / 4)\n```\n",
+        metadata=TaskMetadata("Brüche vergleichen", ["K1", "K4"], "II"),
     )
     return Sequence(
         "brueche",
@@ -107,7 +108,12 @@ def test_invalid_lesson_metadata_has_file_context(tmp_path, field, value):
 
 
 @pytest.mark.parametrize(
-    "relative", ["stunden/erweitern/stunde.toml", "aufgaben/vergleichen/aufgabe.md"]
+    "relative",
+    [
+        "stunden/erweitern/stunde.toml",
+        "aufgaben/vergleichen/aufgabe.md",
+        "aufgaben/vergleichen/aufgabe.toml",
+    ],
 )
 def test_missing_required_reference_is_not_silently_skipped(tmp_path, relative):
     _, path = store(tmp_path)
@@ -118,7 +124,13 @@ def test_missing_required_reference_is_not_silently_skipped(tmp_path, relative):
 
 def test_reject_conflicting_shared_tasks_before_writing(tmp_path):
     sequence = sample()
-    sequence.lessons[1].tasks = [Task("vergleichen", "Anderer Inhalt")]
+    sequence.lessons[1].tasks = [
+        Task(
+            "vergleichen",
+            "Anderer Inhalt",
+            metadata=TaskMetadata("Vergleichen", ["K1"], "I"),
+        )
+    ]
     with pytest.raises(ValueError, match="Widersprüchliche"):
         save_sequence(tmp_path, sequence)
     assert not (tmp_path / "sequences").exists()

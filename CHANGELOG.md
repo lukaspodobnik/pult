@@ -1,5 +1,13 @@
 # Änderungen
 
+## Noch nicht veröffentlicht
+
+- Aufgaben besitzen eine `aufgabe.toml` mit Titel, ein bis drei Hauptkompetenzen
+  und einem Anforderungsbereich (höchster Bereich der Teilaufgaben). Anlage,
+  Bearbeitung und Aufgabenbibliothek berücksichtigen die Metadaten.
+- Bestehende Aufgaben benötigen die neue Metadatendatei ebenfalls; keine
+  automatische fachliche Einordnung.
+
 ## 1.3.1
 
 - Integrierte Einrichtung der Dokumentdarstellung beim Start und in den

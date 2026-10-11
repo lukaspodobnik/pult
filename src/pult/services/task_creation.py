@@ -4,13 +4,14 @@ import re
 import unicodedata
 from pathlib import Path
 
-from pult.curriculum.material import material_path
+from pult.curriculum.material import Task, TaskMetadata, material_path, save_task
 
 
-def create_task_files(directory: Path, title: str) -> tuple[str, list[Path]]:
-    title = " ".join(title.split())
-    if not title:
-        raise ValueError("Bitte einen Aufgabentitel eingeben.")
+def create_task_files(
+    directory: Path, metadata: TaskMetadata
+) -> tuple[str, list[Path]]:
+    metadata.__post_init__()
+    title = metadata.title
     normalized = (
         title.lower()
         .replace("ä", "ae")
@@ -35,10 +36,9 @@ def create_task_files(directory: Path, title: str) -> tuple[str, list[Path]]:
             break
         except FileExistsError:
             number += 1
-    paths = [target / "aufgabe.md", target / "loesung.md"]
+    paths = [target / name for name in ("aufgabe.md", "loesung.md", "aufgabe.toml")]
     try:
-        paths[0].write_text(f"# {title}\n\n", encoding="utf-8")
-        paths[1].write_text("", encoding="utf-8")
+        save_task(directory, Task(task_id, f"# {title}\n\n", "", metadata=metadata))
     except OSError:
         for path in paths:
             path.unlink(missing_ok=True)

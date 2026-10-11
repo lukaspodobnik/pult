@@ -176,25 +176,25 @@ def test_initialization_copies_reference_documents(tmp_path, monkeypatch):
     monkeypatch.setattr("pult.initialization.pult.save_app_config", lambda config: None)
     initialize_pult(str(tmp_path), "nvim", "2026-2027")
     defaults = files("pult.defaults")
-    names = [
-        "jahrgang-05.md",
-        "jahrgang-06.md",
-        "jahrgang-07.md",
-        "jahrgang-08.md",
+    references = [
         "kompetenzen.md",
         "anforderungsbereiche.md",
         "leitideen.md",
         "operatoren.md",
     ]
-    paths = [f"curriculum/mathematik/{name}" for name in names]
+    paths = [f"curriculum/mathematik/jahrgang-{grade:02}.md" for grade in range(5, 14)]
+    paths.extend(f"vorbereitung/mathematik/referenzen/{name}" for name in references)
     paths.append("vorbereitung/materialvertrag.md")
     for relative in paths:
         assert (tmp_path / relative).read_bytes() == defaults.joinpath(
             relative
         ).read_bytes()
     assert sorted(p.name for p in (tmp_path / "vorbereitung").iterdir()) == [
-        "materialvertrag.md"
+        "materialvertrag.md",
+        "mathematik",
     ]
+    for name in references:
+        assert not (tmp_path / "curriculum/mathematik" / name).exists()
 
 
 def test_reinitialization_preserves_reference_and_personal_files(tmp_path, monkeypatch):
@@ -203,11 +203,12 @@ def test_reinitialization_preserves_reference_and_personal_files(tmp_path, monke
     paths = [
         "curriculum/mathematik/jahrgang-05.md",
         "vorbereitung/materialvertrag.md",
-        "vorbereitung/vertrag.md",
+        "vorbereitung/mathematik/allgemein.md",
+        "vorbereitung/mathematik/referenzen/kompetenzen.md",
     ]
     for relative in paths:
         (tmp_path / relative).write_text("Persönlich")
-    missing = tmp_path / "curriculum/mathematik/operatoren.md"
+    missing = tmp_path / "vorbereitung/mathematik/referenzen/operatoren.md"
     missing.unlink()
     initialize_pult(str(tmp_path), "nvim", "2026-2027")
     for relative in paths:
@@ -215,6 +216,6 @@ def test_reinitialization_preserves_reference_and_personal_files(tmp_path, monke
     assert (
         missing.read_bytes()
         == files("pult.defaults")
-        .joinpath("curriculum/mathematik/operatoren.md")
+        .joinpath("vorbereitung/mathematik/referenzen/operatoren.md")
         .read_bytes()
     )

@@ -112,9 +112,11 @@ Dokument. Die Vorbereitung ist freies Markdown für Hefteinträge, Übungen oder
 | `m` | Titel, Aufgabenverweise und optionale Hinweise bearbeiten |
 | `a` | Aufgabenbibliothek der Sequenz öffnen |
 
-Aufgaben werden einzeln mit optionaler Lösung gespeichert. In der
-**Aufgabenbibliothek** legt `n` eine Aufgabe an, `e` bearbeitet sie und `s` wechselt
-zur Lösung. Aus einer Stunde heraus merkt `v` die ausgewählte Aufgabe für diese
+Aufgaben werden mit Titel, Hauptkompetenzen, Anforderungsbereich und optionaler
+Lösung gespeichert. Der höchste Bereich der Teilaufgaben bestimmt die grobe
+Einordnung der Gesamtaufgabe. In der **Aufgabenbibliothek** legt `n` eine Aufgabe
+an, `e` bearbeitet Text, Lösung oder `aufgabe.toml`, und `s` wechselt zur Lösung.
+Aus einer Stunde heraus merkt `v` die ausgewählte Aufgabe für diese
 Stunde vor oder entfernt die Zuordnung. Die Auswahl allein ändert nichts.
 Auch aus der Sequenzbibliothek öffnet `a` die Aufgaben.
 
@@ -179,7 +181,9 @@ Neue Schuljahre übernehmen die bisherigen LNW-Vorgaben, aber keine Klassen oder
 
 Die Konfiguration liegt in `~/.config/pult/config.toml`. Der gewählte Datenordner enthält:
 
-- `sequences/`, `curriculum/`, `vorbereitung/`: Materialien, Lehrpläne und Anleitungen.
+- `sequences/`: Unterrichtsmaterialien.
+- `curriculum/`: Lehrpläne nach Fach und Jahrgang.
+- `vorbereitung/`: Anleitungen und Fachreferenzen unter `<Fach>/referenzen/`.
 - `subjects.toml`, `periods.toml`: Fächer und gemeinsame Stundenzeiten.
 - `calendars/`: Schuljahreskalender; mitgeliefert werden 2025/26 bis 2029/30.
 - `school-years/<Jahr>/`: Klassen, Stundenplan, Protokolle, Ausfälle und LNWs.
