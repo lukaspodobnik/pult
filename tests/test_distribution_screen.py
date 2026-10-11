@@ -13,7 +13,11 @@ from pult.school.timetable import TimetableEntry, get_timetable_path, save_timet
 from pult.screens.distribution_screen import DistributionScreen
 from pult.screens.main_screen import MainScreen
 from pult.services.themes import standard_theme
-from pult.views.distribution_view import DistributionTableRow, DistributionView
+from pult.views.distribution_view import (
+    DistributionTable,
+    DistributionTableRow,
+    DistributionView,
+)
 from pult.widgets.navigation import TeachingPicker, ViewPicker
 from pult.widgets.scrolling import VerticalScroll
 
@@ -79,7 +83,7 @@ def test_full_width_sections_fixed_header_and_theme():
     styles = Path(__file__).parents[1] / "src/pult/styles/distribution.tcss"
     rows = (
         DistributionRow(
-            DistributionKind.SEQUENCE, date(2026, 9, 7), "Terme · Lehrplan: 12 Std."
+            DistributionKind.SEQUENCE, date(2026, 9, 7), "Terme (ca. 12 Std.)"
         ),
         DistributionRow(
             DistributionKind.LESSON,
@@ -110,11 +114,19 @@ def test_full_width_sections_fixed_header_and_theme():
                 view = app.query_one(DistributionView)
                 body = view.query_one(VerticalScroll)
                 section = body.query_one(".sequence", DistributionTableRow)
+                assert section.region.width == body.scrollable_content_region.width
+                assert not section.children
+                tables = list(view.query(DistributionTable))
+                assert all(table.render().box is not None for table in tables)
                 assert (
-                    section.query_one(".distribution-section").region.width
-                    == section.content_size.width
+                    len(
+                        {
+                            tuple(column.width for column in table.render().columns)
+                            for table in tables
+                        }
+                    )
+                    == 1
                 )
-                assert len(section.children) == 1
                 header = view.query_one(".heading")
                 header_y = header.region.y
                 body.scroll_to(y=20, animate=False)
@@ -122,9 +134,24 @@ def test_full_width_sections_fixed_header_and_theme():
                 assert header.region.y == header_y
                 assert body.scroll_y > 0
                 assert (
-                    body.query_one(".holiday").styles.color
-                    != body.query_one(".assessment").styles.color
+                    body.query_one(".holiday").styles.color.rich_color
+                    != tables[-1]
+                    .get_component_rich_style("distribution-table--assessment")
+                    .color
                 )
+            old_widths = view.column_widths
+            await pilot.resize_terminal(75, 30)
+            await pilot.pause()
+            assert view.column_widths != old_widths
+            assert (
+                len(
+                    {
+                        tuple(column.width for column in table.render().columns)
+                        for table in view.query(DistributionTable)
+                    }
+                )
+                == 1
+            )
             app.save_screenshot(
                 filename="pult-stoffverteilungsplan.svg", path="/private/tmp"
             )

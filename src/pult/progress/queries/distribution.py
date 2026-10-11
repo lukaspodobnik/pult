@@ -275,7 +275,7 @@ def build_distribution_plan(
                 sequence = by_id[row.sequence_id]
                 title = sequence.title
                 if sequence.recommended_lesson_count is not None:
-                    title += f" · Lehrplan: {sequence.recommended_lesson_count} Std."
+                    title += f" (ca. {sequence.recommended_lesson_count} Std.)"
                 rows.append(
                     DistributionRow(
                         DistributionKind.SEQUENCE,

@@ -63,8 +63,8 @@ def test_projection_follows_curriculum_and_keeps_all_remaining_dates(data):
     assert [row.number for row in lessons(data)] == [1, 2, 1]
     assert all(row.projected for row in lessons(data))
     assert [row.title for row in rows if row.kind is Kind.SEQUENCE] == [
-        "Natürliche Zahlen · Lehrplan: 2 Std.",
-        "Rechenarten · Lehrplan: 1 Std.",
+        "Natürliche Zahlen (ca. 2 Std.)",
+        "Rechenarten (ca. 1 Std.)",
     ]
     assert len([row for row in rows if row.period is not None]) == 6
     assert [row.kind for row in rows if row.date == date(2026, 9, 14)] == [
