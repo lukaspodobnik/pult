@@ -1,16 +1,17 @@
 from typing import ClassVar
 
-from textual import on
+from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.timer import Timer
 from textual.widgets import Label
 
 from pult.curriculum.sequence import Sequence
-from pult.progress.queries.distribution import build_distribution_plan
+from pult.progress.queries.distribution import DistributionRow, build_distribution_plan
 from pult.school.school_class import SchoolClass, load_school_classes
 from pult.school.subject import Subject, load_subjects
 from pult.screens.base_screen import PultScreen
+from pult.services.distribution_export import export_distribution_plan
 from pult.services.progress import PlanningData, load_planning_data
 from pult.views.distribution_view import DistributionView
 from pult.widgets.footer import PultFooter
@@ -19,7 +20,10 @@ from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
 class DistributionScreen(PultScreen[None]):
-    BINDINGS: ClassVar = [("escape", "close", "Zurück")]
+    BINDINGS: ClassVar = [
+        ("escape", "close", "Zurück"),
+        ("x", "export_pdf", "PDF exportieren"),
+    ]
 
     def __init__(
         self,
@@ -36,6 +40,8 @@ class DistributionScreen(PultScreen[None]):
         self.sequences: list[Sequence] = []
         self._view_timer: Timer | None = None
         self._pending_target: tuple[str, str] | None = None
+        self._displayed_target: tuple[str, str] | None = None
+        self._exporting = False
         # Nur für diesen geöffneten Screen: erneutes Öffnen liest aktuelle Dateien.
         self._planning_cache: dict[str, PlanningData] = {}
         self._views: dict[tuple[str, str], DistributionView] = {}
@@ -130,6 +136,7 @@ class DistributionScreen(PultScreen[None]):
             await self.show_distribution(school_class)
 
     async def show_distribution(self, school_class: SchoolClass) -> None:
+        self._displayed_target = None
         config = self.app_config
         try:
             progress = self._planning_cache.get(school_class.id)
@@ -155,6 +162,8 @@ class DistributionScreen(PultScreen[None]):
             view.display = False
         if key in self._views:
             self._views[key].display = True
+            self._displayed_target = key
+            self.refresh_bindings()
             return
         try:
             rows = build_distribution_plan(
@@ -171,11 +180,60 @@ class DistributionScreen(PultScreen[None]):
         view = DistributionView(rows)
         self._views[key] = view
         await content.mount(view)
+        self._displayed_target = key
+        self.refresh_bindings()
 
     async def _show_empty_state(self, message: str) -> None:
+        self._displayed_target = None
+        self._views.clear()
+        self.refresh_bindings()
         content = self.query_one("#distribution-content", Container)
         await content.remove_children()
         await content.mount(Label(message, classes="distribution-empty"))
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "export_pdf":
+            return (
+                self._displayed_target is not None
+                and not self._exporting
+                and self._pending_target is None
+            )
+        return True
+
+    def action_export_pdf(self) -> None:
+        if not self.check_action("export_pdf", ()):
+            return
+        assert self._displayed_target is not None
+        school_class_id, subject_id = self._displayed_target
+        subject = next(s for s in self.subjects if s.id == subject_id)
+        view = self._views[self._displayed_target]
+        self._exporting = True
+        self.refresh_bindings()
+        self._export_pdf(school_class_id, subject.id, subject.name, view.rows)
+
+    @work(group="pdf-export", exit_on_error=False)
+    async def _export_pdf(
+        self,
+        school_class_id: str,
+        subject_id: str,
+        subject_name: str,
+        rows: tuple[DistributionRow, ...],
+    ) -> None:
+        try:
+            path = await export_distribution_plan(
+                self.pult_app.document_renderer,
+                self.app_config,
+                school_class_id=school_class_id,
+                subject_id=subject_id,
+                subject_name=subject_name,
+                rows=rows,
+            )
+            self.notify(f"PDF gespeichert: {path}", timeout=10)
+        except Exception as error:
+            self.notify(f"Der PDF-Export ist fehlgeschlagen: {error}", severity="error")
+        finally:
+            self._exporting = False
+            self.refresh_bindings()
 
     def action_close(self) -> None:
         if self._view_timer is not None:

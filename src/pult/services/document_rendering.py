@@ -309,6 +309,41 @@ class DocumentRenderer:
             finally:
                 await page.close()
 
+    async def render_pdf(self, document: str) -> bytes:
+        """HTML offline als durchsuchbare A4-PDF mit Seitenzahlen drucken."""
+        async with self.lock:
+            await self.ensure_browser()
+            assert self.browser is not None
+            page = await self.browser.new_page()
+            try:
+                await page.route("**/*", lambda route: route.abort())
+                await page.emulate_media(media="print")
+                await page.set_content(document, wait_until="load")
+                await page.evaluate(
+                    "async () => {await document.fonts.ready; "
+                    "await Promise.all(Array.from(document.images, i => i.decode()));}"
+                )
+                return await page.pdf(
+                    format="A4",
+                    prefer_css_page_size=True,
+                    print_background=True,
+                    margin={
+                        "top": "14mm",
+                        "bottom": "18mm",
+                        "left": "12mm",
+                        "right": "12mm",
+                    },
+                    display_header_footer=True,
+                    header_template="<span></span>",
+                    footer_template=(
+                        '<div style="font:9px sans-serif;color:#59616a;width:100%;text-align:center">'
+                        '<span class="pageNumber"></span> / '
+                        '<span class="totalPages"></span></div>'
+                    ),
+                )
+            finally:
+                await page.close()
+
     async def close(self):
         if self.browser:
             await self.browser.close()

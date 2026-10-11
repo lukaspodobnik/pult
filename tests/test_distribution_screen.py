@@ -36,6 +36,17 @@ def test_menu_initial_selection_class_switch_scroll_and_escape(tmp_path, monkeyp
     )
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
+    exports = []
+
+    async def fake_export(renderer, export_config, **kwargs):
+        exports.append(kwargs)
+        await asyncio.sleep(0.1)
+        return tmp_path / "exports/test.pdf"
+
+    monkeypatch.setattr(
+        "pult.screens.distribution_screen.export_distribution_plan", fake_export
+    )
+
     async def run():
         app = PultApp()
         async with app.run_test(size=(140, 42)) as pilot:
@@ -60,8 +71,15 @@ def test_menu_initial_selection_class_switch_scroll_and_escape(tmp_path, monkeyp
             assert picker.highlighted == 1
             assert "5B" in str(screen.query_one("#distribution-content").border_title)
             assert screen.query_one("#distribution-navigation").region.width == 40
+            displayed_rows = screen._views[("5B", "mathematik")].rows
+            await pilot.press("x")
+            screen.action_export_pdf()  # Ein laufender Export wird nicht doppelt gestartet.
             picker.highlighted = 0
             await pilot.pause(0.3)
+            assert len(exports) == 1
+            assert exports[0]["school_class_id"] == "5B"
+            assert exports[0]["rows"] is displayed_rows
+            assert not screen._exporting
             assert "5A" in str(screen.query_one("#distribution-content").border_title)
             view = next(view for view in screen.query(DistributionView) if view.display)
             assert all(

@@ -298,4 +298,17 @@ Die Prognose folgt dem letzten verbuchten Unterrichtstermin,
 nicht dem heutigen Datum. Frühere Lücken heißen „Nicht protokolliert“; nach
 Ausschöpfen der Sequenzstunden bleiben Termine als „Noch nicht verplant“ sichtbar.
 Der Plan wird beim erneuten Öffnen aus aktuellen Daten berechnet und nicht als
-eigene Datei gespeichert. Ein PDF-Export folgt separat.
+eigene Datei gespeichert.
+
+Mit **x – PDF exportieren** wird der angezeigte Plan als durchsuchbare A4-PDF
+im Hochformat gespeichert. Die Ablage erfolgt automatisch im PULT-Datenordner:
+`exports/<Schuljahr>/<Klasse>/stoffverteilungsplan-<Fach-ID>.pdf`, beispielsweise
+`exports/2026-2027/7D/stoffverteilungsplan-mathematik.pdf`.
+Ein erneuter Export ersetzt dieselbe Datei erst nach erfolgreicher Erzeugung.
+Die PDF enthält den Stand des Exports, wiederholte Spaltenüberschriften und
+Seitenzahlen. Der Browser arbeitet unsichtbar; es öffnet sich keine zweite App.
+Der Export verwendet dieselbe Schriftartwahl wie die Dokumentansicht und
+benötigt denselben installierten Playwright-Browser.
+
+Weitere Exportarten können dieselbe Ablage nutzen; klassenübergreifende
+Übersichten sind unter `exports/<Schuljahr>/uebersichten/` vorgesehen.
