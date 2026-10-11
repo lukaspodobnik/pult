@@ -8,324 +8,203 @@
 ╩    ╚══╝ ╚══╝ ╩
 ```
 
-Dein Unterrichtsplaner im Terminal: Stundenplan, wiederverwendbare Sequenzen,
-Leistungsnachweise und Unterrichtsprotokoll mit Fortschritt pro Klasse und Fach.
-Lokal, ohne Konto und im Alltag offline nutzbar. Ein persönliches Lernprojekt
-auf Basis von Textual, mit Vorlagen für Mathematik und Informatik am bayerischen Gymnasium.
+Unterricht planen und im Blick behalten: Stundenplan, wiederverwendbare Sequenzen,
+Materialien, Leistungsnachweise und Fortschritt pro Klasse und Fach.
+PULT läuft lokal im Terminal, ohne Konto und im Alltag offline. Ein persönliches
+Projekt mit Python und Textual, mit Vorlagen für Mathematik und Informatik am
+bayerischen Gymnasium.
 
-## Starten
+## Installieren
 
-Voraussetzungen: [uv](https://docs.astral.sh/uv/) und ein Terminal mit
-Unicode-Unterstützung. PULT 1.2.0 nach Veröffentlichung direkt aus dem GitHub-Release installieren:
+Benötigt werden [uv](https://docs.astral.sh/uv/), ein Terminal mit Unicode und ein
+Editor, etwa Neovim oder VS Code. Für die grafische Dokumentansicht eignen sich
+**Ghostty** und **Foot**. Andere Terminals können die Textansicht verwenden.
+
+PULT 1.3.0 nach Veröffentlichung aus dem GitHub-Release installieren:
 
 ```sh
-uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.2.0/pult-1.2.0-py3-none-any.whl
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.3.0/pult-1.3.0-py3-none-any.whl
+```
+
+Für Dokumentdarstellung und PDF-Export einmalig den passenden Browser installieren
+(macOS/Linux; derselbe Befehl gilt nach einem Playwright-Update):
+
+```sh
+"$(uv tool dir)/pult/bin/python" -m playwright install chromium --only-shell
 pult
 ```
 
-Eine fehlende Python-Version lädt uv bei Bedarf herunter. Falls uv auf einen
-fehlenden Suchpfad hinweist: `uv tool update-shell` ausführen und ein neues
-Terminal öffnen. Zum Bearbeiten von Unterrichtsmaterialien wird zusätzlich ein
-Editor benötigt, beispielsweise Neovim.
+Unter Linux können zusätzlich Browser-Systembibliotheken nötig sein:
+`"$(uv tool dir)/pult/bin/python" -m playwright install-deps chromium`.
+Es öffnet sich kein Browserfenster. Ohne installierten Browser bleibt die
+Textansicht nutzbar; PDF-Exporte benötigen Chromium.
 
-Alternativ aus einem heruntergeladenen oder geklonten Projektordner installieren:
+Alternativ im geklonten Projektordner `uv tool install .` ausführen; ein Update
+übernimmt `uv tool install --force .`. Bei fehlendem Suchpfad hilft
+`uv tool update-shell` und ein neues Terminal. `uv tool uninstall pult` entfernt
+die Installation, lässt Konfiguration und Unterrichtsdaten bestehen.
 
-```sh
-uv tool install .
-```
+## Einrichten und navigieren
 
-Nach einer Aktualisierung des Projektordners übernimmt `uv tool install --force .`
-den neuen Stand. `uv tool uninstall pult` entfernt die Installation, nicht deine
-Konfiguration oder Unterrichtsdaten. Ein AUR-Paket ist noch nicht veröffentlicht.
-
-Beim ersten Start Datenverzeichnis, Editor und Schuljahr auswählen. Unter
-**Verwaltung → Klassen** Klassen anlegen (z. B. `9B`); die führende Zahl bestimmt
-die Jahrgangsstufe und die angebotenen Fächer. Anschließend den Stundenplan füllen.
-
-## Bedienung und Ansichten
+Beim ersten Start Datenordner, Editor und Schuljahr auswählen. Danach unter
+**Verwaltung → Klassen** Klassen und Fächer anlegen und den **Stundenplan** füllen.
+Die führende Zahl einer Klasse, etwa `7D`, bestimmt ihre Jahrgangsstufe.
 
 | Taste | Aktion |
 | --- | --- |
-| F1 | Hilfe zur aktuellen Ansicht und zum aktuellen Fokus |
+| F1 | Hilfe für die aktuelle Ansicht und den Fokus |
 | Tab / Shift+Tab | Fokus wechseln |
-| Pfeiltasten oder h/j/k/l | Navigieren; in Textfeldern bleiben Buchstaben normale Eingaben |
-| Enter | Werkzeug öffnen, Auswahl bestätigen oder Stundenplanzelle bearbeiten |
-| `o` | Mit Fokus auf **Ansichten** die nächste Stunde öffnen; bei einem LNW dessen Verwaltung |
-| F2 | Zur Übersicht und zur Ansichtenauswahl zurückkehren |
-| Escape | Zurück bzw. abbrechen |
+| Pfeile oder h/j/k/l | Navigieren; Textfelder behalten normale Buchstabeneingaben |
+| Enter | Auswahl öffnen oder bestätigen |
+| `o` | Mit Fokus auf **Ansichten** die nächste Stunde bzw. LNW-Verwaltung öffnen |
+| F2 | Zur Übersicht und Ansichtenauswahl |
+| Escape | Zurück oder abbrechen |
 | `q` | Beenden, außer in Texteingaben |
 
-Die Ansichten wechseln beim Hervorheben. Die Übersicht zeigt **HEUTE**, den
-Stundenplan, die **NÄCHSTE STUNDE** und eine **KLASSENÜBERSICHT** mit Fach,
-Stundendifferenz, nächstem Leistungsnachweis sowie den Zählern **Groß** und **Klein**.
-Stundenplan und Tagesplan bieten Platz für sechs Stunden; weitere Einträge sind scrollbar.
-Die Klassenansichten zeigen je Fach Sequenzfortschritt, Stundenbilanz und nächste
-Stunde. Bei vorhandenen LNWs wird die Bilanz zur **ÜBERSICHT** mit LNW-Informationen.
+Die **Übersicht** zeigt den heutigen Tag, Stundenplan, nächste Stunde und alle
+Klassen. Der zeitlich nächste LNW ist hervorgehoben. In den **Klassenansichten**
+stehen Fortschritt und Stundenbilanz je Fach. Unter **Verwaltung** werden Klassen,
+Stundenplan, Ausfälle und Leistungsnachweise gepflegt; Änderungen werden beim
+Speichern im jeweiligen Dialog gesichert.
 
-### Unterricht protokollieren
+## Unterricht protokollieren
 
-Die folgenden Befehle gelten mit Fokus auf **Ansichten**: in der Übersicht für den
-global nächsten offenen Termin, in einer Klassenansicht für das gewählte Fach.
-Vergangene, nicht protokollierte Termine bleiben offen und können nachgetragen werden.
+Diese Tasten gelten mit Fokus auf **Ansichten**: in der Übersicht für den nächsten
+offenen Termin, in einer Klassenansicht für das ausgewählte Fach. Vergangene
+ungebuchte Termine bleiben offen und lassen sich nachtragen.
 
 | Taste | Aktion |
 | --- | --- |
-| `n` | Stunde abschließen und Sequenzfortschritt weiterführen; einen LNW als durchgeführt protokollieren, ohne die Sequenz weiterzuschalten |
-| `s` | Sequenzstunde überspringen, ohne einen Termin zu verbrauchen |
-| `c` | Termin verbuchen; Sequenzstunde bleibt offen |
-| `a` | Spontanen Unterrichtsausfall mit Begründung verbuchen |
-| `t` | Spontanunterricht am regulären Termin eintragen |
-| `z` | Zusätzlichen Termin eintragen |
-| `p` | Letzten Eintrag des Fachs nach Bestätigung zurücknehmen; in der Übersicht den dort zuletzt abgeschlossenen LNW zurücknehmen |
-| `w` | Aktive Sequenz wechseln, nur in der Klassenansicht |
-| `u` | Unterrichtsprotokoll des Fachs öffnen, nur in der Klassenansicht |
+| `n` | Stunde abschließen und zur nächsten Planstunde weitergehen |
+| `c` | Termin verbuchen; die bearbeitete Planstunde bleibt offen |
+| `s` | Planstunde überspringen, ohne einen Termin zu verbrauchen |
+| `a` | Spontanen Unterrichtsausfall mit Begründung eintragen |
+| `t` | Spontanunterricht mit Beschreibung eintragen; Planstunde bleibt offen |
+| `z` | Zusätzlichen Termin außerhalb des Stundenplans eintragen |
+| `p` | Letzte Buchung des Fachs nach Bestätigung zurücknehmen |
+| `w` / `u` | In einer Klassenansicht Sequenz wechseln / Unterrichtsprotokoll öffnen |
 
-Die Unterrichtsaktionen `s`, `c` und `a` gelten nicht für LNWs. Einen ausgefallenen
-LNW stattdessen in der Verwaltung verschieben oder löschen. Nach Abschluss einer
-Sequenz wird die nächste offene Sequenz zur Auswahl angeboten.
+`t` passt beispielsweise für eine ungeplante Übungsstunde vor einer Schulaufgabe.
+Die Beschreibung wird im Stoffverteilungsplan zum Stundenthema. Bei `z` kann
+optional die nächste Planstunde abgeschlossen werden. Nach Abschluss einer Sequenz
+bietet PULT die nächste offene Sequenz an.
 
-**Spontanunterricht (`t`)** verbucht den nächsten regulären Unterrichtstermin für
-andere Inhalte der aktiven Sequenz. Eine Beschreibung ist verpflichtend, etwa
-„Übung vor der Schulaufgabe“. Die nächste vorbereitete Planstunde bleibt offen;
-der Stoffverteilungsplan zeigt die Beschreibung als Stundenthema mit eigener
-fortlaufender Nummer. `c` hingegen bedeutet, dass die geplante Stunde bearbeitet,
-aber noch nicht abgeschlossen wurde.
+Bei einem LNW protokolliert `n` dessen Durchführung, ohne eine Planstunde zu
+verbrauchen. `p` in der Übersicht nimmt den dort zuletzt abgeschlossenen LNW
+zurück. Ausgefallene LNWs werden in der Verwaltung verschoben oder gelöscht.
 
-**Zusätzlicher Termin (`z`)** erfasst Unterricht außerhalb des regulären
-Stundenplans. Optional kann dabei die nächste geplante Stunde abgeschlossen
-werden. `p` nimmt die letzte Buchung des ausgewählten Fachs zurück.
+## Sequenzen, Materialien und Lehrpläne
 
-## Verwaltung und Einstellungen
+Unter **Unterricht → Sequenzen** Fach, Jahrgang und Lehrplanabschnitt wählen.
+Die Vorschau zeigt Stunden und Ziele. Mit Tab in die Vorschau wechseln und eine
+Stunde mit Enter öffnen. `e` auf einer Sequenz bearbeitet ihre `sequenz.toml`.
+**Unterricht → Lehrplan** zeigt den vollständigen Fachlehrplan eines Jahrgangs.
 
-- **Klassen:** Klassen und Fächer verwalten; zugehörige Unterrichtstermine einsehen.
-- **Stundenplan:** Enter bearbeitet eine Zelle. Speichern und Löschen sichern sofort;
-  Abbrechen verwirft die Eingabe. Die Verwaltung zeigt alle konfigurierten Stunden.
-  **x – PDF exportieren** speichert die Wochenübersicht im A4-Querformat unter
-  `exports/<Schuljahr>/uebersichten/stundenplan.pdf` im PULT-Datenordner.
-  Der Export enthält alle Stundenzeiten, Klassen, Fachkürzel und Räume und nutzt
-  die eingestellte Dokumentschrift. Ein erneuter Export ersetzt die vorhandene
-  PDF erst nach erfolgreicher Erstellung.
-- **Ausfälle:** Ganztägige Ausfälle schulweit oder für eine Klasse anlegen und
-  betroffene Unterrichtstermine einsehen. Ausfälle werden wie Ferien berücksichtigt.
-- **Leistungsnachweise:** Termine planen, bearbeiten, löschen und als durchgeführt
-  markieren; siehe unten.
-- **Protokoll:** Chronologische Einträge nach Klasse und Fach; der neueste steht unten.
-- **Einstellungen:** Editor und Schuljahr wählen sowie Stundenzeiten und LNW-Vorgaben
-  bearbeiten. Neue Jahre werden automatisch vorbereitet; Klassen und Stundenplan
-  werden nicht automatisch übernommen. Ab dem ersten Schultag bietet PULT den Wechsel
-  ins aktuelle neuere Schuljahr an.
+In der **Stundenansicht** stehen links die Stunden und das Material, rechts das
+Dokument. Die Vorbereitung ist freies Markdown für Hefteinträge, Übungen oder Notizen.
 
-Unter **Einstellungen → Stundenzeiten** lassen sich Beginn und Ende jeder Stunde
-im Format `HH:MM` ändern. Sie gelten für alle Schuljahre und werden direkt im Dialog
-gespeichert. Neue Datenablagen enthalten elf voreingestellte Stundenzeiten.
+| Taste | Aktion in der Stundenansicht |
+| --- | --- |
+| Leertaste | Vorbereitung / Planung mit Zielen und Verlauf wechseln |
+| `e` | Sichtbaren Inhalt bearbeiten; bei Planung Ziele oder Verlauf auswählen |
+| `r` | Materialliste bearbeiten; ihre Links lassen sich direkt öffnen |
+| `m` | Titel, Aufgabenverweise und optionale Hinweise bearbeiten |
+| `a` | Aufgabenbibliothek der Sequenz öffnen |
 
-### Leistungsnachweise planen
+Aufgaben werden einzeln mit optionaler Lösung gespeichert. In der
+**Aufgabenbibliothek** legt `n` eine Aufgabe an, `e` bearbeitet sie und `s` wechselt
+zur Lösung. Aus einer Stunde heraus merkt `v` die ausgewählte Aufgabe für diese
+Stunde vor oder entfernt die Zuordnung. Die Auswahl allein ändert nichts.
+Auch aus der Sequenzbibliothek öffnet `a` die Aufgaben.
 
-PULT unterstützt Schulaufgaben (**SA**), Stegreifaufgaben (**EX**), angekündigte
-kleine Leistungsnachweise (**AKL**) und Jahrgangsstufentests (**JST**, etwa den BMT).
-Im Dialog werden nur die für Fach und Jahrgangsstufe erlaubten Arten angeboten;
-beim Speichern werden die Vorgaben erneut geprüft.
+Dateien und Regeln stehen im [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md);
+ein [Unterrichtsbeispiel](examples/unterricht/README.md) zeigt das Format.
+Bei der Einrichtung und beim Ergänzen von Stunden-IDs über den Sequenzeditor legt
+PULT kurze Musterdateien an, ohne vorhandene Inhalte zu überschreiben.
+Nach dem Editor werden Änderungen validiert; bei Fehlern bleibt die letzte gültige
+Ansicht sichtbar. Stabile IDs erhalten, sobald Klassen darauf verweisen.
 
-Ein Termin enthält Klasse, Fach, Art, Datum, Beginn als Stundennummer und Dauer
-in Minuten. Belegte Unterrichtsstunden werden gesondert ausgewählt und in der
-Stundenbilanz berücksichtigt. Passender regulärer Unterricht zur gewählten
-Startstunde wird automatisch markiert. Auch Termine ohne belegte Unterrichtsstunden
-sind möglich. Die Nummer, etwa „2. Schulaufgabe“, wird aus der Terminreihenfolge abgeleitet.
+### Dokumentdarstellung
 
-LNWs erscheinen in **HEUTE** und **NÄCHSTE STUNDE**. Mit `n` oder **Abschließen**
-in der LNW-Verwaltung werden sie im Unterrichtsprotokoll erfasst. **Rückgängig**
-öffnet sie wieder; vor dem Bearbeiten oder Löschen eines durchgeführten LNWs muss
-sein Abschluss zurückgenommen werden. Konflikte mit Ferien oder Ausfällen und
-Widersprüche zu erlaubten Arten werden angezeigt, ohne bestehende Termine automatisch zu ändern.
+Der gemeinsame Betrachter setzt Markdown, Tabellen, TeX (`$…$`, `$$…$$`), Code mit
+Syntaxfarben und lokale Bilder in einem unsichtbaren Chromium-Prozess. Ghostty
+zeigt das Ergebnis über Kitty-Grafik, Foot über Sixel. Im Textmodus bleiben
+Formeln als TeX-Quelltext lesbar. Links im Dokumentbild sind nicht anklickbar;
+Materiallinks gehören deshalb in den eigenen Materialkasten.
 
-Unter **Einstellungen → Leistungsnachweise** gelten Vorgaben je Fach und
-Jahrgangsstufe für das ausgewählte Schuljahr: erlaubte Arten sowie jährliche
-Mindestzahlen für große schriftliche LNWs (SA) und kleine schriftliche LNWs
-(EX und AKL gemeinsam). Leere Mindestfelder bedeuten keine Mindestvorgabe.
-Informatik bis Jahrgangsstufe 11 startet mit zwei kleinen schriftlichen LNWs pro
-Jahr als anpassbarem Schulstandard. Beim Einrichten eines Schuljahres werden die
-letzten früheren Vorgaben übernommen; andernfalls gelten die mitgelieferten Standards.
+Unter **Einstellungen → Dokumentschrift** gilt eine Auswahl für Dokumente und
+Exporte: automatisch **Avenir Next**, wenn alle benötigten Schnitte installiert
+sind, sonst die mitgelieferte **Source Sans 3**. Beide sind auch gezielt wählbar,
+Avenir nur bei Verfügbarkeit. Code verwendet JetBrains Mono. Schriftdateien und
+MathJax sind lokal enthalten; Avenir Next wird nicht mitgeliefert.
 
-Die Klassenübersicht zählt **durchgeführte** LNWs:
+## Stoffverteilungsplan und PDF-Export
 
-- `x/y`: durchgeführt / Mindestzahl; auch mehr als die Mindestzahl ist möglich.
-- Eine Zahl: durchgeführt, ohne Mindestvorgabe.
-- `—`: Für diese Kategorie ist keine Art erlaubt.
+**Unterricht → Stoffverteilungsplan** zeigt den Jahresverlauf je Klasse und Fach:
+protokollierte Stunden und eine Prognose der noch offenen Planstunden. Die
+Prognose folgt dem letzten gebuchten Termin. Fortsetzungen, Spontanunterricht und
+zusätzliche Termine zählen als Unterrichtszeit; Ausfälle und LNWs erhöhen die
+Nummerierung nicht. Jede Sequenz beginnt wieder bei 1.
 
-Der nächste LNW steht daneben mit Datum. Jahrgangsstufentests erscheinen weder
-in dieser Terminspalte noch in den Zählern und erfüllen keine Mindestzahl.
-**NOCH ZU PLANEN** in der LNW-Verwaltung zeigt dagegen, was nach Anrechnung bereits
-durchgeführter und konfliktfrei geplanter, erlaubter LNWs zur Jahresmindestzahl fehlt.
+Ferien, neue Sequenzen und LNWs sind farblich erkennbar. Auch LNWs anderer Fächer
+oder außerhalb eigener Stunden erscheinen; nur belegte eigene Termine verdrängen
+Unterricht. Anmerkungen stammen aus den vorhandenen Daten, etwa `hinweise` in
+`stunde.toml`. Die Tabelle wird mit der Maus gescrollt.
 
-## Sequenzen und Unterrichtsmaterialien
+Mit **x** exportieren Stoffverteilungsplan und Stundenplanverwaltung die jeweilige
+Ansicht als durchsuchbare A4-PDF mit Seitenzahlen und gewählter Dokumentschrift:
 
-Unter **Unterricht → Sequenzen** Fach, Jahrgang und nummerierten Lehrplanpunkt wählen.
-Kapitelüberschriften werden nicht als zusätzliche Ebene angezeigt. Die Vorschau
-folgt der Auswahl. Mit Tab in die Vorschau wechseln, mit ↑/↓ eine Stunde auswählen
-und mit Enter den Unterrichtsviewer öffnen. `e` auf einer Sequenz öffnet ihre
-TOML-Datei im Editor; nach der Rückkehr wird sie neu geladen und validiert.
+| Export | Format | Ablage im Datenordner |
+| --- | --- | --- |
+| Stoffverteilungsplan | Hochformat | `exports/<Jahr>/<Klasse>/stoffverteilungsplan-<Fach-ID>.pdf` |
+| Stundenplan | Querformat | `exports/<Jahr>/uebersichten/stundenplan.pdf` |
 
-Unter **Unterricht → Lehrplan** wählst du direkt Fach und Jahrgang. Die Fächer
-sind beim Öffnen eingeklappt. Der vollständige
-Lehrplan erscheint im gemeinsamen Dokumentbetrachter. Persönliche Dateien unter
-`curriculum/` haben Vorrang vor den Defaults; weitere Gliederungsebenen entfallen.
+Ein erneuter Export ersetzt die gleichnamige Datei erst nach erfolgreicher Erstellung.
 
-Die mitgelieferten Sequenzen enthalten die Lehrplanstruktur und Stunden-IDs.
-Eine gemeinsame Routine legt die fünf kurzen Musterdateien jeder Stunde bei der
-Einrichtung an, ohne persönliche Dateien zu überschreiben. Dateiformat und
-Validierung beschreibt der [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md);
-ein [neutrales Beispiel](examples/unterricht/README.md) zeigt eigene Inhalte.
+## Leistungsnachweise und Einstellungen
 
-### Unterrichts- und Aufgabenansicht
+PULT verwaltet Schulaufgaben, Stegreifaufgaben, angekündigte kleine LNWs und
+Jahrgangsstufentests. Datum, Startstunde und Dauer bestimmen den Termin; belegte
+Unterrichtsstunden werden gesondert ausgewählt. Termine ohne eigenen Unterricht
+sind ebenfalls möglich. Konflikte mit Ferien, Ausfällen oder Vorgaben werden angezeigt.
 
-Links stehen einzeilige Stundentitel und ein immer sichtbarer Materialkasten.
-Rechts steht das breite Dokument, mit dem Sequenznamen als Rahmentitel.
+Unter **Einstellungen** lassen sich erlaubte LNW-Arten und Mindestzahlen je Fach
+und Jahrgang, Stundenzeiten, Editor, Dokumentschrift und Schuljahr anpassen.
+Die Klassenübersicht zählt durchgeführte LNWs; „Noch zu planen“ berücksichtigt
+zusätzlich konfliktfrei geplante LNWs. Jahrgangsstufentests erfüllen keine Mindestzahl.
+Neue Schuljahre übernehmen die bisherigen LNW-Vorgaben, aber keine Klassen oder Stundenpläne.
 
-- **Leertaste:** Vorbereitung / Planung mit Zielen und Verlauf wechseln.
-- **e:** Vorbereitung bearbeiten; in der Planung Ziele oder Verlauf auswählen.
-- **r:** Materialliste bearbeiten; Links sind im Materialkasten direkt zu öffnen.
-- **m:** `stunde.toml` mit Titel, Aufgabenverweisen und optionalen `hinweise` bearbeiten (z. B. `hinweise = "Computerraum · Übungstheke"`).
-- **a:** Aufgabenbibliothek der Sequenz öffnen; die erste vorgemerkte Aufgabe wird ausgewählt.
-- **Escape:** Zurückkehren; beim Rückweg aus Aufgaben bleiben Modus und Leseposition erhalten.
+## Eigene Daten
 
-`vorbereitung.md` ist frei gestaltbar. Als Konvention steht der Stundentitel als
-`#`-Überschrift am Anfang. `ziele.md` enthält eine ungeordnete Liste.
-`verlauf.md` verwendet ausschließlich `#` als Phasenüberschrift; die Inhalte
-erscheinen in einer Tabelle. `material.md` enthält eine ungeordnete Liste aus
-Dingen und benannten Datei- oder Webseitenlinks. Materiallinks gehören hierher.
+Die Konfiguration liegt in `~/.config/pult/config.toml`. Der gewählte Datenordner enthält:
 
-Auch aus der Sequenzbibliothek öffnet **a** alle Aufgaben. Dort bearbeitet **e**
-eine Aufgabe oder Lösung; **n** legt eine neue Aufgabe an. **s** blendet gezielt
-die Lösung ein. Mit Stundenkontext merkt **v** eine Aufgabe vor oder entfernt
-sie aus der Stunde. Die Auswahl allein verändert keine Zuordnung.
-Die Vorschau der Sequenzbibliothek zeigt Ziele, keine Aufgaben-IDs.
+- `sequences/`, `curriculum/`, `vorbereitung/`: Materialien, Lehrpläne und Anleitungen.
+- `subjects.toml`, `periods.toml`: Fächer und gemeinsame Stundenzeiten.
+- `calendars/`: Schuljahreskalender; mitgeliefert werden 2025/26 bis 2029/30.
+- `school-years/<Jahr>/`: Klassen, Stundenplan, Protokolle, Ausfälle und LNWs.
+- `exports/<Jahr>/`: erzeugte PDFs.
 
-Nach dem Editor lädt PULT die Dateien neu. Bei Fehlern bleibt der letzte gültige
-Stand sichtbar; die betroffene Datei wird gemeldet.
+**Sichere den gesamten Datenordner.** Persönliche Dateien werden bei der Einrichtung
+nicht überschrieben. Der Dokumentcache liegt unter `$XDG_CACHE_HOME/pult/documents`
+bzw. `~/.cache/pult/documents`. Auf Omarchy folgt PULT dem aktuellen Theme;
+sonst verwendet es sein dunkles Standardtheme. Das Layout ist für große
+Terminalfenster ausgelegt, etwa 206 × 46 Zeichen.
 
-### Schöne Dokumente im Terminal
-
-Der gemeinsame Betrachter setzt Markdown, Tabellen, TeX (`$...$`, `$$...$$`)
-und lokale Bilder mit **Playwright und Chromium**. Ein Browserfenster öffnet sich
-dabei nicht. Einmalig nach der Installation:
+## Entwicklung und Lizenz
 
 ```sh
-python -m playwright install chromium --only-shell
+uv sync --locked
+uv run playwright install chromium --only-shell
+uv run pult
+just check        # Ruff, Formatprüfung, Pyright und Tests
+uv build          # Wheel und Quellarchiv unter dist/
 ```
 
-Unter Linux gegebenenfalls `python -m playwright install-deps chromium` für die
-Browser-Systembibliotheken ausführen. Das Dokument wird in voller verfügbarer
-Breite gesetzt, in Bildabschnitte geteilt und in lesbarer Größe gescrollt.
-Theme- und Breitenänderungen lösen eine neue Darstellung aus. **Ghostty** nutzt
-das Kitty-Grafikprotokoll, **Foot** Sixel. Ohne passenden Grafikmodus oder Browser
-bleibt PULT mit einer Textansicht nutzbar; TeX wird dann als Quelltext angezeigt.
+Code liegt in `src/pult/`, Tests in `tests/`. `PULT_TEST_BROWSER=1 uv run pytest
+tests/test_material_rendering.py` prüft zusätzlich den echten Browserrenderer.
+Die [Release-Notizen](CHANGELOG.md) beschreiben die Änderungen.
 
-MathJax ist lokal enthalten. Eigene Node.js-/npm-Projekte und `rsvg-convert` sind
-nicht mehr nötig. Playwright bringt intern eine Node-Laufzeit mit, MathJax läuft
-als JavaScript im unsichtbaren Browser. Dokumente werden offline gerendert;
-Bilder müssen relativ zur Markdown-Datei im jeweiligen Sequenz- bzw.
-Lehrplanordner liegen. Links im Dokumentbild öffnen sich nicht; nutze dafür
-`material.md`. Der Cache liegt unter `$XDG_CACHE_HOME/pult/documents` bzw.
-`~/.cache/pult/documents`.
-
-## Daten und Darstellung
-
-Die Konfiguration liegt unter `~/.config/pult/config.toml`. Das gewählte
-Datenverzeichnis enthält:
-
-- `subjects.toml` und `periods.toml`: Fächer und gemeinsame Stundenzeiten.
-- `sequences/`, `curriculum/` und `vorbereitung/`: Unterrichtsmaterialien und Referenzen.
-- `calendars/`: Kalender; enthalten sind **2025/26 bis 2029/30**. Nur Jahre mit gültigem lokalem Kalender sind auswählbar.
-- `school-years/<Jahr>/`: Jahresdaten, darunter `assessment-requirements.toml`
-  mit LNW-Vorgaben sowie je Klasse eine `assessments.toml` mit LNW-Terminen.
-
-Stundenpläne sind CSV, übrige Fachdaten TOML. Vorhandene Dateien werden bei der
-Einrichtung nicht überschrieben. **Sichere das gesamte Datenverzeichnis** vor
-größeren manuellen Änderungen.
-
-Auf Omarchy folgt das Farbschema dem aktuellen Theme; sonst verwendet PULT sein
-eigenes dunkles Theme. Das Layout ist für etwa **206 × 46 Zeichen** ausgelegt;
-zusätzliche Inhalte sind scrollbar.
-
-## Entwicklung
-
-```sh
-uv sync
-uv run pult                      # aus der Entwicklungsumgebung starten
-just check                       # Ruff, Formatprüfung, Pyright und pytest
-uv run pytest                    # nur Tests
-uv run ruff check . --fix         # automatische Codekorrekturen
-uv run ruff format .              # Formatierung
-```
-
-`uv tool install --editable .` macht den Entwicklungsstand überall aufrufbar.
-Quellcode liegt in `src/pult/`, Tests in `tests/`. Tests verwenden temporäre
-Datenverzeichnisse; eigene Unterrichtsdaten gehören nicht ins Repository.
-
-## Lizenz und Quellen
-
-Der eigene Programmcode steht unter **GNU GPL Version 3 oder später**
-([Lizenztext](LICENSE), [Urheber- und Lizenzhinweise](COPYRIGHT)). PULT wird ohne
-Gewährleistung bereitgestellt, soweit gesetzlich zulässig.
-[Quellen und Fremdbestandteile](SOURCES.md) dokumentiert Lehrplanvorlagen,
-Kalenderdaten und Bibliotheken. **Einstellungen → Über PULT / Lizenz** zeigt
-Version, Quellen und Lizenztext auch offline.
-
-
-### Dokumentschrift
-
-Unter **Einstellungen → Dokumentschrift** gilt die Auswahl gemeinsam für
-Vorbereitung, Planung, Aufgaben, Lösungen und Lehrpläne:
-
-- **Automatisch** (Standard): Avenir Next, wenn alle benötigten Schriftschnitte
-  verfügbar sind; sonst Source Sans 3.
-- **Avenir Next**: nur auswählbar, wenn im lokalen Renderer verfügbar.
-- **Source Sans 3**: immer verfügbar, lokal mitgeliefert.
-
-Die Wahl wird in der globalen `config.toml` als `document_font` gespeichert
-(`auto`, `avenir-next` oder `source-sans-3`). Bestehende Konfigurationen ohne
-Eintrag verwenden automatisch den Standard. Falls eine gespeicherte Avenir-Wahl
-auf einem anderen Gerät nicht verfügbar ist, greift Source Sans 3.
-Ein Wechsel wirkt ohne Neustart auf die Dokumentansichten.
-
-Fließtext und Überschriften verwenden dieselbe Schriftfamilie, Überschriften
-Halbfett (600), Hervorhebungen Medium (500). Code verwendet die mitgelieferte
-JetBrains Mono und Pygments-Syntaxfarben; MathJax behält seine Formelschrift.
-Alle Schriftdateien und Renderer-Bestandteile funktionieren offline.
-Avenir Next wird ausschließlich aus einer vorhandenen lokalen Installation
-verwendet und nicht mitgeliefert. Quellen und Lizenzen: siehe `SOURCES.md` und
-`src/pult/assets/fonts/`.
-
-### Stoffverteilungsplan
-
-Unter **UNTERRICHT → Stoffverteilungsplan** zeigt PULT den Jahresplan für die
-ausgewählte Klasse und das Fach. Protokollierter Unterricht bleibt erhalten;
-offene Stunden werden ab der aktiven Sequenz in Lehrplanreihenfolge auf die
-verbleibenden Termine verteilt. Fortsetzungen, Spontanunterricht und zusätzliche
-Termine zählen als Unterrichtszeit; übersprungene Stunden, Ausfälle und Leistungsnachweise nicht.
-Die Nummerierung beginnt bei jedem Sequenzwechsel erneut bei 1.
-
-Ferien erscheinen als eine Abschnittszeile, Feiertage und lokale Ausfälle als
-Termine ohne Nummer. Alle Leistungsnachweise der Klasse werden angezeigt, auch
-Termine anderer Fächer oder außerhalb eigener Unterrichtsstunden. Nur belegte
-eigene Stunden verdrängen Unterricht. Die Anmerkungen stammen aus optionalen
-`hinweise` in `stunde.toml` und vorhandenen Protokoll-/Kalenderangaben.
-
-Die Prognose folgt dem letzten verbuchten Unterrichtstermin,
-nicht dem heutigen Datum. Frühere Lücken heißen „Nicht protokolliert“; nach
-Ausschöpfen der Sequenzstunden bleiben Termine als „Noch nicht verplant“ sichtbar.
-Der Plan wird beim erneuten Öffnen aus aktuellen Daten berechnet und nicht als
-eigene Datei gespeichert.
-
-Mit **x – PDF exportieren** wird der angezeigte Plan als durchsuchbare A4-PDF
-im Hochformat gespeichert. Die Ablage erfolgt automatisch im PULT-Datenordner:
-`exports/<Schuljahr>/<Klasse>/stoffverteilungsplan-<Fach-ID>.pdf`, beispielsweise
-`exports/2026-2027/7D/stoffverteilungsplan-mathematik.pdf`.
-Ein erneuter Export ersetzt dieselbe Datei erst nach erfolgreicher Erzeugung.
-Die PDF enthält den Stand des Exports, wiederholte Spaltenüberschriften und
-Seitenzahlen. Der Browser arbeitet unsichtbar; es öffnet sich keine zweite App.
-Der Export verwendet dieselbe Schriftartwahl wie die Dokumentansicht und
-benötigt denselben installierten Playwright-Browser.
-
-Weitere Exportarten können dieselbe Ablage nutzen; klassenübergreifende
-Übersichten sind unter `exports/<Schuljahr>/uebersichten/` vorgesehen.
+Der eigene Code steht unter **GPL-3.0-or-later** ([Lizenz](LICENSE),
+[Urheberhinweise](COPYRIGHT)), ohne Gewährleistung. [Quellen und Fremdbestandteile](SOURCES.md)
+dokumentiert Vorlagen, Kalender, Bibliotheken und Schriften.
+**Einstellungen → Über PULT / Lizenz** zeigt die Hinweise auch offline.

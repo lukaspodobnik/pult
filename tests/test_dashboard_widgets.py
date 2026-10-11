@@ -105,7 +105,7 @@ def test_dashboard_widgets_and_time_updates(
                 assert cell.get_style_at_offset(app.console, second).bgcolor is not None
                 expected = row_style.bgcolor if column == "monday" else None
                 assert cell.get_style_at_offset(app.console, third).bgcolor == expected
-            assert "1. Std." in str(table.ordered_rows[0].label)
+            assert "1. Stunde" in str(table.ordered_rows[0].label)
             rows = list(app.query_one(DailySchedulePanel).query(DailyScheduleRow))
             assert [row.has_class("time-highlighted") for row in rows] == [True, False]
 

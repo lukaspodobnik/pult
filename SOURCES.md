@@ -1,7 +1,7 @@
 # Quellen und Fremdbestandteile
 
-Prüfstand: 7. September 2026. Diese Übersicht dokumentiert den geprüften Bestand;
-sie ist keine anwaltliche Freigabe und keine Prüfung von Markenrechten.
+Bestandsabgleich für 1.3.0: 11. Oktober 2026. Die bisherigen Herkunftsangaben
+bleiben erhalten; eine erneute rechtliche Gesamtprüfung ist damit nicht verbunden.
 Die Lizenz des eigenen Programmcodes steht in [COPYRIGHT](COPYRIGHT) und
 [LICENSE](LICENSE). Fremde Rechte werden dadurch nicht neu lizenziert.
 
@@ -9,9 +9,11 @@ Die Lizenz des eigenen Programmcodes steht in [COPYRIGHT](COPYRIGHT) und
 
 `src/pult/defaults/sequences/` enthält 116 Vorlagen mit 1.645 leeren
 Unterrichtsstunden. Übernommen wurden Abschnitts- und Kapitelbezeichnungen,
-Lehrplankennungen und gegebenenfalls empfohlene Stundenanzahlen. Die Felder für
-Stundentitel, Aufgaben und Notizen sind leer. Vollständige PDFs, Abbildungen und
-ergänzende Unterrichtsmaterialien werden nicht mitgeliefert.
+Lehrplankennungen und gegebenenfalls empfohlene Stundenanzahlen. Die Vorlagen
+enthalten Stunden-IDs; kurze Musterdateien werden erst in der Datenablage erzeugt.
+`src/pult/defaults/curriculum/` enthält die Fachlehrplantexte als Markdown.
+Original-PDFs, fremde Abbildungen und ergänzende Unterrichtsmaterialien werden
+nicht mitgeliefert.
 
 Quelle: **Staatsinstitut für Schulqualität und Bildungsforschung (ISB),
 LehrplanPLUS Bayern, Gymnasium**. Grundlage waren die für das Projekt bereitgestellten
@@ -83,7 +85,7 @@ des aktuellen Entwicklungsstands:
 | Paket | Version | Lizenz |
 | --- | --- | --- |
 | textual | 8.2.8 | MIT |
-| textual-image | 0.12.0 | MIT |
+| textual-image | 0.12.0 | LGPL-3.0-or-later |
 | Pillow | 12.3.0 | MIT-CMU |
 | tomli-w | 1.2.0 | MIT |
 | rich | 15.0.0 | MIT |
@@ -94,6 +96,9 @@ des aktuellen Entwicklungsstands:
 | platformdirs | 4.11.5 | MIT |
 | Pygments | 2.21.0 | BSD-2-Clause |
 | typing_extensions | 4.16.0 | PSF-2.0 |
+| playwright | 1.63.0 | Apache-2.0 |
+| pyee | 13.0.1 | MIT |
+| greenlet | 3.5.6 | MIT AND PSF-2.0 |
 
 Diese Lizenzen sind mit GPLv3 vereinbar
 ([GNU-Lizenzübersicht](https://www.gnu.org/licenses/license-list.html)).
@@ -137,7 +142,6 @@ Bemerkung in der Antwort nimmt deren Verkauf ausdrücklich aus.
 PULT liefert nur den erzeugten Schriftzug mit, nicht die Schriftdateien oder
 den Generator. Die Herkunftsangabe beansprucht keine Urheberschaft an der Schrift.
 
-
 ## Dokumentrenderer
 
 MathJax 3.2.2 wird als lokales Browser-Bundle `tex-svg-full.js` unter
@@ -151,8 +155,6 @@ Der Lizenztext liegt neben dem Bundle sowie unter
 Playwright ist eine externe Python-Abhängigkeit unter Apache-2.0. Seine interne
 Node-Laufzeit gehört zur Playwright-Distribution. Chromium wird gesondert durch
 Playwright installiert und nicht mit dem PULT-Wheel gebündelt.
-Der frühere Node-/librsvg-Wrapper und sein npm-Build wurden entfernt.
-
 
 ## Dokumentschriften und Syntaxhervorhebung
 

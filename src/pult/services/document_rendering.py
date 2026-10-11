@@ -23,6 +23,7 @@ from pult.services.document_fonts import (
     document_font_stylesheet,
     validate_document_font,
 )
+from pult.storage import save_bytes
 
 
 def highlight_code(code: str, language: str, attributes: str) -> str:
@@ -151,10 +152,10 @@ def document_html(
     <style>
     {syntax_stylesheet(bg)}
     * {{box-sizing:border-box}} html,body {{margin:0;background:{bg};color:{fg}}}
-    body {{width:{width}px;font: {font_size}px/1.65 Georgia,"Times New Roman",serif;
+    body {{width:{width}px;font-size:{font_size}px;line-height:1.65;
       -webkit-font-smoothing:antialiased;overflow-wrap:anywhere}}
     article {{width:100%;margin:0;padding:.75em 1em 1.5em}}
-    h1,h2,h3,h4,h5,h6 {{font-family:Arial,sans-serif;line-height:1.22;letter-spacing:-.025em;
+    h1,h2,h3,h4,h5,h6 {{line-height:1.22;letter-spacing:-.025em;
       color:{accent};font-weight:600;break-after:avoid}}
     h1 {{font-size:2.05em;margin:0 0 .75em}} h2 {{font-size:1.35em;margin:1.8em 0 .65em}}
     h3 {{font-size:1.08em;margin:1.4em 0 .5em}} p {{margin:.75em 0 1em}}
@@ -163,7 +164,7 @@ def document_html(
     a {{color:{accent};text-decoration:none;border-bottom:1px dotted {accent}}}
     blockquote {{margin:1.2em 0;padding:.15em 1em;border-left:3px solid {accent};
       background:color-mix(in srgb,{accent} 7%,{bg})}}
-    table {{border-collapse:collapse;width:100%;font: .88em/1.5 Arial,sans-serif;margin:1.2em 0}}
+    table {{border-collapse:collapse;width:100%;font-size:.88em;line-height:1.5;margin:1.2em 0}}
     td,th {{text-align:left;padding:.7em .8em;border-bottom:1px solid color-mix(in srgb,{fg} 20%,{bg})}}
     .phases td:first-child,.phases th:first-child {{width:20%;vertical-align:top}}
     .phases td p:first-child {{margin-top:0}} .phases td p:last-child {{margin-bottom:0}}
@@ -171,7 +172,7 @@ def document_html(
       background:color-mix(in srgb,{fg} 6%,{bg});border-radius:5px}}
     pre {{line-height:1.5}}
     .syntax-highlight {{color:{fg};background:color-mix(in srgb,{fg} 6%,{bg})}}
-    code {{font-family:monospace;font-size:.85em}} img {{max-width:100%;height:auto}}
+    code {{font-size:.85em}} img {{max-width:100%;height:auto}}
     .display {{overflow-x:auto;padding:.2em 0}} mjx-container[jax="SVG"] {{max-width:100%}}
     hr {{border:0;border-top:1px solid color-mix(in srgb,{fg} 18%,{bg});margin:2em 0}}
     {document_font_stylesheet(font)}
@@ -299,11 +300,7 @@ class DocumentRenderer:
                     "i => i.decode()));}"
                 )
                 self.cache.mkdir(parents=True, exist_ok=True)
-                temporary = target.with_suffix(".tmp.png")
-                await page.screenshot(
-                    path=str(temporary), full_page=True, timeout=30000
-                )
-                temporary.replace(target)
+                save_bytes(target, await page.screenshot(full_page=True, timeout=30000))
 
                 return target
             finally:

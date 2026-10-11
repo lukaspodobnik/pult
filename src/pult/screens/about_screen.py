@@ -49,7 +49,10 @@ class AboutScreen(PultModalScreen[None]):
                     "Textual, Rich, tomli-w, markdown-it-py, mdit-py-plugins, "
                     "linkify-it-py, mdurl und platformdirs: MIT.\n"
                     "Pygments: BSD-2-Clause. typing_extensions: PSF-2.0.\n"
-                    "textual-image: MIT. Pillow: MIT-CMU.\n"
+                    "textual-image: LGPL-3.0-or-later. Pillow: MIT-CMU.\n"
+                    "Playwright: Apache-2.0. pyee: MIT. greenlet: MIT und PSF-2.0.\n"
+                    "Source Sans 3 und JetBrains Mono: SIL Open Font License 1.1.\n"
+                    "Avenir Next wird nur aus einer lokalen Installation verwendet.\n"
                     "MathJax 3.2.2: Apache-2.0; lokal gebündelter Formelrenderer.\n"
                     "Fremde Bestandteile behalten ihre jeweiligen Rechte und Lizenzen.\n\n"
                     "MATHJAX · LIZENZ UND HINWEISE\n\n"
@@ -59,6 +62,14 @@ class AboutScreen(PultModalScreen[None]):
                     + "\n"
                     + files("pult")
                     .joinpath("legal/MathJax-Apache-2.0.txt")
+                    .read_text(encoding="utf-8")
+                    + "\n\nDOKUMENTSCHRIFTEN · LIZENZHINWEISE\n\n"
+                    + files("pult")
+                    .joinpath("assets/fonts/SourceSans3-OFL.txt")
+                    .read_text(encoding="utf-8")
+                    + "\n"
+                    + files("pult")
+                    .joinpath("assets/fonts/JetBrainsMono-OFL.txt")
                     .read_text(encoding="utf-8")
                     + "\n\nVOLLSTÄNDIGER GPL-LIZENZTEXT\n\n"
                     + files("pult")

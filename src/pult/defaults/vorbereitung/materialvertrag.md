@@ -1,113 +1,81 @@
-# Unterrichtsmaterialien in PULT
+# Materialvertrag
 
-Jede Sequenz liegt unter `sequences/<Jahrgang>/<Fach>/<Sequenz-ID>/`.
-`sequenz.toml` beschreibt die Sequenz und ihre geordneten Stunden-IDs. Klassen und
-Schuljahre verweisen auf diese IDs; Unterrichtsinhalte gehören zur Sequenzbibliothek.
-IDs bestehen aus Kleinbuchstaben, Zahlen und einzelnen Bindestrichen.
+Dieser Vertrag beschreibt das Dateiformat für PULT. Didaktische Vorgaben und der
+Ablauf einer KI-gestützten Vorbereitung werden gesondert festgelegt.
 
-## Dateien einer Stunde
+## Sequenz
+
+Eine Sequenz liegt unter `sequences/<Jahrgang>/<Fach-ID>/<Sequenz-ID>/`.
+`sequenz.toml` enthält `id`, `curriculum_section_id`, `subject_id`, `grade_level`,
+`titel` und die geordnete Liste `stunden` mit Stunden-IDs. Optional sind
+`recommended_lesson_count` sowie gemeinsam `chapter_id` und `chapter_title`.
+Die Angaben müssen zum Ablageort passen; weitere Felder sind nicht erlaubt.
+
+Stunden-, Aufgaben-, Fach- und Sequenz-IDs bestehen aus Kleinbuchstaben, Zahlen
+und einzelnen Bindestrichen, etwa `brueche-vergleichen`. Referenzlisten enthalten
+keine Duplikate. Bestehende IDs erhalten: Klassenfortschritt und Zuordnungen
+verweisen darauf. Materialien bleiben unabhängig von konkreten Klassen und Terminen.
+
+## Stunde
 
 Unter `stunden/<Stunden-ID>/` liegen fünf Dateien:
 
-- `stunde.toml`: `titel`, `aufgaben` (geordnete Aufgaben-IDs) und optional `hinweise`.
-- `vorbereitung.md`: freies Markdown für Hefteinträge, Übungen und Notizen.
-- `ziele.md`: eine flache ungeordnete Liste; Inline-Markdown ist erlaubt.
-- `verlauf.md`: Phasen als `# Überschrift`, darunter beliebiger Markdown-Inhalt.
-- `material.md`: eine flache ungeordnete Liste aus Dingen und benannten Links.
+| Datei | Inhalt und Validierung |
+| --- | --- |
+| `stunde.toml` | Nicht leerer `titel`, optionale Liste `aufgaben` und optionaler Text `hinweise`; keine weiteren Felder. |
+| `vorbereitung.md` | Freies Markdown; als Konvention beginnt es mit `# Stundentitel`. |
+| `ziele.md` | Flache ungeordnete Liste; pro Eintrag genau ein Absatz, Inline-Markdown erlaubt. |
+| `verlauf.md` | Beginnt mit einer nicht leeren `#`-Phasenüberschrift; darunter freies Markdown. Weitere Überschriften ausschließlich als `#`, keine Unterüberschriften oder Setext-Überschriften. |
+| `material.md` | Flache ungeordnete Liste aus Dingen und benannten Links; pro Eintrag ein Absatz und höchstens ein Link. |
 
-Die Vorbereitung beginnt als Konvention mit `# Stundentitel`. Das wird nicht
-validiert. Markdown-Tabellen, Code, lokale Abbildungen und TeX sind erlaubt.
-Materiallinks gehören in `material.md`, nicht in die Vorbereitung.
+Leere Markdown-Dateien sind gültig. Fehlende Markdown-Dateien werden als leer
+behandelt. Leere Phasen sind erlaubt; Überschriften in Codeblöcken zählen nicht
+als Phasen. Ziele und Verlauf erscheinen gemeinsam in der Planung, der Verlauf
+als Tabelle. Materiallinks stehen ausschließlich in `material.md`.
 
 ```toml
 titel = "Brüche vergleichen"
-aufgaben = ["vergleichen", "vertiefen"]
+aufgaben = ["vergleichen"]
 hinweise = "Übungstheke · Computerraum"
 ```
 
-```markdown
-- Die Schüler können gleichwertige Brüche erkennen.
-- Die Schüler können ihre Ergebnisse begründen.
-```
-
-Der Verlauf beginnt mit einer nicht leeren `#`-Überschrift. Weitere Überschriften
-müssen ebenfalls `#` verwenden; `##`, `###` und Setext-Überschriften sind nicht
-erlaubt. Überschriften innerhalb von Codeblöcken zählen nicht als Phasen.
-Eine Phase darf zunächst leer bleiben. Eine vollständig leere Planungsdatei ist
-auch gültig. PULT zeigt Ziele und Verlauf zusammen, den Verlauf als Tabelle
-mit den Spalten Phase und Inhalt.
-
-```markdown
-# Einstieg
-
-- Brüche mit Papierstreifen vergleichen.
-
-# Übung
-
-Die Aufgabe aus der Bibliothek gemeinsam besprechen.
-```
-
-Materialeinträge dürfen höchstens einen Link enthalten. Dateilinks beziehen sich
-auf die Materialdatei und müssen innerhalb des Sequenzordners bleiben.
-Externe Links verwenden `https://` oder `http://`. Lokale Dateien öffnen sich mit
-der dafür eingerichteten Anwendung, Webseiten mit dem Standardbrowser.
+`aufgaben` verweist auf vorhandene Aufgaben dieser Sequenz; ihre Reihenfolge ist
+die Reihenfolge des Vormerkens. PULT kann die Zuordnung verwalten. `hinweise`
+enthält kurze organisatorische Angaben für den Stoffverteilungsplan.
 
 ```markdown
 - Schere
-- Kleber
 - [Präsentation](../../dateien/brueche.key)
 - [Übungsseite](https://example.org/uebung)
 ```
 
-## Aufgaben
+Dateilinks beziehen sich auf `material.md` und bleiben innerhalb der Sequenz.
+Weblinks verwenden `https://` oder `http://`. Dateien öffnen sich in der
+zugeordneten Anwendung, Webseiten im Standardbrowser.
+
+## Aufgaben und Markdown
 
 Aufgaben liegen unter `aufgaben/<Aufgaben-ID>/aufgabe.md`; `loesung.md` ist optional.
-Beide Dateien sind freies Markdown. Ein `# Titel` im Aufgabentext liefert den
-Anzeigenamen. Eine Aufgabe darf in mehreren Stunden verwendet werden.
+Beides ist freies Markdown. Eine `#`-Überschrift liefert den Anzeigenamen.
+Aufgaben können mehreren Stunden derselben Sequenz zugeordnet sein.
 
-In der Sequenzbibliothek und der Unterrichtsansicht öffnet **a** die Aufgaben.
-Von einer Stunde aus wird ihre erste vorgemerkte Aufgabe ausgewählt. **v** merkt
-die ausgewählte Aufgabe für diese Stunde vor oder entfernt die Zuordnung.
-Die Reihenfolge entspricht der Reihenfolge des Vormerkens. Die reine Auswahl
-ändert keine Zuordnung. **s** wechselt zwischen Aufgabe und Lösung.
+Markdown unterstützt Tabellen, Codeblöcke mit Sprachangabe, TeX als `$…$` bzw.
+`$$…$$` und lokale Bilder (SVG, PNG, JPEG, WebP). Bildpfade sind relativ zur
+Markdown-Datei und bleiben innerhalb des Sequenzordners; gemeinsame Dateien
+können in `dateien/` liegen. HTML wird nicht ausgeführt, entfernte Bilder werden
+nicht geladen. Links innerhalb gerenderter Dokumentbilder sind nicht anklickbar.
 
-## Darstellung und Bedienung
+## Muster und Änderungen
 
-Die Unterrichtsansicht zeigt links die einzeiligen, bei Bedarf abgeschnittenen
-Stundentitel und darunter immer das Material. Rechts steht das Dokument; der
-Rahmentitel ist der Sequenzname. **Leertaste** wechselt zwischen Vorbereitung
-und Planung. **e** bearbeitet den sichtbaren Inhalt, bei Planung nach Dateiauswahl.
-**r** bearbeitet Material, **m** Titel und Hinweise. **Tab** wechselt den Fokus;
-Pfeile und Bildtasten scrollen den fokussierten Bereich. Die Rückkehr aus den
-Aufgaben erhält Modus und Leseposition der Stunde.
+Beim Einrichten und beim Ergänzen von Stunden im Sequenzeditor legt PULT fehlende
+Dateien an. Vorhandene Inhalte bleiben erhalten. Die Muster enthalten nur:
 
-Der gemeinsame Dokumentbetrachter wird auch für Aufgaben, Lösungen und Lehrpläne
-verwendet. Der Lehrplanbaum enthält nur Fach und Jahrgang. Eine Sprungfunktion
-innerhalb der Dokumente gibt es nicht.
+- `stunde.toml`: `titel = "Noch nicht vorbereitet"` und `aufgaben = []`.
+- `vorbereitung.md`: `# Noch nicht vorbereitet`.
+- `ziele.md`: zweimal `- Die Schüler können`.
+- `verlauf.md`: `# Einstieg`.
+- `material.md`: leer.
 
-Markdown, TeX und Bilder werden offline in einem unsichtbaren Chromium-Prozess
-zusammen gesetzt. Das Dokument wird in voller Breite und lesbarer Größe als
-scrollbare Bildabschnitte angezeigt. Ghostty verwendet das Kitty-Grafikprotokoll,
-Foot Sixel. In anderen Terminals ohne passende Grafikunterstützung sowie bei
-fehlendem Renderer verwendet PULT eine Textansicht. Formeln bleiben dort als
-TeX-Quelltext lesbar. Links im Dokumentbild sind nicht anklickbar; dafür gibt es
-den separaten Materialbereich.
-
-## Neue Stunden und Muster
-
-Die mitgelieferten Sequenzen enthalten nur die Stunden-IDs. Bei der Einrichtung
-entstehen die fünf Dateien durch eine gemeinsame Routine; vorhandene Dateien
-werden nicht überschrieben. Neue Stunden-IDs in einer bearbeiteten Sequenz werden
-nach der Validierung mit derselben Routine ergänzt.
-
-Die Muster sind bewusst kurz:
-
-- TOML: Titel „Noch nicht vorbereitet“, leere Aufgabenliste, keine Kommentare.
-- Vorbereitung: `# Noch nicht vorbereitet`.
-- Ziele: zweimal `- Die Schüler können`.
-- Verlauf: `# Einstieg`.
-- Material: leer.
-
-Nach dem Editor lädt PULT die Dateien neu und validiert sie. Bei Fehlern bleibt
-die letzte gültige Ansicht geöffnet. PULT repariert persönliche Dateien nicht
-automatisch. Eine Übernahme alter TOML-Ziele oder -Phasen ist nicht vorgesehen.
+Nach dem Bearbeiten validiert PULT die Dateien. Bei Fehlern bleibt die letzte
+gültige Ansicht sichtbar; die Datei wird nicht automatisch korrigiert.
+Das frühere Format mit Zielen und Verlauf in TOML wird nicht übernommen.

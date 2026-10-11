@@ -1,12 +1,11 @@
 """Gemeinsame Ablage für Exporte im Datenverzeichnis."""
 
-import os
 import re
-import tempfile
 from pathlib import Path
 
 from pult.school.calendar import validate_school_year
 from pult.services.document_fonts import document_font_stylesheet
+from pult.storage import save_bytes
 
 
 def pdf_stylesheet(font: str) -> str:
@@ -50,17 +49,5 @@ def save_pdf(target: Path, content: bytes) -> Path:
     if not content.startswith(b"%PDF-"):
         raise ValueError("Der Renderer hat keine PDF-Datei erzeugt.")
     target.parent.mkdir(parents=True, exist_ok=True)
-    temporary: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            dir=target.parent, suffix=".tmp", delete=False
-        ) as stream:
-            temporary = Path(stream.name)
-            stream.write(content)
-            stream.flush()
-            os.fsync(stream.fileno())
-        temporary.replace(target)
-        return target
-    finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
+    save_bytes(target, content)
+    return target

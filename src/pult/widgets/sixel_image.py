@@ -1,20 +1,19 @@
 """Isolated adapter for the pinned textual-image 0.12.0 Sixel implementation.
 
-Preserve glyph proportions when fitting terminal cells and keep a fixed formula
-palette across scrolling crops. Uses private extension points for textual-image 0.12.0.
+Preserve image proportions when fitting terminal cells and declare the palette
+before drawing scrolling crops. Uses private extension points for textual-image 0.12.0.
 """
 
 import re
 
 from PIL import Image as PILImage
-from PIL import ImageColor, ImageOps
+from PIL import ImageOps
 from textual_image._pixeldata import PixelData
 from textual_image._sixel import image_to_sixels
 from textual_image.widget import SixelImage, SixelOptions
 from textual_image.widget.sixel import _ImageSixelImpl
 
 BACKGROUND = "#18252b"
-FOREGROUND = "#e7ece7"
 
 
 def terminal_safe_sixel(encoded):
@@ -44,21 +43,6 @@ def fit_image(image, width, height, background):
     return canvas
 
 
-def formula_palette(image, bg, fg):
-    """Fixed background-to-ink ramp, without spatial dithering."""
-    background = ImageColor.getrgb(bg)
-    foreground = ImageColor.getrgb(fg)
-    palette = PILImage.new("P", (1, 1))
-    palette.putpalette(
-        [
-            round(start + (end - start) * step / 255)
-            for step in range(256)
-            for start, end in zip(background, foreground)
-        ]
-    )
-    return image.convert("RGB").quantize(palette=palette, dither=PILImage.Dither.NONE)
-
-
 class StableSixelData(_ImageSixelImpl):
     def _scale_image(self, image_data, terminal_sizes):
         assert isinstance(self.parent, StableSixelImage)
@@ -74,16 +58,12 @@ class StableSixelData(_ImageSixelImpl):
 
     def _image_to_sixels(self, image, sixel_options=None, background=None):
         assert isinstance(self.parent, StableSixelImage)
-        if self.parent.has_class("formula"):
-            image = formula_palette(
-                image, self.parent.paper_color, self.parent.ink_color
-            )
         return terminal_safe_sixel(image_to_sixels(image, sixel_options, background))
 
 
 class StableSixelImage(SixelImage, Renderable=SixelImage._Renderable):
-    def __init__(self, *args, paper_color=BACKGROUND, ink_color=FOREGROUND, **kwargs):
-        self.paper_color, self.ink_color = paper_color, ink_color
+    def __init__(self, *args, paper_color=BACKGROUND, **kwargs):
+        self.paper_color = paper_color
         super().__init__(
             *args,
             **kwargs,

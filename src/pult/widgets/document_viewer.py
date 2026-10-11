@@ -199,7 +199,7 @@ class DocumentViewer(Vertical):
                         factory = graphics.image_widget()
                         assert factory is not None
                         kwargs = (
-                            {"paper_color": colors[0], "ink_color": colors[1]}
+                            {"paper_color": colors[0]}
                             if factory.__name__ == "StableSixelImage"
                             else {}
                         )

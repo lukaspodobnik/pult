@@ -9,12 +9,7 @@ from urllib.parse import urlsplit
 import tomli_w
 from markdown_it import MarkdownIt
 
-from pult.storage import load_toml, save_toml
-
-
-def lesson_metadata_source(lesson: "Lesson") -> str:
-    """Titel, Aufgabenverweise und optionale organisatorische Hinweise."""
-    return tomli_w.dumps(lesson_metadata(lesson))
+from pult.storage import load_toml, save_text, save_toml
 
 
 def lesson_metadata(lesson: "Lesson") -> dict[str, Any]:
@@ -135,10 +130,6 @@ class Lesson:
             raise ValueError("Der Verlauf muss aus Phasen bestehen.")
 
     @property
-    def task_summary(self) -> str:
-        return " · ".join(task.id for task in self.tasks)
-
-    @property
     def material_summary(self) -> str:
         return " · ".join(self.material)
 
@@ -201,11 +192,12 @@ def unordered_items(source: str, filename: str) -> list[str]:
     ):
         raise ValueError(f"{filename}: Jeder Eintrag benötigt genau einen Absatz.")
     items = []
+    source_lines = source.splitlines()
     for token in tokens:
         if token.type == "list_item_open":
             if token.map is None:
                 raise ValueError(f"{filename}: Ungültiger Listeneintrag.")
-            lines = source.splitlines()[token.map[0] : token.map[1]]
+            lines = source_lines[token.map[0] : token.map[1]]
             item = re.sub(r"^ {0,3}[-+*] +", "", lines[0])
             item = "\n".join([item, *(line.strip() for line in lines[1:])]).strip()
             if not item or "\n\n" in item:
@@ -311,16 +303,16 @@ def load_lesson(directory: Path, lesson_id: str, tasks: dict[str, Task]) -> Less
         }
         material_entries(sources["material.md"])
         return Lesson(
-            lesson_id,
-            require_text(data, "titel"),
-            resolved,
-            optional_markdown(material_path(folder, "vorbereitung.md")),
-            unordered_items(sources["ziele.md"], "ziele.md"),
-            unordered_items(sources["material.md"], "material.md"),
-            parse_phases(sources["verlauf.md"]),
-            sources["ziele.md"],
-            sources["material.md"],
-            sources["verlauf.md"],
+            id=lesson_id,
+            title=require_text(data, "titel"),
+            tasks=resolved,
+            preparation=optional_markdown(material_path(folder, "vorbereitung.md")),
+            goals=unordered_items(sources["ziele.md"], "ziele.md"),
+            material=unordered_items(sources["material.md"], "material.md"),
+            phases=parse_phases(sources["verlauf.md"]),
+            goals_source=sources["ziele.md"],
+            material_source=sources["material.md"],
+            phases_source=sources["verlauf.md"],
             notes=data.get("hinweise", ""),
         )
     except (OSError, ValueError, TypeError, KeyError) as error:
@@ -332,7 +324,7 @@ def save_markdown(path: Path, source: str | None) -> None:
         path.unlink(missing_ok=True)
     else:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(source, encoding="utf-8")
+        save_text(path, source)
 
 
 def save_lesson(directory: Path, lesson: Lesson) -> None:
