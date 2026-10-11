@@ -6,6 +6,19 @@ import tempfile
 from pathlib import Path
 
 from pult.school.calendar import validate_school_year
+from pult.services.document_fonts import document_font_stylesheet
+
+
+def pdf_stylesheet(font: str) -> str:
+    """Gemeinsame Schrift, Überschriften und Farben für PDF-Exporte."""
+    return (
+        document_font_stylesheet(font)
+        + """
+body { margin:0; color:#253038; font-size:10pt; line-height:1.35; }
+h1 { font-size:20pt; margin:0 0 3mm; font-weight:600; }
+.meta { margin:0 0 6mm; color:#59616a; }
+"""
+    )
 
 
 def export_path(

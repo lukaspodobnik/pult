@@ -88,6 +88,11 @@ Sequenz wird die nächste offene Sequenz zur Auswahl angeboten.
 - **Klassen:** Klassen und Fächer verwalten; zugehörige Unterrichtstermine einsehen.
 - **Stundenplan:** Enter bearbeitet eine Zelle. Speichern und Löschen sichern sofort;
   Abbrechen verwirft die Eingabe. Die Verwaltung zeigt alle konfigurierten Stunden.
+  **x – PDF exportieren** speichert die Wochenübersicht im A4-Querformat unter
+  `exports/<Schuljahr>/uebersichten/stundenplan.pdf` im PULT-Datenordner.
+  Der Export enthält alle Stundenzeiten, Klassen, Fachkürzel und Räume und nutzt
+  die eingestellte Dokumentschrift. Ein erneuter Export ersetzt die vorhandene
+  PDF erst nach erfolgreicher Erstellung.
 - **Ausfälle:** Ganztägige Ausfälle schulweit oder für eine Klasse anlegen und
   betroffene Unterrichtstermine einsehen. Ausfälle werden wie Ferien berücksichtigt.
 - **Leistungsnachweise:** Termine planen, bearbeiten, löschen und als durchgeführt

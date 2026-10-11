@@ -1,9 +1,10 @@
+from dataclasses import replace
 from typing import ClassVar
 
 from rich.segment import Segment
 from rich.style import Style
 from rich.text import Text
-from textual import on
+from textual import on, work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.coordinate import Coordinate
@@ -26,6 +27,7 @@ from pult.screens.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
+from pult.services.timetable_export import export_timetable
 from pult.widgets.button import Button
 from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import DataTable, Horizontal, Vertical
@@ -113,6 +115,7 @@ class EditableTimetable(DataTable):
 class EditTimetableScreen(PultScreen[None]):
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
+        ("x", "export_pdf", "PDF exportieren"),
     ]
 
     def __init__(self) -> None:
@@ -122,6 +125,7 @@ class EditTimetableScreen(PultScreen[None]):
         self.subjects: list[Subject] = []
         self.subjects_by_id: dict[str, Subject] = {}
         self.periods: list[Period] = []
+        self._exporting = False
         self._last_entry: TimetableEntry | None = None
         self._column_width = 12
         self._row_heights: dict[int, int] = {}
@@ -302,6 +306,45 @@ class EditTimetableScreen(PultScreen[None]):
             self._format_cell(self.entries_by_slot.get(slot), slot[0], slot[1]),
         )
         table.focus()
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "export_pdf":
+            return bool(self.periods) and not self._exporting
+        return True
+
+    def action_export_pdf(self) -> None:
+        if not self.check_action("export_pdf", ()):
+            return
+        self._exporting = True
+        self.refresh_bindings()
+        # Eine Momentaufnahme: Änderungen während des Exports gehören zum nächsten Export.
+        self._export_pdf(
+            tuple(replace(entry) for entry in self.entries_by_slot.values()),
+            tuple(replace(period) for period in self.periods),
+            {subject.id: subject.short_name for subject in self.subjects},
+        )
+
+    @work(group="pdf-export", exit_on_error=False)
+    async def _export_pdf(
+        self,
+        entries: tuple[TimetableEntry, ...],
+        periods: tuple[Period, ...],
+        subject_labels: dict[str, str],
+    ) -> None:
+        try:
+            path = await export_timetable(
+                self.pult_app.document_renderer,
+                self.app_config,
+                entries=entries,
+                periods=periods,
+                subject_labels=subject_labels,
+            )
+            self.notify(f"PDF gespeichert: {path}", timeout=10)
+        except Exception as error:
+            self.notify(f"Der PDF-Export ist fehlgeschlagen: {error}", severity="error")
+        finally:
+            self._exporting = False
+            self.refresh_bindings()
 
     @on(Button.Pressed, "#close-timetable")
     def close_timetable(self) -> None:

@@ -192,7 +192,7 @@ class TimetablePanel(Vertical):
                 )
 
             label = (
-                f"{period.number}. Std.".ljust(12)
+                f"{period.number}. Stunde".ljust(12)
                 + f"\n{period.start:%H:%M}–{period.end:%H:%M} "
             )
             if height > 2:

@@ -8,9 +8,8 @@ from zoneinfo import ZoneInfo
 from pult.config import AppConfig
 from pult.presentation import format_compact_date, format_school_year
 from pult.progress.queries.distribution import DistributionKind, DistributionRow
-from pult.services.document_fonts import document_font_stylesheet
 from pult.services.document_rendering import DocumentRenderer
-from pult.services.exports import export_path, save_pdf
+from pult.services.exports import export_path, pdf_stylesheet, save_pdf
 
 
 def distribution_html(
@@ -54,11 +53,8 @@ def distribution_html(
     heading = f"{escape(school_class_id)} · {escape(subject_name)}"
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8">
 <title>Stoffverteilungsplan · {heading}</title><style>
-{document_font_stylesheet(font)}
+{pdf_stylesheet(font)}
 @page {{ size:A4 portrait; }}
-body {{ margin:0; color:#253038; font-size:10pt; line-height:1.35; }}
-h1 {{ font-size:20pt; margin:0 0 3mm; font-weight:600; }}
-.meta {{ margin:0 0 6mm; color:#59616a; }}
 table {{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:9pt; }}
 thead {{ display:table-header-group; }}
 th {{ font-weight:600; text-align:left; white-space:nowrap; border-bottom:1px solid #82909b; }}
