@@ -4,6 +4,7 @@ from pathlib import Path
 
 from test_ui_integration import prepare_root
 from textual.app import App
+from textual.events import MouseScrollDown
 
 from pult.app import PultApp
 from pult.initialization.school_class import initialize_school_class
@@ -86,10 +87,15 @@ def test_menu_initial_selection_class_switch_scroll_and_escape(tmp_path, monkeyp
                 row.date.weekday() == 0 for row in view.rows if row.period is not None
             )
             body = view.query_one(VerticalScroll)
+            picker.focus()
+            await pilot.press("tab", "shift+tab")
+            assert app.focused is picker
             body.focus()
-            await pilot.press("pagedown")
+            assert app.focused is picker
+            body.post_message(MouseScrollDown(body, 1, 1, 0, 1, 0, False, False, False))
             await pilot.pause()
             assert body.scroll_y > 0
+            assert app.focused is picker
             app.save_screenshot(filename="pult-stoff-screen.svg", path="/private/tmp")
             await pilot.press("escape")
             assert app.screen is main

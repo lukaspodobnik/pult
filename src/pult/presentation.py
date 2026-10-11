@@ -28,6 +28,11 @@ def format_date(value: date, *, with_weekday: bool = False) -> str:
     return f"{WEEKDAY_NAMES[value.weekday()]}, {text}" if with_weekday else text
 
 
+def format_compact_date(value: date) -> str:
+    """Kompaktes Tabellendatum mit Wochentag, etwa Mi 16.09.26."""
+    return f"{WEEKDAY_NAMES[value.weekday()][:2]} {value:%d.%m.%y}"
+
+
 def parse_date(value: str, description: str = "Das Datum") -> date:
     """Lies ein gültiges Datum im Eingabeformat TT.MM.JJJJ."""
     value = value.strip()

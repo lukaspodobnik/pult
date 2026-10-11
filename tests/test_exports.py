@@ -92,12 +92,15 @@ def test_pdf_html_preserves_rows_and_escapes_all_user_content():
     )
     assert "<script>" not in document and "&lt;script&gt; &amp; Thema" in document
     assert "Mathe &lt;b&gt;" in document
-    assert "<td>2</td><td>Mo</td><td>12.10.2026</td>" in document
+    assert (
+        '<td>2</td><td><span class="date-weekday">Mo</span> '
+        '<span class="date-number">12.10.26</span></td>'
+    ) in document
     assert "HERBSTFERIEN" in document and "Buß und Bettag" in document
     assert "Terme (ca. 12 Std.)" in document
     assert "Stand: 11.10.2026, 14:30" in document
     assert "A4 portrait" in document and "table-header-group" in document
-    assert ".assessment td:nth-child(4)" in document
+    assert ".assessment td:nth-child(3)" in document
 
 
 def test_failed_render_preserves_previous_export(tmp_path):

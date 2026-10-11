@@ -7,11 +7,11 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.widgets import Static
 
+from pult.presentation import format_compact_date
 from pult.progress.queries.distribution import DistributionKind, DistributionRow
 from pult.widgets.scrolling import Vertical, VerticalScroll
 
-WEEKDAY_LABELS = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
-HEADINGS = ("Nr.", "WT", "Datum", "Stundenthema", "Anmerkungen")
+HEADINGS = ("Nr.", "Datum", "Stundenthema", "Anmerkungen")
 SECTION_KINDS = {DistributionKind.SEQUENCE, DistributionKind.HOLIDAY}
 HEADER_BOX = box.Box(str(box.MINIMAL).replace("│", " ").replace("┼", "─"))
 
@@ -78,8 +78,7 @@ class DistributionTable(Static):
             notes_style = self.get_component_rich_style("distribution-table--notes")
             values = (
                 str(row.number) if row.number is not None else "—",
-                WEEKDAY_LABELS[row.date.weekday()],
-                row.date.strftime("%d.%m.%Y"),
+                format_compact_date(row.date),
                 row.title,
                 row.notes,
             )
@@ -91,9 +90,9 @@ class DistributionTable(Static):
                             self.get_component_rich_style(
                                 "distribution-table--assessment"
                             )
-                            if index == 3 and row.kind is DistributionKind.ASSESSMENT
+                            if index == 2 and row.kind is DistributionKind.ASSESSMENT
                             else notes_style
-                            if index == 4
+                            if index == 3
                             else ""
                         ),
                         justify="left",
@@ -122,11 +121,13 @@ class DistributionView(Vertical):
     def __init__(self, rows: tuple[DistributionRow, ...]) -> None:
         super().__init__()
         self.rows = rows
-        self.column_widths = (3, 2, 10, 24, 16)
+        self.column_widths = (3, 11, 24, 20)
 
     def compose(self) -> ComposeResult:
         yield DistributionTable(self, heading=True)
-        with VerticalScroll(classes="distribution-body"):
+        body = VerticalScroll(classes="distribution-body")
+        body.can_focus = False
+        with body:
             if not self.rows:
                 yield Static(
                     "Noch keine Unterrichtstermine vorhanden.",
@@ -152,17 +153,18 @@ class DistributionView(Vertical):
 
     def update_column_widths(self) -> None:
         body = self.query_one(".distribution-body", VerticalScroll)
-        # Innenpadding: 2; vier Trennlinien und Zellabstände: 12.
+        # Innenpadding: 2; drei Trennlinien und Zellabstände: 9.
         available = max(34, body.scrollable_content_region.width - 2)
-        flexible = available - 12 - 3 - 2 - 10
-        title = max(4, flexible * 3 // 5)
-        widths = (3, 2, 10, title, flexible - title)
+        flexible = available - 9 - 3 - 11
+        # Die vier gewonnenen Zeichen kommen vollständig den Anmerkungen zugute.
+        title = max(4, (flexible - 4) * 3 // 5)
+        widths = (3, 11, title, flexible - title)
         if widths != self.column_widths:
             self.column_widths = widths
             for table in self.query(DistributionTable):
                 table.refresh(layout=True)
-        # Drei vorhergehende Zellen, deren Abstände und Trennlinien sowie
+        # Zwei vorhergehende Zellen, deren Abstände und Trennlinien sowie
         # das linke Padding der Themenspalte; Hintergrund bleibt vollbreit.
-        title_offset = 1 + sum(self.column_widths[:3]) + 9
+        title_offset = 1 + sum(self.column_widths[:2]) + 6
         for section in self.query(DistributionTableRow):
             section.styles.padding = (0, 1, 0, title_offset)

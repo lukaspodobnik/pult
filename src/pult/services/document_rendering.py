@@ -309,8 +309,14 @@ class DocumentRenderer:
             finally:
                 await page.close()
 
-    async def render_pdf(self, document: str) -> bytes:
+    async def render_pdf(self, document: str, *, font: str = "source-sans-3") -> bytes:
         """HTML offline als durchsuchbare A4-PDF mit Seitenzahlen drucken."""
+        footer_styles = document_font_stylesheet(font)
+        footer_family = (
+            "'Avenir Next',sans-serif"
+            if font == "avenir-next"
+            else "'Pult Source Sans',sans-serif"
+        )
         async with self.lock:
             await self.ensure_browser()
             assert self.browser is not None
@@ -336,7 +342,9 @@ class DocumentRenderer:
                     display_header_footer=True,
                     header_template="<span></span>",
                     footer_template=(
-                        '<div style="font:9px sans-serif;color:#59616a;width:100%;text-align:center">'
+                        f"<style>{footer_styles}</style>"
+                        f'<div style="font-family:{footer_family};font-size:9px;font-weight:400;'
+                        'color:#59616a;width:100%;text-align:center">'
                         '<span class="pageNumber"></span> / '
                         '<span class="totalPages"></span></div>'
                     ),
