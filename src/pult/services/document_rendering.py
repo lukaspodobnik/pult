@@ -183,6 +183,7 @@ def document_html(
 class DocumentRenderer:
     def __init__(self, cache: Path | None = None, *, stylesheet: str = ""):
         self.stylesheet = stylesheet
+        self.generation = 0
         self._avenir_available: bool | None = None
         self.driver = self.browser = None
         self.lock = asyncio.Lock()
@@ -193,10 +194,34 @@ class DocumentRenderer:
         )
 
     async def ensure_browser(self):
+        if self.browser is not None and not self.browser.is_connected():
+            self.browser = None
         if self.browser is None:
             if self.driver is None:
                 self.driver = await async_playwright().start()
             self.browser = await self.driver.chromium.launch(headless=True)
+
+    async def check_available(self) -> None:
+        """Einen echten Bild- und PDF-Test ausführen, ohne Dateien zu speichern."""
+        async with self.lock:
+            await self.ensure_browser()
+            assert self.browser is not None
+            page = await self.browser.new_page(viewport={"width": 160, "height": 80})
+            try:
+                await page.route("**/*", lambda route: route.abort())
+                await page.set_content("<p>PULT · Dokumentdarstellung</p>")
+                await page.screenshot()
+                await page.pdf()
+                self._avenir_available = None
+                self.generation += 1
+            finally:
+                await page.close()
+
+    async def reset(self) -> None:
+        async with self.lock:
+            await self.close()
+            self._avenir_available = None
+            self.generation += 1
 
     async def avenir_available(self) -> bool:
         if self._avenir_available is not None:

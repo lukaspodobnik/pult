@@ -1,6 +1,6 @@
 from typing import ClassVar
 
-from textual import on
+from textual import on, work
 from textual.app import ComposeResult
 from textual.widgets import Label, Select, Static
 
@@ -15,6 +15,7 @@ from pult.screens.edit_assessment_requirements_screen import (
     EditAssessmentRequirementsScreen,
 )
 from pult.screens.edit_periods_screen import EditPeriodsScreen
+from pult.screens.renderer_setup_screen import RendererSetupScreen
 from pult.services.settings import get_editor_options, update_settings
 from pult.widgets.button import Button
 from pult.widgets.form_dialog import FormDialog, FormFields
@@ -24,7 +25,7 @@ from pult.widgets.scrolling import Horizontal
 class SettingsScreen(PultModalScreen[AppConfig | None]):
     BINDINGS: ClassVar = [("escape", "cancel", "Abbrechen")]
     DEFAULT_CSS = """
-    SettingsScreen #edit-periods, SettingsScreen #edit-requirements, SettingsScreen #show-about {
+    SettingsScreen #edit-periods, SettingsScreen #edit-requirements, SettingsScreen #show-about, SettingsScreen #setup-renderer {
         width: 100%;
         margin: 0;
     }
@@ -41,6 +42,7 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
                     allow_blank=False,
                     id="settings-editor",
                 )
+                yield Button("Dokumentdarstellung einrichten", id="setup-renderer")
                 yield Label("Dokumentschrift", classes="field-label")
                 yield Select(
                     [("Automatisch", "auto"), ("Source Sans 3", "source-sans-3")],
@@ -72,7 +74,10 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
     def on_mount(self) -> None:
         self.call_after_refresh(self.load_font_options)
 
+    @work(exclusive=True, group="font-options")
     async def load_font_options(self) -> None:
+        picker = self.query_one("#settings-document-font", Select)
+        selected = self.app_config.document_font if picker.disabled else picker.value
         available = await self.pult_app.document_renderer.avenir_available()
         if not self.is_mounted:
             return
@@ -82,8 +87,7 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
             options.append(("Avenir Next", "avenir-next"))
         options.append(("Source Sans 3", "source-sans-3"))
         picker.set_options(options)
-        saved = self.app_config.document_font
-        picker.value = saved if available or saved != "avenir-next" else "auto"
+        picker.value = selected if available or selected != "avenir-next" else "auto"
         picker.disabled = False
         self.query_one("#font-status", Static).update(
             "Automatisch: Avenir Next"
@@ -126,6 +130,14 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
             EditAssessmentRequirementsScreen(str(year), entries, subjects)
         )
 
+    @on(Button.Pressed, "#setup-renderer")
+    def setup_renderer(self) -> None:
+        self.app.push_screen(RendererSetupScreen(), self.renderer_setup_finished)
+
+    def renderer_setup_finished(self, ready: bool | None) -> None:
+        if ready:
+            self.load_font_options()
+
     @on(Button.Pressed, "#show-about")
     def show_about(self) -> None:
         self.app.push_screen(AboutScreen())
@@ -135,13 +147,10 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
         editor = self.query_one("#settings-editor", Select).value
         year = self.query_one("#settings-year", Select).value
         font_picker = self.query_one("#settings-document-font", Select)
-        font = font_picker.value
-        if (
-            font_picker.disabled
-            or editor is Select.NULL
-            or year is Select.NULL
-            or font is Select.NULL
-        ):
+        font = (
+            self.app_config.document_font if font_picker.disabled else font_picker.value
+        )
+        if editor is Select.NULL or year is Select.NULL or font is Select.NULL:
             return
         try:
             updated = update_settings(

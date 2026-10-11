@@ -12,6 +12,7 @@ from pult.school.school_class import SchoolClass, load_school_classes
 from pult.school.subject import Subject, load_subjects
 from pult.screens.base_screen import PultScreen
 from pult.services.distribution_export import export_distribution_plan
+from pult.services.exports import export_error_message
 from pult.services.progress import PlanningData, load_planning_data
 from pult.views.distribution_view import DistributionView
 from pult.widgets.footer import PultFooter
@@ -230,7 +231,7 @@ class DistributionScreen(PultScreen[None]):
             )
             self.notify(f"PDF gespeichert: {path}", timeout=10)
         except Exception as error:
-            self.notify(f"Der PDF-Export ist fehlgeschlagen: {error}", severity="error")
+            self.notify(export_error_message(error), severity="error")
         finally:
             self._exporting = False
             self.refresh_bindings()

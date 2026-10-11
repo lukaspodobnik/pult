@@ -3,6 +3,8 @@
 import re
 from pathlib import Path
 
+from playwright.async_api import Error as PlaywrightError
+
 from pult.school.calendar import validate_school_year
 from pult.services.document_fonts import document_font_stylesheet
 from pult.storage import save_bytes
@@ -51,3 +53,12 @@ def save_pdf(target: Path, content: bytes) -> Path:
     target.parent.mkdir(parents=True, exist_ok=True)
     save_bytes(target, content)
     return target
+
+
+def export_error_message(error: Exception) -> str:
+    if isinstance(error, PlaywrightError):
+        return (
+            "Der PDF-Export benötigt die Dokumentdarstellung. "
+            "Bitte unter Einstellungen → Dokumentdarstellung einrichten prüfen."
+        )
+    return f"Der PDF-Export ist fehlgeschlagen: {error}"

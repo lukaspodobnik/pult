@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import ClassVar
 from zoneinfo import ZoneInfo
 
+from textual import work
 from textual.app import App
 from textual.binding import Binding
 from textual.events import Event, Key
@@ -12,9 +13,11 @@ from pult.config import AppConfig, load_app_config
 from pult.presentation import format_school_year
 from pult.screens.confirmation_screen import ConfirmationScreen
 from pult.screens.main_screen import MainScreen
+from pult.screens.renderer_setup_screen import RendererSetupScreen
 from pult.screens.setup_pult_screen import SetupScreen
 from pult.services.document_rendering import DocumentRenderer
 from pult.services.omarchy_theme import OmarchyThemeWatcher
+from pult.services.renderer_setup import RendererSetup
 from pult.services.sequence_library import SequenceLibrary
 from pult.services.settings import get_suggested_school_year, update_settings
 from pult.services.themes import standard_theme
@@ -84,6 +87,8 @@ class PultApp(App):
     def __init__(self) -> None:
         super().__init__()
         self.document_renderer = DocumentRenderer()
+        self.renderer_setup = RendererSetup(self.document_renderer)
+        self._renderer_setup_offered = False
         self.app_config: AppConfig | None = None
         self.sequence_library: SequenceLibrary | None = None
         self.omarchy_theme = OmarchyThemeWatcher()
@@ -160,11 +165,14 @@ class PultApp(App):
                 f"Schuljahreswechsel konnte nicht geprüft werden: {error}",
                 severity="warning",
             )
+            self.offer_renderer_setup()
             return
         if year is None:
+            self.offer_renderer_setup()
             return
 
         def selected(confirmed: bool | None) -> None:
+            self.call_after_refresh(self.offer_renderer_setup)
             if not confirmed:
                 return
             try:
@@ -187,6 +195,21 @@ class PultApp(App):
             ),
             selected,
         )
+
+    @work(group="renderer-startup-check", exclusive=True)
+    async def offer_renderer_setup(self) -> None:
+        if self._renderer_setup_offered or not self.renderer_setup.should_offer():
+            return
+        self._renderer_setup_offered = True
+        result = await self.renderer_setup.check()
+        # Keine laufende Interaktion durch einen verspäteten Dialog unterbrechen.
+        if (
+            result.state != "ready"
+            and self.screen_stack
+            and isinstance(self.screen, MainScreen)
+            and not self.screen.startup_active
+        ):
+            self.push_screen(RendererSetupScreen(result, offered=True))
 
     def on_setup_complete(self, app_config: AppConfig | None) -> None:
         assert app_config is not None

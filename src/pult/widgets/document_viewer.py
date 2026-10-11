@@ -128,6 +128,7 @@ class DocumentViewer(Vertical):
             self.text_mode,
             font,
             viewport_height,
+            getattr(getattr(self.app, "document_renderer", None), "generation", 0),
         )
         if signature == self.signature:
             self.refresh_corners()
@@ -145,7 +146,7 @@ class DocumentViewer(Vertical):
 
     @work(exclusive=True)
     async def render_document(self, signature):
-        width, colors, text_mode, font, viewport_height = signature
+        width, colors, text_mode, font, viewport_height, _generation = signature
         body = self.query_one("#document-body", Vertical)
         tiles = []
         try:
@@ -223,7 +224,7 @@ class DocumentViewer(Vertical):
                 status = Static(
                     f"Textansicht · {error}"
                     if isinstance(error, ValueError)
-                    else "Textansicht · Grafikdarstellung ist nicht verfügbar (siehe README).",
+                    else "Textansicht · Grafikdarstellung nicht verfügbar. Einstellungen → Dokumentdarstellung öffnen.",
                     markup=False,
                     classes="document-status",
                 )

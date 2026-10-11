@@ -25,6 +25,19 @@ def isolated_omarchy_palette(tmp_path, monkeypatch):
     )
 
 
+@pytest.fixture(autouse=True)
+def isolated_renderer_check(tmp_path, monkeypatch):
+    """UI-Tests benötigen keinen Browser und schreiben nie in den echten Cache."""
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+
+    async def ready(_):
+        pass
+
+    monkeypatch.setattr(
+        "pult.services.document_rendering.DocumentRenderer.check_available", ready
+    )
+
+
 @pytest.fixture
 def subject() -> Subject:
     return Subject("mathematik", "Mathematik", "Ma", [5])

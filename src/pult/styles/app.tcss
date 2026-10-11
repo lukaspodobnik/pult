@@ -306,3 +306,7 @@ EditPeriodsScreen #periods-dialog .form-fields {
     height: 1fr;
     margin-right: 1;
 }
+
+RendererSetupScreen #renderer-check {
+    width: 20;
+}

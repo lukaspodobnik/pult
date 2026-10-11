@@ -1,5 +1,12 @@
 # Änderungen
 
+## 1.3.1
+
+- Integrierte Einrichtung der Dokumentdarstellung beim Start und in den
+  Einstellungen: Chromium-Download, Abbruch, erneute Prüfung und Linux-Hilfe.
+- Schriftprüfung und offene Dokumente aktualisieren sich nach erfolgreicher
+  Einrichtung ohne Neustart; die Textansicht bleibt ohne Chromium verfügbar.
+
 ## 1.3.0
 
 - Gemeinsamer Dokumentbetrachter für Unterricht, Planung, Aufgaben und Lehrpläne:

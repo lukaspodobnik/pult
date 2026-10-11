@@ -22,6 +22,7 @@ from pult.app import PultApp
 from pult.curriculum.sequence import load_sequence_library
 from pult.screens.about_screen import AboutScreen
 from pult.screens.main_screen import MainScreen
+from pult.screens.renderer_setup_screen import RendererSetupScreen
 from pult.screens.setup_pult_screen import SetupScreen
 
 
@@ -41,6 +42,16 @@ async def smoke(app: PultApp, root: Path) -> None:
             ):
                 break
         assert isinstance(app.screen, MainScreen)
+        for _ in range(100):
+            await pilot.pause(0.05)
+            if isinstance(app.screen, RendererSetupScreen):
+                break
+        assert isinstance(app.screen, RendererSetupScreen)
+        assert app.screen.result is not None and app.screen.result.state == "missing"
+        assert await pilot.click("#renderer-close")
+        await pilot.pause()
+        assert isinstance(app.screen, MainScreen)
+        assert not app.renderer_setup.should_offer()
         assert app.require_config().root.resolve() == (root / "data").resolve()
         assert len(load_sequence_library(root / "data")) == 116
         await app.push_screen(AboutScreen())
@@ -81,6 +92,8 @@ def main() -> None:
         with TemporaryDirectory(prefix="pult-installed-smoke-") as directory:
             root = Path(directory)
             os.chdir(root)
+            os.environ["XDG_CACHE_HOME"] = str(root / "cache")
+            os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(root / "missing-browser")
             config_module.APP_CONFIG_PATH = root / "config.toml"
             theme_module.get_omarchy_palette_path = lambda: root / "no-theme.toml"
             if len(sys.argv) > 1:
@@ -100,7 +113,7 @@ def main() -> None:
     finally:
         os.chdir(old_cwd)
     print(
-        "Installiertes PULT: Einstiegspunkt, Setup, Neustart, Defaults und Lizenzdialog erfolgreich."
+        "Installiertes PULT: Einstiegspunkt, Setup, Rendererangebot, Neustart, Defaults und Lizenzdialog erfolgreich."
     )
 
 

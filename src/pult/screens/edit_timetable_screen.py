@@ -27,6 +27,7 @@ from pult.screens.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
+from pult.services.exports import export_error_message
 from pult.services.timetable_export import export_timetable
 from pult.widgets.button import Button
 from pult.widgets.footer import PultFooter
@@ -341,7 +342,7 @@ class EditTimetableScreen(PultScreen[None]):
             )
             self.notify(f"PDF gespeichert: {path}", timeout=10)
         except Exception as error:
-            self.notify(f"Der PDF-Export ist fehlgeschlagen: {error}", severity="error")
+            self.notify(export_error_message(error), severity="error")
         finally:
             self._exporting = False
             self.refresh_bindings()

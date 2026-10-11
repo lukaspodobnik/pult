@@ -15,6 +15,15 @@ from pult.services.document_rendering import DocumentRenderer
 from pult.services.exports import export_path, save_pdf
 
 
+def test_browser_export_error_points_to_setup_but_keeps_file_errors():
+    from playwright.async_api import Error
+
+    from pult.services.exports import export_error_message
+
+    assert "Einstellungen" in export_error_message(Error("Executable doesn't exist"))
+    assert "Datenträger voll" in export_error_message(OSError("Datenträger voll"))
+
+
 def test_export_paths_are_stable_and_support_shared_overviews(tmp_path):
     assert (
         export_path(
@@ -141,7 +150,9 @@ def test_pdf_renderer_waits_for_fonts_and_closes_page_on_failure(tmp_path):
         close=AsyncMock(),
     )
     renderer = DocumentRenderer(tmp_path)
-    renderer.browser = SimpleNamespace(new_page=AsyncMock(return_value=page))
+    renderer.browser = SimpleNamespace(
+        is_connected=lambda: True, new_page=AsyncMock(return_value=page)
+    )
 
     async def run():
         assert await renderer.render_pdf("<html>Test</html>") == b"%PDF-test"

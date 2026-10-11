@@ -20,24 +20,25 @@ Benötigt werden [uv](https://docs.astral.sh/uv/), ein Terminal mit Unicode und 
 Editor, etwa Neovim oder VS Code. Für die grafische Dokumentansicht eignen sich
 **Ghostty** und **Foot**. Andere Terminals können die Textansicht verwenden.
 
-PULT 1.3.0 nach Veröffentlichung aus dem GitHub-Release installieren:
+PULT 1.3.1 nach Veröffentlichung aus dem GitHub-Release installieren:
 
 ```sh
-uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.3.0/pult-1.3.0-py3-none-any.whl
+uv tool install --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.3.1/pult-1.3.1-py3-none-any.whl
 ```
 
-Für Dokumentdarstellung und PDF-Export einmalig den passenden Browser installieren
-(macOS/Linux; derselbe Befehl gilt nach einem Playwright-Update):
+`pult` starten und **Dokumentdarstellung einrichten** wählen. PULT lädt den passenden
+Chromium-Browser für Dokumentgrafik und PDF-Export selbst herunter. Die Einrichtung
+ist auch unter **Einstellungen → Dokumentdarstellung einrichten** erreichbar.
+Es öffnet sich kein Browserfenster. Mit **Später** bleibt die Textansicht nutzbar;
+nach einem Playwright-Update wird die Einrichtung bei Bedarf erneut angeboten.
 
-```sh
-"$(uv tool dir)/pult/bin/python" -m playwright install chromium --only-shell
-pult
-```
-
-Unter Linux können zusätzlich Browser-Systembibliotheken nötig sein:
-`"$(uv tool dir)/pult/bin/python" -m playwright install-deps chromium`.
-Es öffnet sich kein Browserfenster. Ohne installierten Browser bleibt die
-Textansicht nutzbar; PDF-Exporte benötigen Chromium.
+Unter Linux können zusätzliche Systembibliotheken nötig sein. PULT zeigt dafür
+auf unterstützten Debian-/Ubuntu-Versionen einen kopierbaren Installationsbefehl.
+Auf Arch/Omarchy gibt PULT Hinweise zu `pacman` und bietet bei bekannten
+Bibliotheksnamen eine Dateisuche mit `pacman -F` an. Systempakete installiert man selbst im Terminal;
+anschließend **Erneut prüfen** wählen. Arch wird von Playwright nicht offiziell
+unterstützt; die vollständige Einrichtung auf einem frischen Arch-System ist
+noch nicht verifiziert. Darstellung und Export funktionieren danach offline.
 
 Alternativ im geklonten Projektordner `uv tool install .` ausführen; ein Update
 übernimmt `uv tool install --force .`. Bei fehlendem Suchpfad hilft
@@ -194,7 +195,6 @@ Terminalfenster ausgelegt, etwa 206 × 46 Zeichen.
 
 ```sh
 uv sync --locked
-uv run playwright install chromium --only-shell
 uv run pult
 just check        # Ruff, Formatprüfung, Pyright und Tests
 uv build          # Wheel und Quellarchiv unter dist/
