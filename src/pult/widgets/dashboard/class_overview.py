@@ -19,6 +19,17 @@ class ClassOverviewPanel(Vertical):
         self.subjects = subjects
 
     def rows(self):
+        next_time = min(
+            (
+                (
+                    balance.next_assessment.assessment.date,
+                    balance.next_assessment.assessment.start,
+                )
+                for balance in self.balances
+                if balance.next_assessment is not None
+            ),
+            default=None,
+        )
         if not self.balances:
             yield Static("Noch keine Klassen angelegt.", classes="dashboard-empty")
         for balance in self.balances:
@@ -44,13 +55,23 @@ class ClassOverviewPanel(Vertical):
                     f"{balance.difference:+d} Std.",
                     classes=f"balance-difference {sign}",
                 )
-                yield Static(
+                assessment_label = Static(
                     f"{format_date(balance.next_assessment.assessment.date)} · {balance.next_assessment.number}. {balance.next_assessment.assessment.kind.abbreviation}"
                     if balance.next_assessment
                     else "—",
                     classes="balance-assessments",
                     markup=False,
                 )
+                if (
+                    balance.next_assessment is not None
+                    and (
+                        balance.next_assessment.assessment.date,
+                        balance.next_assessment.assessment.start,
+                    )
+                    == next_time
+                ):
+                    assessment_label.add_class("next-assessment")
+                yield assessment_label
 
                 yield Static(balance.large_assessments.label, classes="balance-large")
                 yield Static(balance.small_assessments.label, classes="balance-small")

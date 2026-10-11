@@ -152,6 +152,13 @@ class TeachingLogEntry:
                 "Ein anderer Unterrichtsinhalt darf keine Stunden-ID besitzen."
             )
 
+        if (
+            self.action is TeachingAction.OTHER
+            and self.origin is TeachingOrigin.SCHEDULED
+            and not self.comment
+        ):
+            raise ValueError("Spontanunterricht benötigt eine Beschreibung.")
+
         if self.origin is TeachingOrigin.SCHEDULED and self.period is None:
             raise ValueError(
                 "Ein regulärer Stundenplantermin benötigt eine Stundennummer."

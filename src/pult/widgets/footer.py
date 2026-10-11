@@ -5,7 +5,7 @@ from textual.widgets._footer import FooterKey
 
 SHORT_LABELS = {
     "open_next_lesson": "Öffnen",
-    "add_extra_lesson": "Zusatzstunde",
+    "add_extra_lesson": "Zusätzlicher Termin",
     "change_active_sequence": "Sequenz",
     "toggle_material": "Ansicht",
     "edit_preparation": "Bearbeiten",

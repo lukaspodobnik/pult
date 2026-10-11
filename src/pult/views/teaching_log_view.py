@@ -17,13 +17,13 @@ ACTION_LABELS = {
     TeachingAction.SKIPPED: "Übersprungen",
     TeachingAction.CONTINUED: "Fortgesetzt",
     TeachingAction.CANCELLED: "Ausgefallen",
-    TeachingAction.OTHER: "Zusatzunterricht",
+    TeachingAction.OTHER: "Andere Inhalte",
     TeachingAction.ASSESSMENT_COMPLETED: "Durchgeführt",
 }
 
 ORIGIN_LABELS = {
     TeachingOrigin.SCHEDULED: "Stundenplantermin",
-    TeachingOrigin.ADDITIONAL: "Zusatztermin",
+    TeachingOrigin.ADDITIONAL: "Zusätzlicher Termin",
     TeachingOrigin.NONE: "Ohne Termin",
     TeachingOrigin.ASSESSMENT: "Leistungsnachweis",
 }
@@ -73,8 +73,14 @@ class TeachingLogEntryBlock(Vertical):
         if lesson_title is not None:
             yield Static(lesson_title, classes="teaching-log-lesson")
 
+        action_label = (
+            "Spontanunterricht"
+            if self.entry.action is TeachingAction.OTHER
+            and self.entry.origin is TeachingOrigin.SCHEDULED
+            else ACTION_LABELS[self.entry.action]
+        )
         yield Static(
-            f"{ACTION_LABELS[self.entry.action]} · {ORIGIN_LABELS[self.entry.origin]}",
+            f"{action_label} · {ORIGIN_LABELS[self.entry.origin]}",
             classes="teaching-log-kind",
         )
 

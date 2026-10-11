@@ -20,6 +20,7 @@ ACTION_ICONS = {
     TeachingAction.COMPLETED: "✓",
     TeachingAction.ASSESSMENT_COMPLETED: "✓",
     TeachingAction.CONTINUED: "↻",
+    TeachingAction.OTHER: "✓",
     TeachingAction.CANCELLED: "×",
 }
 
@@ -100,6 +101,8 @@ class DailyScheduleRow(Horizontal):
             return self.daily_entry.planned_lesson.lesson.title or UNTITLED_LESSON
 
         log_entry = self.daily_entry.log_entry
+        if log_entry is not None and log_entry.action is TeachingAction.OTHER:
+            return log_entry.comment
         if log_entry is None or log_entry.lesson_id is None:
             return None
 

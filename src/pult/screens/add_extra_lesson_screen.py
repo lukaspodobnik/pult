@@ -54,7 +54,7 @@ class AddExtraLessonScreen(PultModalScreen[ExtraLessonFormResult | None]):
         selected_class_id = self.fixed_school_class_id or self.school_classes[0].id
         subject_options = self.get_subject_options(selected_class_id)
 
-        with FormDialog("Zusatzunterricht", id="add-extra-lesson-dialog"):
+        with FormDialog("Zusätzlicher Termin", id="add-extra-lesson-dialog"):
             with FormFields(classes="form-fields"):
                 if self.fixed_school_class_id is None:
                     yield Label("Klasse", classes="field-label")
@@ -155,7 +155,7 @@ class AddExtraLessonScreen(PultModalScreen[ExtraLessonFormResult | None]):
 
         comment = self.query_one("#extra-comment", Input).value.strip()
         if not comment:
-            self.notify("Bitte beschreibe den Zusatzunterricht.", severity="warning")
+            self.notify("Bitte beschreibe den zusätzlichen Termin.", severity="warning")
             return
 
         self.dismiss(

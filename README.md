@@ -74,7 +74,8 @@ Vergangene, nicht protokollierte Termine bleiben offen und können nachgetragen 
 | `s` | Sequenzstunde überspringen, ohne einen Termin zu verbrauchen |
 | `c` | Termin verbuchen; Sequenzstunde bleibt offen |
 | `a` | Spontanen Unterrichtsausfall mit Begründung verbuchen |
-| `z` | Zusatzunterricht eintragen |
+| `t` | Spontanunterricht am regulären Termin eintragen |
+| `z` | Zusätzlichen Termin eintragen |
 | `p` | Letzten Eintrag des Fachs nach Bestätigung zurücknehmen; in der Übersicht den dort zuletzt abgeschlossenen LNW zurücknehmen |
 | `w` | Aktive Sequenz wechseln, nur in der Klassenansicht |
 | `u` | Unterrichtsprotokoll des Fachs öffnen, nur in der Klassenansicht |
@@ -82,6 +83,17 @@ Vergangene, nicht protokollierte Termine bleiben offen und können nachgetragen 
 Die Unterrichtsaktionen `s`, `c` und `a` gelten nicht für LNWs. Einen ausgefallenen
 LNW stattdessen in der Verwaltung verschieben oder löschen. Nach Abschluss einer
 Sequenz wird die nächste offene Sequenz zur Auswahl angeboten.
+
+**Spontanunterricht (`t`)** verbucht den nächsten regulären Unterrichtstermin für
+andere Inhalte der aktiven Sequenz. Eine Beschreibung ist verpflichtend, etwa
+„Übung vor der Schulaufgabe“. Die nächste vorbereitete Planstunde bleibt offen;
+der Stoffverteilungsplan zeigt die Beschreibung als Stundenthema mit eigener
+fortlaufender Nummer. `c` hingegen bedeutet, dass die geplante Stunde bearbeitet,
+aber noch nicht abgeschlossen wurde.
+
+**Zusätzlicher Termin (`z`)** erfasst Unterricht außerhalb des regulären
+Stundenplans. Optional kann dabei die nächste geplante Stunde abgeschlossen
+werden. `p` nimmt die letzte Buchung des ausgewählten Fachs zurück.
 
 ## Verwaltung und Einstellungen
 
@@ -289,8 +301,8 @@ verwendet und nicht mitgeliefert. Quellen und Lizenzen: siehe `SOURCES.md` und
 Unter **UNTERRICHT → Stoffverteilungsplan** zeigt PULT den Jahresplan für die
 ausgewählte Klasse und das Fach. Protokollierter Unterricht bleibt erhalten;
 offene Stunden werden ab der aktiven Sequenz in Lehrplanreihenfolge auf die
-verbleibenden Termine verteilt. Fortsetzungen und Zusatzunterricht zählen als
-Unterrichtszeit; übersprungene Stunden, Ausfälle und Leistungsnachweise nicht.
+verbleibenden Termine verteilt. Fortsetzungen, Spontanunterricht und zusätzliche
+Termine zählen als Unterrichtszeit; übersprungene Stunden, Ausfälle und Leistungsnachweise nicht.
 Die Nummerierung beginnt bei jedem Sequenzwechsel erneut bei 1.
 
 Ferien erscheinen als eine Abschnittszeile, Feiertage und lokale Ausfälle als

@@ -95,6 +95,30 @@ def continue_lesson(
     )
 
 
+def record_spontaneous_lesson(
+    old_progress: ClassProgress,
+    planned_lesson: PlannedLesson,
+    sequences: list[Sequence],
+    description: str,
+) -> ClassProgress:
+    """Verbrauche einen regulären Termin für andere Inhalte der aktiven Sequenz."""
+    if not description.strip():
+        raise ProgressCommandError("Bitte beschreibe den Spontanunterricht.")
+    _validate_planned_lesson(old_progress, planned_lesson, sequences)
+    return _append_entry(
+        old_progress,
+        TeachingLogEntry(
+            date=planned_lesson.date,
+            subject_id=planned_lesson.subject_id,
+            sequence_id=planned_lesson.sequence_id,
+            action=TeachingAction.OTHER,
+            origin=TeachingOrigin.SCHEDULED,
+            period=planned_lesson.period,
+            comment=description,
+        ),
+    )
+
+
 def cancel_scheduled_lesson(
     old_progress: ClassProgress,
     planned_lesson: PlannedLesson,
@@ -124,7 +148,7 @@ def add_extra_lesson(
     entry_date: date,
     comment: str = "",
 ) -> ClassProgress:
-    """Protokolliere Zusatzunterricht, der keine geplante Lesson abschließt."""
+    """Protokolliere einen zusätzlichen Termin ohne Abschluss einer geplanten Lesson."""
     active_sequence = _get_active_sequence(old_progress, subject_id)
     return _append_entry(
         old_progress,

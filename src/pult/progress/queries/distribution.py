@@ -59,7 +59,7 @@ def build_distribution_plan(
     """Protokollierte Termine bewahren; offene Stunden ab der aktiven Sequenz planen.
 
     Die Prognose setzt nach dem letzten verbuchten Unterrichtstermin an,
-    unabhängig vom heutigen Datum. Zusatzunterricht wird dabei berücksichtigt.
+    unabhängig vom heutigen Datum. Zusätzliche Termine werden berücksichtigt.
     """
     school_class = next(c for c in data.school_classes if c.id == school_class_id)
     progress = data.progresses_by_class_id[school_class_id]
@@ -191,13 +191,21 @@ def build_distribution_plan(
                 entry.comment,
                 period=entry.period,
             )
-        notes = [lesson.notes if lesson else "", entry.comment]
+        spontaneous = (
+            entry.action is TeachingAction.OTHER
+            and entry.origin is TeachingOrigin.SCHEDULED
+        )
+        notes = [lesson.notes if lesson else "", "" if spontaneous else entry.comment]
         if entry.origin is TeachingOrigin.ADDITIONAL:
-            notes.append("Zusatzunterricht")
+            notes.append("Zusätzlicher Termin")
         return DistributionRow(
             DistributionKind.LESSON,
             entry.date,
-            lesson.title if lesson else "Anderer Unterrichtsinhalt",
+            entry.comment
+            if spontaneous
+            else lesson.title
+            if lesson
+            else "Anderer Unterrichtsinhalt",
             " · ".join(dict.fromkeys(n for n in notes if n)),
             period=entry.period,
             sequence_id=sequence.id,

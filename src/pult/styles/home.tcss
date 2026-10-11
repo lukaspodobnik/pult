@@ -201,6 +201,7 @@ HomeView .balance-subject { width: 1fr; min-width: 8; height: 1; }
 HomeView .balance-large, HomeView .balance-small { width: 7; height: 1; text-align: center; }
 HomeView .balance-difference { width: 12; height: 1; }
 HomeView .balance-assessments { width: 21; height: 1; color: $foreground-muted; }
+HomeView .balance-assessments.next-assessment { color: $foreground; text-style: bold; }
 HomeView .balance-difference.positive { color: $success; }
 HomeView .balance-difference.negative { color: $error; }
 

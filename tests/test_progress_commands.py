@@ -17,6 +17,7 @@ from pult.progress.commands import (
     complete_additional_lesson,
     complete_lesson,
     continue_lesson,
+    record_spontaneous_lesson,
     set_active_sequence,
     skip_lesson,
     undo_last_entry,
@@ -169,3 +170,42 @@ def test_command_rejects_stale_planned_lesson(
     progress = complete_lesson(empty_progress, planned_lesson, sequences).progress
     with pytest.raises(ProgressCommandError):
         complete_lesson(progress, planned_lesson, sequences)
+
+
+def test_spontaneous_consumes_regular_slot_without_advancing_and_can_be_undone(
+    empty_progress,
+    planned_lesson,
+    sequences,
+    timetable_entries,
+    school_calendar,
+):
+    from pult.progress.queries.scheduling import get_next_scheduled_occurrence
+
+    progress = record_spontaneous_lesson(
+        empty_progress, planned_lesson, sequences, "  Übung vor der Schulaufgabe  "
+    )
+    entry = progress.entries[-1]
+    assert entry.action is TeachingAction.OTHER
+    assert entry.origin is TeachingOrigin.SCHEDULED
+    assert entry.lesson_id is None
+    assert entry.comment == "Übung vor der Schulaufgabe"
+    assert (entry.date, entry.period) == (planned_lesson.date, planned_lesson.period)
+    assert get_next_lesson(progress, sequences, "mathematik", 5).id == "lesson-1"
+    assert get_next_scheduled_occurrence(
+        progress, timetable_entries, "5A", "mathematik", school_calendar, []
+    ) == (date(2026, 9, 7), 2)
+    with pytest.raises(ProgressCommandError):
+        record_spontaneous_lesson(
+            progress, planned_lesson, sequences, "Doppelte Buchung"
+        )
+    assert undo_last_entry(progress, subject_id="mathematik") == empty_progress
+
+
+@pytest.mark.parametrize("description", ["", "   "])
+def test_spontaneous_requires_description(
+    empty_progress, planned_lesson, sequences, description
+):
+    with pytest.raises(ProgressCommandError):
+        record_spontaneous_lesson(
+            empty_progress, planned_lesson, sequences, description
+        )

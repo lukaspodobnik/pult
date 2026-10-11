@@ -208,7 +208,7 @@ def test_additional_lesson_preserved_and_future_not_projected_before_it(data):
         (date(2026, 9, 9), 2),
         (date(2026, 9, 16), 1),
     ]
-    assert lessons(data)[0].notes == "Zusatzunterricht"
+    assert lessons(data)[0].notes == "Zusätzlicher Termin"
 
 
 def test_active_sequence_defines_forecast_order(data):
@@ -271,3 +271,38 @@ def test_penitence_day_shown_as_cancelled_lesson_not_vacation(data, name):
     assert rows[0].notes == "Buß und Bettag"
     assert rows[0].number is None
     assert lessons(data)[-1].date == date(2026, 9, 16)
+
+
+def test_spontaneous_title_real_number_and_unchanged_next_plan_lesson(
+    data, planned_lesson
+):
+    from pult.progress.commands import complete_lesson, record_spontaneous_lesson
+
+    progress = complete_lesson(
+        data.progresses_by_class_id["5A"], planned_lesson, data.sequences
+    ).progress
+    spontaneous_slot = replace(
+        planned_lesson, period=2, lesson=data.sequences[0].lessons[1]
+    )
+    progress = record_spontaneous_lesson(
+        progress, spontaneous_slot, data.sequences, "Übung vor der Schulaufgabe"
+    )
+    data = replace(data, progresses_by_class_id={"5A": progress})
+    rows = lessons(data)
+    assert [(row.title, row.number) for row in rows[:3]] == [
+        ("Zahlen ordnen", 1),
+        ("Übung vor der Schulaufgabe", 2),
+        ("Zahlen runden", 3),
+    ]
+    assert (rows[1].date, rows[1].period, rows[1].lesson_id, rows[1].projected) == (
+        date(2026, 9, 7),
+        2,
+        None,
+        False,
+    )
+    assert rows[1].notes == ""
+    assert (rows[2].date, rows[2].period, rows[2].projected) == (
+        date(2026, 9, 9),
+        1,
+        True,
+    )

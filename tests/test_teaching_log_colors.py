@@ -35,6 +35,7 @@ def test_log_colors_match_progress_and_follow_theme(school_class, subject, seque
             }
             else None,
             period=None if action is TeachingAction.SKIPPED else 1,
+            comment="Übung" if action is TeachingAction.OTHER else "",
         )
         for action in TeachingAction
         if action is not TeachingAction.ASSESSMENT_COMPLETED

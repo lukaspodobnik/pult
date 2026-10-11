@@ -13,7 +13,7 @@ from textual.widgets import ContentSwitcher
 
 from pult.config import AppConfig
 from pult.curriculum.sequence import Sequence
-from pult.presentation import UNTITLED_LESSON
+from pult.presentation import UNTITLED_LESSON, format_compact_date
 from pult.progress.class_progress import (
     ClassProgress,
     save_class_progress,
@@ -28,6 +28,7 @@ from pult.progress.commands import (
     complete_additional_lesson,
     complete_lesson,
     continue_lesson,
+    record_spontaneous_lesson,
     set_active_sequence,
     skip_lesson,
     undo_last_entry,
@@ -70,6 +71,7 @@ from pult.screens.set_active_sequence_screen import (
     SetActiveSequenceScreen,
 )
 from pult.screens.settings_screen import SettingsScreen
+from pult.screens.spontaneous_lesson_screen import SpontaneousLessonScreen
 from pult.screens.teaching_log_screen import TeachingLogScreen
 from pult.services.assessments import complete_assessment, reopen_assessment
 from pult.services.progress import (
@@ -101,7 +103,8 @@ class MainScreen(PultScreen[None]):
         ("s", "skip_next_lesson", "Überspringen"),
         ("c", "continue_next_lesson", "Fortsetzen"),
         ("a", "cancel_next_lesson", "Ausfall"),
-        ("z", "add_extra_lesson", "Zusatzunterricht"),
+        ("t", "record_spontaneous_lesson", "Spontanunterricht"),
+        ("z", "add_extra_lesson", "Zusätzlicher Termin"),
         ("p", "undo_last_entry", "Rückgängig"),
         ("u", "show_teaching_log", "Protokoll"),
         ("w", "change_active_sequence", "Sequenz wechseln"),
@@ -437,6 +440,7 @@ class MainScreen(PultScreen[None]):
             "skip_next_lesson",
             "continue_next_lesson",
             "cancel_next_lesson",
+            "record_spontaneous_lesson",
             "add_extra_lesson",
             "undo_last_entry",
             "change_active_sequence",
@@ -454,6 +458,7 @@ class MainScreen(PultScreen[None]):
             "skip_next_lesson",
             "continue_next_lesson",
             "cancel_next_lesson",
+            "record_spontaneous_lesson",
         } and isinstance(self.displayed_next_lesson(), PlannedAssessment):
             return False
         if action == "undo_last_entry" and self.active_school_class_id is None:
@@ -758,6 +763,38 @@ class MainScreen(PultScreen[None]):
             cancellation_entered,
         )
 
+    def action_record_spontaneous_lesson(self) -> None:
+        context = self.load_planned_lesson_context()
+        if context is None:
+            return
+
+        async def description_entered(description: str | None) -> None:
+            if description is None:
+                return
+            try:
+                progress = record_spontaneous_lesson(
+                    context.progress,
+                    context.planned_lesson,
+                    context.sequences,
+                    description,
+                )
+                await self.save_progress_and_refresh(
+                    context.school_class, progress, context.sequences
+                )
+            except (OSError, ProgressCommandError, ValueError) as error:
+                self.notify(str(error), severity="error")
+                return
+            self.notify(f"{context.school_class.id}: Spontanunterricht eingetragen.")
+
+        planned = context.planned_lesson
+        self.app.push_screen(
+            SpontaneousLessonScreen(
+                f"{context.school_class.id} · "
+                f"{format_compact_date(planned.date)} · {planned.period}. Stunde"
+            ),
+            description_entered,
+        )
+
     def action_add_extra_lesson(self) -> None:
         config = self.app_config
         try:
@@ -772,7 +809,7 @@ class MainScreen(PultScreen[None]):
 
         if not school_classes:
             self.notify(
-                "Für Zusatzunterricht muss zuerst eine Klasse angelegt werden.",
+                "Für einen zusätzlichen Termin muss zuerst eine Klasse angelegt werden.",
                 severity="warning",
             )
             return
@@ -821,7 +858,7 @@ class MainScreen(PultScreen[None]):
                         lesson.title,
                         sequences,
                         result,
-                        action_description="im Zusatzunterricht abgeschlossen",
+                        action_description="am zusätzlichen Termin abgeschlossen",
                     )
                     return
 
@@ -846,7 +883,7 @@ class MainScreen(PultScreen[None]):
                 self.notify(str(error), severity="error")
                 return
 
-            self.notify(f"{school_class.id}: Zusatzunterricht eingetragen.")
+            self.notify(f"{school_class.id}: Zusätzlicher Termin eingetragen.")
 
         self.app.push_screen(
             AddExtraLessonScreen(
