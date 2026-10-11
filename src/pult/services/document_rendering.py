@@ -18,6 +18,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 
 from pult.curriculum.material import Lesson
+from pult.services.document_callouts import callouts_plugin, resolve_callout_colors
 from pult.services.document_fonts import (
     avenir_font_faces,
     document_font_stylesheet,
@@ -49,6 +50,7 @@ def parser() -> MarkdownIt:
         MarkdownIt("commonmark", {"html": False, "highlight": highlight_code})
         .enable("table")
         .use(dollarmath_plugin)
+        .use(callouts_plugin)
     )
     md.add_render_rule(
         "math_inline",
@@ -120,10 +122,17 @@ def document_html(
     *,
     stylesheet: str = "",
     font: str = "source-sans-3",
+    callout_colors: tuple[str, str] | None = None,
 ) -> str:
     for color in (bg, fg, accent):
         if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
             raise ValueError("Ungültige Theme-Farbe.")
+    definition, merksatz = callout_colors or resolve_callout_colors(
+        bg, {"accent": accent}
+    )
+    for color in (definition, merksatz):
+        if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
+            raise ValueError("Ungültige Callout-Farbe.")
     if planning is None:
         body = markdown_html(source, source_path, directory)
     else:
@@ -164,6 +173,15 @@ def document_html(
     a {{color:{accent};text-decoration:none;border-bottom:1px dotted {accent}}}
     blockquote {{margin:1.2em 0;padding:.15em 1em;border-left:3px solid {accent};
       background:color-mix(in srgb,{accent} 7%,{bg})}}
+    .callout-definition {{--callout-color:{definition}}}
+    .callout-merksatz {{--callout-color:{merksatz}}}
+    blockquote.callout {{padding:.8em 1em;border-left-color:var(--callout-color);
+      border-radius:0 .4em .4em 0;
+      background:color-mix(in srgb,var(--callout-color) 7%,{bg});break-inside:avoid}}
+    .callout > .callout-title {{color:var(--callout-color);font-weight:600;
+      line-height:1.35;margin:0 0 .55em}}
+    .callout > :last-child {{margin-bottom:0}}
+    .callout > .callout-title + p {{margin-top:0}}
     table {{border-collapse:collapse;width:100%;font-size:.88em;line-height:1.5;margin:1.2em 0}}
     td,th {{text-align:left;padding:.7em .8em;border-bottom:1px solid color-mix(in srgb,{fg} 20%,{bg})}}
     .phases td:first-child,.phases th:first-child {{width:20%;vertical-align:top}}
@@ -276,6 +294,7 @@ class DocumentRenderer:
         planning: Lesson | None = None,
         *,
         font: str = "auto",
+        callout_colors: tuple[str, str] | None = None,
     ) -> Path:
         resolved_font = await self.resolve_font(font)
         document = document_html(
@@ -290,6 +309,7 @@ class DocumentRenderer:
             planning,
             stylesheet=self.stylesheet,
             font=resolved_font,
+            callout_colors=callout_colors,
         )
         script = Path(__file__).parents[1] / "assets/mathjax/tex-svg-full.js"
         key = hashlib.sha256(

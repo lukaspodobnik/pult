@@ -83,6 +83,22 @@ Markdown-Datei und bleiben innerhalb des Sequenzordners; gemeinsame Dateien
 können in `dateien/` liegen. HTML wird nicht ausgeführt, entfernte Bilder werden
 nicht geladen. Links innerhalb gerenderter Dokumentbilder sind nicht anklickbar.
 
+Definitionen und Merksätze lassen sich als beschriftete Blöcke hervorheben:
+
+```markdown
+> [!definition] Gerade Zahl
+> Eine durch $2$ teilbare ganze Zahl heißt **gerade**.
+
+> [!merksatz] Distributivgesetz
+> Für Zahlen $a$, $b$ und $c$ gilt: $a(b+c)=ab+ac$.
+```
+
+Der Titel nach der Markierung ist optional. Alle Zeilen des Blocks beginnen mit
+`>`, auch Leerzeilen. Darin sind normales Markdown und TeX möglich. Definitionen
+sind blau, Merksätze orange; die Farbtöne passen sich dem Theme an. In der
+Textansicht bleiben die Beschriftungen erhalten. Diese Schreibweise ist in allen
+frei gestaltbaren Markdown-Dokumenten verfügbar; sie schreibt keinen Aufbau vor.
+
 ## Muster und Änderungen
 
 Beim Einrichten und beim Ergänzen von Stunden im Sequenzeditor legt PULT fehlende

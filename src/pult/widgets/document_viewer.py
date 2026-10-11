@@ -14,6 +14,7 @@ from textual.widgets import Markdown, Static
 
 from pult.curriculum.material import Lesson
 from pult.services import material_rendering as graphics
+from pult.services.document_callouts import resolve_callout_colors, text_document_parser
 from pult.services.document_corners import round_document_tile
 from pult.services.document_rendering import DocumentRenderer
 from pult.widgets.scrolling import Vertical, VerticalScroll
@@ -120,6 +121,7 @@ class DocumentViewer(Vertical):
             .hex
         )
         colors = (background, variables["foreground"], variables["primary"])
+        callout_colors = resolve_callout_colors(background, variables)
         config = getattr(self.app, "app_config", None)
         font = getattr(config, "document_font", "auto")
         signature = (
@@ -129,6 +131,7 @@ class DocumentViewer(Vertical):
             font,
             viewport_height,
             getattr(getattr(self.app, "document_renderer", None), "generation", 0),
+            callout_colors,
         )
         if signature == self.signature:
             self.refresh_corners()
@@ -146,12 +149,20 @@ class DocumentViewer(Vertical):
 
     @work(exclusive=True)
     async def render_document(self, signature):
-        width, colors, text_mode, font, viewport_height, _generation = signature
+        width, colors, text_mode, font, viewport_height, _generation, callout_colors = (
+            signature
+        )
         body = self.query_one("#document-body", Vertical)
         tiles = []
         try:
             if graphics.image_widget() is None or text_mode:
-                widgets = [Markdown(self.fallback_source(), open_links=False)]
+                widgets = [
+                    Markdown(
+                        self.fallback_source(),
+                        open_links=False,
+                        parser_factory=text_document_parser,
+                    )
+                ]
             else:
                 cell_width, cell_height = graphics.CELL
                 pixel_width = width * cell_width
@@ -171,6 +182,7 @@ class DocumentViewer(Vertical):
                     *colors,
                     planning=self.planning,
                     font=font,
+                    callout_colors=callout_colors,
                 )
                 if not self.is_mounted or signature != self.signature:
                     return
@@ -230,7 +242,12 @@ class DocumentViewer(Vertical):
                 )
                 status.tooltip = str(error)
                 await body.mount(
-                    status, Markdown(self.fallback_source(), open_links=False)
+                    status,
+                    Markdown(
+                        self.fallback_source(),
+                        open_links=False,
+                        parser_factory=text_document_parser,
+                    ),
                 )
 
     def refresh_corners(self) -> None:

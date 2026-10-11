@@ -135,6 +135,10 @@ zeigt das Ergebnis über Kitty-Grafik, Foot über Sixel. Im Textmodus bleiben
 Formeln als TeX-Quelltext lesbar. Links im Dokumentbild sind nicht anklickbar;
 Materiallinks gehören deshalb in den eigenen Materialkasten.
 
+Mit `> [!definition] Titel` bzw. `> [!merksatz] Titel` beginnen farblich abgesetzte
+Blöcke: Definitionen blau, Merksätze orange, jeweils passend zum Theme.
+Inhaltliche Beispiele und die Schreibweise stehen im Materialvertrag.
+
 Unter **Einstellungen → Dokumentschrift** gilt eine Auswahl für Dokumente und
 Exporte: automatisch **Avenir Next**, wenn alle benötigten Schnitte installiert
 sind, sonst die mitgelieferte **Source Sans 3**. Beide sind auch gezielt wählbar,

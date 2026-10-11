@@ -193,6 +193,7 @@ def test_document_tiles_keep_native_scale_and_resize(tmp_path, monkeypatch):
             *colors,
             planning=None,
             font="auto",
+            callout_colors=None,
         ):
             self.calls.append((width, colors))
             image = tmp_path / f"render-{len(self.calls)}.png"

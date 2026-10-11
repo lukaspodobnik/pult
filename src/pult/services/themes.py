@@ -6,6 +6,8 @@ from typing import Any
 from textual.color import Color
 from textual.theme import Theme
 
+from pult.services.document_callouts import resolve_callout_colors
+
 PULT_PALETTE = {
     "mode": "dark",
     "background": "#202428",
@@ -44,6 +46,14 @@ def theme_from_palette(data: dict[str, Any], *, name: str = "omarchy") -> Theme:
     )
     selection = color("selection", color("lighter_background", background))
     muted = color("muted", color("dark_foreground", foreground))
+    callouts = resolve_callout_colors(
+        background,
+        {
+            key: color(key)
+            for key in ("blue", "orange", "peach", "accent")
+            if key in data
+        },
+    )
     return Theme(
         name=name,
         primary=accent,
@@ -58,6 +68,8 @@ def theme_from_palette(data: dict[str, Any], *, name: str = "omarchy") -> Theme:
         panel=color("dark_background", background),
         dark=dark,
         variables={
+            "document-definition": callouts[0],
+            "document-merksatz": callouts[1],
             "foreground-muted": muted,
             "text-muted": muted,
             "text-accent": accent,

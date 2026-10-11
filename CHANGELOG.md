@@ -2,6 +2,8 @@
 
 ## Noch nicht veröffentlicht
 
+- Definitionen und Merksätze als Markdown-Callouts: blaue bzw. orange Akzente
+  passend zum Theme, mit Beschriftung auch in der Textansicht.
 - Aufgaben besitzen eine `aufgabe.toml` mit Titel, ein bis drei Hauptkompetenzen
   und einem Anforderungsbereich (höchster Bereich der Teilaufgaben). Anlage,
   Bearbeitung und Aufgabenbibliothek berücksichtigen die Metadaten.
