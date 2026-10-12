@@ -4,8 +4,12 @@ import math
 from pathlib import Path
 
 from PIL import Image as PILImage
+from rich import box
+from rich.markdown import Markdown as RichMarkdown
 from rich.segment import Segment
 from rich.style import Style
+from rich.table import Table
+from rich.text import Text
 from textual import work
 from textual.color import Color
 from textual.geometry import Region
@@ -16,7 +20,7 @@ from pult.curriculum.material import Lesson
 from pult.services import material_rendering as graphics
 from pult.services.document_callouts import resolve_callout_colors, text_document_parser
 from pult.services.document_corners import round_document_tile
-from pult.services.document_rendering import DocumentRenderer
+from pult.services.document_rendering import DocumentRenderer, split_phase_time
 from pult.widgets.scrolling import Vertical, VerticalScroll
 
 
@@ -156,13 +160,7 @@ class DocumentViewer(Vertical):
         tiles = []
         try:
             if graphics.image_widget() is None or text_mode:
-                widgets = [
-                    Markdown(
-                        self.fallback_source(),
-                        open_links=False,
-                        parser_factory=text_document_parser,
-                    )
-                ]
+                widgets = self.fallback_widgets()
             else:
                 cell_width, cell_height = graphics.CELL
                 pixel_width = width * cell_width
@@ -241,14 +239,7 @@ class DocumentViewer(Vertical):
                     classes="document-status",
                 )
                 status.tooltip = str(error)
-                await body.mount(
-                    status,
-                    Markdown(
-                        self.fallback_source(),
-                        open_links=False,
-                        parser_factory=text_document_parser,
-                    ),
-                )
+                await body.mount(status, *self.fallback_widgets())
 
     def refresh_corners(self) -> None:
         if not self.is_mounted or not self.image_tiles:
@@ -287,12 +278,30 @@ class DocumentViewer(Vertical):
                 else original
             )
 
-    def fallback_source(self) -> str:
+    def fallback_widgets(self) -> list[Markdown | Static]:
+        source = self.source
+        if self.planning is not None:
+            source = (
+                "# Planung\n\n## Ziele\n\n"
+                + (self.planning.goals_markdown() or "Noch keine Ziele eingetragen.")
+                + "\n\n## Verlauf\n"
+            )
+        widgets: list[Markdown | Static] = [
+            Markdown(source, open_links=False, parser_factory=text_document_parser)
+        ]
         if self.planning is None:
-            return self.source
-        return (
-            "# Planung\n\n## Ziele\n\n"
-            + (self.planning.goals_markdown() or "Noch keine Ziele eingetragen.")
-            + "\n\n## Verlauf\n\n"
-            + self.planning.phases_markdown()
-        )
+            return widgets
+        if not self.planning.phases:
+            widgets.append(Static("Noch kein Verlauf eingetragen.", markup=False))
+            return widgets
+        table = Table(box=box.SIMPLE_HEAD, expand=True, padding=(0, 1))
+        table.add_column("Zeit", no_wrap=True)
+        table.add_column("Phase", width=15)
+        table.add_column("Inhalt", ratio=1)
+        for phase in self.planning.phases:
+            time, content = split_phase_time(phase.text)
+            markdown = RichMarkdown(content, hyperlinks=False)
+            markdown.parsed = text_document_parser().parse(content)
+            table.add_row(Text(time), Text(phase.title), markdown)
+        widgets.append(Static(table, classes="planning-table"))
+        return widgets

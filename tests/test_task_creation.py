@@ -112,7 +112,7 @@ def test_create_task_opens_all_files_and_renders_one_entry(tmp_path, monkeypatch
             material = list(screen.query(DocumentViewer))
             assert len(material) == 1
             assert material[0].source.endswith("Vergleiche die Brüche.")
-            await pilot.press("s")
+            await pilot.press("space")
             await pilot.pause()
             assert screen.query_one(DocumentViewer).source == "Ein Halb ist größer."
             assert screen.query_one("#task-content").border_title == sequence.title

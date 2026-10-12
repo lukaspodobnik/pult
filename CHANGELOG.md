@@ -2,6 +2,15 @@
 
 ## Noch nicht veröffentlicht
 
+- Teilaufgabenblöcke mit ausgerichteten Beschriftungen und ein bis drei Spalten;
+  schmale Ansichten verwenden weniger Spalten, die Textansicht bleibt einspaltig.
+
+- Leertaste wechselt zwischen Aufgabe und Lösung; Verlaufspläne zeigen die Zeit
+  als Zahl in einer eigenen Spalte vor Phase und Inhalt, auch in der Textansicht.
+
+- Aufgabenbibliothek nach Titelnummer sortiert: `1.`, `2.`, …, `10.`;
+  unnummerierte Titel folgen alphabetisch. Aufgaben-IDs und Zuordnungen bleiben erhalten.
+
 - Definitionen und Merksätze als Markdown-Callouts: blaue bzw. orange Akzente
   passend zum Theme, mit Beschriftung auch in der Textansicht.
 - Aufgaben besitzen eine `aufgabe.toml` mit Titel, ein bis drei Hauptkompetenzen

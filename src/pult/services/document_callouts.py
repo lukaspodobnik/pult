@@ -8,6 +8,8 @@ from markdown_it import MarkdownIt
 from markdown_it.rules_core import StateCore
 from markdown_it.token import Token
 
+from pult.services.document_subtasks import subtasks_plugin
+
 CALLOUT_LABELS = {"definition": "Definition", "merksatz": "Merksatz"}
 CALLOUT_MARKER = re.compile(r"^\[!(definition|merksatz)\](?:[ \t]+(.*))?$", re.I)
 HEX_COLOR = re.compile(r"#[0-9a-fA-F]{6}")
@@ -70,7 +72,11 @@ def callouts_plugin(md: MarkdownIt) -> None:
 
 def text_document_parser() -> MarkdownIt:
     """Dieselben Beschriftungen im Terminal; TeX bleibt lesbarer Quelltext."""
-    return MarkdownIt("gfm-like", {"html": False}).use(callouts_plugin)
+    return (
+        MarkdownIt("gfm-like", {"html": False})
+        .use(callouts_plugin)
+        .use(subtasks_plugin, text_only=True)
+    )
 
 
 def _rgb(color: str) -> tuple[float, float, float]:

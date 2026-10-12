@@ -11,6 +11,7 @@ from pult.services.document_rendering import (
     document_html,
     parser,
     safe_local,
+    split_phase_time,
 )
 
 
@@ -94,7 +95,7 @@ def test_planning_table_renders_markdown_inside_cells(tmp_path):
         "Test",
         goals=["Erkennen"],
         phases=[
-            Phase("Einstieg", "- **Beispiel** mit $x$\n- Zweites Beispiel"),
+            Phase("Einstieg", "**5**\n\n- **Beispiel** mit $x$\n- Zweites Beispiel"),
             Phase("Übung", ""),
         ],
     )
@@ -110,9 +111,70 @@ def test_planning_table_renders_markdown_inside_cells(tmp_path):
         lesson,
     )
     assert '<table class="phases">' in output
+    assert "<th>Zeit</th><th>Phase</th><th>Inhalt</th>" in output
+    assert "<tr><td>5</td><td>Einstieg</td><td><ul>" in output
+    assert "<tr><td></td><td>Übung</td><td></td></tr>" in output
+    assert output.count("<td>5</td>") == 1
+    assert "Min." not in output
     assert "<strong>Beispiel</strong>" in output
     assert "<li>" in output
     assert "\\(x\\)" in output
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("**4** Besprechen.", ("4", "Besprechen.")),
+        ("**2,5**", ("2,5", "")),
+        ("**4**\n\n    code", ("4", "    code")),
+        ("3 Aufgaben bearbeiten.", ("", "3 Aufgaben bearbeiten.")),
+        ("**3 Aufgaben** bearbeiten.", ("", "**3 Aufgaben** bearbeiten.")),
+        ("```md\n**4**\n```", ("", "```md\n**4**\n```")),
+        ("**4 Min.** Besprechen.", ("4", "Besprechen.")),
+        ("10 Min.\n\n- Beispiel", ("10", "- Beispiel")),
+        ("**2,5 Min.**", ("2,5", "")),
+        ("**4 Min.**\n\n    code", ("4", "    code")),
+        ("Text mit **4 Min.**", ("", "Text mit **4 Min.**")),
+        ("```md\n**4 Min.**\n```", ("", "```md\n**4 Min.**\n```")),
+        ("**4 Min. Inhalt**", ("", "**4 Min. Inhalt**")),
+        ("5 Minuten zählen.", ("", "5 Minuten zählen.")),
+        ("", ("", "")),
+    ],
+)
+def test_phase_time_only_extracts_a_separate_leading_duration(source, expected):
+    assert split_phase_time(source) == expected
+
+
+def test_text_planning_keeps_time_columns_and_markdown(tmp_path):
+    from rich.console import Console
+    from rich.table import Table
+    from textual.widgets import Static
+
+    from pult.widgets.document_viewer import DocumentViewer
+
+    lesson = Lesson(
+        "test",
+        "Test",
+        phases=[
+            Phase("Einstieg", "**5**\n\n- Beispiel mit $x$\n- Zweiter Punkt"),
+            Phase("Übung", "> [!merksatz] Regel\n> Zusammenfassen."),
+        ],
+    )
+    viewer = DocumentViewer("", tmp_path / "verlauf.md", tmp_path, planning=lesson)
+    table_widget = viewer.fallback_widgets()[-1]
+    assert isinstance(table_widget, Static)
+    table = table_widget.content
+    assert isinstance(table, Table)
+    assert [column.header for column in table.columns] == ["Zeit", "Phase", "Inhalt"]
+    console = Console(width=90, force_terminal=False)
+    with console.capture() as capture:
+        console.print(table)
+    text = capture.get()
+    assert text.count("5") == 1
+    assert "Min." not in text
+    assert "Beispiel mit $x$" in text and "Zweiter Punkt" in text
+    assert "Merksatz" in text and "Zusammenfassen." in text
+    assert "[!merksatz]" not in text
 
 
 @pytest.mark.skipif(

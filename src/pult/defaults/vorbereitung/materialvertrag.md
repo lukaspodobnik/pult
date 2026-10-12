@@ -31,7 +31,10 @@ Unter `stunden/<Stunden-ID>/` liegen fünf Dateien:
 Leere Markdown-Dateien sind gültig. Fehlende Markdown-Dateien werden als leer
 behandelt. Leere Phasen sind erlaubt; Überschriften in Codeblöcken zählen nicht
 als Phasen. Ziele und Verlauf erscheinen gemeinsam in der Planung, der Verlauf
-als Tabelle. Materiallinks stehen ausschließlich in `material.md`.
+als Tabelle mit den Spalten Zeit, Phase und Inhalt. Die Dauer in Minuten steht
+als führende fett gesetzte Zahl im Phasentext, etwa `**5**`. In der Zeitspalte
+erscheint nur die Zahl; ohne Zeitangabe bleibt sie leer. Materiallinks stehen
+ausschließlich in `material.md`.
 
 ```toml
 titel = "Brüche vergleichen"
@@ -60,6 +63,11 @@ Unter `aufgaben/<Aufgaben-ID>/` liegen `aufgabe.toml`, `aufgabe.md` und optional
 aus `aufgabe.toml`; eine Überschrift im Aufgabentext ist optional. Aufgaben können
 mehreren Stunden derselben Sequenz zugeordnet sein.
 
+Die Aufgabenbibliothek sortiert Titel mit führender Nummer numerisch, etwa
+`1. Produkte vereinfachen`, `2. Terme vergleichen`, `10. Gemischte Aufgaben`.
+Titel ohne Nummer folgen alphabetisch. Die Nummer ist Teil von `titel`;
+ein zusätzliches Feld oder eine Änderung bestehender Aufgaben-IDs ist nicht nötig.
+
 ```toml
 titel = "Nullstellen bestimmen"
 kompetenzen = ["K5"]
@@ -82,6 +90,28 @@ Markdown unterstützt Tabellen, Codeblöcke mit Sprachangabe, TeX als `$…$` bz
 Markdown-Datei und bleiben innerhalb des Sequenzordners; gemeinsame Dateien
 können in `dateien/` liegen. HTML wird nicht ausgeführt, entfernte Bilder werden
 nicht geladen. Links innerhalb gerenderter Dokumentbilder sind nicht anklickbar.
+
+Teilaufgaben lassen sich als Block mit festen Abständen zwischen Buchstaben und
+Inhalt setzen. Ohne `spalten` stehen sie untereinander; `spalten=2` oder `spalten=3`
+wünscht zwei bzw. drei gleich breite Spalten in zeilenweiser Reihenfolge. Bei wenig
+Platz werden es automatisch weniger Spalten. In der Textansicht bleiben sie untereinander.
+
+```markdown
+:::teilaufgaben spalten=3
+a) $4a \cdot 3b$
+
+b) $2x \cdot 5x$
+
+c) $3a \cdot b \cdot 2a \cdot b$
+:::
+```
+
+Jede Teilaufgabe beginnt in einem neuen Absatz mit `a)`, `b)`, …; dazwischen steht
+eine Leerzeile. Weitere Absätze, Formeln, Listen oder Bilder gehören bis zur nächsten
+Beschriftung zur selben Teilaufgabe. `:::` beendet den Block. Außerhalb solcher
+Blöcke bleibt die Darstellung unverändert. Aufgabe und Lösung können unterschiedliche
+Spaltenzahlen verwenden. Die Struktur lässt sich für den geplanten Arbeitsheftexport
+wiederverwenden; Rechenflächen werden später beim Export ergänzt.
 
 Definitionen und Merksätze lassen sich als beschriftete Blöcke hervorheben:
 

@@ -115,10 +115,13 @@ Dokument. Die Vorbereitung ist freies Markdown für Hefteinträge, Übungen oder
 Aufgaben werden mit Titel, Hauptkompetenzen, Anforderungsbereich und optionaler
 Lösung gespeichert. Der höchste Bereich der Teilaufgaben bestimmt die grobe
 Einordnung der Gesamtaufgabe. In der **Aufgabenbibliothek** legt `n` eine Aufgabe
-an, `e` bearbeitet Text, Lösung oder `aufgabe.toml`, und `s` wechselt zur Lösung.
+an, `e` bearbeitet Text, Lösung oder `aufgabe.toml`, und die Leertaste wechselt
+zwischen Aufgabe und Lösung.
 Aus einer Stunde heraus merkt `v` die ausgewählte Aufgabe für diese
 Stunde vor oder entfernt die Zuordnung. Die Auswahl allein ändert nichts.
-Auch aus der Sequenzbibliothek öffnet `a` die Aufgaben.
+Auch aus der Sequenzbibliothek öffnet `a` die Aufgaben. Titel wie
+`1. Produkte vereinfachen` und `2. Terme vergleichen` bestimmen die Reihenfolge:
+Nummern werden numerisch sortiert, Titel ohne Nummer folgen alphabetisch.
 
 Dateien und Regeln stehen im [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md);
 ein [Unterrichtsbeispiel](examples/unterricht/README.md) zeigt das Format.
@@ -137,7 +140,9 @@ Materiallinks gehören deshalb in den eigenen Materialkasten.
 
 Mit `> [!definition] Titel` bzw. `> [!merksatz] Titel` beginnen farblich abgesetzte
 Blöcke: Definitionen blau, Merksätze orange, jeweils passend zum Theme.
-Inhaltliche Beispiele und die Schreibweise stehen im Materialvertrag.
+Mit `:::teilaufgaben spalten=3` lassen sich kurze Teilaufgaben in drei Spalten
+anordnen; ohne Spaltenangabe stehen sie untereinander. Beschriftungen und Inhalte
+fluchten. Beispiele und die Schreibweise stehen im Materialvertrag.
 
 Unter **Einstellungen → Dokumentschrift** gilt eine Auswahl für Dokumente und
 Exporte: automatisch **Avenir Next**, wenn alle benötigten Schnitte installiert

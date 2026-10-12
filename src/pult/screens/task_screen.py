@@ -1,5 +1,6 @@
 """Alle Aufgaben einer Sequenz, einschließlich noch nicht zugeordneter Aufgaben."""
 
+import re
 import shlex
 import shutil
 import subprocess
@@ -7,6 +8,7 @@ from typing import ClassVar
 
 from rich.text import Text
 from textual import on
+from textual.binding import Binding
 from textual.widgets import Static
 from textual.widgets.option_list import Option
 
@@ -27,12 +29,21 @@ from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
+def task_sort_key(task: Task) -> tuple[int, int, str, str]:
+    """Titelnummern numerisch sortieren; unnummerierte Titel folgen alphabetisch."""
+    title = task.metadata.title.casefold()
+    number = re.match(r"^(\d+)\.\s+", title)
+    if number:
+        return 0, int(number[1]), title[number.end() :], task.id
+    return 1, 0, title, task.id
+
+
 class TaskScreen(PultScreen[Sequence]):
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
         ("e", "edit_task", "Bearbeiten"),
         ("n", "create_task", "Neue Aufgabe"),
-        ("s", "toggle_solution", "Aufgabe / Lösung"),
+        Binding("space", "toggle_solution", "Aufgabe / Lösung", priority=True),
         ("v", "assign_task", "Vormerken / entfernen"),
     ]
     DEFAULT_CSS = """
@@ -72,7 +83,7 @@ class TaskScreen(PultScreen[Sequence]):
             if not entry.is_dir() or entry.name.startswith("."):
                 continue
             tasks.append(load_task(self.directory, entry.name))
-        return tasks
+        return sorted(tasks, key=task_sort_key)
 
     @property
     def selected_task(self):

@@ -24,6 +24,7 @@ from pult.services.document_fonts import (
     document_font_stylesheet,
     validate_document_font,
 )
+from pult.services.document_subtasks import SUBTASK_STYLES, subtasks_plugin
 from pult.storage import save_bytes
 
 
@@ -51,6 +52,7 @@ def parser() -> MarkdownIt:
         .enable("table")
         .use(dollarmath_plugin)
         .use(callouts_plugin)
+        .use(subtasks_plugin)
     )
     md.add_render_rule(
         "math_inline",
@@ -109,6 +111,20 @@ def markdown_html(source: str, source_path: Path, directory: Path) -> str:
     return md.renderer.render(tokens, md.options, {})
 
 
+def split_phase_time(source: str) -> tuple[str, str]:
+    """Eine führende Zeitangabe nur für die Anzeige vom Phasentext trennen."""
+    match = re.match(
+        r"^(?:\*\*(?P<bold>\d+(?:[,.]\d+)?)(?:[ \t]+Min\.)?\*\*|"
+        r"(?P<plain>\d+(?:[,.]\d+)?)[ \t]+Min\.)(?=\s|$)",
+        source,
+    )
+    if match is None:
+        return "", source
+    time = match["bold"] or match["plain"]
+    content = source[match.end() :].lstrip(" \t").lstrip("\r\n")
+    return time, content
+
+
 def document_html(
     source: str,
     source_path: Path,
@@ -145,15 +161,18 @@ def document_html(
         )
         body += "<h2>Verlauf</h2>"
         if planning.phases:
-            body += '<table class="phases"><thead><tr><th>Phase</th><th>Inhalt</th></tr></thead><tbody>'
-            body += "".join(
-                "<tr><td>"
-                + html.escape(p.title)
-                + "</td><td>"
-                + fragment(p.text)
-                + "</td></tr>"
-                for p in planning.phases
-            )
+            body += '<table class="phases"><thead><tr><th>Zeit</th><th>Phase</th><th>Inhalt</th></tr></thead><tbody>'
+            for phase in planning.phases:
+                time, content = split_phase_time(phase.text)
+                body += (
+                    "<tr><td>"
+                    + html.escape(time)
+                    + "</td><td>"
+                    + html.escape(phase.title)
+                    + "</td><td>"
+                    + fragment(content)
+                    + "</td></tr>"
+                )
             body += "</tbody></table>"
         else:
             body += "<p>Noch kein Verlauf eingetragen.</p>"
@@ -187,7 +206,11 @@ def document_html(
     .callout > .callout-title + p {{margin-top:0}}
     table {{border-collapse:collapse;width:100%;font-size:.88em;line-height:1.5;margin:1.2em 0}}
     td,th {{text-align:left;padding:.7em .8em;border-bottom:1px solid color-mix(in srgb,{fg} 20%,{bg})}}
-    .phases td:first-child,.phases th:first-child {{width:20%;vertical-align:top}}
+    .phases td,.phases th {{vertical-align:top}}
+    .phases td:first-child,.phases th:first-child {{width:1%;white-space:nowrap;
+      font-variant-numeric:tabular-nums}}
+    .phases td:first-child {{font-weight:500}}
+    .phases td:nth-child(2),.phases th:nth-child(2) {{width:1%;overflow-wrap:normal}}
     .phases td p:first-child {{margin-top:0}} .phases td p:last-child {{margin-bottom:0}}
     th {{color:{accent};font-weight:600}} pre {{padding:1em;white-space:pre-wrap;
       background:color-mix(in srgb,{fg} 6%,{bg});border-radius:5px}}
@@ -196,6 +219,7 @@ def document_html(
     code {{font-size:.85em}} img {{max-width:100%;height:auto}}
     .display {{overflow-x:auto;padding:.2em 0}} mjx-container[jax="SVG"] {{max-width:100%}}
     hr {{border:0;border-top:1px solid color-mix(in srgb,{fg} 18%,{bg});margin:2em 0}}
+    {SUBTASK_STYLES}
     {document_font_stylesheet(font)}
     {stylesheet}
     </style><article>{body}</article></html>"""

@@ -14,6 +14,30 @@ from pult.storage import load_toml, save_toml
 from pult.widgets.document_viewer import DocumentViewer
 
 
+def test_tasks_sort_by_title_number_and_preserve_assignment(tmp_path, sequences):
+    tasks = [
+        Task(task_id, "Aufgabe", metadata=TaskMetadata(title, ["K5"], "I"))
+        for task_id, title in [
+            ("a", "10. Produkte"),
+            ("b", "2. Vergleichen"),
+            ("c", "1. Umformen"),
+            ("d", "Zusatz"),
+            ("e", "alpha"),
+            ("f", "2. Anwenden"),
+            ("g", "2. Anwenden"),
+        ]
+    ]
+    for task in tasks:
+        save_task(tmp_path, task)
+    sequence = sequences[0]
+    lesson = sequence.lessons[0]
+    lesson.tasks = [tasks[0]]
+    screen = TaskScreen(sequence, tmp_path, lesson_id=lesson.id)
+    assert [task.id for task in screen.tasks] == ["c", "f", "g", "b", "a", "e", "d"]
+    assert screen.task_id == "a"
+    assert [task.id for task in lesson.tasks] == ["a"]
+
+
 def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
@@ -59,9 +83,15 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             task = screen.selected_task
             assert screen.query_one(DocumentViewer).source == task.text
             await pilot.press("s")
+            assert not screen.show_solution
+            screen.query_one("#task-content").focus()
+            await pilot.press("space")
             await pilot.pause()
             assert screen.query_one(DocumentViewer).source == task.solution
+            await pilot.press("space")
+            assert screen.query_one(DocumentViewer).source == task.text
             picker = screen.query_one(OptionList)
+            picker.focus()
             picker.highlighted = picker.get_option_index("zusatz")
             await pilot.pause()
             assert not screen.show_solution
@@ -86,7 +116,7 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             await pilot.pause()
             assert screen.selected_task.solution == "Neue Lösung"
             assert screen.query_one(DocumentViewer).source == "# Zusatz"
-            await pilot.press("s")
+            await pilot.press("space")
             await pilot.pause()
             assert screen.query_one(DocumentViewer).source == "Neue Lösung"
 
@@ -96,7 +126,7 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
                 save_toml(
                     path,
                     {
-                        "titel": "Neuer Titel",
+                        "titel": "1. Neuer Titel",
                         "kompetenzen": ["K2"],
                         "anforderungsbereich": "III",
                     },
@@ -109,9 +139,11 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             await pilot.press("e", "down", "down", "enter")
             await pilot.pause()
             assert screen.selected_task.metadata == TaskMetadata(
-                "Neuer Titel", ["K2"], "III"
+                "1. Neuer Titel", ["K2"], "III"
             )
-            assert str(picker.get_option("zusatz").prompt) == "Neuer Titel"
+            assert str(picker.get_option("zusatz").prompt) == "1. Neuer Titel"
+            assert picker.get_option_at_index(0).id == "zusatz"
+            assert picker.highlighted == 0
             assert screen.query_one(DocumentViewer).source == "Neue Lösung"
             assert (
                 screen.query_one("#task-content").border_subtitle
