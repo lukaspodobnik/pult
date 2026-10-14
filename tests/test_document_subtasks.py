@@ -134,11 +134,14 @@ def test_text_viewer_displays_subtasks_and_following_document(tmp_path):
 @pytest.mark.skipif(
     not os.environ.get("PULT_TEST_BROWSER"), reason="Expliziter lokaler Browser-Test"
 )
-def test_browser_grid_aligns_labels_and_adapts_for_screen_and_print(tmp_path):
+@pytest.mark.parametrize("columns_setting", [2, 3])
+def test_browser_grid_aligns_labels_and_adapts_for_screen_and_print(
+    tmp_path, columns_setting
+):
     async def run():
         renderer = DocumentRenderer(tmp_path / "cache")
         source = (
-            ":::teilaufgaben spalten=3\n"
+            f":::teilaufgaben spalten={columns_setting}\n"
             + "\n\n".join(
                 f"{letter}) ${term}$"
                 for letter, term in zip(
@@ -163,10 +166,10 @@ def test_browser_grid_aligns_labels_and_adapts_for_screen_and_print(tmp_path):
                 Path(__file__).parents[1] / "src/pult/assets/mathjax/tex-svg-full.js"
             )
             for width, font_size, columns, media in (
-                (1050, 22, 3, "screen"),
-                (740, 22, 2, "screen"),
+                (1050, 22, columns_setting, "screen"),
+                (740, 22, 2 if columns_setting == 3 else 1, "screen"),
                 (400, 22, 1, "screen"),
-                (720, 15, 3, "print"),
+                (720, 15, columns_setting, "print"),
             ):
                 await page.set_viewport_size({"width": width, "height": 900})
                 await page.emulate_media(media=media)

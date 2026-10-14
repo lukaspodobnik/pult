@@ -29,7 +29,7 @@ def test_callouts_keep_inline_math_and_block_content(tmp_path):
     assert 'class="callout callout-definition"' in html
     assert 'class="callout callout-merksatz"' in html
     assert '<p class="callout-title">Definition · Gerade Zahl</p>' in html
-    assert '<p class="callout-title">Merksatz · Distributivgesetz</p>' in html
+    assert '<p class="callout-title">Merke · Distributivgesetz</p>' in html
     assert "<strong>gerade</strong>" in html
     assert "<ul>" in html
     assert "\\(2\\)" in html and "\\[a(b+c)=ab+ac\\]" in html
@@ -41,7 +41,7 @@ def test_callouts_without_title_nested_or_with_only_title(tmp_path):
         "> [!DEFINITION]\n> Text.\n>\n> > [!merksatz] Nur ein Titel\n", tmp_path
     )
     assert '<p class="callout-title">Definition</p>' in html
-    assert '<p class="callout-title">Merksatz · Nur ein Titel</p>' in html
+    assert '<p class="callout-title">Merke · Nur ein Titel</p>' in html
     assert html.count("<blockquote") == html.count("</blockquote>") == 2
     assert "<p></p>" not in html
 
@@ -239,7 +239,7 @@ def test_fallback_displays_callout_labels_and_body(tmp_path):
             assert paragraphs == [
                 "Definition · Variable",
                 "Ein $x$.",
-                "Merksatz",
+                "Merke",
                 "Weitere Erklärung.",
             ]
 

@@ -20,7 +20,11 @@ from pult.curriculum.material import Lesson
 from pult.services import material_rendering as graphics
 from pult.services.document_callouts import resolve_callout_colors, text_document_parser
 from pult.services.document_corners import round_document_tile
-from pult.services.document_rendering import DocumentRenderer, split_phase_time
+from pult.services.document_rendering import (
+    SEPARATOR_Y,
+    DocumentRenderer,
+    split_phase_time,
+)
 from pult.widgets.scrolling import Vertical, VerticalScroll
 
 
@@ -87,10 +91,14 @@ class DocumentViewer(Vertical):
         directory: Path,
         *,
         planning: Lesson | None = None,
+        start_at_separator: bool = False,
     ):
         super().__init__(classes="document-viewer")
         self.source, self.path, self.directory = source, path, directory
         self.planning = planning
+        self.start_at_separator = start_at_separator and planning is None
+        self._initial_scroll_pending = self.start_at_separator
+        self._separator_row: int | None = None
         self.renderer: DocumentRenderer | None = None
         self.signature = None
         self.render_timer = None
@@ -158,6 +166,7 @@ class DocumentViewer(Vertical):
         )
         body = self.query_one("#document-body", Vertical)
         tiles = []
+        separator_row = None
         try:
             if graphics.image_widget() is None or text_mode:
                 widgets = self.fallback_widgets()
@@ -185,12 +194,17 @@ class DocumentViewer(Vertical):
                 if not self.is_mounted or signature != self.signature:
                     return
                 with PILImage.open(image_path) as image:
+                    if self.start_at_separator and SEPARATOR_Y in image.info:
+                        y = float(image.info[SEPARATOR_Y])
+                        if 0 <= y < image.height:
+                            separator_row = math.floor(y / cell_height)
                     image = image.convert("RGB")
                     # Fill short documents to the viewport, including its lower corners.
-                    if image.height < viewport_height * cell_height:
+                    minimum_height = viewport_height * cell_height
+                    if image.height < minimum_height:
                         canvas = PILImage.new(
                             "RGB",
-                            (pixel_width, viewport_height * cell_height),
+                            (pixel_width, minimum_height),
                             colors[0],
                         )
                         canvas.paste(image)
@@ -222,14 +236,21 @@ class DocumentViewer(Vertical):
                 return
             self.image_tiles = []
             self.corner_signatures.clear()
+            # Keep the scroll range while replacement Markdown builds its blocks.
+            body.styles.min_height = body.size.height
             await body.remove_children()
             await body.mount(*widgets)
             self.image_tiles = tiles
+            self._separator_row = separator_row
+            if tiles:
+                body.styles.min_height = 0
+            self.call_after_refresh(self.position_continuation)
             self.call_after_refresh(self.refresh_corners)
         except Exception as error:
             if self.is_mounted and signature == self.signature:
                 self.image_tiles = []
                 self.corner_signatures.clear()
+                body.styles.min_height = body.size.height
                 await body.remove_children()
                 status = Static(
                     f"Textansicht · {error}"
@@ -240,6 +261,44 @@ class DocumentViewer(Vertical):
                 )
                 status.tooltip = str(error)
                 await body.mount(status, *self.fallback_widgets())
+                self._separator_row = None
+                self.call_after_refresh(self.position_continuation)
+
+    def on_markdown_table_of_contents_updated(
+        self, event: Markdown.TableOfContentsUpdated
+    ):
+        # Markdown builds its blocks asynchronously, after the widget is mounted.
+        self.query_one("#document-body").styles.min_height = 0
+        self.call_after_refresh(self.position_continuation)
+
+    def position_continuation(self) -> None:
+        if not self.is_mounted or not self.start_at_separator:
+            return
+        pane = next((a for a in self.ancestors if isinstance(a, DocumentPane)), None)
+        if (
+            pane is None
+            or not self.region.width
+            or not pane.scrollable_content_region.height
+        ):
+            return
+        row = self._separator_row
+        if not self.image_tiles:
+            # Nested rules and literal examples in code do not mark a continuation.
+            rule = next(iter(self.query("MarkdownHorizontalRule.level-0")), None)
+            if rule is None:
+                return
+            body = self.query_one("#document-body", Vertical)
+            row = max(0, rule.region.y - body.region.y)
+        if row is not None and self._initial_scroll_pending:
+            self._initial_scroll_pending = False
+            if pane.max_scroll_y > 0:
+                offset = (
+                    self.region.y - pane.scrollable_content_region.y + pane.scroll_y
+                )
+                middle = pane.scrollable_content_region.height // 2
+                # Use only the document's natural scroll range; no empty tail.
+                target = min(pane.max_scroll_y, max(0, offset + row - middle))
+                pane.scroll_to(y=target, animate=False)
 
     def refresh_corners(self) -> None:
         if not self.is_mounted or not self.image_tiles:

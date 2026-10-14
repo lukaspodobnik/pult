@@ -173,7 +173,7 @@ def test_text_planning_keeps_time_columns_and_markdown(tmp_path):
     assert text.count("5") == 1
     assert "Min." not in text
     assert "Beispiel mit $x$" in text and "Zweiter Punkt" in text
-    assert "Merksatz" in text and "Zusammenfassen." in text
+    assert "Merke" in text and "Zusammenfassen." in text
     assert "[!merksatz]" not in text
 
 

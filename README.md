@@ -139,10 +139,17 @@ Formeln als TeX-Quelltext lesbar. Links im Dokumentbild sind nicht anklickbar;
 Materiallinks gehören deshalb in den eigenen Materialkasten.
 
 Mit `> [!definition] Titel` bzw. `> [!merksatz] Titel` beginnen farblich abgesetzte
-Blöcke: Definitionen blau, Merksätze orange, jeweils passend zum Theme.
+Blöcke mit den Beschriftungen „Definition“ (blau) und „Merke“ (orange),
+jeweils passend zum Theme.
+Eine freistehende Trennlinie (`---`) markiert die Fortsetzung eines Hefteintrags;
+bei längeren Einträgen scrollt die Unterrichtsansicht beim Öffnen so weit, dass
+die erste solche Linie möglichst mittig liegt. Vollständig sichtbare Einträge
+bleiben oben stehen.
 Mit `:::teilaufgaben spalten=3` lassen sich kurze Teilaufgaben in drei Spalten
 anordnen; ohne Spaltenangabe stehen sie untereinander. Beschriftungen und Inhalte
-fluchten. Beispiele und die Schreibweise stehen im Materialvertrag.
+fluchten. `:::abbildung` setzt eine kompakte Skizze neben den zugehörigen Text.
+Bei wenig Breite stehen Bild und Text untereinander. Beispiele und Schreibweisen
+stehen im Materialvertrag.
 
 Unter **Einstellungen → Dokumentschrift** gilt eine Auswahl für Dokumente und
 Exporte: automatisch **Avenir Next**, wenn alle benötigten Schnitte installiert

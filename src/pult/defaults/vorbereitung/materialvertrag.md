@@ -113,6 +113,21 @@ Blöcke bleibt die Darstellung unverändert. Aufgabe und Lösung können untersc
 Spaltenzahlen verwenden. Die Struktur lässt sich für den geplanten Arbeitsheftexport
 wiederverwenden; Rechenflächen werden später beim Export ergänzt.
 
+Abbildungen lassen sich kompakt neben den zugehörigen Text setzen:
+
+```markdown
+:::abbildung
+Bestimme den Flächeninhalt des Rechtecks.
+
+![Rechteck mit den Seiten a und b](../../dateien/rechteck.svg)
+:::
+```
+
+Der Block enthält genau ein freistehendes Bild und den zugehörigen Text;
+bei wenig Breite steht das Bild darunter. Text, Formeln und Teilaufgaben bleiben
+normales Markdown. Bei verschachtelten Blöcken außen vier Doppelpunkte (`::::`)
+verwenden. In der Textansicht entfällt nur die Anordnung nebeneinander.
+
 Definitionen und Merksätze lassen sich als beschriftete Blöcke hervorheben:
 
 ```markdown
@@ -125,9 +140,16 @@ Definitionen und Merksätze lassen sich als beschriftete Blöcke hervorheben:
 
 Der Titel nach der Markierung ist optional. Alle Zeilen des Blocks beginnen mit
 `>`, auch Leerzeilen. Darin sind normales Markdown und TeX möglich. Definitionen
-sind blau, Merksätze orange; die Farbtöne passen sich dem Theme an. In der
+sind blau mit der Beschriftung „Definition“, Merksätze orange mit „Merke“.
+Die Farbtöne passen sich dem Theme an. In der
 Textansicht bleiben die Beschriftungen erhalten. Diese Schreibweise ist in allen
 frei gestaltbaren Markdown-Dokumenten verfügbar; sie schreibt keinen Aufbau vor.
+
+Eine freistehende Markdown-Trennlinie (`---`) markiert eine Fortsetzung; bei
+einem wachsenden Kasten steht sie davor. Passt `vorbereitung.md` nicht vollständig
+in die Unterrichtsansicht, rückt die erste solche Linie beim Öffnen möglichst in
+die Mitte, begrenzt durch das Dokumentende. Vollständig sichtbare Einträge und
+Einträge ohne Trennlinie beginnen oben.
 
 ## Muster und Änderungen
 

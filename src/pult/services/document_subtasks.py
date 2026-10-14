@@ -15,13 +15,13 @@ CLOSE = "container_teilaufgaben_close"
 
 SUBTASK_STYLES = """
 .subtasks {
-  --subtask-columns:1; --subtask-gap:1.6em;
+  --subtask-columns:1; --subtask-gap:1.6em; --subtask-min:12em;
   display:grid; align-items:baseline; column-gap:var(--subtask-gap); row-gap:.85em;
-  grid-template-columns:repeat(auto-fill,minmax(min(100%,max(12em,
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,max(var(--subtask-min),
     calc((100% - (var(--subtask-columns) - 1)*var(--subtask-gap))/var(--subtask-columns)))),1fr));
   margin:1em 0;
 }
-.subtasks[data-columns="2"] {--subtask-columns:2}
+.subtasks[data-columns="2"] {--subtask-columns:2; --subtask-min:16em}
 .subtasks[data-columns="3"] {--subtask-columns:3}
 .subtask {
   display:grid; grid-template-columns:1.6em minmax(0,1fr); column-gap:.4em;

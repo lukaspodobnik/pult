@@ -75,6 +75,7 @@ class LessonScreen(PultScreen[Sequence]):
             ),
             self.directory,
             planning=lesson if planning else None,
+            start_at_separator=not planning,
         )
 
     def materials(self):

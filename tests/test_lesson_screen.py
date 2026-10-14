@@ -58,6 +58,12 @@ def test_lesson_modes_material_tasks_and_editing(tmp_path, monkeypatch):
             assert pane.region.width > 100
             assert pane.region.y == screen.query_one("#lesson-list-frame").region.y
             assert not screen.query("#mode-preparation, #mode-planning")
+            assert pane.query_one(DocumentViewer).start_at_separator
+            assert (
+                not screen.query_one("#lesson-planning")
+                .query_one(DocumentViewer)
+                .start_at_separator
+            )
             assert all(
                 "Benötigtes Material" not in w.source
                 for w in screen.query(DocumentViewer)

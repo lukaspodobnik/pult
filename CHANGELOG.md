@@ -2,6 +2,16 @@
 
 ## Noch nicht veröffentlicht
 
+- Abbildungsblöcke setzen eine kompakte Skizze neben den zugehörigen Text;
+  bei wenig Breite stehen beide untereinander.
+
+- Bei langen Hefteinträgen rückt die erste freistehende Trennlinie beim Öffnen
+  möglichst in die Mitte. Vollständig sichtbare Einträge bleiben oben; es entsteht
+  kein zusätzlicher Leerraum am Ende. Gilt für Grafik- und Textansicht.
+
+- Merksatz-Kästen tragen die Beschriftung „Merke“; abgesetzte Formeln
+  stehen kompakter, auch innerhalb der Kästen.
+
 - Teilaufgabenblöcke mit ausgerichteten Beschriftungen und ein bis drei Spalten;
   schmale Ansichten verwenden weniger Spalten, die Textansicht bleibt einspaltig.
 

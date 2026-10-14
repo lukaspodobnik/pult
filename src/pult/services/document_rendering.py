@@ -4,6 +4,7 @@ import asyncio
 import base64
 import hashlib
 import html
+import io
 import os
 import re
 from pathlib import Path
@@ -11,6 +12,8 @@ from urllib.parse import unquote, urlsplit
 
 from markdown_it import MarkdownIt
 from mdit_py_plugins.dollarmath import dollarmath_plugin
+from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 from playwright.async_api import async_playwright
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
@@ -19,6 +22,7 @@ from pygments.util import ClassNotFound
 
 from pult.curriculum.material import Lesson
 from pult.services.document_callouts import callouts_plugin, resolve_callout_colors
+from pult.services.document_figures import FIGURE_STYLES, figures_plugin
 from pult.services.document_fonts import (
     avenir_font_faces,
     document_font_stylesheet,
@@ -26,6 +30,8 @@ from pult.services.document_fonts import (
 )
 from pult.services.document_subtasks import SUBTASK_STYLES, subtasks_plugin
 from pult.storage import save_bytes
+
+SEPARATOR_Y = "pult.separator_y"
 
 
 def highlight_code(code: str, language: str, attributes: str) -> str:
@@ -53,6 +59,7 @@ def parser() -> MarkdownIt:
         .use(dollarmath_plugin)
         .use(callouts_plugin)
         .use(subtasks_plugin)
+        .use(figures_plugin)
     )
     md.add_render_rule(
         "math_inline",
@@ -217,9 +224,13 @@ def document_html(
     pre {{line-height:1.5}}
     .syntax-highlight {{color:{fg};background:color-mix(in srgb,{fg} 6%,{bg})}}
     code {{font-size:.85em}} img {{max-width:100%;height:auto}}
-    .display {{overflow-x:auto;padding:.2em 0}} mjx-container[jax="SVG"] {{max-width:100%}}
+    .display {{overflow-x:auto;margin:.4em 0;padding:.1em 0}}
+    p:has(+ .display) {{margin-bottom:.4em}}
+    .display > mjx-container[jax="SVG"][display="true"] {{margin:0}}
+    mjx-container[jax="SVG"] {{max-width:100%}}
     hr {{border:0;border-top:1px solid color-mix(in srgb,{fg} 18%,{bg});margin:2em 0}}
     {SUBTASK_STYLES}
+    {FIGURE_STYLES}
     {document_font_stylesheet(font)}
     {stylesheet}
     </style><article>{body}</article></html>"""
@@ -340,7 +351,7 @@ class DocumentRenderer:
         )
         script = Path(__file__).parents[1] / "assets/mathjax/tex-svg-full.js"
         key = hashlib.sha256(
-            (document + str(script.stat().st_mtime_ns)).encode()
+            (document + str(script.stat().st_mtime_ns) + "separator-v1").encode()
         ).hexdigest()
         target = self.cache / f"{key}.png"
         async with self.lock:
@@ -372,7 +383,21 @@ class DocumentRenderer:
                     "i => i.decode()));}"
                 )
                 self.cache.mkdir(parents=True, exist_ok=True)
-                save_bytes(target, await page.screenshot(full_page=True, timeout=30000))
+                separator_y = await page.evaluate("""() => {
+                    const rule = document.querySelector('article > hr');
+                    return rule ? rule.getBoundingClientRect().top + scrollY : null;
+                }""")
+                screenshot = await page.screenshot(full_page=True, timeout=30000)
+                if separator_y is not None:
+                    # Keep the measured position with the cached pixels so a cache
+                    # hit needs no browser layout pass to find the continuation.
+                    metadata = PngInfo()
+                    metadata.add_text(SEPARATOR_Y, str(separator_y))
+                    with Image.open(io.BytesIO(screenshot)) as image:
+                        output = io.BytesIO()
+                        image.save(output, format="PNG", pnginfo=metadata)
+                        screenshot = output.getvalue()
+                save_bytes(target, screenshot)
 
                 return target
             finally:
