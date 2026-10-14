@@ -116,7 +116,8 @@ Aufgaben werden mit Titel, Hauptkompetenzen, Anforderungsbereich und optionaler
 Lösung gespeichert. Der höchste Bereich der Teilaufgaben bestimmt die grobe
 Einordnung der Gesamtaufgabe. In der **Aufgabenbibliothek** legt `n` eine Aufgabe
 an, `e` bearbeitet Text, Lösung oder `aufgabe.toml`, und die Leertaste wechselt
-zwischen Aufgabe und Lösung.
+zwischen Aufgabe und Lösung. Mit `x` entstehen ein Aufgabenheft mit Antwortbereichen
+und ein getrenntes Lösungsheft für die gesamte Sequenz.
 Aus einer Stunde heraus merkt `v` die ausgewählte Aufgabe für diese
 Stunde vor oder entfernt die Zuordnung. Die Auswahl allein ändert nichts.
 Auch aus der Sequenzbibliothek öffnet `a` die Aufgaben. Titel wie
@@ -177,8 +178,17 @@ Ansicht als durchsuchbare A4-PDF mit Seitenzahlen und gewählter Dokumentschrift
 | --- | --- | --- |
 | Stoffverteilungsplan | Hochformat | `exports/<Jahr>/<Klasse>/stoffverteilungsplan-<Fach-ID>.pdf` |
 | Stundenplan | Querformat | `exports/<Jahr>/uebersichten/stundenplan.pdf` |
+| Aufgaben und Lösungen | Hochformat | `exports/<Jahr>/materialien/<Fach-ID>/<Jahrgang>/<Sequenz-ID>/aufgaben.pdf` bzw. `loesungen.pdf` |
 
 Ein erneuter Export ersetzt die gleichnamige Datei erst nach erfolgreicher Erstellung.
+
+Das Aufgabenheft folgt der Reihenfolge der Aufgabenbibliothek und enthält auch
+nicht zugeordnete Aufgaben. Für jede Aufgabe muss eine nicht leere Lösung vorliegen.
+Ohne weitere Angaben gibt es ein gemeinsames Karofeld mit acht Zeilen. Optional
+steuert `[export]` in `aufgabe.toml` Linien, Karofelder oder keinen Antwortbereich,
+die Zeilenzahl und die Platzierung pro Teilaufgabe. Beispiele und Grenzen stehen
+im [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md#aufgabenexport).
+Unter **Einstellungen → Name auf Arbeitsblättern** lässt sich die Fußzeile setzen.
 
 ## Leistungsnachweise und Einstellungen
 

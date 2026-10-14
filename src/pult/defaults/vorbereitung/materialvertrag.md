@@ -76,7 +76,8 @@ anforderungsbereich = "I"
 
 Alle drei Felder sind Pflicht: ein nicht leerer Titel, eine Liste aus ein bis drei
 verschiedenen, nicht leeren Kompetenzbezeichnungen und genau ein Anforderungsbereich
-als `"I"`, `"II"` oder `"III"`. Weitere Felder sind nicht erlaubt. Kompetenzbezeichnungen
+als `"I"`, `"II"` oder `"III"`. Optional ist die Tabelle `export` (siehe unten).
+Weitere Felder sind nicht erlaubt. Kompetenzbezeichnungen
 richten sich nach dem Fach; vorzugsweise eine oder zwei Hauptkompetenzen wählen.
 
 Die Gesamtaufgabe erhält den höchsten Bereich ihrer Teilaufgaben: III vor II vor I.
@@ -110,8 +111,8 @@ Jede Teilaufgabe beginnt in einem neuen Absatz mit `a)`, `b)`, …; dazwischen s
 eine Leerzeile. Weitere Absätze, Formeln, Listen oder Bilder gehören bis zur nächsten
 Beschriftung zur selben Teilaufgabe. `:::` beendet den Block. Außerhalb solcher
 Blöcke bleibt die Darstellung unverändert. Aufgabe und Lösung können unterschiedliche
-Spaltenzahlen verwenden. Die Struktur lässt sich für den geplanten Arbeitsheftexport
-wiederverwenden; Rechenflächen werden später beim Export ergänzt.
+Spaltenzahlen verwenden. Beim Arbeitsheftexport wird dieselbe Struktur verwendet; Antwortbereiche
+werden ausschließlich für das Aufgabenheft ergänzt.
 
 Abbildungen lassen sich kompakt neben den zugehörigen Text setzen:
 
@@ -151,6 +152,52 @@ in die Unterrichtsansicht, rückt die erste solche Linie beim Öffnen möglichst
 die Mitte, begrenzt durch das Dokumentende. Vollständig sichtbare Einträge und
 Einträge ohne Trennlinie beginnen oben.
 
+## Aufgabenexport
+
+In der Aufgabenbibliothek exportiert `x` alle Aufgaben der Sequenz in der
+angezeigten Reihenfolge, auch nicht vorgemerkte Aufgaben. Es entstehen
+`aufgaben.pdf` und `loesungen.pdf` unter
+`exports/<Schuljahr>/materialien/<Fach-ID>/<Jahrgang>/<Sequenz-ID>/`.
+Beide Dateien verwenden dieselbe fortlaufende Nummerierung. Eine führende
+`#`-Überschrift wird durch „1. Aufgabe“, „2. Aufgabe“ usw. ersetzt; weitere
+Überschriften bleiben erhalten. Kompetenzen und Anforderungsbereiche werden
+nicht gedruckt. Leere Aufgaben oder fehlende/leere Lösungen verhindern den
+Export mit Hinweis auf die betroffene Aufgabe.
+
+Antwortbereiche stehen optional in `aufgabe.toml`:
+
+```toml
+[export]
+antwortbereich = "kariert"
+zeilen = 6
+pro_teilaufgabe = true
+```
+
+- `antwortbereich`: `"kariert"`, `"linien"` oder `"keiner"`. Pro Teilaufgabe wird
+  nur eine Art verwendet; Linien und Karofelder werden nicht gemischt.
+- `zeilen`: 1 bis 40. Bei Karofeldern zählt eine Zeile 5 mm, bei Schreiblinien
+  7 mm. Ohne Bereich gilt 0. Überhohe Felder werden mit einer Fehlermeldung
+  abgelehnt, damit nichts abgeschnitten wird.
+- `pro_teilaufgabe`: `true` ergänzt einen Bereich nach jeder Teilaufgabe eines
+  `:::teilaufgaben`-Blocks; `false` einen gemeinsamen Bereich unter der Aufgabe.
+  Ohne Teilaufgabenblock `false` verwenden. Innerhalb eines mehrspaltigen Blocks
+  liegt jedes Feld in seiner Spalte; bei zu breiten Formeln werden es weniger
+  Spalten. Teilaufgabe und Feld bleiben auf derselben Seite.
+
+Ohne `export` gilt ein gemeinsames Karofeld mit acht Zeilen. Fehlende Einzelwerte
+verwenden `kariert`, `false` und acht Zeilen (für `linien` eine, für `keiner` null).
+Schreiblinien beginnen bei Platz direkt hinter dem letzten Absatz, sonst darunter.
+Linien und Gleichheitszeichen nicht durch Unterstriche vortäuschen; ein fachlich
+benötigtes Gleichheitszeichen gehört in den Aufgabentext. Lösungen erhalten keine
+Antwortbereiche. Umfang und Art werden bei der Vorbereitung passend gewählt.
+
+Das A4-Hochformat hat 25 mm linken und 18 mm rechten Rand. Es verwendet die
+Dokumentschrift, klassische mathematische Schrift, dezente graue Tabellenköpfe
+und feine Rechenraster. Die Kopfzeile nennt Fach, Jahrgang und Sequenz. Der Name
+für die Fußzeile wird unter **Einstellungen → Name auf Arbeitsblättern** gesetzt;
+ein leeres Feld lässt ihn weg. Bestehende PDFs werden erst nach erfolgreicher
+Erzeugung beider Dokumente ersetzt.
+
 ## Muster und Änderungen
 
 Beim Einrichten und beim Ergänzen von Stunden im Sequenzeditor legt PULT fehlende
@@ -164,7 +211,7 @@ Dateien an. Vorhandene Inhalte bleiben erhalten. Die Muster enthalten nur:
 
 Beim Anlegen einer Aufgabe werden Titel, Hauptkompetenzen und Anforderungsbereich
 abgefragt. PULT erstellt die drei Aufgabendateien und öffnet sie im Editor.
-Unter „Bearbeiten → Titel und Einordnung“ lässt sich `aufgabe.toml` später ändern.
+Unter „Bearbeiten → Titel, Einordnung und Export“ lässt sich `aufgabe.toml` später ändern.
 Bestehende Aufgaben benötigen ebenfalls diese Datei; PULT ergänzt keine
 fachlichen Angaben automatisch.
 

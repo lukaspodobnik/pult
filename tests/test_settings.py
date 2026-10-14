@@ -231,3 +231,30 @@ def test_font_validation_preserves_saved_settings(tmp_path, monkeypatch):
         update_settings(updated, "nano", config.active_school_year).document_font
         == "source-sans-3"
     )
+
+
+def test_export_author_is_optional_validated_and_preserved(tmp_path, monkeypatch):
+    config = prepare_root(tmp_path)
+    path = tmp_path / "config.toml"
+    monkeypatch.setattr("pult.config.app_config.APP_CONFIG_PATH", path)
+    updated = update_settings(
+        config, config.editor, config.active_school_year, export_author=" L. Beispiel "
+    )
+    assert load_app_config().export_author == "L. Beispiel"
+    assert (
+        update_settings(updated, "nano", config.active_school_year).export_author
+        == "L. Beispiel"
+    )
+    original = path.read_bytes()
+    for invalid in ["first\nsecond", "x" * 81, 12]:
+        with pytest.raises(ValueError):
+            update_settings(
+                updated, "nano", config.active_school_year, export_author=invalid
+            )
+        assert path.read_bytes() == original
+    assert (
+        update_settings(
+            updated, "nano", config.active_school_year, export_author=""
+        ).export_author
+        == ""
+    )

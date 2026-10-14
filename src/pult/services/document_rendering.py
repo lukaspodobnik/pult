@@ -7,14 +7,16 @@ import html
 import io
 import os
 import re
+from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from markdown_it import MarkdownIt
+from markdown_it.token import Token
 from mdit_py_plugins.dollarmath import dollarmath_plugin
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
-from playwright.async_api import async_playwright
+from playwright.async_api import Page, PdfMargins, async_playwright
 from pygments import highlight
 from pygments.formatters import HtmlFormatter
 from pygments.lexers import get_lexer_by_name
@@ -90,9 +92,17 @@ def safe_local(target: str, source_path: Path, directory: Path) -> Path:
     return path
 
 
-def markdown_html(source: str, source_path: Path, directory: Path) -> str:
+def markdown_html(
+    source: str,
+    source_path: Path,
+    directory: Path,
+    *,
+    transform: Callable[[list[Token]], list[Token]] | None = None,
+) -> str:
     md = parser()
     tokens = md.parse(source)
+    if transform is not None:
+        tokens = transform(tokens)
     for token in tokens:
         for child in token.children or []:
             if child.type == "image":
@@ -366,22 +376,7 @@ class DocumentRenderer:
                 # Offline rendering: never fetch links, remote images, or extra scripts.
                 await page.route("**/*", lambda route: route.abort())
                 await page.set_content(document, wait_until="load")
-                await page.evaluate("""window.MathJax = {startup:{typeset:false},
-                    tex:{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']]},
-                    svg:{fontCache:'local'}}""")
-                await page.add_script_tag(content=script.read_text())
-                await page.evaluate(
-                    "async () => {await MathJax.startup.promise; "
-                    "await MathJax.typesetPromise(); await document.fonts.ready;}"
-                )
-                if await page.locator('[data-mml-node="merror"]').count():
-                    raise ValueError(
-                        "Mindestens eine Formel konnte nicht gesetzt werden."
-                    )
-                await page.evaluate(
-                    "async () => {await Promise.all(Array.from(document.images,"
-                    "i => i.decode()));}"
-                )
+                await self._prepare_page(page, math=True)
                 self.cache.mkdir(parents=True, exist_ok=True)
                 separator_y = await page.evaluate("""() => {
                     const rule = document.querySelector('article > hr');
@@ -403,7 +398,49 @@ class DocumentRenderer:
             finally:
                 await page.close()
 
-    async def render_pdf(self, document: str, *, font: str = "source-sans-3") -> bytes:
+    @staticmethod
+    async def _prepare_page(
+        page: Page, *, math: bool = False, strict_math: bool = False
+    ) -> None:
+        if math:
+            script = Path(__file__).parents[1] / "assets/mathjax/tex-svg-full.js"
+            await page.evaluate(
+                """strict => {
+                window.MathJax = {startup:{typeset:false},
+                    tex:{inlineMath:[['\\\\(','\\\\)']],displayMath:[['\\\\[','\\\\]']]},
+                    svg:{fontCache:'local'}};
+                if (strict) MathJax.tex.packages = {'[-]':['noerrors','noundefined']};
+            }""",
+                strict_math,
+            )
+            await page.add_script_tag(content=script.read_text())
+            await page.evaluate(
+                "async () => {await MathJax.startup.promise; "
+                "await MathJax.typesetPromise(); await document.fonts.ready;}"
+            )
+            if await page.locator('[data-mml-node="merror"]').count():
+                raise ValueError("Mindestens eine Formel konnte nicht gesetzt werden.")
+            await page.evaluate(
+                "async () => {await Promise.all(Array.from(document.images,"
+                "i => i.decode()));}"
+            )
+        else:
+            await page.evaluate(
+                "async () => {await document.fonts.ready; "
+                "await Promise.all(Array.from(document.images, i => i.decode()));}"
+            )
+
+    async def render_pdf(
+        self,
+        document: str,
+        *,
+        font: str = "source-sans-3",
+        math: bool = False,
+        margins: PdfMargins | None = None,
+        header_template: str | None = None,
+        footer_template: str | None = None,
+        prepare_script: str | None = None,
+    ) -> bytes:
         """HTML offline als durchsuchbare A4-PDF mit Seitenzahlen drucken."""
         footer_styles = document_font_stylesheet(font)
         footer_family = (
@@ -419,23 +456,29 @@ class DocumentRenderer:
                 await page.route("**/*", lambda route: route.abort())
                 await page.emulate_media(media="print")
                 await page.set_content(document, wait_until="load")
-                await page.evaluate(
-                    "async () => {await document.fonts.ready; "
-                    "await Promise.all(Array.from(document.images, i => i.decode()));}"
-                )
+                await self._prepare_page(page, math=math, strict_math=True)
+                if prepare_script is not None:
+                    layout_error = await page.evaluate(prepare_script)
+                    if layout_error:
+                        raise ValueError(str(layout_error))
                 return await page.pdf(
                     format="A4",
                     prefer_css_page_size=True,
                     print_background=True,
-                    margin={
+                    margin=margins
+                    or {
                         "top": "14mm",
                         "bottom": "18mm",
                         "left": "12mm",
                         "right": "12mm",
                     },
                     display_header_footer=True,
-                    header_template="<span></span>",
-                    footer_template=(
+                    header_template=header_template
+                    if header_template is not None
+                    else "<span></span>",
+                    footer_template=footer_template
+                    if footer_template is not None
+                    else (
                         f"<style>{footer_styles}</style>"
                         f'<div style="font-family:{footer_family};font-size:9px;font-weight:400;'
                         'color:#59616a;width:100%;text-align:center">'

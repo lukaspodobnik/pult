@@ -2,6 +2,11 @@
 
 ## Noch nicht veröffentlicht
 
+- Aufgabenbibliothek: `x` exportiert die ganze Sequenz als Aufgabenheft und
+  getrenntes Lösungsheft. Optionale Exportangaben in `aufgabe.toml` steuern
+  Schreiblinien und Karofelder, gemeinsam oder pro Teilaufgabe. A4-Hochformat
+  mit Formeln, Abbildungen, Seitenzahlen und einstellbarem Namen in der Fußzeile.
+
 - Abbildungsblöcke setzen eine kompakte Skizze neben den zugehörigen Text;
   bei wenig Breite stehen beide untereinander.
 

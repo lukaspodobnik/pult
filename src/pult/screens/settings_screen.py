@@ -2,7 +2,7 @@ from typing import ClassVar
 
 from textual import on, work
 from textual.app import ComposeResult
-from textual.widgets import Label, Select, Static
+from textual.widgets import Input, Label, Select, Static
 
 from pult.config import AppConfig
 from pult.school.assessment_requirements import load_assessment_requirements
@@ -56,6 +56,13 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
                     id="settings-document-font",
                 )
                 yield Static("Schriftverfügbarkeit wird geprüft …", id="font-status")
+                yield Label("Name auf Arbeitsblättern", classes="field-label")
+                yield Input(
+                    config.export_author,
+                    placeholder="Optional",
+                    id="settings-export-author",
+                    max_length=80,
+                )
                 yield Label("Schuljahr", classes="field-label")
                 yield Select(
                     get_school_year_options(config.root),
@@ -154,7 +161,11 @@ class SettingsScreen(PultModalScreen[AppConfig | None]):
             return
         try:
             updated = update_settings(
-                self.app_config, str(editor), str(year), str(font)
+                self.app_config,
+                str(editor),
+                str(year),
+                str(font),
+                export_author=self.query_one("#settings-export-author", Input).value,
             )
         except (OSError, ValueError) as error:
             self.notify(

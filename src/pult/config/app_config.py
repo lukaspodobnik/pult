@@ -14,6 +14,15 @@ class AppConfig:
     editor: str
     active_school_year: str
     document_font: str = "auto"
+    export_author: str = ""
+
+
+def validate_export_author(value: str) -> str:
+    if not isinstance(value, str) or len(value) > 80 or "\n" in value or "\r" in value:
+        raise ValueError(
+            "Der Name auf Arbeitsblättern muss ein kurzer einzeiliger Text sein (maximal 80 Zeichen)."
+        )
+    return value.strip()
 
 
 def load_app_config() -> AppConfig | None:
@@ -32,6 +41,7 @@ def load_app_config() -> AppConfig | None:
         editor=data["editor"],
         active_school_year=data["active_school_year"],
         document_font=validate_document_font(data.get("document_font", "auto")),
+        export_author=validate_export_author(data.get("export_author", "")),
     )
 
 
@@ -42,6 +52,7 @@ def save_app_config(app_config: AppConfig) -> None:
         "editor": app_config.editor,
         "active_school_year": app_config.active_school_year,
         "document_font": validate_document_font(app_config.document_font),
+        "export_author": validate_export_author(app_config.export_author),
     }
 
     APP_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)

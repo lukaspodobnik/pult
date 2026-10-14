@@ -35,7 +35,7 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
             [
                 Option("Aufgabentext", id="aufgabe.md"),
                 Option("Lösung", id="loesung.md"),
-                Option("Titel und Einordnung", id="aufgabe.toml"),
+                Option("Titel, Einordnung und Export", id="aufgabe.toml"),
             ]
         )
         task = next(task for task in self.tasks if task.id == self.task_id)

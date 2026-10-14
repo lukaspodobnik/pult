@@ -2,6 +2,7 @@ from dataclasses import replace
 from datetime import date
 
 from pult.config import AppConfig, save_app_config
+from pult.config.app_config import validate_export_author
 from pult.initialization.school_year import initialize_school_year
 from pult.school.calendar import load_school_calendar
 from pult.school.school_year import get_school_year_options
@@ -26,7 +27,12 @@ def get_editor_options(current: str = "nvim") -> list[tuple[str, str]]:
 
 
 def update_settings(
-    config: AppConfig, editor: str, year: str, document_font: str | None = None
+    config: AppConfig,
+    editor: str,
+    year: str,
+    document_font: str | None = None,
+    *,
+    export_author: str | None = None,
 ) -> AppConfig:
     """Bereite das gewählte Jahr ohne Überschreiben vor; speichere erst danach."""
     if not editor.strip():
@@ -36,9 +42,16 @@ def update_settings(
     font = validate_document_font(
         config.document_font if document_font is None else document_font
     )
+    author = validate_export_author(
+        config.export_author if export_author is None else export_author
+    )
     initialize_school_year(config.root, year)
     updated = replace(
-        config, editor=editor, active_school_year=year, document_font=font
+        config,
+        editor=editor,
+        active_school_year=year,
+        document_font=font,
+        export_author=author,
     )
     save_app_config(updated)
     return updated

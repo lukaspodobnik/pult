@@ -5,6 +5,7 @@ from pathlib import Path
 
 from playwright.async_api import Error as PlaywrightError
 
+from pult.curriculum.material import validate_id
 from pult.school.calendar import validate_school_year
 from pult.services.document_fonts import document_font_stylesheet
 from pult.storage import save_bytes
@@ -62,3 +63,33 @@ def export_error_message(error: Exception) -> str:
             "Bitte unter Einstellungen → Dokumentdarstellung einrichten prüfen."
         )
     return f"Der PDF-Export ist fehlgeschlagen: {error}"
+
+
+def material_export_path(
+    root: Path,
+    year: str,
+    grade: int,
+    subject_id: str,
+    sequence_id: str,
+    document: str,
+) -> Path:
+    """Klassenunabhängige Materialien unter derselben jährlichen Exportablage."""
+    year = validate_school_year(year)
+    if type(grade) is not int or not 5 <= grade <= 13:
+        raise ValueError("Ungültiger Jahrgang für den Export.")
+    for value in (subject_id, sequence_id, document):
+        if (
+            not isinstance(value, str)
+            or validate_id(value, "Exportbezeichnung") != value
+        ):
+            raise ValueError("Ungültige Exportbezeichnung.")
+    return (
+        root
+        / "exports"
+        / year
+        / "materialien"
+        / subject_id
+        / str(grade)
+        / sequence_id
+        / f"{document}.pdf"
+    )

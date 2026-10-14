@@ -1,13 +1,12 @@
 """Alle Aufgaben einer Sequenz, einschließlich noch nicht zugeordneter Aufgaben."""
 
-import re
 import shlex
 import shutil
 import subprocess
 from typing import ClassVar
 
 from rich.text import Text
-from textual import on
+from textual import on, work
 from textual.binding import Binding
 from textual.widgets import Static
 from textual.widgets.option_list import Option
@@ -15,7 +14,7 @@ from textual.widgets.option_list import Option
 from pult.curriculum.material import (
     Task,
     TaskMetadata,
-    load_task,
+    load_tasks,
     material_path,
     save_lesson_metadata,
 )
@@ -23,19 +22,12 @@ from pult.curriculum.sequence import Sequence, load_sequence
 from pult.screens.base_screen import PultScreen
 from pult.screens.create_task_screen import CreateTaskScreen
 from pult.screens.select_task_file_screen import SelectTaskFileScreen
+from pult.services.exports import export_error_message
 from pult.services.task_creation import create_task_files
+from pult.services.task_export import export_task_workbooks
 from pult.widgets.document_viewer import DocumentPane, DocumentViewer
 from pult.widgets.footer import PultFooter
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
-
-
-def task_sort_key(task: Task) -> tuple[int, int, str, str]:
-    """Titelnummern numerisch sortieren; unnummerierte Titel folgen alphabetisch."""
-    title = task.metadata.title.casefold()
-    number = re.match(r"^(\d+)\.\s+", title)
-    if number:
-        return 0, int(number[1]), title[number.end() :], task.id
-    return 1, 0, title, task.id
 
 
 class TaskScreen(PultScreen[Sequence]):
@@ -43,6 +35,7 @@ class TaskScreen(PultScreen[Sequence]):
         ("escape", "close", "Zurück"),
         ("e", "edit_task", "Bearbeiten"),
         ("n", "create_task", "Neue Aufgabe"),
+        ("x", "export_pdf", "Sequenz exportieren"),
         Binding("space", "toggle_solution", "Aufgabe / Lösung", priority=True),
         ("v", "assign_task", "Vormerken / entfernen"),
     ]
@@ -65,6 +58,7 @@ class TaskScreen(PultScreen[Sequence]):
         self.sequence = sequence
         self.directory = directory
         self.lesson_id = lesson_id
+        self._exporting = False
         self.show_solution = False
         self.tasks = self.read_tasks()
         lesson = next((item for item in sequence.lessons if item.id == lesson_id), None)
@@ -75,15 +69,7 @@ class TaskScreen(PultScreen[Sequence]):
         )
 
     def read_tasks(self) -> list[Task]:
-        folder = material_path(self.directory, "aufgaben")
-        if not folder.exists():
-            return []
-        tasks = []
-        for entry in sorted(folder.iterdir(), key=lambda item: item.name):
-            if not entry.is_dir() or entry.name.startswith("."):
-                continue
-            tasks.append(load_task(self.directory, entry.name))
-        return sorted(tasks, key=task_sort_key)
+        return load_tasks(self.directory)
 
     @property
     def selected_task(self):
@@ -133,6 +119,8 @@ class TaskScreen(PultScreen[Sequence]):
         return Text(label)
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "export_pdf":
+            return bool(self.tasks) and not self._exporting
         if action == "assign_task":
             return self.lesson_id is not None
         return True
@@ -302,3 +290,30 @@ class TaskScreen(PultScreen[Sequence]):
             if self.task_id is not None:
                 picker.highlighted = picker.get_option_index(self.task_id)
         await self.refresh_material()
+        self.refresh_bindings()
+
+    def action_export_pdf(self) -> None:
+        if not self.check_action("export_pdf", ()):
+            return
+        self._exporting = True
+        self.refresh_bindings()
+        self.notify("Aufgabenheft und Lösungen werden erstellt …")
+        self._export_pdf()
+
+    @work(group="pdf-export", exit_on_error=False)
+    async def _export_pdf(self) -> None:
+        try:
+            tasks_path, solutions_path = await export_task_workbooks(
+                self.pult_app.document_renderer,
+                self.app_config,
+                sequence=self.sequence,
+                directory=self.directory,
+            )
+            self.notify(
+                f"Aufgaben und Lösungen gespeichert: {tasks_path.parent}", timeout=12
+            )
+        except Exception as error:
+            self.notify(export_error_message(error), severity="error")
+        finally:
+            self._exporting = False
+            self.refresh_bindings()

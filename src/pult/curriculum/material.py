@@ -78,11 +78,53 @@ class Phase:
         self.text = self.text.strip()
 
 
+@dataclass(frozen=True)
+class TaskExport:
+    """Antwortflächen im Arbeitsheft; fehlende Angaben ergeben ein gemeinsames Raster."""
+
+    answer_area: str = "kariert"
+    rows: int = 8
+    per_subtask: bool = False
+
+    def __post_init__(self) -> None:
+        if self.answer_area not in ("linien", "kariert", "keiner"):
+            raise ValueError(
+                "export.antwortbereich muss 'linien', 'kariert' oder 'keiner' sein."
+            )
+        if type(self.rows) is not int or not 0 <= self.rows <= 40:
+            raise ValueError("export.zeilen muss eine ganze Zahl von 0 bis 40 sein.")
+        if self.answer_area != "keiner" and self.rows == 0:
+            raise ValueError("Ein Antwortbereich benötigt mindestens eine Zeile.")
+        if self.answer_area == "keiner" and self.rows != 0:
+            raise ValueError("Ohne Antwortbereich muss export.zeilen 0 sein.")
+        if type(self.per_subtask) is not bool:
+            raise ValueError("export.pro_teilaufgabe muss true oder false sein.")
+
+    @classmethod
+    def from_dict(cls, data: Any) -> "TaskExport":
+        if not isinstance(data, dict):
+            raise ValueError("'export' muss eine TOML-Tabelle sein.")
+        reject_unknown(data, {"antwortbereich", "zeilen", "pro_teilaufgabe"})
+        area = data.get("antwortbereich", "kariert")
+        default_rows = 0 if area == "keiner" else 1 if area == "linien" else 8
+        return cls(
+            area, data.get("zeilen", default_rows), data.get("pro_teilaufgabe", False)
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "antwortbereich": self.answer_area,
+            "zeilen": self.rows,
+            "pro_teilaufgabe": self.per_subtask,
+        }
+
+
 @dataclass
 class TaskMetadata:
     title: str
     competencies: list[str]
     requirement_level: str
+    export: TaskExport | None = None
 
     def __post_init__(self) -> None:
         self.title = " ".join(require_text({"titel": self.title}, "titel").split())
@@ -96,21 +138,33 @@ class TaskMetadata:
             )
         if len(set(self.competencies)) != len(self.competencies):
             raise ValueError("'kompetenzen' darf keine doppelten Einträge enthalten.")
+        if self.export is not None:
+            if not isinstance(self.export, TaskExport):
+                raise ValueError("Ungültige Exportangaben für die Aufgabe.")
+            self.export.__post_init__()
         if self.requirement_level not in ("I", "II", "III"):
             raise ValueError("'anforderungsbereich' muss 'I', 'II' oder 'III' sein.")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TaskMetadata":
-        reject_unknown(data, {"titel", "kompetenzen", "anforderungsbereich"})
-        return cls(data["titel"], data["kompetenzen"], data["anforderungsbereich"])
+        reject_unknown(data, {"titel", "kompetenzen", "anforderungsbereich", "export"})
+        return cls(
+            data["titel"],
+            data["kompetenzen"],
+            data["anforderungsbereich"],
+            TaskExport.from_dict(data["export"]) if "export" in data else None,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         self.__post_init__()
-        return {
+        data: dict[str, Any] = {
             "titel": self.title,
             "kompetenzen": self.competencies,
             "anforderungsbereich": self.requirement_level,
         }
+        if self.export is not None:
+            data["export"] = self.export.to_dict()
+        return data
 
 
 @dataclass
@@ -445,4 +499,27 @@ def save_lesson_metadata(directory: Path, lesson: Lesson) -> None:
     save_toml(
         material_path(directory, "stunden", lesson.id, "stunde.toml"),
         lesson_metadata(lesson),
+    )
+
+
+def task_sort_key(task: Task) -> tuple[int, int, str, str]:
+    """Titelnummern numerisch sortieren; unnummerierte Titel folgen alphabetisch."""
+    title = task.metadata.title.casefold()
+    number = re.match(r"^(\d+)\.\s+", title)
+    if number:
+        return 0, int(number[1]), title[number.end() :], task.id
+    return 1, 0, title, task.id
+
+
+def load_tasks(directory: Path) -> list[Task]:
+    folder = material_path(directory, "aufgaben")
+    if not folder.exists():
+        return []
+    return sorted(
+        (
+            load_task(directory, entry.name)
+            for entry in folder.iterdir()
+            if entry.is_dir() and not entry.name.startswith(".")
+        ),
+        key=task_sort_key,
     )

@@ -163,3 +163,50 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             assert screen.sequence.lessons[0].tasks[-1].metadata == before.metadata
 
     asyncio.run(run())
+
+
+def test_sequence_export_hotkey_is_guarded_and_recovers_after_failure(
+    tmp_path, monkeypatch
+):
+    from unittest.mock import AsyncMock
+
+    config = prepare_root(tmp_path)
+    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
+    sequence = load_sequence(
+        Path(__file__).parents[1] / "examples/unterricht",
+        6,
+        "mathematik",
+        "formatbeispiel",
+    )
+    save_sequence(tmp_path, sequence)
+    directory = tmp_path / "sequences/6/mathematik/formatbeispiel"
+
+    async def run():
+        app = PultApp()
+        started, release = asyncio.Event(), asyncio.Event()
+
+        async def exporter(*args, **kwargs):
+            started.set()
+            await release.wait()
+            raise ValueError("Lösung fehlt")
+
+        mock = AsyncMock(side_effect=exporter)
+        monkeypatch.setattr("pult.screens.task_screen.export_task_workbooks", mock)
+        async with app.run_test(size=(140, 42)) as pilot:
+            await pilot.pause()
+            screen = TaskScreen(sequence, directory)
+            await app.push_screen(screen)
+            await pilot.pause()
+            await pilot.press("x")
+            await asyncio.wait_for(started.wait(), 2)
+            assert screen._exporting
+            await pilot.press("x")
+            assert mock.await_count == 1
+            release.set()
+            await pilot.pause()
+            assert screen.check_action("export_pdf", ())
+            assert mock.call_args.kwargs["sequence"] == sequence
+            screen.tasks = []
+            assert not screen.check_action("export_pdf", ())
+
+    asyncio.run(run())
