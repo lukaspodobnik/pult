@@ -32,7 +32,7 @@ def test_dashboard_content_and_keyboard_navigation(tmp_path, monkeypatch):
             return datetime.combine(first_day, time(8, 10), tzinfo=tz)
 
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    monkeypatch.setattr("pult.screens.main_screen.datetime", Clock)
+    monkeypatch.setattr("pult.services.dashboard.datetime", Clock)
     monkeypatch.setattr("pult.views.home_view.datetime", Clock)
     save_timetable(
         get_timetable_path(tmp_path, config.active_school_year),

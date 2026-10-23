@@ -1,7 +1,5 @@
 import asyncio
-from datetime import datetime
 from typing import ClassVar
-from zoneinfo import ZoneInfo
 
 from textual import on
 from textual.app import ComposeResult
@@ -31,14 +29,10 @@ from pult.progress.commands import (
 from pult.progress.queries import (
     PlannedLesson,
     get_available_next_sequences,
-    get_class_progress_summary,
-    get_home_dashboard_summary,
     get_next_lesson,
     get_suggested_next_sequence,
 )
 from pult.progress.queries.assessments import PlannedAssessment, next_event
-from pult.school.assessment_requirements import load_assessment_requirements
-from pult.school.period import load_periods
 from pult.school.school_class import SchoolClass, load_school_classes
 from pult.school.subject import load_subjects
 from pult.screens.base_screen import PultScreen
@@ -67,6 +61,11 @@ from pult.screens.teaching.curriculum_screen import CurriculumScreen
 from pult.screens.teaching.lesson_screen import LessonScreen
 from pult.screens.teaching.sequence_library_screen import SequenceLibraryScreen
 from pult.services.assessments import complete_assessment, reopen_assessment
+from pult.services.dashboard import (
+    HomeViewData,
+    load_home_view_data,
+    load_school_class_view_data,
+)
 from pult.services.progress import (
     PlannedLessonContext,
     get_planned_lesson_context,
@@ -289,32 +288,14 @@ class MainScreen(PultScreen[None]):
         self.active_subject_id = None
         config = self.app_config
 
-        def load_dashboard():
-            data = load_planning_data(config, sequences=self.sequence_library)
-            periods = load_periods(config.root)
-            subjects = load_subjects(config.root)
-            dashboard = get_home_dashboard_summary(
-                datetime.now(ZoneInfo("Europe/Berlin")),
-                data.progresses_by_class_id,
-                data.sequences,
-                data.timetable_entries,
-                periods,
-                data.school_classes,
-                data.school_calendar,
-                data.school_closures,
-                data.class_closures_by_class_id,
-                data.assessments_by_class_id,
-                load_assessment_requirements(config.root, config.active_school_year),
-            )
-            return data, periods, subjects, dashboard
+        def load_dashboard() -> HomeViewData:
+            return load_home_view_data(config, sequences=self.sequence_library)
 
         try:
             if self.startup_active:
-                data, periods, subjects, dashboard = await asyncio.to_thread(
-                    load_dashboard
-                )
+                data = await asyncio.to_thread(load_dashboard)
             else:
-                data, periods, subjects, dashboard = load_dashboard()
+                data = load_dashboard()
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(
                 f"Die Übersicht konnte nicht geladen werden: {error}", severity="error"
@@ -331,14 +312,18 @@ class MainScreen(PultScreen[None]):
             view = views.first()
             await view.update_data(
                 data.timetable_entries,
-                subjects,
-                periods,
+                data.subjects,
+                data.periods,
                 data.sequences,
-                dashboard,
+                data.dashboard,
             )
         else:
             view = HomeView(
-                data.timetable_entries, subjects, periods, data.sequences, dashboard
+                data.timetable_entries,
+                data.subjects,
+                data.periods,
+                data.sequences,
+                data.dashboard,
             )
         await self.switch_view(view)
         if not self.app.is_running:
@@ -363,29 +348,16 @@ class MainScreen(PultScreen[None]):
         """Lade und validiere alle Daten für die Ansicht einer Klasse."""
         config = self.app_config
         try:
-            data = load_planning_data(
-                config, school_class.id, sequences=self.sequence_library
-            )
-            school_class = data.school_classes[0]
-            if subject_id is None:
-                subject_id = (
+            data = load_school_class_view_data(
+                config,
+                school_class.id,
+                subject_id,
+                preferred_subject_id=(
                     self.active_subject_id
                     if self.active_school_class_id == school_class.id
-                    and self.active_subject_id in school_class.subject_ids
-                    else school_class.subject_ids[0]
-                )
-            if subject_id not in school_class.subject_ids:
-                raise ValueError("Das ausgewählte Fach gehört nicht zu dieser Klasse.")
-            subjects = load_subjects(config.root)
-            progress_summaries = get_class_progress_summary(
-                data.progresses_by_class_id[school_class.id],
-                data.sequences,
-                data.timetable_entries,
-                school_class,
-                data.school_calendar,
-                data.school_closures,
-                data.class_closures_by_class_id[school_class.id],
-                data.assessments_by_class_id[school_class.id],
+                    else None
+                ),
+                sequences=self.sequence_library,
             )
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(
@@ -394,19 +366,18 @@ class MainScreen(PultScreen[None]):
             )
             return
 
-        progress_summaries = tuple(
-            summary
-            for summary in progress_summaries
-            if summary.subject_id == subject_id
-        )
-        self.active_school_class_id = school_class.id
-        self.active_subject_id = subject_id
+        self.active_school_class_id = data.school_class.id
+        self.active_subject_id = data.subject_id
         views = self.query(SchoolClassView)
         if views:
             view = views.first()
-            await view.update_data(school_class, subjects, progress_summaries)
+            await view.update_data(
+                data.school_class, data.subjects, data.progress_summaries
+            )
         else:
-            view = SchoolClassView(school_class, subjects, progress_summaries)
+            view = SchoolClassView(
+                data.school_class, data.subjects, data.progress_summaries
+            )
         await self.switch_view(view)
         if self not in self.app.screen_stack:
             return

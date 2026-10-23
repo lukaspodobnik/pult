@@ -299,7 +299,7 @@ def test_open_next_lesson_uses_visible_lesson_and_returns(
         def now(cls, tz):
             return datetime(2026, 9, 16, 8, 0, tzinfo=tz)
 
-    monkeypatch.setattr("pult.screens.main_screen.datetime", Clock)
+    monkeypatch.setattr("pult.services.dashboard.datetime", Clock)
     monkeypatch.setattr("pult.views.home_view.datetime", Clock)
 
     async def run():
