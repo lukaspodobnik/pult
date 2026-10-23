@@ -1,4 +1,4 @@
-"""Lade frische Fortschrittsdaten mit optional geteilter Sequenzbibliothek."""
+"""Lade Unterrichtskontexte und validiere Fortschritt beim Laden und Speichern."""
 
 from dataclasses import dataclass
 
@@ -7,7 +7,13 @@ from pult.curriculum.sequence import Sequence, load_sequence_library
 from pult.progress.class_progress import (
     ClassProgress,
     load_class_progress,
+    save_class_progress,
     validate_class_progress,
+)
+from pult.progress.queries import (
+    PlannedLesson,
+    get_next_planned_lesson,
+    get_next_planned_lessons_for_class,
 )
 from pult.school.assessment import Assessment
 from pult.school.calendar import (
@@ -45,6 +51,14 @@ class PlanningData:
     assessments_by_class_id: dict[str, list[Assessment]]
 
 
+@dataclass(frozen=True)
+class PlannedLessonContext:
+    school_class: SchoolClass
+    progress: ClassProgress
+    planned_lesson: PlannedLesson
+    sequences: list[Sequence]
+
+
 def load_class_progress_data(
     config: AppConfig,
     school_class: SchoolClass,
@@ -63,6 +77,20 @@ def load_class_progress_data(
     )
     validate_class_progress(progress, school_class, sequences)
     return ClassProgressData(school_class, sequences, progress)
+
+
+def save_class_progress_data(
+    config: AppConfig,
+    school_class: SchoolClass,
+    progress: ClassProgress,
+    *,
+    sequences: list[Sequence],
+) -> None:
+    """Validiere Fortschritt vor dem Speichern; Fehler gehen an den Aufrufer."""
+    validate_class_progress(progress, school_class, sequences)
+    save_class_progress(
+        config.root, config.active_school_year, school_class.id, progress
+    )
 
 
 def load_planning_data(
@@ -109,4 +137,57 @@ def load_planning_data(
             )
             for school_class in classes
         },
+    )
+
+
+def get_planned_lesson_context(
+    data: PlanningData,
+    school_class_id: str | None = None,
+    subject_id: str | None = None,
+) -> PlannedLessonContext | None:
+    """Ermittle die nächste globale Stunde oder die des ausgewählten Klassenfachs.
+
+    Ohne Klasse gilt die globale Reihenfolge. Bei Klassenwahl wird ausschließlich
+    das angegebene Fach berücksichtigt; fehlt dort eine Stunde, ist das Ergebnis None.
+    """
+    school_classes_by_id = {
+        school_class.id: school_class for school_class in data.school_classes
+    }
+    if school_class_id is None:
+        planned_lesson = get_next_planned_lesson(
+            data.progresses_by_class_id,
+            data.sequences,
+            data.timetable_entries,
+            data.school_classes,
+            data.school_calendar,
+            data.school_closures,
+            data.class_closures_by_class_id,
+            data.assessments_by_class_id,
+        )
+    else:
+        planned_lesson = next(
+            (
+                lesson
+                for lesson in get_next_planned_lessons_for_class(
+                    data.progresses_by_class_id[school_class_id],
+                    data.sequences,
+                    data.timetable_entries,
+                    school_classes_by_id[school_class_id],
+                    data.school_calendar,
+                    data.school_closures,
+                    data.class_closures_by_class_id[school_class_id],
+                    data.assessments_by_class_id[school_class_id],
+                )
+                if lesson.subject_id == subject_id
+            ),
+            None,
+        )
+    if planned_lesson is None:
+        return None
+
+    return PlannedLessonContext(
+        school_class=school_classes_by_id[planned_lesson.school_class_id],
+        progress=data.progresses_by_class_id[planned_lesson.school_class_id],
+        planned_lesson=planned_lesson,
+        sequences=data.sequences,
     )

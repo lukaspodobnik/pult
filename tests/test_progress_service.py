@@ -1,10 +1,18 @@
+from dataclasses import replace
 from unittest.mock import Mock
 
 import pytest
 
 from pult.config import AppConfig
-from pult.progress.class_progress import ActiveSequence, ClassProgress
+from pult.progress.class_progress import (
+    ActiveSequence,
+    ClassProgress,
+    ClassProgressValidationError,
+    get_class_progress_path,
+    load_class_progress,
+)
 from pult.school.school_class import SchoolClass
+from pult.school.timetable import TimetableEntry
 from pult.services import progress as service
 
 
@@ -62,3 +70,58 @@ def test_loading_propagates_file_errors(loaders, school_class):
     mocks["load_class_progress"].side_effect = FileNotFoundError("Missing progress")
     with pytest.raises(FileNotFoundError):
         service.load_class_progress_data(config, school_class)
+
+
+@pytest.mark.parametrize(
+    "class_id, subject_id, expected_class_id, expected_period",
+    [
+        (None, None, "5B", 1),
+        ("5A", "mathematik", "5A", 2),
+        ("5A", "informatik", None, None),
+    ],
+)
+def test_planned_context_respects_class_and_subject_selection(
+    loaders, planned_lesson, class_id, subject_id, expected_class_id, expected_period
+):
+    config, mocks = loaders
+    mocks["load_timetable"].return_value = [
+        TimetableEntry("monday", 1, "5B", "mathematik", "102"),
+        TimetableEntry("monday", 2, "5A", "mathematik", "101"),
+    ]
+    data = service.load_planning_data(config)
+
+    context = service.get_planned_lesson_context(data, class_id, subject_id)
+
+    if expected_class_id is None:
+        assert context is None
+    else:
+        assert context is not None
+        assert context.school_class.id == expected_class_id
+        assert context.planned_lesson == replace(
+            planned_lesson, school_class_id=expected_class_id, period=expected_period
+        )
+        assert context.progress == data.progresses_by_class_id[expected_class_id]
+        assert context.sequences == data.sequences
+
+
+def test_invalid_progress_does_not_overwrite_saved_progress(
+    tmp_path, school_class, sequences, empty_progress
+):
+    config = AppConfig(tmp_path, "true", "2026-2027")
+    path = get_class_progress_path(tmp_path, "2026-2027", "5A")
+    path.parent.mkdir(parents=True)
+    service.save_class_progress_data(
+        config, school_class, empty_progress, sequences=sequences
+    )
+    assert load_class_progress(tmp_path, "2026-2027", "5A") == empty_progress
+    saved = path.read_bytes()
+    invalid_progress = ClassProgress(
+        (ActiveSequence("mathematik", "missing-sequence"),), ()
+    )
+
+    with pytest.raises(ClassProgressValidationError, match="missing-sequence"):
+        service.save_class_progress_data(
+            config, school_class, invalid_progress, sequences=sequences
+        )
+
+    assert path.read_bytes() == saved

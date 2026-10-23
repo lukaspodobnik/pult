@@ -1,5 +1,4 @@
 import asyncio
-from dataclasses import dataclass
 from datetime import datetime
 from typing import ClassVar
 from zoneinfo import ZoneInfo
@@ -14,11 +13,7 @@ from textual.widgets import ContentSwitcher
 from pult.config import AppConfig
 from pult.curriculum.sequence import Sequence
 from pult.presentation import UNTITLED_LESSON, format_compact_date
-from pult.progress.class_progress import (
-    ClassProgress,
-    save_class_progress,
-    validate_class_progress,
-)
+from pult.progress.class_progress import ClassProgress
 from pult.progress.commands import (
     CompleteLessonResult,
     LessonCompletionState,
@@ -39,8 +34,6 @@ from pult.progress.queries import (
     get_class_progress_summary,
     get_home_dashboard_summary,
     get_next_lesson,
-    get_next_planned_lesson,
-    get_next_planned_lessons_for_class,
     get_suggested_next_sequence,
 )
 from pult.progress.queries.assessments import PlannedAssessment, next_event
@@ -75,8 +68,11 @@ from pult.screens.teaching.lesson_screen import LessonScreen
 from pult.screens.teaching.sequence_library_screen import SequenceLibraryScreen
 from pult.services.assessments import complete_assessment, reopen_assessment
 from pult.services.progress import (
+    PlannedLessonContext,
+    get_planned_lesson_context,
     load_class_progress_data,
     load_planning_data,
+    save_class_progress_data,
 )
 from pult.views.home_view import HomeView
 from pult.views.school_class_view import SchoolClassView
@@ -85,14 +81,6 @@ from pult.widgets.footer import PultFooter
 from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 from pult.widgets.startup_logo import StartupLogo
-
-
-@dataclass(frozen=True)
-class PlannedLessonContext:
-    school_class: SchoolClass
-    progress: ClassProgress
-    planned_lesson: PlannedLesson
-    sequences: list[Sequence]
 
 
 class MainScreen(PultScreen[None]):
@@ -555,13 +543,8 @@ class MainScreen(PultScreen[None]):
     ) -> None:
         """Validiere und speichere Fortschritt und aktualisiere danach die View."""
         self._last_assessment_completion = None
-        config = self.app_config
-        validate_class_progress(progress, school_class, sequences)
-        save_class_progress(
-            config.root,
-            config.active_school_year,
-            school_class.id,
-            progress,
+        save_class_progress_data(
+            self.app_config, school_class, progress, sequences=sequences
         )
         await self.refresh_current_view()
 
@@ -581,59 +564,21 @@ class MainScreen(PultScreen[None]):
             self.school_classes_by_id.update(
                 {school_class.id: school_class for school_class in data.school_classes}
             )
-            if self.active_school_class_id is None:
-                planned_lesson = get_next_planned_lesson(
-                    data.progresses_by_class_id,
-                    data.sequences,
-                    data.timetable_entries,
-                    data.school_classes,
-                    data.school_calendar,
-                    data.school_closures,
-                    data.class_closures_by_class_id,
-                    data.assessments_by_class_id,
-                )
-            else:
-                class_id = self.active_school_class_id
-                planned_lesson = next(
-                    (
-                        lesson
-                        for lesson in get_next_planned_lessons_for_class(
-                            data.progresses_by_class_id[class_id],
-                            data.sequences,
-                            data.timetable_entries,
-                            self.school_classes_by_id[class_id],
-                            data.school_calendar,
-                            data.school_closures,
-                            data.class_closures_by_class_id[class_id],
-                            data.assessments_by_class_id[class_id],
-                        )
-                        if lesson.subject_id == self.active_subject_id
-                    ),
-                    None,
-                )
-            progress = (
-                data.progresses_by_class_id[planned_lesson.school_class_id]
-                if planned_lesson is not None
-                else None
+            context = get_planned_lesson_context(
+                data, self.active_school_class_id, self.active_subject_id
             )
         except (OSError, KeyError, ValueError) as error:
             self.notify(str(error), severity="error")
             return None
 
-        if planned_lesson is None or progress is None:
+        if context is None:
             self.notify(
                 "Keine offene Unterrichtsstunde gefunden. Prüfe Stundenplan, Sequenzfortschritt und Schuljahr.",
                 severity="warning",
             )
             return None
 
-        school_class = self.school_classes_by_id[planned_lesson.school_class_id]
-        return PlannedLessonContext(
-            school_class=school_class,
-            progress=progress,
-            planned_lesson=planned_lesson,
-            sequences=data.sequences,
-        )
+        return context
 
     async def action_complete_next_lesson(self) -> None:
         planned = self.displayed_next_lesson()
