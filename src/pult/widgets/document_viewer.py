@@ -13,6 +13,7 @@ from rich.text import Text
 from textual import work
 from textual.color import Color
 from textual.geometry import Region
+from textual.message import Message
 from textual.strip import Strip
 from textual.widgets import Markdown, Static
 
@@ -79,6 +80,16 @@ class DocumentPane(VerticalScroll):
 
 
 class DocumentViewer(Vertical):
+    class Rendering(Message):
+        def __init__(self, viewer: "DocumentViewer"):
+            super().__init__()
+            self.viewer = viewer
+
+    class Ready(Message):
+        def __init__(self, viewer: "DocumentViewer"):
+            super().__init__()
+            self.viewer = viewer
+
     DEFAULT_CSS = """
     DocumentViewer {height:auto; background:transparent; overflow:hidden hidden;}
     DocumentViewer .document-tile {width:100%; margin:0; padding:0;}
@@ -104,6 +115,7 @@ class DocumentViewer(Vertical):
         self._separator_row: int | None = None
         self.renderer: DocumentRenderer | None = None
         self.signature = None
+        self.rendered_signature = None
         self.render_timer = None
         self.text_mode = False
         self.image_tiles = []
@@ -123,10 +135,33 @@ class DocumentViewer(Vertical):
     def on_resize(self):
         self.schedule_render()
 
+    def set_active(self, active: bool, *, reset_position: bool = False):
+        self.display = active
+        if not active:
+            if self.render_timer:
+                self.render_timer.stop()
+            for worker in self.workers:
+                if worker.node is self and not worker.is_cancelled:
+                    worker.cancel()
+            if self.rendered_signature != self.signature:
+                self.signature = None
+            return
+        if reset_position:
+            self._initial_scroll_pending = self.start_at_separator
+        self.call_after_refresh(self.activate_document)
+
+    def activate_document(self):
+        self.schedule_render()
+        self.position_continuation()
+        if self.signature is not None and self.rendered_signature == self.signature:
+            self.post_message(self.Ready(self))
+
     def schedule_render(self):
-        if not self.is_mounted or self.content_size.width < 5:
+        if not self.is_mounted or not self.display or self.content_size.width < 5:
             return
         pane = next((a for a in self.ancestors if isinstance(a, DocumentPane)), None)
+        if pane is not None and not pane.display:
+            return
         viewport_height = pane.scrollable_content_region.height if pane else 0
         variables = self.app.get_css_variables()
         # A subtle reading surface, lighter in dark themes and darker in light ones.
@@ -151,7 +186,9 @@ class DocumentViewer(Vertical):
         if signature == self.signature:
             self.refresh_corners()
             return
+        first_render = self.signature is None
         self.signature = signature
+        self.post_message(self.Rendering(self))
         self.styles.background = background
         self.query_one("#document-body").styles.background = background
         for ancestor in self.ancestors:
@@ -160,7 +197,43 @@ class DocumentViewer(Vertical):
                 break
         if self.render_timer:
             self.render_timer.stop()
-        self.render_timer = self.set_timer(0.2, lambda: self.render_document(signature))
+        if first_render:
+            self.render_document(signature)
+        else:
+            # Resize/theme bursts still settle before repeating expensive layout.
+            self.render_timer = self.set_timer(
+                0.2, lambda: self.render_document(signature)
+            )
+
+    async def render_image(
+        self, source: str, path: Path, planning: Lesson | None, signature
+    ):
+        width, colors, _text_mode, font, _height, _generation, callout_colors = (
+            signature
+        )
+        if self.renderer is None:
+            renderer = getattr(self.app, "document_renderer", None)
+            if renderer is None:
+                renderer = DocumentRenderer()
+                setattr(self.app, "document_renderer", renderer)
+            self.renderer = renderer
+        assert self.renderer is not None
+        cell_width, cell_height = graphics.CELL
+        return await self.renderer.render(
+            source,
+            path,
+            self.directory,
+            width * cell_width,
+            max(15, cell_height * 0.85),
+            *colors,
+            planning=planning,
+            font=font,
+            callout_colors=callout_colors,
+        )
+
+    async def prefetch(self, source: str, path: Path, planning: Lesson | None):
+        if self.signature is not None and self.image_tiles:
+            await self.render_image(source, path, planning, self.signature)
 
     @work(exclusive=True)
     async def render_document(self, signature):
@@ -176,23 +249,8 @@ class DocumentViewer(Vertical):
             else:
                 cell_width, cell_height = graphics.CELL
                 pixel_width = width * cell_width
-                if self.renderer is None:
-                    renderer = getattr(self.app, "document_renderer", None)
-                    if renderer is None:
-                        renderer = DocumentRenderer()
-                        setattr(self.app, "document_renderer", renderer)
-                    self.renderer = renderer
-                assert self.renderer is not None
-                image_path = await self.renderer.render(
-                    self.source,
-                    self.path,
-                    self.directory,
-                    pixel_width,
-                    max(15, cell_height * 0.85),
-                    *colors,
-                    planning=self.planning,
-                    font=font,
-                    callout_colors=callout_colors,
+                image_path = await self.render_image(
+                    self.source, self.path, self.planning, signature
                 )
                 if not self.is_mounted or signature != self.signature:
                     return
@@ -249,6 +307,8 @@ class DocumentViewer(Vertical):
                 body.styles.min_height = 0
             self.call_after_refresh(self.position_continuation)
             self.call_after_refresh(self.refresh_corners)
+            self.rendered_signature = signature
+            self.post_message(self.Ready(self))
         except Exception as error:
             if self.is_mounted and signature == self.signature:
                 self.image_tiles = []
@@ -266,6 +326,8 @@ class DocumentViewer(Vertical):
                 await body.mount(status, *self.fallback_widgets())
                 self._separator_row = None
                 self.call_after_refresh(self.position_continuation)
+                self.rendered_signature = signature
+                self.post_message(self.Ready(self))
 
     def on_markdown_table_of_contents_updated(
         self, event: Markdown.TableOfContentsUpdated
@@ -275,11 +337,12 @@ class DocumentViewer(Vertical):
         self.call_after_refresh(self.position_continuation)
 
     def position_continuation(self) -> None:
-        if not self.is_mounted or not self.start_at_separator:
+        if not self.is_mounted or not self.display or not self.start_at_separator:
             return
         pane = next((a for a in self.ancestors if isinstance(a, DocumentPane)), None)
         if (
             pane is None
+            or not pane.display
             or not self.region.width
             or not pane.scrollable_content_region.height
         ):
@@ -304,10 +367,10 @@ class DocumentViewer(Vertical):
                 pane.scroll_to(y=target, animate=False)
 
     def refresh_corners(self) -> None:
-        if not self.is_mounted or not self.image_tiles:
+        if not self.is_mounted or not self.display or not self.image_tiles:
             return
         pane = next((a for a in self.ancestors if isinstance(a, DocumentPane)), None)
-        if pane is None:
+        if pane is None or not pane.display:
             return
         viewport = pane.scrollable_content_region
         cell_width, cell_height = graphics.CELL

@@ -31,4 +31,5 @@ LessonScreen #lesson-materials Button.-active {
     text-style: bold underline;
 }
 LessonScreen #lesson-primary { width: 1fr; height: 1fr; }
+LessonScreen #lesson-primary DocumentPane { scrollbar-gutter: stable; }
 .lesson-empty { height: auto; color: $text-muted; }

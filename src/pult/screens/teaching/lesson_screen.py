@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import ClassVar
 
 from rich.text import Text
-from textual import on
+from textual import on, work
 from textual.binding import Binding
+from textual.timer import Timer
 from textual.widgets import Static
 from textual.widgets.option_list import Option
 
@@ -23,6 +24,7 @@ from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 
 
 class LessonScreen(PultScreen[Sequence]):
+    CACHE_RADIUS = 2
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
         Binding("space", "toggle_material", "Vorbereitung / Planung", priority=True),
@@ -38,6 +40,9 @@ class LessonScreen(PultScreen[Sequence]):
             raise ValueError("Die ausgewählte Stunde ist nicht mehr vorhanden.")
         self.sequence, self.lesson_id = sequence, lesson_id
         self.show_planning = False
+        self._documents: dict[tuple[str, bool], DocumentViewer] = {}
+        self._prefetch_timer: Timer | None = None
+        self._prefetch_key = None
 
     @property
     def lesson(self) -> Lesson | None:
@@ -65,7 +70,10 @@ class LessonScreen(PultScreen[Sequence]):
         lesson = self.lesson
         if lesson is None:
             return Static("Noch keine Stunden vorhanden.", classes="lesson-empty")
-        return DocumentViewer(
+        key = (lesson.id, planning)
+        if key in self._documents:
+            return self._documents[key]
+        viewer = DocumentViewer(
             lesson.preparation_markdown(),
             material_path(
                 self.directory,
@@ -77,6 +85,8 @@ class LessonScreen(PultScreen[Sequence]):
             planning=lesson if planning else None,
             start_at_separator=not planning,
         )
+        self._documents[key] = viewer
+        return viewer
 
     def materials(self):
         return MaterialsPane(
@@ -104,10 +114,17 @@ class LessonScreen(PultScreen[Sequence]):
 
     def on_mount(self):
         self.query_one("#lesson-list-frame").border_title = "STUNDEN"
+        self.sync_picker()
         self.update_view()
         self.query_one("#lesson-list").focus()
 
-    def update_view(self):
+    def sync_picker(self):
+        listing = self.query_one("#lesson-list", OptionList)
+        if self.lesson:
+            with self.prevent(OptionList.OptionHighlighted):
+                listing.highlighted = listing.get_option_index(self.lesson.id)
+
+    def update_view(self, *, reset_position: bool = False):
         self.query_one("#lesson-preparation").display = not self.show_planning
         self.query_one("#lesson-planning").display = self.show_planning
         for selector, label in (
@@ -117,10 +134,12 @@ class LessonScreen(PultScreen[Sequence]):
             pane = self.query_one("#" + selector)
             pane.border_title = self.sequence.title
             pane.border_subtitle = label
-        listing = self.query_one("#lesson-list", OptionList)
-        if self.lesson:
-            with self.prevent(OptionList.OptionHighlighted):
-                listing.highlighted = listing.get_option_index(self.lesson.id)
+            current = self._documents.get((self.lesson_id, label == "Planung"))
+            for viewer in pane.query(DocumentViewer):
+                viewer.set_active(
+                    pane.display and viewer is current,
+                    reset_position=reset_position,
+                )
 
     @on(OptionList.OptionHighlighted, "#lesson-list")
     async def select_lesson(self, event: OptionList.OptionHighlighted):
@@ -134,24 +153,119 @@ class LessonScreen(PultScreen[Sequence]):
         self.show_planning = False
         await self.refresh_contents()
 
-    async def refresh_contents(self):
+    def neighbour_ids(self) -> list[str]:
+        ids = [lesson.id for lesson in self.sequence.lessons]
+        if self.lesson_id not in ids:
+            return []
+        index = ids.index(self.lesson_id)
+        return ids[max(0, index - self.CACHE_RADIUS) : index + self.CACHE_RADIUS + 1]
+
+    async def refresh_contents(self, *, clear_cache: bool = False):
+        self.stop_prefetch()
+        for viewer in self._documents.values():
+            viewer.set_active(False)
+        if clear_cache:
+            self._documents.clear()
         for selector, planning in (
             ("lesson-preparation", False),
             ("lesson-planning", True),
         ):
             pane = self.query_one("#" + selector, DocumentPane)
-            await pane.remove_children()
-            await pane.mount(self.document(planning))
+            if clear_cache or self.lesson is None:
+                await pane.remove_children()
+            document = self.document(planning)
+            if not document.is_mounted:
+                await pane.mount(document)
             pane.scroll_home(animate=False)
         frame = self.query_one("#lesson-material-frame", Vertical)
         await frame.remove_children()
         await frame.mount(self.materials())
-        self.update_view()
+        self.update_view(reset_position=True)
+        keep = set(self.neighbour_ids())
+        for key in list(self._documents):
+            if key[0] not in keep:
+                await self._documents.pop(key).remove()
+
+    def stop_prefetch(self):
+        if self._prefetch_timer:
+            self._prefetch_timer.stop()
+            self._prefetch_timer = None
+        for worker in self.workers:
+            if (
+                worker.node is self
+                and worker.group == "lesson-prefetch"
+                and not worker.is_cancelled
+            ):
+                worker.cancel()
+        self._prefetch_key = None
+
+    @on(DocumentViewer.Rendering)
+    def document_rendering(self, event: DocumentViewer.Rendering):
+        if event.viewer is self._documents.get((self.lesson_id, self.show_planning)):
+            self.stop_prefetch()
+
+    @on(DocumentViewer.Ready)
+    def document_ready(self, event: DocumentViewer.Ready):
+        viewer = event.viewer
+        if (
+            self.app.screen is not self
+            or viewer is not self._documents.get((self.lesson_id, self.show_planning))
+            or not viewer.image_tiles
+        ):
+            return
+        key = (self.lesson_id, self.show_planning, viewer.signature)
+        if key == self._prefetch_key:
+            return
+        self.stop_prefetch()
+        self._prefetch_key = key
+        # The visible document always finishes first; rapid selection stays cheap.
+        self._prefetch_timer = self.set_timer(
+            0.15, lambda: self.prefetch_neighbours(viewer, key)
+        )
+
+    @work(exclusive=True, group="lesson-prefetch", exit_on_error=False)
+    async def prefetch_neighbours(self, viewer: DocumentViewer, key):
+        lessons = self.sequence.lessons
+        index = next(
+            i for i, lesson in enumerate(lessons) if lesson.id == self.lesson_id
+        )
+        requests = [(lessons[index], not self.show_planning)]
+        for distance in range(1, self.CACHE_RADIUS + 1):
+            for planning in (False, True):
+                for position in (index + distance, index - distance):
+                    if 0 <= position < len(lessons):
+                        requests.append((lessons[position], planning))
+        for lesson, planning in requests:
+            if self._prefetch_key != key or viewer.signature != key[2]:
+                return
+            try:
+                await viewer.prefetch(
+                    lesson.preparation_markdown(),
+                    material_path(
+                        self.directory,
+                        "stunden",
+                        lesson.id,
+                        "verlauf.md" if planning else "vorbereitung.md",
+                    ),
+                    lesson if planning else None,
+                )
+            except Exception:
+                # A broken neighbour must not disturb the current lesson. Its
+                # own viewer will report the error if it is actually selected.
+                continue
+
+    def on_screen_suspend(self):
+        self.stop_prefetch()
+
+    def on_screen_resume(self):
+        self.call_after_refresh(self.update_view)
 
     def action_close(self):
+        self.stop_prefetch()
         self.dismiss(self.sequence)
 
     def action_toggle_material(self):
+        self.stop_prefetch()
         self.show_planning = not self.show_planning
         self.update_view()
 
@@ -230,4 +344,5 @@ class LessonScreen(PultScreen[Sequence]):
         with self.prevent(OptionList.OptionHighlighted):
             listing.clear_options()
             listing.add_options(self.options())
-        await self.refresh_contents()
+            self.sync_picker()
+        await self.refresh_contents(clear_cache=True)

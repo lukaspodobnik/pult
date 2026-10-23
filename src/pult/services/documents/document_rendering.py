@@ -367,6 +367,9 @@ class DocumentRenderer:
             (document + str(script.stat().st_mtime_ns) + "separator-v1").encode()
         ).hexdigest()
         target = self.cache / f"{key}.png"
+        # Warm documents must not wait behind a background render in Chromium.
+        if target.exists():
+            return target
         async with self.lock:
             if target.exists():
                 return target
@@ -375,31 +378,39 @@ class DocumentRenderer:
             page = await self.browser.new_page(
                 viewport={"width": width, "height": 1}, device_scale_factor=1
             )
+            rendering = asyncio.create_task(self._render_png(page, document, target))
             try:
-                # Offline rendering: never fetch links, remote images, or extra scripts.
-                await page.route("**/*", lambda route: route.abort())
-                await page.set_content(document, wait_until="load")
-                await self._prepare_page(page, math=True)
-                self.cache.mkdir(parents=True, exist_ok=True)
-                separator_y = await page.evaluate("""() => {
-                    const rule = document.querySelector('article > hr');
-                    return rule ? rule.getBoundingClientRect().top + scrollY : null;
-                }""")
-                screenshot = await page.screenshot(full_page=True, timeout=30000)
-                if separator_y is not None:
-                    # Keep the measured position with the cached pixels so a cache
-                    # hit needs no browser layout pass to find the continuation.
-                    metadata = PngInfo()
-                    metadata.add_text(SEPARATOR_Y, str(separator_y))
-                    with Image.open(io.BytesIO(screenshot)) as image:
-                        output = io.BytesIO()
-                        image.save(output, format="PNG", pnginfo=metadata)
-                        screenshot = output.getvalue()
-                save_bytes(target, screenshot)
-
-                return target
+                return await asyncio.shield(rendering)
             finally:
-                await page.close()
+                # Closing the page aborts an obsolete render. Drain its result
+                # without cancelling a pending Playwright protocol callback.
+                await asyncio.shield(
+                    asyncio.gather(page.close(), rendering, return_exceptions=True)
+                )
+
+    async def _render_png(self, page: Page, document: str, target: Path) -> Path:
+        # Offline rendering: never fetch links, remote images, or extra scripts.
+        await page.route("**/*", lambda route: route.abort())
+        await page.set_content(document, wait_until="load")
+        await self._prepare_page(page, math=True)
+        self.cache.mkdir(parents=True, exist_ok=True)
+        separator_y = await page.evaluate("""() => {
+            const rule = document.querySelector('article > hr');
+            return rule ? rule.getBoundingClientRect().top + scrollY : null;
+        }""")
+        screenshot = await page.screenshot(full_page=True, timeout=30000)
+        if separator_y is not None:
+            # Keep the measured position with the cached pixels so a cache
+            # hit needs no browser layout pass to find the continuation.
+            metadata = PngInfo()
+            metadata.add_text(SEPARATOR_Y, str(separator_y))
+            with Image.open(io.BytesIO(screenshot)) as image:
+                output = io.BytesIO()
+                image.save(output, format="PNG", pnginfo=metadata)
+                screenshot = output.getvalue()
+        save_bytes(target, screenshot)
+
+        return target
 
     @staticmethod
     async def _prepare_page(

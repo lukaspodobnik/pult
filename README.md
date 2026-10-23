@@ -106,6 +106,10 @@ Stunde mit Enter öffnen. `e` auf einer Sequenz bearbeitet ihre `sequenz.toml`.
 
 In der **Stundenansicht** stehen links die Stunden und das Material, rechts das
 Dokument. Die Vorbereitung ist freies Markdown für Hefteinträge, Übungen oder Notizen.
+Sobald das aktuelle Dokument angezeigt wird, lädt PULT Vorbereitung und Planung
+der nächsten und vorherigen zwei Stunden im Hintergrund vor. Bereits besuchte
+Ansichten in diesem Bereich bleiben für schnelle Wechsel erhalten. Nach Änderungen
+über den Editor werden sie neu aufgebaut.
 
 | Taste | Aktion in der Stundenansicht |
 | --- | --- |
