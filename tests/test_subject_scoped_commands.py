@@ -4,7 +4,7 @@ from datetime import date
 
 import pytest
 from test_ui_integration import prepare_root
-from textual.widgets import Input, Select
+from textual.widgets import Checkbox, Input, Select
 
 from pult.app import PultApp
 from pult.initialization.school_class import initialize_school_class
@@ -14,9 +14,15 @@ from pult.progress.class_progress import (
     TeachingAction,
     TeachingLogEntry,
     TeachingOrigin,
+    get_class_progress_path,
     load_class_progress,
+    save_class_progress,
 )
-from pult.progress.commands import ProgressCommandError, undo_last_entry
+from pult.progress.commands import (
+    ProgressCommandError,
+    complete_additional_lesson,
+    undo_last_entry,
+)
 from pult.school.school_class import SchoolClass
 from pult.school.timetable import (
     TimetableEntry,
@@ -25,6 +31,7 @@ from pult.school.timetable import (
 )
 from pult.screens.progress.add_extra_lesson_screen import AddExtraLessonScreen
 from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.select_next_sequence_screen import SelectNextSequenceScreen
 from pult.screens.progress.set_active_sequence_screen import SetActiveSequenceScreen
 from pult.screens.progress.teaching_log_screen import TeachingLogScreen
 from pult.views.school_class_view import (
@@ -335,5 +342,133 @@ def test_open_next_lesson_uses_visible_lesson_and_returns(
             main._pending_view_id = "home"
             assert main.check_action("open_next_lesson", ()) is None
             main._pending_view_id = None
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize(
+    "action_name, expected_action, expected_origin",
+    [
+        ("complete_next_lesson", TeachingAction.COMPLETED, TeachingOrigin.SCHEDULED),
+        ("skip_next_lesson", TeachingAction.SKIPPED, TeachingOrigin.NONE),
+        ("extra", TeachingAction.COMPLETED, TeachingOrigin.ADDITIONAL),
+    ],
+)
+def test_sequence_transition_is_saved_only_after_confirmation(
+    multi_class_config, action_name, expected_action, expected_origin
+):
+    config = multi_class_config
+
+    async def run():
+        app = PultApp()
+        async with app.run_test(size=(180, 52)) as pilot:
+            main = await ready(app, pilot)
+            await main.show_school_class_view(
+                main.school_classes_by_id["9B"], "informatik-ntg"
+            )
+            context = main.load_planned_lesson_context()
+            assert context is not None
+            sequence = next(
+                sequence
+                for sequence in context.sequences
+                if sequence.id == context.planned_lesson.sequence_id
+                and sequence.subject_id == "informatik-ntg"
+                and sequence.grade_level == 9
+            )
+            progress = context.progress
+            for _ in sequence.lessons[:-1]:
+                progress = complete_additional_lesson(
+                    progress,
+                    "informatik-ntg",
+                    9,
+                    context.planned_lesson.date,
+                    context.sequences,
+                ).progress
+            save_class_progress(config.root, config.active_school_year, "9B", progress)
+            await main.refresh_current_view()
+            path = get_class_progress_path(config.root, config.active_school_year, "9B")
+            saved = path.read_bytes()
+            other_progress = load_class_progress(
+                config.root, config.active_school_year, "5A"
+            )
+            if action_name == "extra":
+                await main.show_home_view()
+                main.action_add_extra_lesson()
+                await pilot.pause()
+                assert isinstance(app.screen, AddExtraLessonScreen)
+                await pilot.press("escape")
+                await pilot.pause()
+                assert app.screen is main
+                assert path.read_bytes() == saved
+
+            async def start_completion():
+                if action_name == "extra":
+                    main.action_add_extra_lesson()
+                    await pilot.pause()
+                    modal = app.screen
+                    assert isinstance(modal, AddExtraLessonScreen)
+                    modal.query_one("#extra-school-class", Select).value = "9B"
+                    await pilot.pause()
+                    modal.query_one("#extra-subject", Select).value = "informatik-ntg"
+                    modal.query_one(
+                        "#extra-date", Input
+                    ).value = context.planned_lesson.date.strftime("%d.%m.%Y")
+                    modal.query_one("#extra-comment", Input).value = "Nachholtermin"
+                    modal.query_one(
+                        "#complete-next-extra-lesson", Checkbox
+                    ).value = True
+                    await pilot.click("#save-extra-lesson")
+                else:
+                    await getattr(main, f"action_{action_name}")()
+                await pilot.pause()
+                assert isinstance(app.screen, SelectNextSequenceScreen)
+
+            await start_completion()
+            assert path.read_bytes() == saved
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.screen is main
+            assert path.read_bytes() == saved
+
+            await start_completion()
+            selected_sequence = app.screen.query_one("#next-sequence", Select).value
+            await pilot.click("#save-next-sequence")
+            await ready(app, pilot)
+            updated = load_class_progress(config.root, config.active_school_year, "9B")
+            assert updated.entries[:-1] == progress.entries
+            entry = updated.entries[-1]
+            assert entry.subject_id == "informatik-ntg"
+            assert entry.lesson_id == sequence.lessons[-1].id
+            assert entry.action is expected_action
+            assert entry.origin is expected_origin
+            if action_name == "extra":
+                assert entry.comment == "Nachholtermin"
+                assert entry.date == context.planned_lesson.date
+                assert main.active_school_class_id is None
+            else:
+                assert main.active_school_class_id == "9B"
+                assert main.active_subject_id == "informatik-ntg"
+            assert updated.active_sequences == tuple(
+                ActiveSequence(active.subject_id, str(selected_sequence))
+                if active.subject_id == "informatik-ntg"
+                else active
+                for active in progress.active_sequences
+            )
+            assert (
+                load_class_progress(config.root, config.active_school_year, "5A")
+                == other_progress
+            )
+
+            await main.show_school_class_view(
+                main.school_classes_by_id["9B"], "informatik-ntg"
+            )
+            await main.action_undo_last_entry()
+            await pilot.pause()
+            await pilot.click("#confirm-undo")
+            await ready(app, pilot)
+            assert (
+                load_class_progress(config.root, config.active_school_year, "9B")
+                == progress
+            )
 
     asyncio.run(run())
