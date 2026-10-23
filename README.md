@@ -119,6 +119,29 @@ Ansichten in diesem Bereich bleiben für schnelle Wechsel erhalten. Nach Änderu
 | `m` | Titel, Aufgabenverweise und optionale Hinweise bearbeiten |
 | `a` | Aufgabenbibliothek der Sequenz öffnen |
 
+In Markdown-Texten stellt PULT `->`, `<-` und `<->` automatisch als →, ← und ↔ dar.
+Das gilt für Dokumentansichten, die Textansicht sowie Aufgaben- und Lösungshefte.
+Code, TeX-Formeln und Linkadressen bleiben erhalten; die Quelldateien werden nicht
+verändert. Ein Backslash vor einem Pfeil, etwa `\->`, zeigt die Zeichenfolge
+wörtlich an. Weitere Typografiekorrekturen für Anführungszeichen, Gedankenstriche
+oder wiederholte Satzzeichen sind ausgeschaltet.
+
+Eigene Ersetzungen lassen sich am Ende von `~/.config/pult/config.toml` ergänzen
+(einen bereits vorhandenen Abschnitt `document_replacements` entsprechend erweitern):
+
+```toml
+[document_replacements]
+"=>" = "⇒"
+"->" = "⟶"
+"<-" = "<-"
+```
+
+Dieses Beispiel ergänzt `=>`, überschreibt den Standardpfeil `->` und deaktiviert
+die Ersetzung von `<-`. Nicht aufgeführte Standardregeln bleiben aktiv. Suchtexte
+werden wörtlich und unter Beachtung der Groß-/Kleinschreibung verglichen; längere
+Treffer haben Vorrang. Ersetzter Text wird nicht erneut ersetzt oder als Markdown
+interpretiert. Nach Änderungen an der Konfiguration PULT neu starten.
+
 Aufgaben werden mit Titel, Hauptkompetenzen, Anforderungsbereich und optionaler
 Lösung gespeichert. Der höchste Bereich der Teilaufgaben bestimmt die grobe
 Einordnung der Gesamtaufgabe. In der **Aufgabenbibliothek** legt `n` eine Aufgabe

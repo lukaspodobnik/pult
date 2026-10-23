@@ -8,7 +8,7 @@ import io
 import os
 import re
 import stat
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -34,6 +34,7 @@ from pult.services.documents.document_fonts import (
     document_font_stylesheet,
     validate_document_font,
 )
+from pult.services.documents.document_replacements import replacements_plugin
 from pult.services.documents.document_subtasks import SUBTASK_STYLES, subtasks_plugin
 from pult.storage import save_bytes
 
@@ -59,7 +60,7 @@ def syntax_stylesheet(background: str) -> str:
     return HtmlFormatter(style=style).get_style_defs(".syntax-highlight")
 
 
-def parser() -> MarkdownIt:
+def parser(replacements: Mapping[str, str] | None = None) -> MarkdownIt:
     md = (
         MarkdownIt("commonmark", {"html": False, "highlight": highlight_code})
         .enable("table")
@@ -67,6 +68,7 @@ def parser() -> MarkdownIt:
         .use(callouts_plugin)
         .use(subtasks_plugin)
         .use(figures_plugin)
+        .use(replacements_plugin, replacements)
     )
     md.add_render_rule(
         "math_inline",
@@ -103,8 +105,9 @@ def markdown_html(
     directory: Path,
     *,
     transform: Callable[[list[Token]], list[Token]] | None = None,
+    replacements: Mapping[str, str] | None = None,
 ) -> str:
-    md = parser()
+    md = parser(replacements)
     tokens = md.parse(source)
     if transform is not None:
         tokens = transform(tokens)
@@ -161,6 +164,7 @@ def document_html(
     stylesheet: str = "",
     font: str = "source-sans-3",
     callout_colors: tuple[str, str] | None = None,
+    replacements: Mapping[str, str] | None = None,
 ) -> str:
     for color in (bg, fg, accent):
         if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
@@ -172,11 +176,13 @@ def document_html(
         if not re.fullmatch(r"#[0-9a-fA-F]{6}", color):
             raise ValueError("Ungültige Callout-Farbe.")
     if planning is None:
-        body = markdown_html(source, source_path, directory)
+        body = markdown_html(source, source_path, directory, replacements=replacements)
     else:
 
         def fragment(text: str) -> str:
-            return markdown_html(text, source_path, directory)
+            return markdown_html(
+                text, source_path, directory, replacements=replacements
+            )
 
         body = "<h1>Planung</h1><h2>Ziele</h2>" + fragment(
             planning.goals_markdown() or "Noch keine Ziele eingetragen."
@@ -390,6 +396,7 @@ class DocumentRenderer:
         *,
         font: str = "auto",
         callout_colors: tuple[str, str] | None = None,
+        replacements: Mapping[str, str] | None = None,
     ) -> Path | bytes:
         resolved_font = await self.resolve_font(font)
         document = document_html(
@@ -405,6 +412,7 @@ class DocumentRenderer:
             stylesheet=self.stylesheet,
             font=resolved_font,
             callout_colors=callout_colors,
+            replacements=replacements,
         )
         script = Path(__file__).parents[2] / "assets/mathjax/tex-svg-full.js"
         key = hashlib.sha256(

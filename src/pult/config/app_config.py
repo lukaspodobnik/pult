@@ -1,8 +1,12 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from pult.services.documents.document_fonts import validate_document_font
+from pult.services.documents.document_replacements import (
+    DEFAULT_REPLACEMENTS,
+    validate_document_replacements,
+)
 from pult.storage import load_toml, save_toml
 
 APP_CONFIG_PATH = Path.home() / ".config" / "pult" / "config.toml"
@@ -15,6 +19,9 @@ class AppConfig:
     active_school_year: str
     document_font: str = "auto"
     export_author: str = ""
+    document_replacements: dict[str, str] = field(
+        default_factory=lambda: DEFAULT_REPLACEMENTS.copy()
+    )
 
 
 def validate_export_author(value: str) -> str:
@@ -42,6 +49,9 @@ def load_app_config() -> AppConfig | None:
         active_school_year=data["active_school_year"],
         document_font=validate_document_font(data.get("document_font", "auto")),
         export_author=validate_export_author(data.get("export_author", "")),
+        document_replacements=validate_document_replacements(
+            data.get("document_replacements", {})
+        ),
     )
 
 
@@ -53,6 +63,9 @@ def save_app_config(app_config: AppConfig) -> None:
         "active_school_year": app_config.active_school_year,
         "document_font": validate_document_font(app_config.document_font),
         "export_author": validate_export_author(app_config.export_author),
+        "document_replacements": validate_document_replacements(
+            app_config.document_replacements
+        ),
     }
 
     APP_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)

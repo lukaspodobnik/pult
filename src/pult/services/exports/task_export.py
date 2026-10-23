@@ -1,5 +1,6 @@
 """Aufgaben und Lösungen einer Sequenz als gemeinsam gestaltete Arbeitshefte."""
 
+from collections.abc import Mapping
 from html import escape
 from pathlib import Path
 
@@ -121,6 +122,7 @@ def workbook_html(
     *,
     solutions: bool = False,
     font: str = "source-sans-3",
+    replacements: Mapping[str, str] | None = None,
 ) -> str:
     bodies = []
     for number, task in enumerate(tasks, 1):
@@ -135,6 +137,7 @@ def workbook_html(
                 material_path(directory, "aufgaben", task.id, filename),
                 directory,
                 transform=lambda tokens: task_tokens(tokens, options),
+                replacements=replacements,
             )
         except (OSError, ValueError) as error:
             raise ValueError(f"{task.metadata.title}: {error}") from error
@@ -215,7 +218,14 @@ async def export_task_workbooks(
     )
     font = await renderer.resolve_font(config.document_font)
     documents = [
-        workbook_html(tasks, sequence, directory, solutions=solutions, font=font)
+        workbook_html(
+            tasks,
+            sequence,
+            directory,
+            solutions=solutions,
+            font=font,
+            replacements=config.document_replacements,
+        )
         for solutions in (False, True)
     ]
     header, footer = workbook_furniture(

@@ -39,6 +39,7 @@ class RecordingRenderer:
     def __init__(self, directory):
         self.directory = directory
         self.calls = []
+        self.replacement_calls = []
         self.block = None
         self.started = asyncio.Event()
         self.cancelled = asyncio.Event()
@@ -48,6 +49,7 @@ class RecordingRenderer:
         self, source, path, directory, width, font_size, *colors, **kwargs
     ):
         key = (path.parent.name, kwargs.get("planning") is not None)
+        self.replacement_calls.append((key, kwargs.get("replacements")))
         self.calls.append((key, width, colors, kwargs["font"]))
         if key == self.block:
             self.started.set()
@@ -157,9 +159,11 @@ def test_neighbours_reuse_and_bounded_views(tmp_path, monkeypatch, memory_only):
             await pilot.pause()
             assert visible_document(screen) is initial
             assert initial.image_tiles[0][0] is tile
+            # A cached widget is already rendered; its activation runs after
+            # layout and updates the timestamp and continuation position.
             if cached is not None:
-                assert cached.stat().st_mtime > 1
-            assert pane.scroll_y > 0
+                await until(lambda: cached.stat().st_mtime > 1)
+            await until(lambda: pane.scroll_y > 0)
             assert app.focused is picker
             screen.action_toggle_material()
             await until(lambda: ready(screen, "lesson-3"))
@@ -269,6 +273,42 @@ def test_cached_documents_follow_resize_font_theme_and_editor_changes(
             assert visible_document(screen) is not original
             assert visible_document(screen).source == "# Geänderte Vorbereitung"
             assert original not in screen.query(DocumentViewer)
+
+    asyncio.run(run())
+
+
+def test_replacement_changes_refresh_views_and_prefetched_planning(
+    tmp_path, monkeypatch
+):
+    config, sequence = setup_lessons(tmp_path, monkeypatch)
+
+    async def run():
+        app = PultApp()
+        renderer = RecordingRenderer(tmp_path)
+        app.document_renderer = renderer
+        async with app.run_test(size=(160, 46)) as pilot:
+            await pilot.pause()
+            screen = LessonScreen(sequence, "lesson-3")
+            await app.push_screen(screen)
+            await until(lambda: ready(screen, "lesson-3"))
+            original = visible_document(screen).rendered_signature
+            config.document_replacements["->"] = "⟶"
+            await until(
+                lambda: (
+                    ready(screen, "lesson-3")
+                    and visible_document(screen).rendered_signature != original
+                )
+            )
+            await until(
+                lambda: (
+                    (("lesson-4", True), config.document_replacements)
+                    in renderer.replacement_calls
+                )
+            )
+            assert (
+                ("lesson-3", False),
+                config.document_replacements,
+            ) in renderer.replacement_calls
 
     asyncio.run(run())
 

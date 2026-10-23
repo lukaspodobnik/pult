@@ -2,6 +2,8 @@
 
 import io
 import math
+from collections.abc import Mapping
+from functools import partial
 from pathlib import Path
 
 from PIL import Image as PILImage
@@ -30,6 +32,7 @@ from pult.services.documents.document_rendering import (
     DocumentRenderer,
     split_phase_time,
 )
+from pult.services.documents.document_replacements import DEFAULT_REPLACEMENTS
 from pult.widgets.scrolling import Vertical, VerticalScroll
 
 
@@ -186,6 +189,13 @@ class DocumentViewer(Vertical):
             viewport_height,
             getattr(getattr(self.app, "document_renderer", None), "generation", 0),
             callout_colors,
+            tuple(
+                sorted(
+                    getattr(
+                        config, "document_replacements", DEFAULT_REPLACEMENTS
+                    ).items()
+                )
+            ),
         )
         if signature == self.signature:
             self.refresh_corners()
@@ -212,9 +222,16 @@ class DocumentViewer(Vertical):
     async def render_image(
         self, source: str, path: Path, planning: Lesson | None, signature
     ):
-        width, colors, _text_mode, font, _height, _generation, callout_colors = (
-            signature
-        )
+        (
+            width,
+            colors,
+            _text_mode,
+            font,
+            _height,
+            _generation,
+            callout_colors,
+            replacements,
+        ) = signature
         if self.renderer is None:
             renderer = getattr(self.app, "document_renderer", None)
             if renderer is None:
@@ -233,6 +250,7 @@ class DocumentViewer(Vertical):
             planning=planning,
             font=font,
             callout_colors=callout_colors,
+            replacements=dict(replacements),
         )
 
     async def prefetch(self, source: str, path: Path, planning: Lesson | None):
@@ -241,16 +259,23 @@ class DocumentViewer(Vertical):
 
     @work(exclusive=True)
     async def render_document(self, signature):
-        width, colors, text_mode, font, viewport_height, _generation, callout_colors = (
-            signature
-        )
+        (
+            width,
+            colors,
+            text_mode,
+            font,
+            viewport_height,
+            _generation,
+            callout_colors,
+            replacements,
+        ) = signature
         body = self.query_one("#document-body", Vertical)
         tiles = []
         separator_row = None
         cache_path = None
         try:
             if graphics.image_widget() is None or text_mode:
-                widgets = self.fallback_widgets()
+                widgets = self.fallback_widgets(dict(replacements))
             else:
                 cell_width, cell_height = graphics.CELL
                 pixel_width = width * cell_width
@@ -337,7 +362,7 @@ class DocumentViewer(Vertical):
                     classes="document-status",
                 )
                 status.tooltip = str(error)
-                await body.mount(status, *self.fallback_widgets())
+                await body.mount(status, *self.fallback_widgets(dict(replacements)))
                 self._separator_row = None
                 self.call_after_refresh(self.position_continuation)
                 self.rendered_signature = signature
@@ -418,7 +443,9 @@ class DocumentViewer(Vertical):
                 else original
             )
 
-    def fallback_widgets(self) -> list[Markdown | Static]:
+    def fallback_widgets(
+        self, replacements: Mapping[str, str] | None = None
+    ) -> list[Markdown | Static]:
         source = self.source
         if self.planning is not None:
             source = (
@@ -427,7 +454,11 @@ class DocumentViewer(Vertical):
                 + "\n\n## Verlauf\n"
             )
         widgets: list[Markdown | Static] = [
-            Markdown(source, open_links=False, parser_factory=text_document_parser)
+            Markdown(
+                source,
+                open_links=False,
+                parser_factory=partial(text_document_parser, replacements),
+            )
         ]
         if self.planning is None:
             return widgets
@@ -441,7 +472,7 @@ class DocumentViewer(Vertical):
         for phase in self.planning.phases:
             time, content = split_phase_time(phase.text)
             markdown = RichMarkdown(content, hyperlinks=False)
-            markdown.parsed = text_document_parser().parse(content)
+            markdown.parsed = text_document_parser(replacements).parse(content)
             table.add_row(Text(time), Text(phase.title), markdown)
         widgets.append(Static(table, classes="planning-table"))
         return widgets

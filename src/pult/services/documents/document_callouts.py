@@ -7,8 +7,13 @@ from collections.abc import Mapping
 from markdown_it import MarkdownIt
 from markdown_it.rules_core import StateCore
 from markdown_it.token import Token
+from mdit_py_plugins.dollarmath import dollarmath_plugin
 
 from pult.services.documents.document_figures import figures_plugin
+from pult.services.documents.document_replacements import (
+    literal_math_plugin,
+    replacements_plugin,
+)
 from pult.services.documents.document_subtasks import subtasks_plugin
 
 CALLOUT_LABELS = {"definition": "Definition", "merksatz": "Merke"}
@@ -71,13 +76,16 @@ def callouts_plugin(md: MarkdownIt) -> None:
     md.core.ruler.before("inline", "pult_callouts", callouts)
 
 
-def text_document_parser() -> MarkdownIt:
+def text_document_parser(replacements: Mapping[str, str] | None = None) -> MarkdownIt:
     """Dieselben Beschriftungen im Terminal; TeX bleibt lesbarer Quelltext."""
     return (
         MarkdownIt("gfm-like", {"html": False})
+        .use(dollarmath_plugin)
         .use(callouts_plugin)
         .use(subtasks_plugin, text_only=True)
         .use(figures_plugin, text_only=True)
+        .use(replacements_plugin, replacements)
+        .use(literal_math_plugin)
     )
 
 
