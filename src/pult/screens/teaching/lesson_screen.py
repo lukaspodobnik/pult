@@ -94,9 +94,11 @@ class LessonScreen(PultScreen[Sequence]):
                 with Vertical(id="lesson-material-frame"):
                     yield self.materials()
             with Vertical(id="lesson-primary"):
-                with DocumentPane(id="lesson-preparation"):
+                with DocumentPane(id="lesson-preparation") as preparation:
+                    preparation.can_focus = False
                     yield self.document()
-                with DocumentPane(id="lesson-planning"):
+                with DocumentPane(id="lesson-planning") as planning:
+                    planning.can_focus = False
                     yield self.document(planning=True)
         yield PultFooter()
 

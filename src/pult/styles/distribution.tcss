@@ -16,7 +16,7 @@ DistributionTable > .distribution-table--muted { color: $foreground-muted; }
 DistributionTable > .distribution-table--notes { color: $foreground-muted; }
 DistributionTable > .distribution-table--assessment { color: $warning; background: $warning 12%; }
 App.-light-mode DistributionTable > .distribution-table--assessment { color: $warning-darken-2; }
-DistributionView .sequence { margin-top: 1; background: $primary 15%; color: $text-accent; text-style: bold; }
+DistributionView .sequence { margin: 1 1 0 1; background: $primary 15%; color: $text-accent; text-style: bold; }
 DistributionView .holiday { margin: 1 0; background: $secondary 12%; color: $secondary; text-style: bold; }
 DistributionView .distribution-empty { height: auto; padding: 1; color: $foreground-muted; }
 

@@ -9,14 +9,19 @@ from textual.widgets import Button, Static
 
 from pult.curriculum.material import material_entries
 from pult.services.documents.document_rendering import safe_local
-from pult.widgets.scrolling import VerticalScroll
+from pult.widgets.scrolling import Horizontal, VerticalScroll
 
 
 class MaterialsPane(VerticalScroll):
+    can_focus = False
+    can_focus_children = False
+
     DEFAULT_CSS = """
     MaterialsPane {height:12; min-height:6; border:round $primary; background:$surface; padding:0 1;}
-    MaterialsPane Static {height:auto; margin-bottom:1;}
-    MaterialsPane Button {width:100%; height:auto; min-height:1; border:none; padding:0; margin:0 0 1 0; background:transparent; content-align:left middle;}
+    MaterialsPane Static {height:auto; margin:0;}
+    MaterialsPane .material-row {height:auto;}
+    MaterialsPane .material-bullet {width:2; height:1;}
+    MaterialsPane .material-text {width:1fr;}
     """
 
     def __init__(self, source: str, path: Path, directory: Path, **kwargs):
@@ -29,10 +34,16 @@ class MaterialsPane(VerticalScroll):
         if not self.entries:
             yield Static("Kein Material eingetragen.", classes="lesson-empty")
         for index, entry in enumerate(self.entries):
-            if entry.target:
-                yield Button(entry.label, id=f"material-{index}", compact=True)
-            else:
-                yield Static(f"• {entry.label}", markup=False)
+            with Horizontal(classes="material-row"):
+                yield Static("•", classes="material-bullet", markup=False)
+                if entry.target:
+                    button = Button(entry.label, id=f"material-{index}", compact=True)
+                    button.can_focus = False
+                    # Ohne den zusätzlichen Texteinschub des Standardbuttons.
+                    button.styles.line_pad = 0
+                    yield button
+                else:
+                    yield Static(entry.label, classes="material-text", markup=False)
 
     @on(Button.Pressed)
     def open_material(self, event: Button.Pressed):

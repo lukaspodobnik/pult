@@ -16,8 +16,8 @@ li > p { margin:0; }
 pre { font-size:9pt; white-space:pre-wrap; overflow-wrap:anywhere; padding:3mm; background:#F0F2F4; }
 code { font-size:.9em; }
 img { max-width:min(100%,var(--image-width,65mm)); max-height:var(--image-width,65mm); height:auto; object-fit:contain; }
-.display { margin:1.5mm 0; }
-.display > mjx-container[jax="SVG"][display="true"] { margin:0; }
+.display { margin:1.5mm 0 1.5mm 2em; }
+.display > mjx-container[jax="SVG"][display="true"] { margin:0; text-align:left; }
 mjx-container[jax="SVG"] { max-width:100%; }
 table { border-collapse:collapse; width:100%; margin:2mm 0 3mm; font-size:11pt; }
 thead { display:table-header-group; }

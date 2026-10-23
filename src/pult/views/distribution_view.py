@@ -164,7 +164,12 @@ class DistributionView(Vertical):
             for table in self.query(DistributionTable):
                 table.refresh(layout=True)
         # Zwei vorhergehende Zellen, deren Abstände und Trennlinien sowie
-        # das linke Padding der Themenspalte; Hintergrund bleibt vollbreit.
+        # das linke Padding der Themenspalte; den Abschnittsrand ausgleichen.
         title_offset = 1 + sum(self.column_widths[:2]) + 6
         for section in self.query(DistributionTableRow):
-            section.styles.padding = (0, 1, 0, title_offset)
+            section.styles.padding = (
+                0,
+                1,
+                0,
+                title_offset - section.styles.margin.left,
+            )

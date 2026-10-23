@@ -237,9 +237,9 @@ def document_html(
     pre {{line-height:1.5}}
     .syntax-highlight {{color:{fg};background:color-mix(in srgb,{fg} 6%,{bg})}}
     code {{font-size:.85em}} img {{max-width:100%;height:auto}}
-    .display {{overflow-x:auto;margin:.4em 0;padding:.1em 0}}
+    .display {{overflow-x:auto;margin:.4em 0 .4em 2em;padding:.1em 0}}
     p:has(+ .display) {{margin-bottom:.4em}}
-    .display > mjx-container[jax="SVG"][display="true"] {{margin:0}}
+    .display > mjx-container[jax="SVG"][display="true"] {{margin:0;text-align:left}}
     mjx-container[jax="SVG"] {{max-width:100%}}
     hr {{border:0;border-top:1px solid color-mix(in srgb,{fg} 18%,{bg});margin:2em 0}}
     {SUBTASK_STYLES}
