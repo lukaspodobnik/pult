@@ -1,4 +1,4 @@
-"""Steuere Zusatztermine und die Folgesequenzauswahl beim Unterrichtsabschluss."""
+"""Steuere Zusatztermine, manuelle Sequenzwechsel und die Folgesequenzauswahl."""
 
 from collections.abc import Awaitable, Callable
 
@@ -25,6 +25,10 @@ from pult.screens.progress.add_extra_lesson_screen import (
     ExtraLessonFormResult,
 )
 from pult.screens.progress.select_next_sequence_screen import SelectNextSequenceScreen
+from pult.screens.progress.set_active_sequence_screen import (
+    ActiveSequenceFormResult,
+    SetActiveSequenceScreen,
+)
 from pult.services.progress import load_class_progress_data
 
 
@@ -145,6 +149,74 @@ class LessonProgressFlow:
                 fixed_subject_id=fixed_subject_id,
             ),
             extra_lesson_entered,
+        )
+
+    def open_sequence_change(
+        self, school_class: SchoolClass, selected_subject_id: str
+    ) -> None:
+        """Wähle eine andere offene Sequenz für das übergebene Klassenfach."""
+        config = self.screen.app_config
+        try:
+            data = load_class_progress_data(
+                config, school_class, sequences=self.screen.sequence_library
+            )
+            sequences, progress = data.sequences, data.progress
+            subjects = load_subjects(config.root)
+            has_available_sequence = bool(
+                get_available_next_sequences(
+                    progress, sequences, selected_subject_id, school_class.grade_level
+                )
+            )
+        except (OSError, KeyError, StopIteration, ValueError) as error:
+            self.screen.notify(str(error), severity="error")
+            return
+
+        if not has_available_sequence:
+            self.screen.notify(
+                "Für dieses Fach gibt es keine weitere offene Sequenz.",
+                severity="warning",
+            )
+            return
+
+        subjects_by_id = {subject.id: subject for subject in subjects}
+
+        async def active_sequence_selected(
+            form_result: ActiveSequenceFormResult | None,
+        ) -> None:
+            if form_result is None:
+                return
+
+            try:
+                updated_progress = set_active_sequence(
+                    progress,
+                    form_result.subject_id,
+                    form_result.sequence_id,
+                    school_class.grade_level,
+                    sequences,
+                )
+                await self.save_progress(
+                    school_class,
+                    updated_progress,
+                    sequences,
+                )
+            except (OSError, ProgressCommandError, ValueError) as error:
+                self.screen.notify(str(error), severity="error")
+                return
+
+            self.screen.notify(
+                f"{school_class.id}: Aktive Sequenz für "
+                f"'{subjects_by_id[form_result.subject_id].name}' gewechselt."
+            )
+
+        self.screen.app.push_screen(
+            SetActiveSequenceScreen(
+                school_class,
+                progress,
+                sequences,
+                subjects,
+                fixed_subject_id=selected_subject_id,
+            ),
+            active_sequence_selected,
         )
 
     async def handle_result(

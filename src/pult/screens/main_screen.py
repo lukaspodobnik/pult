@@ -18,14 +18,10 @@ from pult.progress.commands import (
     complete_lesson,
     continue_lesson,
     record_spontaneous_lesson,
-    set_active_sequence,
     skip_lesson,
     undo_last_entry,
 )
-from pult.progress.queries import (
-    PlannedLesson,
-    get_available_next_sequences,
-)
+from pult.progress.queries import PlannedLesson
 from pult.progress.queries.assessments import PlannedAssessment, next_event
 from pult.school.school_class import SchoolClass, load_school_classes
 from pult.school.subject import load_subjects
@@ -38,10 +34,6 @@ from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
 from pult.screens.progress.confirm_undo_screen import ConfirmUndoScreen
 from pult.screens.progress.distribution_screen import DistributionScreen
 from pult.screens.progress.lesson_progress_flow import LessonProgressFlow
-from pult.screens.progress.set_active_sequence_screen import (
-    ActiveSequenceFormResult,
-    SetActiveSequenceScreen,
-)
 from pult.screens.progress.spontaneous_lesson_screen import SpontaneousLessonScreen
 from pult.screens.progress.teaching_log_screen import TeachingLogScreen
 from pult.screens.settings.settings_screen import SettingsScreen
@@ -779,70 +771,9 @@ class MainScreen(PultScreen[None]):
         if self.active_school_class_id is None or self.active_subject_id is None:
             return
 
-        selected_subject_id = self.active_subject_id
-        config = self.app_config
-        school_class = self.school_classes_by_id[self.active_school_class_id]
-        try:
-            data = load_class_progress_data(
-                config, school_class, sequences=self.sequence_library
-            )
-            sequences, progress = data.sequences, data.progress
-            subjects = load_subjects(config.root)
-            has_available_sequence = bool(
-                get_available_next_sequences(
-                    progress, sequences, selected_subject_id, school_class.grade_level
-                )
-            )
-        except (OSError, KeyError, StopIteration, ValueError) as error:
-            self.notify(str(error), severity="error")
-            return
-
-        if not has_available_sequence:
-            self.notify(
-                "Für dieses Fach gibt es keine weitere offene Sequenz.",
-                severity="warning",
-            )
-            return
-
-        subjects_by_id = {subject.id: subject for subject in subjects}
-
-        async def active_sequence_selected(
-            form_result: ActiveSequenceFormResult | None,
-        ) -> None:
-            if form_result is None:
-                return
-
-            try:
-                updated_progress = set_active_sequence(
-                    progress,
-                    form_result.subject_id,
-                    form_result.sequence_id,
-                    school_class.grade_level,
-                    sequences,
-                )
-                await self.save_progress_and_refresh(
-                    school_class,
-                    updated_progress,
-                    sequences,
-                )
-            except (OSError, ProgressCommandError, ValueError) as error:
-                self.notify(str(error), severity="error")
-                return
-
-            self.notify(
-                f"{school_class.id}: Aktive Sequenz für "
-                f"'{subjects_by_id[form_result.subject_id].name}' gewechselt."
-            )
-
-        self.app.push_screen(
-            SetActiveSequenceScreen(
-                school_class,
-                progress,
-                sequences,
-                subjects,
-                fixed_subject_id=selected_subject_id,
-            ),
-            active_sequence_selected,
+        self._lesson_progress_flow.open_sequence_change(
+            self.school_classes_by_id[self.active_school_class_id],
+            self.active_subject_id,
         )
 
     def action_show_teaching_log(self) -> None:

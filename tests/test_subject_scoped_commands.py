@@ -210,22 +210,40 @@ def test_modals_and_log_keep_subject_scope(multi_class_config):
             progress = load_class_progress(config.root, config.active_school_year, "9B")
             assert progress.entries[-1].subject_id == "informatik-ntg"
 
+            before_sequence_change = progress
+            progress_path = get_class_progress_path(
+                config.root, config.active_school_year, "9B"
+            )
+            saved = progress_path.read_bytes()
             main.action_change_active_sequence()
             await pilot.pause()
             assert isinstance(app.screen, SetActiveSequenceScreen)
             assert app.screen.available_subject_ids == ["informatik-ntg"]
             assert not app.screen.query("#active-sequence-subject")
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.screen is main
+            assert progress_path.read_bytes() == saved
+
+            main.action_change_active_sequence()
+            await pilot.pause()
+            assert isinstance(app.screen, SetActiveSequenceScreen)
             value = app.screen.query_one("#active-sequence", Select).value
             await pilot.click("#save-active-sequence")
             await pilot.pause()
             progress = load_class_progress(config.root, config.active_school_year, "9B")
-            assert (
-                next(
-                    s
-                    for s in progress.active_sequences
-                    if s.subject_id == "informatik-ntg"
-                ).sequence_id
-                == value
+            assert progress == replace(
+                before_sequence_change,
+                active_sequences=tuple(
+                    ActiveSequence(active.subject_id, str(value))
+                    if active.subject_id == "informatik-ntg"
+                    else active
+                    for active in before_sequence_change.active_sequences
+                ),
+            )
+            assert (main.active_school_class_id, main.active_subject_id) == (
+                "9B",
+                "informatik-ntg",
             )
             await main.show_school_class_view(
                 main.school_classes_by_id["9B"], "mathematik"
