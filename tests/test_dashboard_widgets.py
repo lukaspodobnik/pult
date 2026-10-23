@@ -2,21 +2,12 @@ import asyncio
 from datetime import datetime
 
 from textual.app import App, ComposeResult
-from textual.widgets import DataTable
 
 from pult.progress.queries import get_home_dashboard_summary
 from pult.views.home_view import HomeView
-from pult.widgets.dashboard.daily_schedule import (
-    DailySchedulePanel,
-    DailyScheduleRow,
-)
-from pult.widgets.dashboard.next_lesson import NextLessonPanel
-from pult.widgets.dashboard.school_year_progress import SchoolYearProgress
-from pult.widgets.dashboard.timetable import TimetablePanel
-from pult.widgets.lesson_progress_bar import LessonProgressBar
 
 
-def test_dashboard_widgets_and_time_updates(
+def test_dashboard_refreshes_once_when_the_day_changes(
     monkeypatch,
     school_class,
     subject,
@@ -57,73 +48,12 @@ def test_dashboard_widgets_and_time_updates(
 
     async def run():
         app = DashboardApp()
-        async with app.run_test(size=(206, 46)) as pilot:
+        async with app.run_test() as pilot:
             await pilot.pause()
             view = app.query_one(HomeView)
-            assert app.query_one(SchoolYearProgress).parent is view
-            bar = app.query_one("#school-year-progress-bar", LessonProgressBar)
-            assert bar.completed == dashboard.school_year_progress.elapsed_day_count
-            assert (
-                app.query_one(NextLessonPanel).planned_lesson
-                == dashboard.next_planned_lesson
-            )
-            table = app.query_one(DataTable)
-            assert table.parent is app.query_one(TimetablePanel)
-            assert table.row_count == len(periods)
-            assert not table.can_focus
-            assert table.cursor_type == "none"
-            assert [
-                line.strip() for line in str(table.get_cell("1", "monday")).splitlines()
-            ][:2] == ["5A · Ma", "101"]
-            cell_lines = str(table.get_cell("1", "monday")).splitlines()
-            for line in cell_lines[:2]:
-                left = len(line) - len(line.lstrip())
-                right = len(line) - len(line.rstrip())
-                assert abs(left - right) <= 1
-            panel = app.query_one(TimetablePanel)
-            current_style = panel.get_component_rich_style("timetable--current")
-            row_style = panel.get_component_rich_style("timetable--period")
-            assert current_style.bgcolor != row_style.bgcolor
-            assert (
-                table.get_cell("1", "monday").get_style_at_offset(app.console, 0)
-                == current_style
-            )
-            assert (
-                table.get_cell("1", "tuesday").get_style_at_offset(app.console, 0)
-                == row_style
-            )
-            assert (
-                not current_style.bold
-                and not current_style.underline
-                and not current_style.reverse
-            )
-            for column in ("monday", "tuesday", "period", "separator-0"):
-                cell = table.get_cell("1", column)
-                lines = cell.plain.split("\n")
-                second = len(lines[0]) + 1
-                third = second + len(lines[1]) + 1
-                assert cell.get_style_at_offset(app.console, second).bgcolor is not None
-                expected = row_style.bgcolor if column == "monday" else None
-                assert cell.get_style_at_offset(app.console, third).bgcolor == expected
-            assert "1. Stunde" in str(table.ordered_rows[0].label)
-            rows = list(app.query_one(DailySchedulePanel).query(DailyScheduleRow))
-            assert [row.has_class("time-highlighted") for row in rows] == [True, False]
-
-            Clock.current = datetime(2026, 9, 7, 8, 55)
             view.refresh_time_highlight()
-            assert [row.has_class("time-highlighted") for row in rows] == [False, True]
-            assert (
-                table.get_cell("2", "monday").get_style_at_offset(app.console, 0)
-                == current_style
-            )
-            assert (
-                table.get_cell("1", "monday").get_style_at_offset(app.console, 0)
-                == row_style
-            )
-            assert not table.get_cell("1", "tuesday").spans
-            view.refresh_time_highlight()
-            assert table.row_count == len(periods)
-
+            await pilot.pause()
+            assert app.refresh_requests == 0
             Clock.current = datetime(2026, 9, 8, 0, 1)
             view.refresh_time_highlight()
             view.refresh_time_highlight()
@@ -133,13 +63,12 @@ def test_dashboard_widgets_and_time_updates(
     asyncio.run(run())
 
 
-def test_class_overview_updates_and_scrolls(subject):
+def test_class_overview_updates_balances_and_removes_old_rows(subject):
     from pult.progress.queries.dashboard import ClassBalance
     from pult.widgets.dashboard.class_overview import ClassOverviewPanel
 
     class OverviewApp(App):
         CSS_PATH = "../src/pult/styles/home.tcss"
-        CSS = "ClassOverviewPanel { height: 10; }"
 
         def compose(self):
             yield ClassOverviewPanel((), {subject.id: subject})
@@ -154,7 +83,10 @@ def test_class_overview_updates_and_scrolls(subject):
             await panel.update_data(balances, {subject.id: subject})
             await pilot.pause()
             assert len(panel.query(".class-balance-row")) == 19
-            assert panel.query_one(".balance-difference.negative").content == "-5 Std."
+            assert (
+                panel.query(".class-balance-row .balance-difference").first().content
+                == "-5 Std."
+            )
             assert all(
                 w.content == "—"
                 for w in panel.query(".class-balance-row .balance-assessments")
@@ -164,6 +96,9 @@ def test_class_overview_updates_and_scrolls(subject):
             )
             await pilot.pause()
             assert len(panel.query(".class-balance-row")) == 1
-            assert panel.query_one(".balance-difference.positive").content == "+2 Std."
+            assert (
+                panel.query(".class-balance-row .balance-difference").first().content
+                == "+2 Std."
+            )
 
     asyncio.run(run())

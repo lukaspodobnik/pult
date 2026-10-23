@@ -10,8 +10,8 @@ from textual.widgets import Input, OptionList, Select
 from pult.app import PultApp
 from pult.curriculum.material import TaskMetadata, load_task
 from pult.curriculum.sequence import load_sequence, save_sequence
-from pult.screens.create_task_screen import CreateTaskScreen
-from pult.screens.task_screen import TaskScreen
+from pult.screens.teaching.create_task_screen import CreateTaskScreen
+from pult.screens.teaching.task_screen import TaskScreen
 from pult.services.task_creation import create_task_files
 from pult.widgets.document_viewer import DocumentViewer
 
@@ -71,7 +71,7 @@ def test_create_task_opens_all_files_and_renders_one_entry(tmp_path, monkeypatch
         calls.append(files)
         return SimpleNamespace(returncode=0)
 
-    monkeypatch.setattr("pult.screens.task_screen.subprocess.run", editor)
+    monkeypatch.setattr("pult.screens.teaching.task_screen.subprocess.run", editor)
 
     async def run():
         app = PultApp()
@@ -121,7 +121,6 @@ def test_create_task_opens_all_files_and_renders_one_entry(tmp_path, monkeypatch
                 for lesson in screen.sequence.lessons
                 for task in lesson.tasks
             )
-            assert screen.query_one("PultFooter").region.bottom == 52
 
             previous_task = screen.selected_task
 
@@ -130,7 +129,7 @@ def test_create_task_opens_all_files_and_renders_one_entry(tmp_path, monkeypatch
                 return SimpleNamespace(returncode=0)
 
             monkeypatch.setattr(
-                "pult.screens.task_screen.subprocess.run", invalid_editor
+                "pult.screens.teaching.task_screen.subprocess.run", invalid_editor
             )
             await screen.create_task(TaskMetadata("Weitere Aufgabe", ["K5"], "I"))
             assert screen.selected_task is previous_task

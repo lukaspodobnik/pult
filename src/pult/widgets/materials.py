@@ -8,7 +8,7 @@ from textual import on
 from textual.widgets import Button, Static
 
 from pult.curriculum.material import material_entries
-from pult.services.document_rendering import safe_local
+from pult.services.documents.document_rendering import safe_local
 from pult.widgets.scrolling import VerticalScroll
 
 

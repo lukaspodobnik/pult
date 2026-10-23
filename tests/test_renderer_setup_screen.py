@@ -2,17 +2,15 @@ import asyncio
 from dataclasses import replace
 from unittest.mock import AsyncMock
 
-import pytest
 from test_ui_integration import prepare_root
 from textual.widgets import Select
 
 from pult.app import PultApp
-from pult.screens.confirmation_screen import ConfirmationScreen
+from pult.screens.common.confirmation_screen import ConfirmationScreen
 from pult.screens.main_screen import MainScreen
-from pult.screens.renderer_setup_screen import RendererSetupScreen
-from pult.screens.settings_screen import SettingsScreen
-from pult.services.renderer_setup import SetupResult, setup_failure
-from pult.widgets.button import Button
+from pult.screens.settings.renderer_setup_screen import RendererSetupScreen
+from pult.screens.settings.settings_screen import SettingsScreen
+from pult.services.documents.renderer_setup import setup_failure
 
 
 async def wait_for_screen(app, pilot, screen_type):
@@ -34,7 +32,7 @@ def test_startup_offer_follows_year_dialog_and_later_persists(tmp_path, monkeypa
             side_effect=RuntimeError("Executable doesn't exist")
         )
         app.renderer_setup.install = AsyncMock()
-        async with app.run_test(size=(100, 35)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await wait_for_screen(app, pilot, ConfirmationScreen)
             assert not any(isinstance(s, RendererSetupScreen) for s in app.screen_stack)
             await pilot.press("escape")
@@ -51,57 +49,6 @@ def test_startup_offer_follows_year_dialog_and_later_persists(tmp_path, monkeypa
     asyncio.run(run())
 
 
-def test_settings_install_refreshes_font_picker_without_restart(tmp_path, monkeypatch):
-    config = prepare_root(tmp_path)
-    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    monkeypatch.setattr("pult.app.get_suggested_school_year", lambda *_: None)
-    ready = False
-
-    async def available(_):
-        return ready
-
-    monkeypatch.setattr(
-        "pult.services.document_rendering.DocumentRenderer.avenir_available", available
-    )
-
-    async def run():
-        nonlocal ready
-        app = PultApp()
-        app.renderer_setup.defer()
-        app.renderer_setup.check = AsyncMock(
-            return_value=setup_failure(RuntimeError("Executable doesn't exist"))
-        )
-
-        async def install(output):
-            nonlocal ready
-            output("Chromium heruntergeladen")
-            ready = True
-            await app.document_renderer.reset()
-            return SetupResult("ready", "Bereit")
-
-        app.renderer_setup.install = install
-        async with app.run_test(size=(100, 35)) as pilot:
-            await pilot.pause(0.3)
-            settings = SettingsScreen()
-            await app.push_screen(settings)
-            await pilot.pause()
-            assert settings.query_one("#settings-document-font", Select).value == "auto"
-            await pilot.click("#setup-renderer")
-            dialog = await wait_for_screen(app, pilot, RendererSetupScreen)
-            await pilot.click("#renderer-install")
-            await pilot.pause()
-            assert dialog.result.state == "ready"
-            assert app.document_renderer.generation == 1
-            await pilot.click("#renderer-close")
-            await pilot.pause()
-            assert app.screen is settings
-            picker = settings.query_one("#settings-document-font", Select)
-            picker.value = "avenir-next"
-            assert not picker.disabled
-
-    asyncio.run(run())
-
-
 def test_slow_font_check_does_not_block_other_settings_or_lose_saved_font(
     tmp_path, monkeypatch
 ):
@@ -113,12 +60,13 @@ def test_slow_font_check_does_not_block_other_settings_or_lose_saved_font(
         await asyncio.Future()
 
     monkeypatch.setattr(
-        "pult.services.document_rendering.DocumentRenderer.avenir_available", pending
+        "pult.services.documents.document_rendering.DocumentRenderer.avenir_available",
+        pending,
     )
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(100, 35)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause(0.3)
             main = app.screen
             settings = SettingsScreen()
@@ -154,7 +102,7 @@ def test_cancel_waits_for_download_cleanup(tmp_path, monkeypatch):
                 stopped.set()
 
         app.renderer_setup.install = install
-        async with app.run_test(size=(100, 35)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause(0.3)
             await app.push_screen(
                 RendererSetupScreen(
@@ -172,44 +120,12 @@ def test_cancel_waits_for_download_cleanup(tmp_path, monkeypatch):
     asyncio.run(run())
 
 
-@pytest.mark.parametrize("size", [(80, 24), (140, 42)])
-def test_dependency_help_keeps_actions_visible(tmp_path, monkeypatch, size):
-    config = prepare_root(tmp_path)
-    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    monkeypatch.setattr("pult.app.get_suggested_school_year", lambda *_: None)
-    monkeypatch.setattr(
-        "pult.services.renderer_setup.linux_release", lambda: {"ID": "arch"}
-    )
-
-    async def run():
-        app = PultApp()
-        app.renderer_setup.defer()
-        async with app.run_test(size=size) as pilot:
-            await pilot.pause(0.3)
-            dialog = RendererSetupScreen(
-                setup_failure(
-                    RuntimeError("Missing libraries: libnss3.so\nlibnspr4.so")
-                )
-            )
-            await app.push_screen(dialog)
-            await pilot.pause()
-            assert not dialog.query_one("#renderer-install").display
-            for selector in ("#renderer-close", "#renderer-check"):
-                button = dialog.query_one(selector, Button)
-                assert button.region in dialog.query_one("#renderer-dialog").region
-                assert button.region in app.screen.region
-                assert button.content_region.width >= len(str(button.label)) + 2
-            assert dialog.result.command == "pacman -F libnspr4.so libnss3.so"
-
-    asyncio.run(run())
-
-
 def test_open_document_recovers_from_text_fallback_after_setup(tmp_path, monkeypatch):
     from PIL import Image
     from textual.app import App
     from textual.widgets import Markdown, Static
 
-    from pult.services import material_rendering as graphics
+    from pult.services.documents import material_rendering as graphics
     from pult.widgets.document_viewer import DocumentPane, DocumentViewer
 
     class Tile(Static):

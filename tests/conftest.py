@@ -34,7 +34,8 @@ def isolated_renderer_check(tmp_path, monkeypatch):
         pass
 
     monkeypatch.setattr(
-        "pult.services.document_rendering.DocumentRenderer.check_available", ready
+        "pult.services.documents.document_rendering.DocumentRenderer.check_available",
+        ready,
     )
 
 

@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from pult.curriculum.material import save_markdown
-from pult.services.exports import save_pdf
+from pult.services.exports.common import save_pdf
 from pult.storage import load_csv, save_csv, save_toml
 
 

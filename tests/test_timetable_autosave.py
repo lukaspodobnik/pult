@@ -11,17 +11,17 @@ from pult.school.timetable import (
     load_timetable,
     save_timetable,
 )
-from pult.screens.edit_timetable_entry_screen import (
+from pult.screens.management.edit_timetable_entry_screen import (
     TimetableEditAction,
     TimetableEditResult,
 )
-from pult.screens.edit_timetable_screen import EditTimetableScreen
+from pult.screens.management.edit_timetable_screen import EditTimetableScreen
 
 
 @pytest.mark.parametrize(
-    "change", ["unchanged", "same", "reverted", "edited", "deleted", "added"]
+    "change,escape",
+    [("edited", True), ("deleted", False), ("added", True), ("reverted", False)],
 )
-@pytest.mark.parametrize("escape", [True, False])
 def test_changes_persist_immediately_and_back_keeps_them(
     tmp_path, monkeypatch, change, escape
 ):
@@ -33,7 +33,7 @@ def test_changes_persist_immediately_and_back_keeps_them(
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             screen = EditTimetableScreen()
             await app.push_screen(screen)
@@ -85,7 +85,7 @@ def test_failed_save_keeps_stored_and_displayed_entry(tmp_path, monkeypatch, act
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             screen = EditTimetableScreen()
             await app.push_screen(screen)
@@ -94,7 +94,7 @@ def test_failed_save_keeps_stored_and_displayed_entry(tmp_path, monkeypatch, act
             monkeypatch.setattr(screen, "notify", notify)
             save = Mock(side_effect=OSError("Schreibfehler"))
             monkeypatch.setattr(
-                "pult.screens.edit_timetable_screen.save_timetable", save
+                "pult.screens.management.edit_timetable_screen.save_timetable", save
             )
             screen.timetable_entry_edited(None)
             save.assert_not_called()

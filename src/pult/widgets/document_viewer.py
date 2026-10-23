@@ -17,10 +17,13 @@ from textual.strip import Strip
 from textual.widgets import Markdown, Static
 
 from pult.curriculum.material import Lesson
-from pult.services import material_rendering as graphics
-from pult.services.document_callouts import resolve_callout_colors, text_document_parser
-from pult.services.document_corners import round_document_tile
-from pult.services.document_rendering import (
+from pult.services.documents import material_rendering as graphics
+from pult.services.documents.document_callouts import (
+    resolve_callout_colors,
+    text_document_parser,
+)
+from pult.services.documents.document_corners import round_document_tile
+from pult.services.documents.document_rendering import (
     SEPARATOR_Y,
     DocumentRenderer,
     split_phase_time,

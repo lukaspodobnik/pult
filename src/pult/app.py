@@ -6,21 +6,22 @@ from zoneinfo import ZoneInfo
 from textual import work
 from textual.app import App
 from textual.binding import Binding
-from textual.events import Event, Key
+from textual.events import Event, InputEvent, Key, Resize
 from textual.widgets import Input, TextArea
 
 from pult.config import AppConfig, load_app_config
 from pult.presentation import format_school_year
-from pult.screens.confirmation_screen import ConfirmationScreen
+from pult.screens.common.confirmation_screen import ConfirmationScreen
 from pult.screens.main_screen import MainScreen
-from pult.screens.renderer_setup_screen import RendererSetupScreen
-from pult.screens.setup_pult_screen import SetupScreen
-from pult.services.document_rendering import DocumentRenderer
+from pult.screens.settings.renderer_setup_screen import RendererSetupScreen
+from pult.screens.setup.setup_pult_screen import SetupScreen
+from pult.services.documents.document_rendering import DocumentRenderer
+from pult.services.documents.renderer_setup import RendererSetup
 from pult.services.omarchy_theme import OmarchyThemeWatcher
-from pult.services.renderer_setup import RendererSetup
 from pult.services.sequence_library import SequenceLibrary
 from pult.services.settings import get_suggested_school_year, update_settings
 from pult.services.themes import standard_theme
+from pult.widgets.terminal_size_notice import TerminalSizeNotice
 
 
 class PultApp(App):
@@ -39,6 +40,8 @@ class PultApp(App):
         "styles/distribution.tcss",
     ]
 
+    MINIMUM_TERMINAL_SIZE = (160, 45)
+
     TITLE = "PULT"
     SUB_TITLE = "Schulalltag im Blick"
     ENABLE_COMMAND_PALETTE = False
@@ -49,7 +52,7 @@ class PultApp(App):
     ]
 
     def action_show_binding_help(self) -> None:
-        from pult.screens.binding_help_screen import (
+        from pult.screens.common.binding_help_screen import (
             BindingHelpScreen,
             binding_help_rows,
         )
@@ -66,6 +69,10 @@ class PultApp(App):
 
     async def on_event(self, event: Event) -> None:
         """Behandle h/j/k/l außerhalb von Textfeldern wie die Pfeiltasten."""
+        if isinstance(event, InputEvent) and self.terminal_too_small:
+            if isinstance(event, Key) and event.key in ("q", "ctrl+c"):
+                self.exit()
+            return
         if (
             isinstance(event, Key)
             and self.screen_stack
@@ -94,6 +101,37 @@ class PultApp(App):
         self.omarchy_theme = OmarchyThemeWatcher()
         self._theme_slot = 0
 
+    @property
+    def terminal_too_small(self) -> bool:
+        width, height = self.MINIMUM_TERMINAL_SIZE
+        return self.size.width < width or self.size.height < height
+
+    def on_resize(self, event: Resize) -> None:
+        self.call_after_refresh(self.update_terminal_size_notice)
+
+    async def update_terminal_size_notice(self) -> None:
+        if not self.screen_stack or not self.screen.is_mounted:
+            return
+        screen = self.screen
+        notice = next(iter(screen.query(TerminalSizeNotice)), None)
+        if self.terminal_too_small:
+            if notice is None:
+                screen.styles.layers = " ".join(
+                    (*screen.styles.layers, "terminal-size")
+                )
+                notice = TerminalSizeNotice(markup=False)
+                await screen.mount(notice)
+            width, height = self.MINIMUM_TERMINAL_SIZE
+            notice.update(
+                "Terminal zu klein\n\n"
+                f"PULT benötigt mindestens {width} × {height} Zeichen.\n"
+                f"Aktuell: {self.size.width} × {self.size.height}.\n\n"
+                "Bitte das Terminal vergrößern.\nq: Beenden"
+            )
+            notice.display = True
+        elif notice is not None:
+            notice.display = False
+
     def require_config(self) -> AppConfig:
         """Gib die geladene Config zurück oder melde einen ungültigen App-Zustand."""
         if self.app_config is None:
@@ -111,6 +149,9 @@ class PultApp(App):
         return self.sequence_library
 
     def on_mount(self) -> None:
+        self.screen_change_signal.subscribe(
+            self, lambda _: self.call_after_refresh(self.update_terminal_size_notice)
+        )
         theme = standard_theme()
         self.register_theme(theme)
         self.theme = theme.name

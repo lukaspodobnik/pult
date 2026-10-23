@@ -11,7 +11,7 @@ from pult.progress.class_progress import (
     load_class_progress,
 )
 from pult.school.timetable import TimetableEntry, get_timetable_path, save_timetable
-from pult.screens.spontaneous_lesson_screen import SpontaneousLessonScreen
+from pult.screens.progress.spontaneous_lesson_screen import SpontaneousLessonScreen
 from pult.widgets.navigation import ViewPicker
 
 
@@ -28,7 +28,7 @@ def test_spontaneous_dialog_requires_description_and_preserves_plan(
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause(0.3)
             await pilot.wait_for_scheduled_animations()
             await pilot.pause()

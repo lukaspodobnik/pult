@@ -11,7 +11,7 @@ from pult.school.timetable import (
     get_timetable_path,
     save_timetable,
 )
-from pult.screens.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
 
 
 @pytest.mark.parametrize("from_home", [True, False])
@@ -27,7 +27,7 @@ def test_cancellation_shows_home_class_and_saves_same_target(
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause(0.3)
             main = app.screen
             for _ in range(20):

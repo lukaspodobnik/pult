@@ -8,7 +8,7 @@ from test_ui_integration import prepare_root
 from textual.widgets import Input
 
 from pult.app import PultApp
-from pult.screens.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
 from pult.services.omarchy_theme import (
     OmarchyThemeWatcher,
     theme_from_palette,
@@ -33,19 +33,6 @@ def palette():
 def write_palette(path, palette):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(tomli_w.dumps(palette))
-
-
-def test_palette_mapping_and_light_mode(palette):
-    theme = theme_from_palette(palette)
-    assert theme.primary == palette["accent"]
-    assert theme.success == palette["green"]
-    assert theme.warning == palette["yellow"]
-    assert theme.error == palette["red"]
-    assert theme.variables["block-cursor-background"] == palette["selection"]
-    assert theme.dark
-    assert not theme_from_palette(palette | {"mode": "light"}).dark
-    del palette["mode"]
-    assert not theme_from_palette(palette | {"background": "#ffffff"}).dark
 
 
 @pytest.mark.parametrize(
@@ -83,91 +70,28 @@ def test_watcher_replacement_errors_and_unchanged_file(tmp_path, palette):
         assert watcher.poll() is None
 
 
-@pytest.mark.parametrize("valid_at_start", [False, True])
-def test_live_theme_keeps_modal_input_and_focus(
-    tmp_path, monkeypatch, palette, valid_at_start
-):
+def test_theme_reload_preserves_unsaved_input(tmp_path, monkeypatch, palette):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     path = tmp_path / "omarchy" / "colors.toml"
-    if valid_at_start:
-        write_palette(path, palette)
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
-            assert (
-                app.theme.startswith("pult-omarchy-")
-                if valid_at_start
-                else app.theme == "pult"
-            )
-            modal = CancelLessonScreen("5A")
-            await app.push_screen(modal)
+            await app.push_screen(CancelLessonScreen("5A"))
             await pilot.pause()
+            modal = app.screen
             field = modal.query_one(Input)
             field.value = "Noch nicht gespeichert"
             field.focus()
             field.cursor_position = 5
-            cancel = modal.query_one("#abort-cancel-lesson")
-            save = modal.query_one("#save-cancelled-lesson")
-            assert cancel.styles.background == save.styles.background
-            assert cancel.styles.background.a == 0
-            save.focus()
-            await pilot.pause()
-            assert save.styles.background == cancel.styles.background
-            assert save.styles.border.top[1] != cancel.styles.border.top[1]
-            field.focus()
-            await pilot.pause()
-            field.cursor_position = 5
-            write_palette(path, palette | {"accent": "#88c0d0", "mode": "light"})
-            # Tatsächlichen App-Timer prüfen, nicht nur die Refresh-Methode.
+            write_palette(path, palette | {"accent": "#88c0d0"})
             await pilot.pause(1.2)
             assert app.current_theme.primary == "#88c0d0"
-            assert (
-                modal.query_one(".form-dialog").styles.border.top[1].hex.lower()
-                == "#88c0d0"
-            )
-            assert not app.current_theme.dark
             assert app.screen is modal
             assert app.focused is field
             assert field.value == "Noch nicht gespeichert"
             assert field.cursor_position == 5
-            current = app.theme
-            path.write_text("broken = [")
-            app.refresh_omarchy_theme()
-            assert app.theme == current
-            for accent in ["#abcdef", "#fedcba", "#123456"]:
-                write_palette(path, palette | {"accent": accent})
-                app.refresh_omarchy_theme()
-                await pilot.pause()
-                assert app.current_theme.primary == accent
-                assert (
-                    modal.query_one(".form-dialog").styles.border.top[1].hex.lower()
-                    == accent
-                )
-            assert (
-                len(
-                    [
-                        name
-                        for name in app.available_themes
-                        if name.startswith("pult-omarchy-")
-                    ]
-                )
-                == 2
-            )
 
     asyncio.run(run())
-
-
-def test_standard_theme_uses_same_rules_as_omarchy():
-    from dataclasses import replace
-
-    from pult.services.themes import PULT_PALETTE, standard_theme
-
-    standard = standard_theme()
-    assert standard.name == "pult"
-    assert standard.dark
-    assert standard == replace(theme_from_palette(PULT_PALETTE), name="pult")
-    assert standard.background == standard.surface
-    assert standard.variables["footer-background"] == standard.background

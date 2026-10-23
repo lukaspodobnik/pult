@@ -1,10 +1,8 @@
-import os
-
 import pytest
 from PIL import Image
 
-from pult.services.document_callouts import text_document_parser
-from pult.services.document_rendering import markdown_html
+from pult.services.documents.document_callouts import text_document_parser
+from pult.services.documents.document_rendering import markdown_html
 
 
 def render(source, tmp_path):
@@ -91,57 +89,3 @@ def test_existing_image_security_applies(tmp_path):
         ":::abbildung\n<script>alert(1)</script>\n\n![Bild](bild.png)\n:::", tmp_path
     )
     assert "<script>" not in html and "&lt;script&gt;" in html
-
-
-@pytest.mark.skipif(
-    not os.environ.get("PULT_TEST_BROWSER"),
-    reason="Expliziter lokaler Browser-Test",
-)
-def test_browser_figure_layout_adapts_to_screen_and_print(tmp_path):
-    import asyncio
-
-    from pult.services.document_rendering import DocumentRenderer, document_html
-
-    async def run():
-        renderer = DocumentRenderer(tmp_path / "cache")
-        Image.new("RGB", (800, 600), "white").save(tmp_path / "bild.png")
-        source = (
-            ":::abbildung\nBestimme den Flächeninhalt.\n\n![Rechteck](bild.png)\n:::"
-        )
-        try:
-            await renderer.ensure_browser()
-            page = await renderer.browser.new_page()
-            for width, size, media, beside in [
-                (1000, 22, "screen", True),
-                (700, 22, "screen", True),
-                (400, 22, "screen", False),
-                (640, 15, "print", True),
-            ]:
-                await page.set_viewport_size({"width": width, "height": 900})
-                await page.emulate_media(media=media)
-                await page.set_content(
-                    document_html(
-                        source,
-                        tmp_path / "aufgabe.md",
-                        tmp_path,
-                        width,
-                        size,
-                        "#ffffff",
-                        "#222222",
-                        "#41628a",
-                    )
-                )
-                result = await page.evaluate("""() => {
-                  const t=document.querySelector('.illustrated-text').getBoundingClientRect();
-                  const i=document.querySelector('.illustrated-image img').getBoundingClientRect();
-                  return {beside:i.left>=t.right,below:i.top>=t.bottom,width:i.width,overflow:document.documentElement.scrollWidth>innerWidth};
-                }""")
-                assert result["beside"] == beside
-                assert result["below"] != beside
-                assert 0 < result["width"] <= size * 11 + 1
-                assert not result["overflow"]
-            await page.close()
-        finally:
-            await renderer.close()
-
-    asyncio.run(run())

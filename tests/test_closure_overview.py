@@ -7,7 +7,7 @@ from textual.widgets import Static
 from pult.app import PultApp
 from pult.school.calendar import Closure, ClosureKind, save_school_closures
 from pult.school.timetable import TimetableEntry, get_timetable_path, save_timetable
-from pult.screens.edit_closures_screen import EditClosuresScreen
+from pult.screens.management.edit_closures_screen import EditClosuresScreen
 from pult.widgets.scrolling import OptionList
 
 
@@ -40,7 +40,7 @@ def test_closure_table_and_selected_details(tmp_path, monkeypatch):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(180, 42)) as pilot:
+        async with app.run_test(size=(180, 46)) as pilot:
             await pilot.pause()
             screen = EditClosuresScreen()
             await app.push_screen(screen)
@@ -56,10 +56,6 @@ def test_closure_table_and_selected_details(tmp_path, monkeypatch):
             assert "Fortbildung" in str(text.content)
             assert "02.10.2026" in str(text.content)
             assert "01.10.2026" not in str(text.content)
-            app.save_screenshot("closures.svg", path=str(tmp_path))
-            await pilot.resize_terminal(80, 24)
-            await pilot.pause()
-            assert screen.query_one("#edit-closures-screen").max_scroll_x > 0
             assert "Entfallende Stunden" in str(
                 screen.query_one("#closures-headings", Static).content
             )

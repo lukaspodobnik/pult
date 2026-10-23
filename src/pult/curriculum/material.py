@@ -79,12 +79,53 @@ class Phase:
 
 
 @dataclass(frozen=True)
+class TaskPartExport:
+    """Optionale Druckangaben für eine mit a), b), … bezeichnete Teilaufgabe."""
+
+    rows: int | None = None
+    image_width_mm: int | None = None
+
+    def __post_init__(self) -> None:
+        if self.rows is not None and (
+            type(self.rows) is not int or not 0 <= self.rows <= 40
+        ):
+            raise ValueError(
+                "export.teilaufgaben.*.zeilen muss zwischen 0 und 40 liegen."
+            )
+        if self.image_width_mm is not None and (
+            type(self.image_width_mm) is not int or not 10 <= self.image_width_mm <= 65
+        ):
+            raise ValueError("bildbreite_mm muss eine ganze Zahl von 10 bis 65 sein.")
+
+    @classmethod
+    def from_dict(cls, data: Any) -> "TaskPartExport":
+        if not isinstance(data, dict):
+            raise ValueError("Jede Export-Teilaufgabe muss eine TOML-Tabelle sein.")
+        reject_unknown(data, {"zeilen", "bildbreite_mm"})
+        return cls(data.get("zeilen"), data.get("bildbreite_mm"))
+
+    def to_dict(self) -> dict[str, int]:
+        return {
+            key: value
+            for key, value in (
+                ("zeilen", self.rows),
+                ("bildbreite_mm", self.image_width_mm),
+            )
+            if value is not None
+        }
+
+
+@dataclass(frozen=True)
 class TaskExport:
     """Antwortflächen im Arbeitsheft; fehlende Angaben ergeben ein gemeinsames Raster."""
 
     answer_area: str = "kariert"
     rows: int = 8
     per_subtask: bool = False
+    columns: int | None = None
+    append_equals: bool = False
+    image_width_mm: int | None = None
+    parts: dict[str, TaskPartExport] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.answer_area not in ("linien", "kariert", "keiner"):
@@ -99,24 +140,93 @@ class TaskExport:
             raise ValueError("Ohne Antwortbereich muss export.zeilen 0 sein.")
         if type(self.per_subtask) is not bool:
             raise ValueError("export.pro_teilaufgabe muss true oder false sein.")
+        if self.columns is not None and (
+            type(self.columns) is not int or not 1 <= self.columns <= 3
+        ):
+            raise ValueError("export.spalten muss 1, 2 oder 3 sein.")
+        if self.answer_area == "linien" and self.columns == 3:
+            raise ValueError("Schreiblinien erlauben höchstens zwei Exportspalten.")
+        if (
+            self.answer_area == "kariert"
+            and self.per_subtask
+            and self.columns not in (None, 1)
+        ):
+            raise ValueError("Karofelder je Teilaufgabe benötigen eine Exportspalte.")
+        if type(self.append_equals) is not bool:
+            raise ValueError("export.gleichheitszeichen muss true oder false sein.")
+        if self.append_equals and (
+            self.answer_area != "linien" or not self.per_subtask
+        ):
+            raise ValueError(
+                "Zusätzliche Gleichheitszeichen benötigen Schreiblinien je Teilaufgabe."
+            )
+        TaskPartExport(image_width_mm=self.image_width_mm)
+        if not isinstance(self.parts, dict):
+            raise ValueError("export.teilaufgaben muss eine TOML-Tabelle sein.")
+        for label, part in self.parts.items():
+            if not isinstance(label, str) or not re.fullmatch(r"[a-z]", label):
+                raise ValueError("Export-Teilaufgaben werden mit a, b, … bezeichnet.")
+            if not isinstance(part, TaskPartExport):
+                raise ValueError("Ungültige Exportangaben für eine Teilaufgabe.")
+            part.__post_init__()
+            if part.rows is not None:
+                if not self.per_subtask:
+                    raise ValueError(
+                        "Zeilen je Teilaufgabe benötigen pro_teilaufgabe = true."
+                    )
+                if (part.rows == 0) != (self.answer_area == "keiner"):
+                    raise ValueError(
+                        "Ein Antwortbereich benötigt mindestens eine Zeile; ohne Bereich gilt 0."
+                    )
 
     @classmethod
     def from_dict(cls, data: Any) -> "TaskExport":
         if not isinstance(data, dict):
             raise ValueError("'export' muss eine TOML-Tabelle sein.")
-        reject_unknown(data, {"antwortbereich", "zeilen", "pro_teilaufgabe"})
+        reject_unknown(
+            data,
+            {
+                "antwortbereich",
+                "zeilen",
+                "pro_teilaufgabe",
+                "spalten",
+                "gleichheitszeichen",
+                "bildbreite_mm",
+                "teilaufgaben",
+            },
+        )
         area = data.get("antwortbereich", "kariert")
         default_rows = 0 if area == "keiner" else 1 if area == "linien" else 8
+        parts = data.get("teilaufgaben", {})
+        if not isinstance(parts, dict):
+            raise ValueError("export.teilaufgaben muss eine TOML-Tabelle sein.")
         return cls(
-            area, data.get("zeilen", default_rows), data.get("pro_teilaufgabe", False)
+            area,
+            data.get("zeilen", default_rows),
+            data.get("pro_teilaufgabe", False),
+            data.get("spalten"),
+            data.get("gleichheitszeichen", False),
+            data.get("bildbreite_mm"),
+            {label: TaskPartExport.from_dict(part) for label, part in parts.items()},
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data: dict[str, Any] = {
             "antwortbereich": self.answer_area,
             "zeilen": self.rows,
             "pro_teilaufgabe": self.per_subtask,
         }
+        if self.columns is not None:
+            data["spalten"] = self.columns
+        if self.append_equals:
+            data["gleichheitszeichen"] = True
+        if self.image_width_mm is not None:
+            data["bildbreite_mm"] = self.image_width_mm
+        if self.parts:
+            data["teilaufgaben"] = {
+                key: value.to_dict() for key, value in self.parts.items()
+            }
+        return data
 
 
 @dataclass

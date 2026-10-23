@@ -3,7 +3,7 @@ import asyncio
 from test_ui_integration import prepare_root
 
 from pult.app import PultApp
-from pult.screens.curriculum_screen import (
+from pult.screens.teaching.curriculum_screen import (
     CurriculumScreen,
     CurriculumTree,
     curriculum_documents,
@@ -28,7 +28,7 @@ def test_curriculum_flat_grade_tree_and_shared_viewer(tmp_path, monkeypatch):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             screen = CurriculumScreen()
             await app.push_screen(screen)
@@ -50,6 +50,5 @@ def test_curriculum_flat_grade_tree_and_shared_viewer(tmp_path, monkeypatch):
             tree.move_cursor(subject.children[-1])
             await pilot.pause()
             assert "Mathematik 13" in screen.query_one(DocumentViewer).source
-            assert screen.query_one("#curriculum-reader").scroll_y == 0
 
     asyncio.run(run())

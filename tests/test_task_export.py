@@ -1,5 +1,6 @@
 import asyncio
 import os
+import re
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -10,11 +11,12 @@ from pult.curriculum.material import (
     Task,
     TaskExport,
     TaskMetadata,
+    TaskPartExport,
     load_task,
     save_task,
 )
-from pult.services.exports import material_export_path
-from pult.services.task_export import (
+from pult.services.exports.common import material_export_path
+from pult.services.exports.task_export import (
     export_task_workbooks,
     workbook_furniture,
     workbook_html,
@@ -35,9 +37,15 @@ def exercise(options=None):
     "data",
     [
         {},
-        {"antwortbereich": "linien"},
-        {"antwortbereich": "keiner"},
         {"antwortbereich": "kariert", "zeilen": 6, "pro_teilaufgabe": True},
+        {
+            "antwortbereich": "linien",
+            "pro_teilaufgabe": True,
+            "spalten": 2,
+            "gleichheitszeichen": True,
+            "teilaufgaben": {"a": {"zeilen": 3}},
+        },
+        {"bildbreite_mm": 35, "teilaufgaben": {"b": {"bildbreite_mm": 30}}},
     ],
 )
 def test_export_metadata_roundtrip(tmp_path, data):
@@ -50,21 +58,33 @@ def test_export_metadata_roundtrip(tmp_path, data):
     "data",
     [
         [],
-        "linien",
         {"antwortbereich": ["linien", "kariert"]},
         {"antwortbereich": "andere"},
         {"zeilen": True},
-        {"zeilen": 1.5},
-        {"zeilen": -1},
         {"zeilen": 41},
         {"zeilen": 0},
         {"antwortbereich": "keiner", "zeilen": 2},
         {"pro_teilaufgabe": "true"},
-        {"pro_teilaufgabe": 1},
         {"unbekannt": 1},
+        {"spalten": True},
+        {"spalten": 0},
+        {"spalten": 4},
+        {"antwortbereich": "linien", "spalten": 3},
+        {"pro_teilaufgabe": True, "spalten": 2},
+        {"gleichheitszeichen": "true"},
+        {"gleichheitszeichen": True},
+        {"bildbreite_mm": True},
+        {"bildbreite_mm": 9},
+        {"bildbreite_mm": 66},
+        {"teilaufgaben": []},
+        {"teilaufgaben": {"a)": {"zeilen": 2}}},
+        {"teilaufgaben": {"a": 3}},
+        {"teilaufgaben": {"a": {"zeilen": 2}}},
+        {"pro_teilaufgabe": True, "teilaufgaben": {"a": {"zeilen": 0}}},
+        {"teilaufgaben": {"a": {"unbekannt": 3}}},
     ],
 )
-def test_export_metadata_rejects_malformed_values_with_filename(tmp_path, data):
+def test_export_metadata_rejects_invalid_shapes_ranges_and_combinations(tmp_path, data):
     # TOML cannot express every malformed structure; the parser validates them too.
     with pytest.raises(ValueError):
         TaskExport.from_dict(data)
@@ -97,7 +117,8 @@ def test_workbook_injects_only_requested_answer_fields(
     options = TaskExport(area, 0 if area == "keiner" else 3, per_subtask)
     document = workbook_html([exercise(options)], sequences[0], tmp_path)
     assert document.count('class="answer-area ') == expected
-    assert 'data-columns="2"' in document
+    columns = 1 if area == "linien" or (area == "kariert" and per_subtask) else 2
+    assert f'data-columns="{columns}"' in document
     assert "1. Aufgabe" in document
     assert "<h1>Titel</h1>" not in document
     body = document.split("</style>", 1)[1]
@@ -220,6 +241,21 @@ def test_missing_solution_leaves_previous_exports_and_reports_task(tmp_path, seq
     task = exercise()
     task.solution = None
     save_task(tmp_path, task)
+    from pult.services.exports.common import material_export_path, save_pdf
+
+    targets = [
+        material_export_path(
+            tmp_path,
+            config.active_school_year,
+            sequences[0].grade_level,
+            sequences[0].subject_id,
+            sequences[0].id,
+            kind,
+        )
+        for kind in ("aufgaben", "loesungen")
+    ]
+    for target in targets:
+        save_pdf(target, b"%PDF-previous")
     renderer = SimpleNamespace(
         resolve_font=AsyncMock(return_value="source-sans-3"), render_pdf=AsyncMock()
     )
@@ -230,7 +266,7 @@ def test_missing_solution_leaves_previous_exports_and_reports_task(tmp_path, seq
             )
         )
     renderer.render_pdf.assert_not_awaited()
-    assert not (tmp_path / "exports").exists()
+    assert [target.read_bytes() for target in targets] == [b"%PDF-previous"] * 2
 
 
 @pytest.mark.skipif(
@@ -240,8 +276,8 @@ def test_missing_solution_leaves_previous_exports_and_reports_task(tmp_path, seq
 def test_browser_answer_fields_and_math_print_without_overflow(tmp_path, sequences):
     from dataclasses import replace
 
-    from pult.services.document_rendering import DocumentRenderer
-    from pult.services.task_export import ASSETS, MARGINS
+    from pult.services.documents.document_rendering import DocumentRenderer
+    from pult.services.exports.task_export import ASSETS, MARGINS
 
     async def run():
         tasks = []
@@ -258,6 +294,10 @@ def test_browser_answer_fields_and_math_print_without_overflow(tmp_path, sequenc
             task = exercise(options)
             task.id = f"task-{index}"
             tasks.append(task)
+        prose_task = exercise(TaskExport("linien", 1, True))
+        prose_task.id = "prose"
+        prose_task.text = ":::teilaufgaben\na) Begründe $a^2 \\ge 0$.\n:::\n"
+        tasks.append(prose_task)
         renderer = DocumentRenderer(tmp_path / "cache")
         try:
             await renderer.ensure_browser()
@@ -268,21 +308,54 @@ def test_browser_answer_fields_and_math_print_without_overflow(tmp_path, sequenc
             await renderer._prepare_page(page, math=True)
             assert await page.evaluate((ASSETS / "layout.js").read_text()) is None
             layout = await page.evaluate("""() => ({
+                fullWidth: [...document.querySelectorAll('.answer-grid')].every(grid => {
+                    const r=grid.getBoundingClientRect(), a=document.querySelector('article').getBoundingClientRect();
+                    return Math.abs(r.left-a.left)<1 && Math.abs(r.right-a.right)<1;
+                }),
                 grids: document.querySelectorAll('.answer-grid > svg path').length,
+                cells: [...document.querySelectorAll('.answer-grid')].map(grid => {
+                    const svg = grid.querySelector('svg');
+                    const {width, height} = svg.viewBox.baseVal;
+                    const path = svg.querySelector('path').getAttribute('d');
+                    const xs = [0, ...[...path.matchAll(/M([\\d.e+-]+),0V/g)].map(m => +m[1]), width];
+                    const ys = [0, ...[...path.matchAll(/M0,([\\d.e+-]+)H/g)].map(m => +m[1]), height];
+                    const differences = values => values.slice(1).map((v, i) => v-values[i]);
+                    return {x: differences(xs), y: differences(ys),
+                        rows: +getComputedStyle(grid).getPropertyValue('--rows')};
+                }),
+                proseGap: (() => {
+                    const task = document.querySelector('[data-task="prose"]');
+                    return task.querySelector('.answer-line').getBoundingClientRect().bottom
+                        - task.querySelector('.subtask-content > p').getBoundingClientRect().bottom;
+                })(),
                 lines: document.querySelectorAll('.answer-line').length,
                 math: document.querySelectorAll('mjx-container svg').length,
                 inline: [...document.querySelectorAll('.answer-inline-row')].map(row => {
                     const p = row.querySelector('p').getBoundingClientRect();
                     const line = row.querySelector('.answer-line').getBoundingClientRect();
-                    return {start:line.x, end:p.right, width:line.width};
+                    const content = row.parentElement.getBoundingClientRect();
+                    return {start:line.x, end:p.right, width:line.width,
+                        right:line.right, edge:content.right,
+                        top:line.top, bottom:p.bottom};
                 }),
                 rows: [...document.querySelectorAll('.subtask-row')].map(row => getComputedStyle(row).breakInside),
             })""")
             assert layout["grids"] == 3
-            assert layout["lines"] == 4
-            assert layout["math"] == 10
+            assert layout["fullWidth"]
+            for grid in layout["cells"]:
+                assert len(grid["y"]) == grid["rows"]
+                cell = grid["x"][0]
+                assert 4.9 < cell < 5.1
+                assert all(abs(side - cell) < 0.001 for side in grid["x"] + grid["y"])
+            assert 5 * 96 / 25.4 <= layout["proseGap"] <= 8 * 96 / 25.4
+            assert layout["lines"] == 5
+            assert layout["math"] == 11
+            assert len(layout["inline"]) == 2
             assert all(
-                line["start"] >= line["end"] and line["width"] >= 25 * 96 / 25.4 - 1
+                line["start"] >= line["end"]
+                and line["width"] >= 25 * 96 / 25.4 - 1
+                and abs(line["right"] - line["edge"]) < 1
+                and line["top"] < line["bottom"]
                 for line in layout["inline"]
             )
             assert set(layout["rows"]) == {"avoid"}
@@ -301,3 +374,116 @@ def test_browser_answer_fields_and_math_print_without_overflow(tmp_path, sequenc
             await renderer.close()
 
     asyncio.run(run())
+
+
+@pytest.mark.skipif(
+    not os.environ.get("PULT_TEST_BROWSER"),
+    reason="Expliziter lokaler Browser-Test",
+)
+@pytest.mark.parametrize("parts,before,after", [(2, 120, 150), (4, 100, 0)])
+def test_browser_paginates_between_parts_without_wasting_a_page(
+    tmp_path, sequences, parts, before, after
+):
+    from pult.services.documents.document_rendering import DocumentRenderer
+    from pult.services.exports.task_export import ASSETS, MARGINS
+
+    async def run():
+        tasks = []
+        for task_id in ("before", "split", "after"):
+            if task_id == "after" and not after:
+                continue
+            task = exercise(TaskExport("keiner", 0))
+            task.id = task_id
+            task.text = "Arbeitsauftrag."
+            if task_id == "split":
+                task.text += (
+                    "\n\n:::teilaufgaben\n"
+                    + "\n\n".join(
+                        f"{label}) Rechne {label}." for label in "abcd"[:parts]
+                    )
+                    + "\n:::\n"
+                )
+                task.metadata.export = TaskExport("kariert", 12, True)
+            tasks.append(task)
+        document = workbook_html(tasks, sequences[0], tmp_path)
+        # Fixed neighbouring content leaves room for the first subtask, but not
+        # the whole exercise. Both a two-part and an over-page exercise fit on
+        # two pages; keeping the whole task together or starting it on a fresh
+        # page would waste a third page.
+        fixture_style = (
+            f'[data-task="before"] .exercise-body {{ height:{before}mm; }}'
+            f'[data-task="after"] .exercise-body {{ height:{after}mm; }}'
+        )
+        document = document.replace("</style>", fixture_style + "</style>", 1)
+        renderer = DocumentRenderer(tmp_path / "cache")
+        try:
+            output = await renderer.render_pdf(
+                document,
+                math=True,
+                margins=MARGINS,
+                prepare_script=(ASSETS / "layout.js").read_text(),
+            )
+            # Chromium emits uncompressed page dictionaries; no PDF parsing
+            # dependency is needed to count the actual printed pages.
+            assert len(re.findall(rb"/Type\s*/Page\b", output)) == 2
+        finally:
+            await renderer.close()
+
+    asyncio.run(run())
+
+
+def test_print_columns_equals_and_part_rows_do_not_change_screen_or_solutions(
+    tmp_path, sequences
+):
+    from pult.services.documents.document_rendering import markdown_html
+
+    task = exercise(
+        TaskExport(
+            "linien",
+            1,
+            True,
+            columns=1,
+            append_equals=True,
+            parts={"a": TaskPartExport(rows=3)},
+        )
+    )
+    task.text = ":::teilaufgaben spalten=3\na) $4a \\cdot 3b$\n\nb) $2x = $\n:::\n"
+    source = task.text
+    result = workbook_html([task], sequences[0], tmp_path)
+    assert 'data-columns="1"' in result
+    assert r"\(4a \cdot 3b =\)" in result
+    assert "= =" not in result
+    assert result.count('class="answer-line"') == 4
+    assert task.text == source
+    screen = markdown_html(task.text, tmp_path / "aufgabe.md", tmp_path)
+    assert 'data-columns="3"' in screen and r"\(4a \cdot 3b\)" in screen
+    solution = workbook_html([task], sequences[0], tmp_path, solutions=True)
+    assert 'class="answer-line"' not in solution
+    assert r"\(a+ab\)" in solution
+
+
+def test_export_rejects_equals_on_prose_and_unknown_or_ambiguous_part(
+    tmp_path, sequences
+):
+    task = exercise(TaskExport("linien", 1, True, append_equals=True))
+    task.text = ":::teilaufgaben\na) Begründe $x^2$.\n:::\n"
+    with pytest.raises(ValueError, match="mathematischen Ausdruck"):
+        workbook_html([task], sequences[0], tmp_path)
+    task.metadata.export = TaskExport(parts={"z": TaskPartExport(image_width_mm=30)})
+    with pytest.raises(ValueError, match="Unbekannte Export-Teilaufgabe: z"):
+        workbook_html([task], sequences[0], tmp_path)
+    task.text += task.text
+    task.metadata.export = TaskExport(parts={"a": TaskPartExport(image_width_mm=30)})
+    with pytest.raises(ValueError, match="nicht eindeutig"):
+        workbook_html([task], sequences[0], tmp_path)
+
+
+def test_image_settings_apply_only_to_task_and_selected_part(tmp_path, sequences):
+    task = exercise(
+        TaskExport(image_width_mm=40, parts={"a": TaskPartExport(image_width_mm=30)})
+    )
+    result = workbook_html([task], sequences[0], tmp_path)
+    assert 'style="--image-width:40mm"' in result
+    assert result.count('style="--image-width:30mm"') == 1
+    solution = workbook_html([task], sequences[0], tmp_path, solutions=True)
+    assert 'style="--image-width:' not in solution

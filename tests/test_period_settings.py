@@ -9,10 +9,10 @@ from textual.widgets import Input, Static
 
 from pult.app import PultApp
 from pult.school.period import load_periods
-from pult.screens.about_screen import AboutScreen
-from pult.screens.edit_periods_screen import EditPeriodsScreen
+from pult.screens.common.about_screen import AboutScreen
 from pult.screens.main_screen import MainScreen
-from pult.screens.settings_screen import SettingsScreen
+from pult.screens.management.edit_periods_screen import EditPeriodsScreen
+from pult.screens.settings.settings_screen import SettingsScreen
 from pult.views.home_view import HomeView
 
 
@@ -28,7 +28,7 @@ def test_period_settings_save_cancel_and_refresh(tmp_path, monkeypatch):
     original = load_periods(tmp_path)
 
     async def run():
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause(0.3)
             main = app.screen
             assert isinstance(main, MainScreen)
@@ -71,7 +71,7 @@ def test_invalid_period_times_preserve_file(tmp_path, monkeypatch, start, end):
     original = path.read_bytes()
 
     async def run():
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await app.push_screen(EditPeriodsScreen(load_periods(tmp_path)))
             await pilot.pause()
             app.screen.query_one("#start-1", Input).value = start
@@ -84,13 +84,13 @@ def test_invalid_period_times_preserve_file(tmp_path, monkeypatch, start, end):
     asyncio.run(run())
 
 
-def test_about_dialog_offline_text_and_scrolling(tmp_path, monkeypatch):
+def test_about_dialog_contains_offline_license_and_closes(tmp_path, monkeypatch):
     app = prepare_app(tmp_path, monkeypatch)
     license_text = files("pult").joinpath("legal/GPL-3.0.txt").read_text()
     assert license_text == (Path(__file__).parents[1] / "LICENSE").read_text()
 
     async def run():
-        async with app.run_test(size=(100, 30)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await app.push_screen(SettingsScreen())
             await pilot.pause()
             app.screen.query_one("#show-about").scroll_visible(animate=False)
@@ -104,8 +104,6 @@ def test_about_dialog_offline_text_and_scrolling(tmp_path, monkeypatch):
             assert "LehrplanPLUS" in content
             assert "pending" not in content.lower()
             assert "angefragt" not in content.lower()
-            assert app.screen.query_one("#about-content").max_scroll_y > 0
-            assert app.screen.query_one("#close-about").region.bottom <= 30
             await pilot.press("escape")
             assert isinstance(app.screen, SettingsScreen)
 

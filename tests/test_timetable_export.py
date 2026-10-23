@@ -9,8 +9,8 @@ from pult.app import PultApp
 from pult.config import AppConfig
 from pult.school.period import Period
 from pult.school.timetable import TimetableEntry, get_timetable_path, save_timetable
-from pult.screens.edit_timetable_screen import EditTimetableScreen
-from pult.services.timetable_export import export_timetable, timetable_html
+from pult.screens.management.edit_timetable_screen import EditTimetableScreen
+from pult.services.exports.timetable_export import export_timetable, timetable_html
 
 
 def test_weekly_pdf_includes_all_periods_and_escapes_content():
@@ -70,12 +70,12 @@ def test_timetable_export_hotkey_snapshot_and_error_recovery(tmp_path, monkeypat
         return tmp_path / "exports/2026-2027/uebersichten/stundenplan.pdf"
 
     monkeypatch.setattr(
-        "pult.screens.edit_timetable_screen.export_timetable", fake_export
+        "pult.screens.management.edit_timetable_screen.export_timetable", fake_export
     )
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             screen = EditTimetableScreen()
             await app.push_screen(screen)

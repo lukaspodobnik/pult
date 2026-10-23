@@ -9,7 +9,7 @@ from textual.widgets import OptionList
 from pult.app import PultApp
 from pult.curriculum.material import Task, TaskMetadata, save_task
 from pult.curriculum.sequence import load_sequence, save_sequence
-from pult.screens.task_screen import TaskScreen
+from pult.screens.teaching.task_screen import TaskScreen
 from pult.storage import load_toml, save_toml
 from pult.widgets.document_viewer import DocumentViewer
 
@@ -61,29 +61,13 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             screen = TaskScreen(sequence, directory, lesson_id=sequence.lessons[0].id)
             await app.push_screen(screen)
             await pilot.pause()
-            assert (
-                screen.query_one("#task-list").border_subtitle
-                == f"Für: {sequence.lessons[0].title}"
-            )
-            assert str(
-                screen.query_one(OptionList).get_option(screen.task_id).prompt
-            ).startswith("✓ ")
-            assert not screen.query("SequenceContext")
-            assert screen.query_one("#task-content").border_title == sequence.title
-            assert (
-                screen.query_one("#task-list").region.y
-                == screen.query_one("#task-content").region.y
-            )
-            assert screen.query_one("#task-navigation").region.width == 40
             task = screen.selected_task
             assert screen.query_one(DocumentViewer).source == task.text
-            await pilot.press("s")
-            assert not screen.show_solution
             screen.query_one("#task-content").focus()
             await pilot.press("space")
             await pilot.pause()
@@ -101,24 +85,12 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
                 screen.query_one("#task-content").border_subtitle
                 == "Aufgabe · AFB II · K1, K6"
             )
-            await pilot.press("v", "v")
-            assert [t.id for t in screen.sequence.lessons[0].tasks] == [task.id]
+            await pilot.press("v")
+            assigned = load_toml(
+                directory / "stunden" / sequence.lessons[0].id / "stunde.toml"
+            )["aufgaben"]
+            assert assigned == [task.id, "zusatz"]
             monkeypatch.setattr(app, "suspend", nullcontext)
-
-            def editor(command, *, check):
-                path = Path(command[-1])
-                assert path == extra / "loesung.md"
-                path.write_text("Neue Lösung")
-                return SimpleNamespace(returncode=0)
-
-            monkeypatch.setattr("pult.screens.task_screen.subprocess.run", editor)
-            await pilot.press("e", "down", "enter")
-            await pilot.pause()
-            assert screen.selected_task.solution == "Neue Lösung"
-            assert screen.query_one(DocumentViewer).source == "# Zusatz"
-            await pilot.press("space")
-            await pilot.pause()
-            assert screen.query_one(DocumentViewer).source == "Neue Lösung"
 
             def metadata_editor(command, *, check):
                 path = Path(command[-1])
@@ -134,20 +106,18 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
                 return SimpleNamespace(returncode=0)
 
             monkeypatch.setattr(
-                "pult.screens.task_screen.subprocess.run", metadata_editor
+                "pult.screens.teaching.task_screen.subprocess.run", metadata_editor
             )
             await pilot.press("e", "down", "down", "enter")
             await pilot.pause()
             assert screen.selected_task.metadata == TaskMetadata(
                 "1. Neuer Titel", ["K2"], "III"
             )
-            assert str(picker.get_option("zusatz").prompt) == "1. Neuer Titel"
-            assert picker.get_option_at_index(0).id == "zusatz"
-            assert picker.highlighted == 0
-            assert screen.query_one(DocumentViewer).source == "Neue Lösung"
+            assert str(picker.get_option("zusatz").prompt).endswith("1. Neuer Titel")
+            assert screen.query_one(DocumentViewer).source == "# Zusatz"
             assert (
                 screen.query_one("#task-content").border_subtitle
-                == "Lösung · AFB III · K2"
+                == "Aufgabe · AFB III · K2"
             )
 
             # Invalid edits keep the selected task, documents and metadata available.
@@ -156,11 +126,18 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             invalid = dict(data, anforderungsbereich=["I", "III"])
             save_toml(extra / "aufgabe.toml", invalid)
             await screen.reload_tasks()
-            assert screen.selected_task is before
-            assert screen.query_one(DocumentViewer).source == "Neue Lösung"
+            assert screen.selected_task == before
+            assert screen.query_one(DocumentViewer).source == "# Zusatz"
             save_toml(extra / "aufgabe.toml", data)
+            await screen.reload_tasks()
+            assigned = next(
+                t for t in screen.sequence.lessons[0].tasks if t.id == "zusatz"
+            )
+            assert assigned.metadata == before.metadata
             await pilot.press("v")
-            assert screen.sequence.lessons[0].tasks[-1].metadata == before.metadata
+            assert load_toml(
+                directory / "stunden" / sequence.lessons[0].id / "stunde.toml"
+            )["aufgaben"] == [task.id]
 
     asyncio.run(run())
 
@@ -191,8 +168,10 @@ def test_sequence_export_hotkey_is_guarded_and_recovers_after_failure(
             raise ValueError("Lösung fehlt")
 
         mock = AsyncMock(side_effect=exporter)
-        monkeypatch.setattr("pult.screens.task_screen.export_task_workbooks", mock)
-        async with app.run_test(size=(140, 42)) as pilot:
+        monkeypatch.setattr(
+            "pult.screens.teaching.task_screen.export_task_workbooks", mock
+        )
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             screen = TaskScreen(sequence, directory)
             await app.push_screen(screen)

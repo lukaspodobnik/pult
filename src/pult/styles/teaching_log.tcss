@@ -28,6 +28,7 @@ TeachingLogView {
     width: 1fr;
     height: 1fr;
     padding: 1 2 1 0;
+    scrollbar-gutter: stable;
 }
 
 TeachingLogScreen #teaching-log-class-picker,

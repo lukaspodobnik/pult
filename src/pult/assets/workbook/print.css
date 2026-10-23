@@ -15,7 +15,7 @@ li { margin:1mm 0; }
 li > p { margin:0; }
 pre { font-size:9pt; white-space:pre-wrap; overflow-wrap:anywhere; padding:3mm; background:#F0F2F4; }
 code { font-size:.9em; }
-img { max-width:min(100%,65mm); max-height:65mm; height:auto; object-fit:contain; }
+img { max-width:min(100%,var(--image-width,65mm)); max-height:var(--image-width,65mm); height:auto; object-fit:contain; }
 .display { margin:1.5mm 0; }
 .display > mjx-container[jax="SVG"][display="true"] { margin:0; }
 mjx-container[jax="SVG"] { max-width:100%; }
@@ -33,9 +33,8 @@ blockquote.callout { break-inside:avoid; }
 .callout-definition .callout-title { color:#49779C; }
 .callout-merksatz .callout-title { color:#B86F31; }
 .callout > :last-child { margin-bottom:0; }
-.exercise { margin:0 0 7mm; break-inside:avoid; }
-.exercise.long-exercise { break-inside:auto; }
-.exercise-heading { color:#49779C; margin:0 0 2mm; }
+.exercise { margin:0 0 7mm; }
+.exercise-heading { font-size:1em; font-weight:600; color:#49779C; margin:0 0 2mm; }
 .exercise-body > :first-child { margin-top:0; }
 .exercise-body > :last-child { margin-bottom:0; }
 .subtasks { margin:2.5mm 0; row-gap:3mm; column-gap:5mm; align-items:start; }
@@ -47,18 +46,23 @@ blockquote.callout { break-inside:avoid; }
 .subtasks.print-rows { display:block; }
 .answer-area { break-inside:avoid; margin-top:4mm; }
 .answer-grid {
-  height:calc(var(--rows) * 5mm); width:100%;
+  height:calc(var(--rows) * 5mm); width:100%; grid-column:1 / -1;
 }
 .answer-grid > svg { display:block; width:100%; height:100%; }
-.answer-lines { display:flex; flex-direction:column; gap:0; }
+.answer-lines { display:flex; flex-direction:column; gap:0; margin-top:0; }
 .answer-line { display:block; width:100%; height:7mm; border-bottom:.3pt solid #B5BEC7; }
+.answer-lines > .answer-line:first-child { height:5mm; }
+.answer-inline-row + .answer-lines > .answer-line:first-child { height:7mm; }
 .answer-inline-row { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 3mm; }
 .answer-inline-row > p { margin:0; flex:0 1 auto; max-width:100%; }
 .answer-inline-row > .answer-line { flex:1 0 25mm; height:1em; }
 .answer-lines:empty { display:none; }
-.illustrated { margin:2mm 0; gap:4mm; }
-.illustrated > figure img { max-height:65mm; }
-/* Keep an instruction with the first row; let long tasks span several pages. */
-.exercise-heading, .exercise-body > p:has(+ .subtasks),
+.illustrated { margin:2mm 0; gap:4mm; grid-template-columns:minmax(0,1fr) min(30%,var(--image-width,11em)); }
+.illustrated > figure img { max-width:var(--image-width,11em); max-height:var(--image-width,65mm); }
+.illustrated-with-answers { display:block; break-inside:auto; }
+.illustrated-with-answers > figure { width:var(--image-width,40mm); margin:0 0 3mm auto; }
+/* Keep the introduction with the first row, not the entire exercise. */
+.exercise-heading, .exercise-intro,
 .exercise-body > :has(+ .answer-area),
 .subtasks:has(+ .answer-area) .subtask-row:last-child { break-after:avoid; }
+.exercise-body:has(> .answer-area) { break-inside:avoid; }

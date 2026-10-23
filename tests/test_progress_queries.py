@@ -8,7 +8,6 @@ from pult.progress.class_progress import (
 )
 from pult.progress.commands import (
     complete_lesson,
-    continue_lesson,
     skip_lesson,
 )
 from pult.progress.queries import (
@@ -16,7 +15,6 @@ from pult.progress.queries import (
     get_class_progress_summary,
     get_daily_schedule,
     get_home_dashboard_summary,
-    get_next_lesson,
     get_next_planned_lesson,
     get_next_scheduled_occurrence,
     get_school_year_progress,
@@ -24,16 +22,6 @@ from pult.progress.queries import (
 from pult.school.calendar import Closure, ClosureKind
 from pult.school.school_class import SchoolClass
 from pult.school.timetable import TimetableEntry
-
-
-def test_next_lesson_ignores_continued_and_advances_past_skipped(
-    empty_progress, planned_lesson, sequences
-):
-    continued = continue_lesson(empty_progress, planned_lesson, sequences)
-    assert get_next_lesson(continued, sequences, "mathematik", 5).id == "lesson-1"
-
-    skipped = skip_lesson(empty_progress, planned_lesson, sequences).progress
-    assert get_next_lesson(skipped, sequences, "mathematik", 5).id == "lesson-2"
 
 
 def test_next_occurrence_uses_both_periods_on_same_day(

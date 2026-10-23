@@ -19,6 +19,9 @@ bayerischen Gymnasium.
 Benötigt werden [uv](https://docs.astral.sh/uv/), ein Terminal mit Unicode und ein
 Editor, etwa Neovim oder VS Code. Für die grafische Dokumentansicht eignen sich
 **Ghostty** und **Foot**. Andere Terminals können die Textansicht verwenden.
+Das Terminal muss mindestens **160 Spalten × 45 Zeilen** groß sein. Bei einem
+kleineren Fenster erscheint ein Hinweis; nach dem Vergrößern geht es mit derselben
+Ansicht und unveränderten Eingaben weiter.
 
 PULT 1.3.1 nach Veröffentlichung aus dem GitHub-Release installieren:
 
@@ -188,6 +191,9 @@ Ohne weitere Angaben gibt es ein gemeinsames Karofeld mit acht Zeilen. Optional
 steuert `[export]` in `aufgabe.toml` Linien, Karofelder oder keinen Antwortbereich,
 die Zeilenzahl und die Platzierung pro Teilaufgabe. Beispiele und Grenzen stehen
 im [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md#aufgabenexport).
+Druckspalten, ergänzte Gleichheitszeichen und Bildgrößen lassen sich unabhängig
+von der PULT-Ansicht einstellen. Karofelder nutzen immer die volle Inhaltsbreite.
+
 Unter **Einstellungen → Name auf Arbeitsblättern** lässt sich die Fußzeile setzen.
 
 ## Leistungsnachweise und Einstellungen

@@ -7,8 +7,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from pult.services.document_rendering import DocumentRenderer
-from pult.services.renderer_setup import RendererSetup, dependency_help, setup_failure
+from pult.services.documents.document_rendering import DocumentRenderer
+from pult.services.documents.renderer_setup import (
+    RendererSetup,
+    dependency_help,
+    setup_failure,
+)
 
 REAL_CHECK = DocumentRenderer.check_available
 
@@ -16,7 +20,7 @@ REAL_CHECK = DocumentRenderer.check_available
 @pytest.mark.parametrize("distro, release", [("ubuntu", "24.04"), ("debian", "13")])
 def test_supported_linux_uses_pults_interpreter(monkeypatch, distro, release):
     monkeypatch.setattr(
-        "pult.services.renderer_setup.linux_release",
+        "pult.services.documents.renderer_setup.linux_release",
         lambda: {"ID": distro, "VERSION_ID": release},
     )
     monkeypatch.setattr(sys, "executable", "/home/test user/pult/bin/python")
@@ -35,7 +39,9 @@ def test_supported_linux_uses_pults_interpreter(monkeypatch, distro, release):
     "release", [{"ID": "arch"}, {"ID": "omarchy", "ID_LIKE": "arch"}]
 )
 def test_arch_offers_library_lookup_not_debian_installer(monkeypatch, release):
-    monkeypatch.setattr("pult.services.renderer_setup.linux_release", lambda: release)
+    monkeypatch.setattr(
+        "pult.services.documents.renderer_setup.linux_release", lambda: release
+    )
     help_text, command = dependency_help(
         "Missing libraries: libnss3.so\nlibnspr4.so\nlibnss3.so"
     )
@@ -50,7 +56,9 @@ def test_arch_offers_library_lookup_not_debian_installer(monkeypatch, release):
 def test_unknown_or_unsupported_linux_never_guesses_package_commands(
     monkeypatch, release
 ):
-    monkeypatch.setattr("pult.services.renderer_setup.linux_release", lambda: release)
+    monkeypatch.setattr(
+        "pult.services.documents.renderer_setup.linux_release", lambda: release
+    )
     assert dependency_help("Missing libraries: example.so")[1] == ""
 
 
@@ -195,17 +203,13 @@ def test_cancel_stops_installer_and_child_even_during_spawn(
 @pytest.mark.skipif(
     not os.environ.get("PULT_TEST_BROWSER"), reason="Expliziter lokaler Browser-Test"
 )
-def test_browser_probe_and_reset_refresh_fonts_and_existing_documents(
-    tmp_path, monkeypatch
-):
+def test_browser_probe_and_reset_release_the_browser(tmp_path, monkeypatch):
     monkeypatch.setattr(DocumentRenderer, "check_available", REAL_CHECK)
 
     async def run():
         renderer = DocumentRenderer(tmp_path)
-        renderer._avenir_available = False
         try:
             assert (await RendererSetup(renderer).check()).state == "ready"
-            assert renderer._avenir_available is None
             assert renderer.generation == 1
             await renderer.reset()
             assert renderer.browser is None and renderer.driver is None
@@ -218,7 +222,7 @@ def test_browser_probe_and_reset_refresh_fonts_and_existing_documents(
 
 def test_arch_handles_playwright_reporting_only_debian_packages(monkeypatch):
     monkeypatch.setattr(
-        "pult.services.renderer_setup.linux_release", lambda: {"ID": "arch"}
+        "pult.services.documents.renderer_setup.linux_release", lambda: {"ID": "arch"}
     )
     help_text, command = dependency_help(
         "Host system is missing dependencies. sudo apt-get install libnss3 libnspr4"

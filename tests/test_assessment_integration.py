@@ -22,8 +22,8 @@ from pult.school.assessment import Assessment, AssessmentKind, save_assessments
 from pult.school.calendar import load_school_calendar
 from pult.school.school_class import load_school_class
 from pult.school.timetable import TimetableEntry, get_timetable_path, save_timetable
-from pult.screens.edit_assessments_screen import EditAssessmentsScreen
-from pult.screens.teaching_log_screen import TeachingLogScreen
+from pult.screens.management.edit_assessments_screen import EditAssessmentsScreen
+from pult.screens.progress.teaching_log_screen import TeachingLogScreen
 from pult.services.assessments import (
     complete_assessment,
     load_effective_assessments,

@@ -175,28 +175,57 @@ pro_teilaufgabe = true
 
 - `antwortbereich`: `"kariert"`, `"linien"` oder `"keiner"`. Pro Teilaufgabe wird
   nur eine Art verwendet; Linien und Karofelder werden nicht gemischt.
-- `zeilen`: 1 bis 40. Bei Karofeldern zählt eine Zeile 5 mm, bei Schreiblinien
-  7 mm. Ohne Bereich gilt 0. Überhohe Felder werden mit einer Fehlermeldung
-  abgelehnt, damit nichts abgeschnitten wird.
+- `zeilen`: 1 bis 40. Bei Karofeldern zählt eine Zeile ein Kästchen (etwa 5 mm),
+  Schreiblinien haben 7 mm Abstand; die erste Linie folgt Textaufträgen enger.
+  Ohne Bereich gilt 0. Überhohe Felder werden mit einer Fehlermeldung abgelehnt,
+  damit nichts abgeschnitten wird.
 - `pro_teilaufgabe`: `true` ergänzt einen Bereich nach jeder Teilaufgabe eines
   `:::teilaufgaben`-Blocks; `false` einen gemeinsamen Bereich unter der Aufgabe.
-  Ohne Teilaufgabenblock `false` verwenden. Innerhalb eines mehrspaltigen Blocks
-  liegt jedes Feld in seiner Spalte; bei zu breiten Formeln werden es weniger
-  Spalten. Teilaufgabe und Feld bleiben auf derselben Seite.
+  Ohne Teilaufgabenblock `false` verwenden. Karofelder reichen immer über die
+  volle Inhaltsbreite, links bündig mit dem Teilaufgabenbuchstaben und rechts
+  bis zum Inhaltsrand. Ganze quadratische Kästchen füllen die Breite; ihre Größe
+  wird minimal an 5 mm angenähert. Mit Karofeldern je Teilaufgabe ist der Druck
+  einspaltig.
+  Teilaufgabe und Feld bleiben auf derselben Seite.
+- `spalten`: optionale Druckspaltenzahl (1–3). Bei Schreiblinien gilt standardmäßig
+  1, höchstens 2; bei Karofeldern je Teilaufgabe ausschließlich 1. Ohne eigene
+  Angabe folgt die übrige Darstellung den Markdown-Spalten.
+- `gleichheitszeichen = true`: ergänzt nur im Aufgabenexport ein `=` hinter
+  einem einzelnen mathematischen Ausdruck, ohne ein vorhandenes zu verdoppeln.
+  Erfordert Schreiblinien je Teilaufgabe; nicht für Textaufträge verwenden.
+- `bildbreite_mm`: optionale maximale Bildbreite/-höhe (10–65 mm) im Aufgabenexport.
+- `[export.teilaufgaben.a]` (entsprechend `b`, …): überschreibt `zeilen` und/oder
+  `bildbreite_mm` für diese Teilaufgabe. Abweichende Zeilen benötigen
+  `pro_teilaufgabe = true`. Die Buchstaben beziehen sich auf die äußeren
+  Teilaufgaben und müssen eindeutig vorhanden sein.
 
 Ohne `export` gilt ein gemeinsames Karofeld mit acht Zeilen. Fehlende Einzelwerte
 verwenden `kariert`, `false` und acht Zeilen (für `linien` eine, für `keiner` null).
-Schreiblinien beginnen bei Platz direkt hinter dem letzten Absatz, sonst darunter.
-Linien und Gleichheitszeichen nicht durch Unterstriche vortäuschen; ein fachlich
-benötigtes Gleichheitszeichen gehört in den Aufgabentext. Lösungen erhalten keine
-Antwortbereiche. Umfang und Art werden bei der Vorbereitung passend gewählt.
+Schreiblinien folgen einzelnen Formeln bei Platz direkt in derselben Zeile,
+Textaufträgen darunter. Linien nicht durch Unterstriche vortäuschen.
+Druckspalten, ergänzte Gleichheitszeichen und Bildgrößen verändern weder die
+Markdown-Dateien noch die PULT-Ansicht oder Lösungen. Lösungen erhalten keine
+Antwortbereiche. Umfang und Art je Teilaufgabe aus einer knappen, vollständigen
+und altersgerechten Musterlösung ableiten: nötige Zwischenschritte, Begründungen,
+Skizzen und Handschrift berücksichtigen, mit nur kleiner Reserve. Abgedruckte
+Ausdrücke müssen nicht nochmals abgeschrieben werden. Keine pauschalen
+Mindestflächen; acht Standardzeilen ersetzen diese Einschätzung nicht.
+
+Zwischen Teilaufgaben sind Seitenumbrüche möglich. Überschrift, Einleitung und
+erste Teilaufgabe bleiben zusammen, ebenso jede Teilaufgabe mit ihrem
+Antwortbereich. Gemeinsame Bereiche bleiben beim zugehörigen Auftrag. Bei der
+Ausarbeitung den gesamten Export auf unnötige Umbrüche und übergroße
+Antwortbereiche prüfen.
 
 Das A4-Hochformat hat 25 mm linken und 18 mm rechten Rand. Es verwendet die
 Dokumentschrift, klassische mathematische Schrift, dezente graue Tabellenköpfe
-und feine Rechenraster. Die Kopfzeile nennt Fach, Jahrgang und Sequenz. Der Name
-für die Fußzeile wird unter **Einstellungen → Name auf Arbeitsblättern** gesetzt;
-ein leeres Feld lässt ihn weg. Bestehende PDFs werden erst nach erfolgreicher
-Erzeugung beider Dokumente ersetzt.
+und feine Rechenraster. Aufgabenüberschriften haben dieselbe Größe wie der
+Fließtext (11,5 pt), in Halbfett. Die Kopfzeile nennt Fach, Jahrgang und Sequenz.
+Kopf- und Fußzeile einschließlich Name und Seitenzahl erscheinen in sanftem,
+gut lesbarem Grau (`#647282`), auch im gedruckten PDF. Der Name für die Fußzeile
+wird unter **Einstellungen → Name auf Arbeitsblättern** gesetzt; ein leeres Feld
+lässt ihn weg. Bestehende PDFs werden erst nach erfolgreicher Erzeugung beider
+Dokumente ersetzt.
 
 ## Muster und Änderungen
 

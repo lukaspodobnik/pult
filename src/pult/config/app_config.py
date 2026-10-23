@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from pult.services.document_fonts import validate_document_font
+from pult.services.documents.document_fonts import validate_document_font
 from pult.storage import load_toml, save_toml
 
 APP_CONFIG_PATH = Path.home() / ".config" / "pult" / "config.toml"

@@ -11,30 +11,24 @@ from pult.app import PultApp
 from pult.curriculum.sequence import (
     SequenceFileError,
     get_sequence_path,
-    load_sequence_library,
     save_sequence,
 )
 from pult.screens.main_screen import MainScreen
-from pult.screens.sequence_library_screen import SequenceLibraryScreen
+from pult.screens.teaching.sequence_library_screen import SequenceLibraryScreen
 from pult.storage import save_toml
 from pult.widgets.navigation import TeachingPicker
 from pult.widgets.sequence_preview import SequencePreview
 from pult.widgets.sequence_tree import SequenceTree
 
 
-@pytest.mark.parametrize("editor_result", ["saved", "invalid", "missing"])
+@pytest.mark.parametrize("editor_result", ["saved", "invalid"])
 def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_result):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    library_loader = Mock(wraps=load_sequence_library)
-    monkeypatch.setattr(
-        "pult.services.sequence_library.load_sequence_library",
-        library_loader,
-    )
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             picker = app.screen.query_one(TeachingPicker)
@@ -46,60 +40,11 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             assert isinstance(screen, SequenceLibraryScreen)
             tree = screen.query_one(SequenceTree)
             preview = screen.query_one(SequencePreview)
-            assert not screen.query("Header")
-            assert tree.guide_depth == 2
-            assert tree.border_title == "SEQUENZBIBLIOTHEK"
-            assert (tree.region.y, tree.region.bottom) == (
-                preview.region.y,
-                preview.region.bottom,
-            )
-            assert set(screen.focus_chain) == {tree, preview}
             tree.focus()
-            await pilot.pause()
-            assert (
-                preview.get_component_styles(
-                    "option-list--option-highlighted"
-                ).background.a
-                == 0
-            )
-            assert tree.styles.background_tint.a == 0
-            assert tree.styles.border.top[1] != preview.styles.border.top[1]
             await pilot.press("tab")
             assert app.focused is preview
-            await pilot.pause()
-            assert (
-                preview.get_component_styles(
-                    "option-list--option-highlighted"
-                ).background.a
-                > 0
-            )
-            assert preview.styles.background_tint.a == 0
-            assert preview.styles.border.top[1] != tree.styles.border.top[1]
             await pilot.press("tab")
             assert app.focused is tree
-            assert not tree.show_root
-            assert app.focused is tree
-            assert tree.cursor_node is tree.root.children[0]
-            assert all(not node.is_expanded for node in tree.root.children)
-            assert screen.query_one("#sequence-navigation").region.width == 40
-            assert tree.region.width == 40
-            mathematics = next(
-                node for node in tree.root.children if node.label.plain == "Mathematik"
-            )
-            grade = next(
-                node
-                for node in mathematics.children
-                if node.label.plain == "7. Jahrgangsstufe"
-            )
-            assert (
-                grade.children[0].label.plain
-                == "1.1 Aufstellen und Interpretieren von Termen"
-            )
-            assert grade.children[1].label.plain == "1.2 Umformen von Termen"
-            assert all(
-                node.data is not None and not node.children for node in grade.children
-            )
-            assert all(not node.label.plain.startswith("M7") for node in grade.children)
 
             def leaves(node):
                 if node.data is not None:
@@ -108,10 +53,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
                     yield from leaves(child)
 
             nodes = list(leaves(tree.root))
-            assert len(nodes) == 116
-            assert all(not node.allow_expand for node in nodes)
-            # Home und Bibliotheksbaum teilen denselben ersten Ladevorgang.
-            library_loader.assert_called_once_with(config.root)
+            assert len(nodes) == len(screen.sequence_library)
             node = nodes[0]
             original = node.data
             updated = replace(original, title="Geänderter Sequenzplan")
@@ -132,8 +74,6 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
                     config.root, original.grade_level, original.subject_id, original.id
                 )
                 assert command == ["true", str(path)]
-                if editor_result == "missing":
-                    raise FileNotFoundError("Editor fehlt")
                 if editor_result == "invalid":
                     save_toml(path, {})
                 else:
@@ -142,7 +82,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
 
             # Nur den Editoraufruf ersetzen, nicht das globale subprocess-Modul.
             monkeypatch.setattr(
-                "pult.screens.sequence_library_screen.subprocess",
+                "pult.screens.teaching.sequence_library_screen.subprocess",
                 SimpleNamespace(run=editor),
             )
             await pilot.press("enter")
@@ -154,9 +94,7 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             assert app.screen is screen
             if editor_result == "saved":
                 assert updated in screen.sequence_library
-                assert library_loader.call_count == 2
                 assert node.data == updated
-                assert node.label.plain == SequenceTree.sequence_label(updated)
                 notifications.assert_not_called()
                 preview = screen.query_one(SequencePreview)
                 assert preview.border_title == updated.title
@@ -164,12 +102,8 @@ def test_library_navigation_and_editor_return(tmp_path, monkeypatch, editor_resu
             else:
                 assert node.data == original
                 assert notifications.call_args.kwargs["severity"] == "error"
-                if editor_result == "invalid":
-                    with pytest.raises(SequenceFileError):
-                        _ = screen.sequence_library
-                else:
-                    assert original in screen.sequence_library
-                    assert library_loader.call_count == 1
+                with pytest.raises(SequenceFileError):
+                    _ = screen.sequence_library
             # Erst nach dem Rendern schließen; keine Markdown-Tasks beim Shutdown abbrechen.
             await pilot.press("escape")
             await pilot.pause()

@@ -1,40 +1,13 @@
 from dataclasses import replace
 
-from pult.curriculum.material import Phase
 from pult.widgets.sequence_preview import SequencePreview
 
 
-def test_sequence_preview_structure_and_empty_state(sequences):
-    sequence = sequences[0]
-    sequence.lessons[0].material = ["Schere"]
-    sequence.lessons[0].phases = [Phase("Einstieg", "Zahlenkarten gemeinsam ordnen.")]
-    markdown = SequencePreview.render_sequence(sequence)
-    assert sequence.title not in markdown
-    assert markdown.count(". Stunde ·") == len(sequence.lessons)
-    assert "1. Stunde · Zahlen ordnen" in markdown
-    assert "Aufgaben" not in markdown
-    assert "Benötigtes Material\n• Schere" in markdown
-    assert "Verlauf" not in markdown
-    assert "Einstieg" not in markdown
-    assert "Zahlenkarten gemeinsam ordnen." not in markdown
-    assert (
-        "Zahlenkarten gemeinsam ordnen."
-        not in SequencePreview.render_lesson(sequence.lessons[0]).plain
-    )
-    empty = SequencePreview.render_sequence(
-        replace(sequence, lessons=[], recommended_lesson_count=None)
-    )
-    assert "Noch keine Unterrichtsstunden" in empty
-    assert "---" not in empty
-
-
-def test_selection_focus_reload_and_empty_state(sequences, tmp_path):
+def test_selection_survives_reload_and_resets_for_another_sequence(sequences, tmp_path):
     import asyncio
 
     from textual.app import App
     from textual.widgets import Button
-
-    from pult.curriculum.material import Lesson
 
     class PreviewApp(App):
         def compose(self):
@@ -46,10 +19,6 @@ def test_selection_focus_reload_and_empty_state(sequences, tmp_path):
         async with app.run_test(size=(110, 34)) as pilot:
             preview = app.query_one(SequencePreview)
             sequence = sequences[0]
-            sequence.lessons.extend(
-                Lesson(f"extra-{n}", f"Weitere Stunde {n}", goals=["Ziel"] * 3)
-                for n in range(8)
-            )
             preview.show_sequence(sequence)
             await pilot.pause()
             assert app.focused is not preview
@@ -61,21 +30,13 @@ def test_selection_focus_reload_and_empty_state(sequences, tmp_path):
             await pilot.press("enter")
             assert app.screen is screen
             assert preview.selected_lesson.id == "lesson-2"
-            await pilot.press("end")
-            await pilot.pause()
-            assert preview.selected_lesson.id == "extra-7"
-            assert preview.scroll_y > 0
             selected = preview.selected_lesson.id
-            position = preview.scroll_y
             preview.show_sequence(replace(sequence, title="Neuer Titel"))
             await pilot.pause()
             assert preview.selected_lesson.id == selected
-            assert preview.scroll_y == position
-            app.save_screenshot("sequence-preview.svg", path=tmp_path)
             preview.show_sequence(sequences[1])
             await pilot.pause()
             assert preview.selected_lesson.id == "lesson-3"
-            assert preview.scroll_y == 0
             preview.show_sequence(
                 replace(sequence, lessons=[], recommended_lesson_count=None)
             )

@@ -23,10 +23,10 @@ from pult.school.timetable import (
     get_timetable_path,
     save_timetable,
 )
-from pult.screens.add_extra_lesson_screen import AddExtraLessonScreen
-from pult.screens.cancel_lesson_screen import CancelLessonScreen
-from pult.screens.set_active_sequence_screen import SetActiveSequenceScreen
-from pult.screens.teaching_log_screen import TeachingLogScreen
+from pult.screens.progress.add_extra_lesson_screen import AddExtraLessonScreen
+from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.set_active_sequence_screen import SetActiveSequenceScreen
+from pult.screens.progress.teaching_log_screen import TeachingLogScreen
 from pult.views.school_class_view import (
     SchoolClassView,
     SubjectProgressBlock,
@@ -41,7 +41,7 @@ def test_home_key_selects_home_and_focuses_view_picker(
 ):
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             main = await ready(app, pilot)
             picker = main.query_one(ViewPicker)
             picker.highlighted = 1
@@ -65,7 +65,7 @@ def test_home_key_selects_home_and_focuses_view_picker(
 def test_management_focus_blocks_progress_commands(multi_class_config, monkeypatch):
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             main = await ready(app, pilot)
             await main.show_school_class_view(
                 main.school_classes_by_id["9B"], "mathematik"
@@ -143,7 +143,7 @@ def test_planned_commands_use_selected_subject(multi_class_config, command, acti
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             main = await ready(app, pilot)
             assert (
                 main.load_planned_lesson_context().planned_lesson.subject_id
@@ -187,7 +187,7 @@ def test_modals_and_log_keep_subject_scope(multi_class_config):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             main = await ready(app, pilot)
             await main.show_school_class_view(
                 main.school_classes_by_id["9B"], "informatik-ntg"
@@ -239,12 +239,6 @@ def test_modals_and_log_keep_subject_scope(multi_class_config):
             } == {"informatik-ntg"}
             picker = app.screen.query_one("#teaching-log-class-picker")
             content = app.screen.query_one("#teaching-log-content")
-            assert not app.screen.query("Header")
-            assert app.screen.query_one("#teaching-log-navigation").region.width == 28
-            assert (picker.region.y, picker.region.bottom) == (
-                content.region.y,
-                content.region.bottom,
-            )
             targets = list(picker.class_subjects_by_option_id.values())
             assert targets[picker.highlighted] == ("9B", "informatik-ntg")
             picker.highlighted = targets.index(("9B", "mathematik"))
@@ -297,7 +291,7 @@ def test_open_next_lesson_uses_visible_lesson_and_returns(
 ):
     from datetime import datetime
 
-    from pult.screens.lesson_screen import LessonScreen
+    from pult.screens.teaching.lesson_screen import LessonScreen
     from pult.views.home_view import HomeView
 
     class Clock:

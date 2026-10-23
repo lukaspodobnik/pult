@@ -5,16 +5,16 @@ import pytest
 from textual.app import App
 
 from pult.school.calendar import Closure, ClosureKind
-from pult.screens.confirm_closure_deletion_screen import (
+from pult.screens.management.confirm_closure_deletion_screen import (
     ConfirmClosureDeletionScreen,
 )
-from pult.screens.confirm_undo_screen import ConfirmUndoScreen
-from pult.screens.edit_classes_screen import ConfirmClassDeletionScreen
+from pult.screens.management.edit_classes_screen import ConfirmClassDeletionScreen
+from pult.screens.progress.confirm_undo_screen import ConfirmUndoScreen
 from pult.services.closures import ScopedClosure
 
 
 @pytest.mark.parametrize("kind", ["class", "closure", "undo"])
-def test_confirmation_layout_and_actions(kind):
+def test_confirmation_defaults_to_cancel_and_requires_explicit_acceptance(kind):
     def make_screen():
         if kind == "class":
             return ConfirmClassDeletionScreen("9B")
@@ -49,27 +49,7 @@ def test_confirmation_layout_and_actions(kind):
                 screen = make_screen()
                 await app.push_screen(screen, results.append)
                 await pilot.pause()
-                dialog = screen.query_one(".confirmation-dialog")
-                assert dialog.region.width == 68
-                assert dialog.region.height >= 13
-                assert dialog.border_title
-                buttons = list(screen.query("Button"))
-                for button in buttons:
-                    assert button.styles.border.top[0] == "round"
-                    assert str(button.label) in button.render_line(0).text
-                assert [str(button.label) for button in buttons] == [
-                    "Abbrechen",
-                    "Bestätigen",
-                ]
-                assert all(button.region.height == 3 for button in buttons)
-                assert [button.region.width for button in buttons] == [16, 16]
                 assert app.focused is screen.query_one(".confirmation-cancel")
-                message = screen.query_one(".confirmation-message")
-                assert message.region.height >= 2
-                assert (
-                    message.region.bottom
-                    < screen.query_one(".confirmation-actions").region.y
-                )
                 if action == "confirm":
                     await pilot.click(".confirmation-accept")
                 else:

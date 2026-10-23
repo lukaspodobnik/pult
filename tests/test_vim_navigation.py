@@ -27,7 +27,7 @@ def test_vim_keys_navigate_without_changing_text_input(monkeypatch):
 
     async def run():
         app = NavigationApp()
-        async with app.run_test(size=(100, 60)) as pilot:
+        async with app.run_test(size=(160, 60)) as pilot:
             for selector in ("#options", "#subjects"):
                 options = app.query_one(selector, OptionList)
                 options.focus()

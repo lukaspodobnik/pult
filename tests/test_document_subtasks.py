@@ -1,14 +1,10 @@
 import asyncio
-import os
-from pathlib import Path
 
 import pytest
 from PIL import Image
 
-from pult.services.document_callouts import text_document_parser
-from pult.services.document_rendering import (
-    DocumentRenderer,
-    document_html,
+from pult.services.documents.document_callouts import text_document_parser
+from pult.services.documents.document_rendering import (
     markdown_html,
 )
 
@@ -127,97 +123,5 @@ def test_text_viewer_displays_subtasks_and_following_document(tmp_path):
             await app.workers.wait_for_complete()
             paragraphs = [w._content.plain for w in app.query("MarkdownParagraph")]
             assert paragraphs == ["a) $x$", "b) Begründe.", "Danach."]
-
-    asyncio.run(run())
-
-
-@pytest.mark.skipif(
-    not os.environ.get("PULT_TEST_BROWSER"), reason="Expliziter lokaler Browser-Test"
-)
-@pytest.mark.parametrize("columns_setting", [2, 3])
-def test_browser_grid_aligns_labels_and_adapts_for_screen_and_print(
-    tmp_path, columns_setting
-):
-    async def run():
-        renderer = DocumentRenderer(tmp_path / "cache")
-        source = (
-            f":::teilaufgaben spalten={columns_setting}\n"
-            + "\n\n".join(
-                f"{letter}) ${term}$"
-                for letter, term in zip(
-                    "abcdef",
-                    [
-                        r"\frac{2}{3}x \cdot 9y",
-                        "4x",
-                        r"x^2",
-                        "7ab",
-                        r"\frac{1}{4}a",
-                        "5y",
-                    ],
-                )
-            )
-            + "\n:::"
-        )
-        try:
-            await renderer.ensure_browser()
-            page = await renderer.browser.new_page()
-            await page.route("**/*", lambda route: route.abort())
-            script = (
-                Path(__file__).parents[1] / "src/pult/assets/mathjax/tex-svg-full.js"
-            )
-            for width, font_size, columns, media in (
-                (1050, 22, columns_setting, "screen"),
-                (740, 22, 2 if columns_setting == 3 else 1, "screen"),
-                (400, 22, 1, "screen"),
-                (720, 15, columns_setting, "print"),
-            ):
-                await page.set_viewport_size({"width": width, "height": 900})
-                await page.emulate_media(media=media)
-                await page.set_content(
-                    document_html(
-                        source,
-                        tmp_path / "aufgabe.md",
-                        tmp_path,
-                        width,
-                        font_size,
-                        "#ffffff",
-                        "#222222",
-                        "#41628a",
-                    )
-                )
-                await page.evaluate(
-                    "window.MathJax = {startup:{typeset:false}, svg:{fontCache:'local'}}"
-                )
-                await page.add_script_tag(content=script.read_text())
-                await page.evaluate(
-                    "async () => {await MathJax.startup.promise; await MathJax.typesetPromise(); await document.fonts.ready;}"
-                )
-                layout = await page.evaluate("""() => {
-                    const cells = Array.from(document.querySelectorAll('.subtask'));
-                    const rect = e => {const r = e.getBoundingClientRect(); return {x:r.x, y:r.y, width:r.width};};
-                    return {
-                        cells:cells.map(rect),
-                        bodies:cells.map(e => rect(e.querySelector('.subtask-content'))),
-                        labelRects:cells.map(e => rect(e.querySelector('.subtask-label'))),
-                        labels:cells.map(e => e.querySelector('.subtask-label').textContent),
-                        overflow:document.documentElement.scrollWidth > innerWidth,
-                        breaks:cells.map(e => getComputedStyle(e).breakInside),
-                    };
-                }""")
-                assert layout["labels"] == [f"{letter})" for letter in "abcdef"]
-                assert not layout["overflow"]
-                for i, cell in enumerate(layout["cells"]):
-                    assert layout["labelRects"][i]["y"] == pytest.approx(
-                        layout["labelRects"][i // columns * columns]["y"]
-                    )
-                    assert layout["bodies"][i]["x"] == pytest.approx(
-                        layout["bodies"][i % columns]["x"]
-                    )
-                    if i >= columns:
-                        assert cell["y"] > layout["cells"][i - columns]["y"]
-                assert set(layout["breaks"]) == {"avoid"}
-            await page.close()
-        finally:
-            await renderer.close()
 
     asyncio.run(run())

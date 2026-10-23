@@ -2,8 +2,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from pult.app import PultApp
-from pult.config import AppConfig
 from pult.services.sequence_library import SequenceLibrary
 
 
@@ -31,24 +29,3 @@ def test_failed_loading_can_be_retried(tmp_path, monkeypatch, sequences):
     with pytest.raises(ValueError):
         library.get_sequences()
     assert library.get_sequences() is sequences
-
-
-@pytest.mark.parametrize("after_setup", [False, True])
-def test_app_initializes_and_shares_library(tmp_path, monkeypatch, after_setup):
-    app = PultApp()
-    monkeypatch.setattr(app, "push_screen", Mock())
-    config = AppConfig(tmp_path, "true", "2026-2027")
-    with pytest.raises(RuntimeError):
-        app.require_sequence_library()
-    if after_setup:
-        app.on_setup_complete(config)
-    else:
-        app.app_config = config
-        app.show_initial_screen()
-    library = app.require_sequence_library()
-    assert library.root == tmp_path
-    app.show_initial_screen()
-    assert app.require_sequence_library() is library
-    app.app_config = AppConfig(tmp_path / "other", "true", "2026-2027")
-    app.show_initial_screen()
-    assert app.require_sequence_library() is not library

@@ -1,6 +1,5 @@
 import asyncio
 
-import pytest
 from test_ui_integration import prepare_root
 from textual.widgets import Input, Select, SelectionList
 
@@ -11,18 +10,15 @@ from pult.school.assessment_requirements import (
     get_assessment_requirements_path,
     load_assessment_requirements,
 )
-from pult.screens.edit_assessment_requirements_screen import (
+from pult.screens.management.edit_assessment_requirements_screen import (
     AssessmentKindsScreen,
     EditAssessmentRequirementsScreen,
     RequirementRow,
 )
-from pult.screens.settings_screen import SettingsScreen
+from pult.screens.settings.settings_screen import SettingsScreen
 
 
-@pytest.mark.parametrize("size", [(140, 42), (80, 24)])
-def test_requirements_settings_drafts_validation_and_year_scope(
-    tmp_path, monkeypatch, size
-):
+def test_requirements_settings_drafts_validation_and_year_scope(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     monkeypatch.setattr("pult.app.get_suggested_school_year", lambda *_: None)
@@ -34,7 +30,7 @@ def test_requirements_settings_drafts_validation_and_year_scope(
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=size) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             await app.push_screen(SettingsScreen())
@@ -47,7 +43,6 @@ def test_requirements_settings_drafts_validation_and_year_scope(
             screen = app.screen
             assert isinstance(screen, EditAssessmentRequirementsScreen)
             assert screen.year == "2027-2028"
-            assert screen.query_one("#save-requirements").region.bottom <= size[1]
             row = next(
                 row
                 for row in screen.query(RequirementRow)

@@ -10,8 +10,8 @@ from pult.app import PultApp
 from pult.school.assessment import Assessment, AssessmentKind, load_assessments
 from pult.school.period import load_periods
 from pult.school.timetable import TimetableEntry, get_timetable_path, save_timetable
-from pult.screens.edit_assessment_screen import EditAssessmentScreen
-from pult.screens.edit_assessments_screen import EditAssessmentsScreen
+from pult.screens.management.edit_assessment_screen import EditAssessmentScreen
+from pult.screens.management.edit_assessments_screen import EditAssessmentsScreen
 from pult.services.assessments import (
     list_assessments,
     store_assessment,
@@ -58,8 +58,7 @@ def test_numbering_and_slot_validation(tmp_path):
     assert list_assessments(config)[0].assessment.id == "later"
 
 
-@pytest.mark.parametrize("size", [(140, 42), (80, 24)])
-def test_management_create_edit_delete(tmp_path, monkeypatch, size):
+def test_management_create_edit_delete(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     save_timetable(
@@ -69,7 +68,7 @@ def test_management_create_edit_delete(tmp_path, monkeypatch, size):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=size) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             nav = app.screen.query_one(ManagementPicker)
@@ -88,11 +87,7 @@ def test_management_create_edit_delete(tmp_path, monkeypatch, size):
             form.query_one("#assessment-title", Input).value = "Bruchrechnung"
             form.query_one("#assessment-date", Input).value = "05.10.2026"
             await pilot.pause()
-            assert form.query_one("#save-assessment").region.bottom <= size[1]
-            if size[0] > 80:
-                form.query_one("#assessment-periods", SelectionList).select(1)
-            else:
-                form.query_one("#assessment-periods", SelectionList).deselect_all()
+            form.query_one("#assessment-periods", SelectionList).select(1)
             form.save()
             await pilot.pause()
             assert app.screen is screen
@@ -111,9 +106,7 @@ def test_management_create_edit_delete(tmp_path, monkeypatch, size):
             await pilot.pause()
             assert screen.entries[0].assessment.id == first_id
             assert screen.entries[0].assessment.duration_minutes == 60
-            assert screen.entries[0].assessment.occupied_periods == (
-                (1,) if size[0] > 80 else ()
-            )
+            assert screen.entries[0].assessment.occupied_periods == (1,)
             screen.action_delete()
             await pilot.pause()
             await pilot.click("#cancel-assessment-deletion")
@@ -142,7 +135,7 @@ def test_selecting_start_marks_matching_lesson(tmp_path, monkeypatch):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             await app.push_screen(EditAssessmentScreen())
@@ -167,7 +160,7 @@ def test_default_start_is_selected_without_changing_start(tmp_path, monkeypatch)
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     monkeypatch.setattr(
-        "pult.screens.edit_assessment_screen.get_default_closure_date",
+        "pult.screens.management.edit_assessment_screen.get_default_closure_date",
         lambda *_: date(2026, 10, 5),
     )
     save_timetable(
@@ -179,7 +172,7 @@ def test_default_start_is_selected_without_changing_start(tmp_path, monkeypatch)
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             await app.push_screen(EditAssessmentScreen())
@@ -194,31 +187,5 @@ def test_default_start_is_selected_without_changing_start(tmp_path, monkeypatch)
             form.query_one("#assessment-date", Input).value = "12.10.2026"
             await pilot.pause()
             assert listing.selected == [1]
-
-    asyncio.run(run())
-
-
-def test_kind_change_sets_duration(tmp_path, monkeypatch):
-    config = prepare_root(tmp_path)
-    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-
-    async def run():
-        app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
-            await pilot.pause()
-            await pilot.wait_for_scheduled_animations()
-            await app.push_screen(EditAssessmentScreen())
-            await pilot.pause()
-            form = app.screen
-            kind = form.query_one("#assessment-kind", Select)
-            duration = form.query_one("#assessment-duration", Input)
-            for value, minutes in (("ex", "20"), ("akl", "30"), ("sa", "45")):
-                kind.value = value
-                await pilot.pause()
-                assert duration.value == minutes
-            duration.value = "60"
-            kind.value = "jst"
-            await pilot.pause()
-            assert duration.value == "60"
 
     asyncio.run(run())

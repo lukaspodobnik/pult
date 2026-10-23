@@ -7,7 +7,7 @@ from textual.widgets import Select
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
 from pult.school.timetable import TimetableEntry
-from pult.screens.edit_timetable_entry_screen import (
+from pult.screens.management.edit_timetable_entry_screen import (
     EditTimetabelEntryScreen,
     TimetableEditAction,
 )

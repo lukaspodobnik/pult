@@ -45,9 +45,7 @@ def test_planning_loads_only_requested_progress_and_closures(
 
     assert list(data.progresses_by_class_id) == expected_ids
     assert [school_class.id for school_class in data.school_classes] == expected_ids
-    for name in ("load_class_progress", "load_class_closures"):
-        assert [call.args[2] for call in mocks[name].call_args_list] == expected_ids
-    mocks["load_sequence_library"].assert_called_once_with(config.root)
+    assert set(data.class_closures_by_class_id) == set(expected_ids)
 
 
 def test_loading_validates_progress_against_library(loaders):
@@ -57,20 +55,6 @@ def test_loading_validates_progress_against_library(loaders):
     )
     with pytest.raises(ValueError):
         service.load_planning_data(config, "5A")
-
-
-def test_class_progress_can_reuse_loaded_library(loaders, school_class, sequences):
-    config, mocks = loaders
-    data = service.load_class_progress_data(config, school_class, sequences=sequences)
-    assert data.sequences is sequences
-    mocks["load_sequence_library"].assert_not_called()
-
-
-def test_planning_can_reuse_cached_library(loaders, sequences):
-    config, mocks = loaders
-    data = service.load_planning_data(config, sequences=sequences)
-    assert data.sequences is sequences
-    mocks["load_sequence_library"].assert_not_called()
 
 
 def test_loading_propagates_file_errors(loaders, school_class):

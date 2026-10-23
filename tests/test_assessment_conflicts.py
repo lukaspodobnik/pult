@@ -21,9 +21,9 @@ from pult.school.calendar import (
     save_school_closures,
 )
 from pult.school.school_class import SchoolClass
-from pult.screens.edit_assessment_screen import EditAssessmentScreen
-from pult.screens.edit_assessments_screen import EditAssessmentsScreen
-from pult.screens.edit_closures_screen import EditClosuresScreen
+from pult.screens.management.edit_assessment_screen import EditAssessmentScreen
+from pult.screens.management.edit_assessments_screen import EditAssessmentsScreen
+from pult.screens.management.edit_closures_screen import EditClosuresScreen
 from pult.services.assessment_conflicts import assessment_conflicts, closure_conflicts
 from pult.services.closures import ScopedClosure
 
@@ -85,7 +85,7 @@ def test_ui_warns_from_both_sides_and_clears_marker(tmp_path, monkeypatch):
     async def run():
         app = PultApp()
         notices = []
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             monkeypatch.setattr(

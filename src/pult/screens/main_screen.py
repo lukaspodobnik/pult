@@ -48,31 +48,31 @@ from pult.school.assessment_requirements import load_assessment_requirements
 from pult.school.period import load_periods
 from pult.school.school_class import SchoolClass, load_school_classes
 from pult.school.subject import load_subjects
-from pult.screens.add_extra_lesson_screen import (
+from pult.screens.base_screen import PultScreen
+from pult.screens.management.edit_assessments_screen import EditAssessmentsScreen
+from pult.screens.management.edit_classes_screen import EditClassesScreen
+from pult.screens.management.edit_closures_screen import EditClosuresScreen
+from pult.screens.management.edit_timetable_screen import EditTimetableScreen
+from pult.screens.progress.add_extra_lesson_screen import (
     AddExtraLessonScreen,
     ExtraLessonFormResult,
 )
-from pult.screens.base_screen import PultScreen
-from pult.screens.cancel_lesson_screen import CancelLessonScreen
-from pult.screens.confirm_undo_screen import ConfirmUndoScreen
-from pult.screens.curriculum_screen import CurriculumScreen
-from pult.screens.distribution_screen import DistributionScreen
-from pult.screens.edit_assessments_screen import EditAssessmentsScreen
-from pult.screens.edit_classes_screen import EditClassesScreen
-from pult.screens.edit_closures_screen import EditClosuresScreen
-from pult.screens.edit_timetable_screen import EditTimetableScreen
-from pult.screens.lesson_screen import LessonScreen
-from pult.screens.select_next_sequence_screen import (
+from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.confirm_undo_screen import ConfirmUndoScreen
+from pult.screens.progress.distribution_screen import DistributionScreen
+from pult.screens.progress.select_next_sequence_screen import (
     SelectNextSequenceScreen,
 )
-from pult.screens.sequence_library_screen import SequenceLibraryScreen
-from pult.screens.set_active_sequence_screen import (
+from pult.screens.progress.set_active_sequence_screen import (
     ActiveSequenceFormResult,
     SetActiveSequenceScreen,
 )
-from pult.screens.settings_screen import SettingsScreen
-from pult.screens.spontaneous_lesson_screen import SpontaneousLessonScreen
-from pult.screens.teaching_log_screen import TeachingLogScreen
+from pult.screens.progress.spontaneous_lesson_screen import SpontaneousLessonScreen
+from pult.screens.progress.teaching_log_screen import TeachingLogScreen
+from pult.screens.settings.settings_screen import SettingsScreen
+from pult.screens.teaching.curriculum_screen import CurriculumScreen
+from pult.screens.teaching.lesson_screen import LessonScreen
+from pult.screens.teaching.sequence_library_screen import SequenceLibraryScreen
 from pult.services.assessments import complete_assessment, reopen_assessment
 from pult.services.progress import (
     load_class_progress_data,

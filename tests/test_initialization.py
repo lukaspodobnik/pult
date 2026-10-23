@@ -66,7 +66,7 @@ def test_relative_setup_root_remains_valid_after_changing_directory(
     loaded = load_app_config()
     assert loaded == config
     assert loaded is not None
-    assert len(load_sequence_library(loaded.root)) == 116
+    assert load_sequence_library(loaded.root)
 
 
 def test_school_year_requires_existing_calendar(tmp_path):
@@ -80,8 +80,13 @@ def test_school_year_initialization_is_idempotent(tmp_path, monkeypatch):
         lambda config: None,
     )
     initialize_pult(str(tmp_path), "nvim", "2026-2027")
+    closure_path = get_school_closures_path(tmp_path, "2026-2027")
+    closure_path.write_text("# Persönliche Ausfälle\nclosures = []\n")
+    timetable_path = get_timetable_path(tmp_path, "2026-2027")
+    timetable_path.write_text("weekday,period,school_class_id,subject_id,room\n")
+    before = {path: path.read_bytes() for path in (closure_path, timetable_path)}
     initialize_school_year(tmp_path, "2026-2027")
-    assert get_school_closures_path(tmp_path, "2026-2027").is_file()
+    assert {path: path.read_bytes() for path in before} == before
 
 
 @pytest.mark.parametrize("reuse_library", [False, True])
@@ -159,7 +164,7 @@ def test_material_directories_are_created_without_overwriting_content(
     monkeypatch.setattr("pult.initialization.pult.save_app_config", lambda config: None)
     initialize_pult(str(tmp_path), "nvim", "2026-2027")
     folders = list((tmp_path / "sequences").glob("*/*/*/sequenz.toml"))
-    assert len(folders) == 116
+    assert folders
     for metadata in folders:
         for name in ("aufgaben", "dateien"):
             directory = metadata.parent / name

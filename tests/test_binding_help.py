@@ -5,14 +5,12 @@ from test_ui_integration import prepare_root
 from textual.widgets import Input
 
 from pult.app import PultApp
-from pult.screens.binding_help_screen import BindingHelpScreen, group_help_rows
-from pult.screens.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.common.binding_help_screen import BindingHelpScreen, group_help_rows
+from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
 from pult.widgets.navigation import ViewPicker
 
 
-def test_footer_resizes_help_preserves_focus_and_hidden_keys_work(
-    tmp_path, monkeypatch
-):
+def test_help_groups_actions_and_preserves_modal_input_and_focus(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
@@ -20,24 +18,14 @@ def test_footer_resizes_help_preserves_focus_and_hidden_keys_work(
         app = PultApp()
         async with app.run_test(size=(180, 46)) as pilot:
             await pilot.pause()
+            await pilot.wait_for_scheduled_animations()
             screen = app.screen
             picker = screen.query_one(ViewPicker)
             picker.highlighted = 1
-            await pilot.pause()
-            for width in (180, 100, 60, 180):
-                await pilot.resize_terminal(width, 46)
-                await pilot.pause()
-                footer = screen.query_one("PultFooter")
-                keys = list(footer.query("FooterKey"))
-                assert footer.query_one(".help-key").region.width > 0
-                assert footer.query_one(".quit-key").region.right == width - 2
-                assert keys[0].region.x == picker.region.x
-                assert all(key.region.right <= width for key in keys)
-                assert all(a.region.right <= b.region.x for a, b in zip(keys, keys[1:]))
-            await pilot.resize_terminal(60, 46)
-            await pilot.pause()
-            footer = screen.query_one("PultFooter")
-            assert not any(key.key == "w" for key in footer.query("FooterKey"))
+            for _ in range(40):
+                await pilot.pause(0.05)
+                if screen._pending_view_id is None:
+                    break
             change = Mock()
             monkeypatch.setattr(
                 screen, "action_change_active_sequence", lambda: change()

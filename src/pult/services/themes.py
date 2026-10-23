@@ -6,7 +6,7 @@ from typing import Any
 from textual.color import Color
 from textual.theme import Theme
 
-from pult.services.document_callouts import resolve_callout_colors
+from pult.services.documents.document_callouts import resolve_callout_colors
 
 PULT_PALETTE = {
     "mode": "dark",

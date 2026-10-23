@@ -20,10 +20,10 @@ import pult.config.app_config as config_module
 import pult.services.omarchy_theme as theme_module
 from pult.app import PultApp
 from pult.curriculum.sequence import load_sequence_library
-from pult.screens.about_screen import AboutScreen
+from pult.screens.common.about_screen import AboutScreen
 from pult.screens.main_screen import MainScreen
-from pult.screens.renderer_setup_screen import RendererSetupScreen
-from pult.screens.setup_pult_screen import SetupScreen
+from pult.screens.settings.renderer_setup_screen import RendererSetupScreen
+from pult.screens.setup.setup_pult_screen import SetupScreen
 
 
 async def smoke(app: PultApp, root: Path) -> None:

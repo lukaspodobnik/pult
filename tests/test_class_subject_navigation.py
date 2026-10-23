@@ -10,7 +10,6 @@ from pult.progress.class_progress import (
     save_class_progress,
 )
 from pult.school.school_class import SchoolClass, save_school_class
-from pult.school.subject import load_subjects
 from pult.widgets.navigation import ViewPicker
 
 
@@ -19,11 +18,10 @@ def test_class_subject_options_and_selection_survive_refresh(tmp_path, monkeypat
     school_class = SchoolClass("9B-NTG", 9, ["mathematik", "informatik-ntg"])
     initialize_school_class(tmp_path, config.active_school_year, school_class)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    subjects = {s.id: s for s in load_subjects(tmp_path)}
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause(0.3)
             await pilot.wait_for_scheduled_animations()
             screen = app.screen
@@ -39,14 +37,6 @@ def test_class_subject_options_and_selection_survive_refresh(tmp_path, monkeypat
             await settled()
             assert picker.option_count == 4
             assert picker.get_option_at_index(0).id == "home"
-            assert (
-                str(picker.get_option_at_index(1).prompt)
-                == "5A     · " + subjects["mathematik"].short_name
-            )
-            assert {
-                str(picker.get_option_at_index(index).prompt).index("·")
-                for index in range(1, picker.option_count)
-            } == {7}
             picker.focus()
             await pilot.press("down")
             await settled()

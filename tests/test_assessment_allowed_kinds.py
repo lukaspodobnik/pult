@@ -17,8 +17,8 @@ from pult.school.assessment_requirements import (
     load_assessment_requirements,
     save_assessment_requirements,
 )
-from pult.screens.edit_assessment_screen import EditAssessmentScreen
-from pult.screens.edit_assessments_screen import EditAssessmentsScreen
+from pult.screens.management.edit_assessment_screen import EditAssessmentScreen
+from pult.screens.management.edit_assessments_screen import EditAssessmentsScreen
 from pult.services.assessments import (
     allowed_assessment_kinds,
     assessment_kind_issue,
@@ -87,7 +87,7 @@ def test_ui_marks_existing_and_requires_explicit_correction(tmp_path, monkeypatc
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             await app.push_screen(EditAssessmentsScreen())

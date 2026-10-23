@@ -6,7 +6,7 @@ from pult.config.app_config import validate_export_author
 from pult.initialization.school_year import initialize_school_year
 from pult.school.calendar import load_school_calendar
 from pult.school.school_year import get_school_year_options
-from pult.services.document_fonts import validate_document_font
+from pult.services.documents.document_fonts import validate_document_font
 
 EDITOR_OPTIONS = [
     ("Neovim (btw)", "nvim"),

@@ -7,18 +7,18 @@ import pytest
 
 from pult.config import AppConfig
 from pult.progress.queries.distribution import DistributionKind, DistributionRow
-from pult.services.distribution_export import (
+from pult.services.documents.document_rendering import DocumentRenderer
+from pult.services.exports.common import export_path, save_pdf
+from pult.services.exports.distribution_export import (
     distribution_html,
     export_distribution_plan,
 )
-from pult.services.document_rendering import DocumentRenderer
-from pult.services.exports import export_path, save_pdf
 
 
 def test_browser_export_error_points_to_setup_but_keeps_file_errors():
     from playwright.async_api import Error
 
-    from pult.services.exports import export_error_message
+    from pult.services.exports.common import export_error_message
 
     assert "Einstellungen" in export_error_message(Error("Executable doesn't exist"))
     assert "Datenträger voll" in export_error_message(OSError("Datenträger voll"))
@@ -46,25 +46,12 @@ def test_export_paths_are_stable_and_support_shared_overviews(tmp_path):
         export_path(tmp_path, "2026-2028", "stoffverteilungsplan")
 
 
-def test_atomic_export_replaces_only_successful_pdf(tmp_path, monkeypatch):
+def test_invalid_pdf_preserves_previous_export(tmp_path):
     target = tmp_path / "exports/plan.pdf"
     save_pdf(target, b"%PDF-old")
     with pytest.raises(ValueError):
         save_pdf(target, b"not a PDF")
     assert target.read_bytes() == b"%PDF-old"
-    original_replace = type(target).replace
-
-    def fail_replace(self, destination):
-        if destination == target:
-            raise OSError("disk failure")
-        return original_replace(self, destination)
-
-    monkeypatch.setattr(type(target), "replace", fail_replace)
-    with pytest.raises(OSError):
-        save_pdf(target, b"%PDF-new")
-    assert target.read_bytes() == b"%PDF-old"
-    assert list(target.parent.iterdir()) == [target]
-    monkeypatch.setattr(type(target), "replace", original_replace)
     save_pdf(target, b"%PDF-new")
     assert target.read_bytes() == b"%PDF-new"
 

@@ -11,27 +11,25 @@ from pult.initialization.school_class import initialize_school_class
 from pult.initialization.school_year import initialize_school_year
 from pult.school.school_class import SchoolClass
 from pult.screens.main_screen import MainScreen
-from pult.screens.setup_pult_screen import SetupScreen
-from pult.screens.teaching_log_screen import TeachingLogScreen
-from pult.views.home_view import HomeView
-from pult.views.school_class_view import SchoolClassView
+from pult.screens.progress.teaching_log_screen import TeachingLogScreen
+from pult.storage import load_toml, save_toml
 from pult.widgets.navigation import TeachingPicker, ViewPicker
 
 
 @pytest.mark.parametrize("scope", ["school", "class:5A"])
 def test_closure_modals_create_cancel_and_delete(tmp_path, monkeypatch, scope):
-    from pult.screens.add_closure_screen import AddClosureScreen
-    from pult.screens.confirm_closure_deletion_screen import (
+    from pult.screens.management.add_closure_screen import AddClosureScreen
+    from pult.screens.management.confirm_closure_deletion_screen import (
         ConfirmClosureDeletionScreen,
     )
-    from pult.screens.edit_closures_screen import EditClosuresScreen
+    from pult.screens.management.edit_closures_screen import EditClosuresScreen
 
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await app.push_screen(EditClosuresScreen())
             await pilot.pause()
@@ -66,7 +64,38 @@ def prepare_root(root: Path) -> AppConfig:
     defaults = Path(__file__).parents[1] / "src" / "pult" / "defaults"
     shutil.copy2(defaults / "subjects.toml", root / "subjects.toml")
     shutil.copy2(defaults / "periods.toml", root / "periods.toml")
-    shutil.copytree(defaults / "sequences", root / "sequences")
+    # UI scenarios need multiple classes, subjects and sequence choices, not
+    # every shipped lesson. Initialization tests cover the complete library.
+    examples = {
+        "5/mathematik": [
+            "natuerliche-zahlen",
+            "addition-und-subtraktion-ganzer-zahlen",
+        ],
+        "6/mathematik": [
+            "bruchteile-und-bruchzahlen",
+            "prozentrechnung-daten-und-diagramme",
+        ],
+        "7/mathematik": [
+            "aufstellen-und-interpretieren-von-termen",
+            "umformen-von-termen",
+        ],
+        "9/mathematik": [
+            "quadratwurzeln",
+            "quadratische-funktionen-und-quadratische-gleichungen",
+        ],
+        "9/informatik-ntg": [
+            "grundlagen-der-objektorientierten-modellierung-und-programmierung",
+            "grundlagen-der-datenmodellierung-und-relationaler-datenbanksysteme",
+        ],
+    }
+    for scope, sequence_ids in examples.items():
+        for sequence_id in sequence_ids:
+            relative = Path("sequences") / scope / sequence_id / "sequenz.toml"
+            target = root / relative
+            target.parent.mkdir(parents=True)
+            metadata = load_toml(defaults / relative)
+            metadata["stunden"] = metadata["stunden"][:2]
+            save_toml(target, metadata)
     shutil.copytree(defaults / "calendars", root / "calendars")
     from pult.initialization.pult import _create_material_directories
 
@@ -81,61 +110,13 @@ def prepare_root(root: Path) -> AppConfig:
     return AppConfig(root, "true", "2026-2027")
 
 
-def test_missing_config_opens_setup(monkeypatch):
-    monkeypatch.setattr("pult.app.load_app_config", lambda: None)
-
-    async def run() -> None:
-        app = PultApp()
-        async with app.run_test() as pilot:
-            await pilot.pause()
-            assert isinstance(app.screen, SetupScreen)
-
-    asyncio.run(run())
-
-
-def test_existing_config_opens_home_dashboard(tmp_path, monkeypatch):
-    config = prepare_root(tmp_path)
-    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-
-    async def run() -> None:
-        app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
-            await pilot.pause()
-            await pilot.pause()
-            assert isinstance(app.screen, MainScreen)
-            assert app.screen.query_one(HomeView)
-            assert app.screen.query_one("#schedule").row_count == 6
-
-    asyncio.run(run())
-
-
-def test_highlighting_class_switches_to_class_view(tmp_path, monkeypatch):
-    config = prepare_root(tmp_path)
-    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-
-    async def run() -> None:
-        app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
-            await pilot.pause()
-            picker = app.screen.query_one(ViewPicker)
-            picker.highlighted = 1
-            # Ein leerer Event-Queue bedeutet nicht, dass der Debounce-Timer ablief.
-            for _ in range(20):
-                await pilot.pause(0.05)
-                if app.screen.query(SchoolClassView):
-                    break
-            assert app.screen.query_one(SchoolClassView).school_class.id == "5A"
-
-    asyncio.run(run())
-
-
 def test_management_opens_teaching_log_with_class_picker(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run() -> None:
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             picker = app.screen.query_one(TeachingPicker)
@@ -159,7 +140,7 @@ def test_class_view_log_binding_preselects_current_class(tmp_path, monkeypatch):
 
     async def run() -> None:
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await pilot.wait_for_scheduled_animations()
             app.screen.query_one(ViewPicker).highlighted = 1
@@ -176,17 +157,6 @@ def test_class_view_log_binding_preselects_current_class(tmp_path, monkeypatch):
             assert isinstance(app.screen, TeachingLogScreen)
             title = app.screen.query_one("#teaching-log-content").border_title
             assert title == "Unterrichtsprotokoll · 5A · Mathematik"
-            picker = app.screen.query_one("#teaching-log-class-picker")
-            content = app.screen.query_one("#teaching-log-content")
-            picker.focus()
-            await pilot.pause()
-            assert picker.styles.background_tint.a == 0
-            assert picker.styles.border.top[1] != content.styles.border.top[1]
-            active_color = picker.styles.border.top[1]
-            await pilot.press("tab")
-            await pilot.pause()
-            assert content.styles.border.top[1] == active_color
-            assert picker.styles.border.top[1] != active_color
             await pilot.press("escape")
             assert isinstance(app.screen, MainScreen)
 

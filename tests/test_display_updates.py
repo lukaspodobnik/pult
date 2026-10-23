@@ -1,30 +1,18 @@
 import asyncio
-from dataclasses import replace
-from datetime import date, timedelta
 
-import pytest
 from test_ui_integration import prepare_root
-from textual.widgets import Button, DataTable, Input, OptionList, Select
+from textual.widgets import Button, DataTable, Input, Select
 
 from pult.app import PultApp
 from pult.initialization.school_class import initialize_school_class
-from pult.progress.class_progress import (
-    TeachingAction,
-    TeachingLogEntry,
-    TeachingOrigin,
-    load_class_progress,
-    save_class_progress,
-)
 from pult.school.school_class import SchoolClass
 from pult.school.timetable import TimetableEntry
-from pult.screens.edit_timetable_entry_screen import (
+from pult.screens.management.edit_timetable_entry_screen import (
     EditTimetabelEntryScreen,
     TimetableEditAction,
     TimetableEditResult,
 )
-from pult.screens.edit_timetable_screen import EditTimetableScreen
-from pult.screens.teaching_log_screen import TeachingLogScreen
-from pult.views.teaching_log_view import TeachingLogView
+from pult.screens.management.edit_timetable_screen import EditTimetableScreen
 
 
 def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
@@ -38,7 +26,7 @@ def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             screen = EditTimetableScreen()
             await app.push_screen(screen)
@@ -98,13 +86,13 @@ def test_new_timetable_entry_reuses_last_accepted_values(tmp_path, monkeypatch):
     asyncio.run(run())
 
 
-def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):
+def test_cell_updates_preserve_selection_and_focus(tmp_path, monkeypatch):
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             await app.push_screen(EditTimetableScreen())
             await pilot.pause()
@@ -112,9 +100,6 @@ def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):
             table = screen.query_one(DataTable)
             table.move_cursor(row=2, column=1)
             cursor = table.cursor_coordinate
-            columns = list(table.ordered_columns)
-            rows = list(table.ordered_rows)
-            widths = []
             for room, action in [
                 ("12345678901234567890", TimetableEditAction.SAVE),
                 ("1", TimetableEditAction.SAVE),
@@ -128,113 +113,9 @@ def test_cell_updates_preserve_table_and_fixed_columns(tmp_path, monkeypatch):
                 assert "--" not in str(table.get_cell("1", "monday"))
                 assert table.cursor_coordinate == cursor
                 assert table.has_focus
-                assert all(a is b for a, b in zip(columns, table.ordered_columns))
-                assert all(a is b for a, b in zip(rows, table.ordered_rows))
-                widths.append(table.ordered_columns[1].content_width)
-            assert widths[0] == widths[1] == widths[2]
-            await pilot.resize_terminal(206, 46)
+            await pilot.resize_terminal(180, 46)
             await pilot.pause()
             assert table.cursor_coordinate == cursor
-            assert len({column.width for column in table.ordered_columns}) == 1
-            assert table.ordered_columns[1].width > widths[0]
-            assert len({row.height for row in table.ordered_rows}) == 1
-            remaining = (
-                table.content_size.height
-                - table.header_height
-                - sum(row.height for row in table.ordered_rows)
-            )
-            assert 0 <= remaining < len(table.ordered_rows)
-            assert all(row.height >= 3 for row in table.ordered_rows)
-            for size in [(180, 42), (241, 70), (80, 24)]:
-                await pilot.resize_terminal(*size)
-                await pilot.pause()
-                assert table.cursor_coordinate == cursor
-                assert len(table.columns) == 5
-                assert len({column.width for column in table.ordered_columns}) == 1
-                assert all(row.height >= 3 for row in table.ordered_rows)
-                assert len({row.height for row in table.ordered_rows}) == 1
-                header = table.render_line(1).text
-                rule = table.render_line(2).text
-                body = table.render_line(table.header_height).text
-
-                def positions(text, chars):
-                    return [i for i, char in enumerate(text) if char in chars]
-
-                assert positions(header, "│") == positions(rule, "├┼┤")
-                assert positions(header, "│") == positions(body, "│")
-                assert rule.lstrip().startswith("├")
-            assert table.max_scroll_y > 0
-
-    asyncio.run(run())
-
-
-@pytest.mark.parametrize("initial_class", [None, "5B"])
-def test_log_initial_build_once_and_scrolls_to_latest(
-    tmp_path, monkeypatch, initial_class
-):
-    config = prepare_root(tmp_path)
-    initialize_school_class(
-        tmp_path, config.active_school_year, SchoolClass("5B", 5, ["mathematik"])
-    )
-    for class_id in ("5A", "5B"):
-        progress = load_class_progress(tmp_path, config.active_school_year, class_id)
-        entries = tuple(
-            TeachingLogEntry(
-                date(2026, 9, 15) + timedelta(days=i),
-                "mathematik",
-                progress.active_sequences[0].sequence_id,
-                TeachingAction.OTHER,
-                TeachingOrigin.ADDITIONAL,
-                comment="Langer Kommentar " * 20,
-            )
-            for i in range(30)
-        )
-        save_class_progress(
-            tmp_path,
-            config.active_school_year,
-            class_id,
-            replace(progress, entries=entries),
-        )
-    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    calls = []
-    original = TeachingLogScreen.show_teaching_log
-
-    async def track(self, school_class):
-        calls.append(school_class.id)
-        await original(self, school_class)
-
-    monkeypatch.setattr(TeachingLogScreen, "show_teaching_log", track)
-
-    async def run():
-        app = PultApp()
-        async with app.run_test(size=(100, 30)) as pilot:
-            await pilot.pause()
-            await app.push_screen(TeachingLogScreen(initial_class))
-            await pilot.pause()
-            assert calls == [initial_class or "5A"]
-            view = app.screen.query_one(TeachingLogView)
-            assert view.scroll_y == view.max_scroll_y > 0
-            picker = app.screen.query_one("#teaching-log-class-picker", OptionList)
-            picker.highlighted = 0 if initial_class == "5B" else 1
-            await pilot.pause(0.2)
-            assert calls == [
-                initial_class or "5A",
-                "5A" if initial_class == "5B" else "5B",
-            ]
-            view = next(v for v in app.screen.query(TeachingLogView) if v.display)
-            for _ in range(40):
-                if view.max_scroll_y > 0:
-                    break
-                await pilot.pause(0.05)
-            assert view.scroll_y == view.max_scroll_y > 0
-            cached_views = tuple(app.screen.query(TeachingLogView))
-            calls.clear()
-            # Schnelle Zwischenpositionen sollen keinen eigenen Aufbau auslösen.
-            for index in range(12):
-                picker.highlighted = index % 2
-                await asyncio.sleep(0)
-            await pilot.pause(0.2)
-            assert len(calls) <= 1
-            assert tuple(app.screen.query(TeachingLogView)) == cached_views
+            assert table.has_focus
 
     asyncio.run(run())

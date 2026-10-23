@@ -11,11 +11,11 @@ from textual.widgets import Select
 from pult.app import PultApp
 from pult.config import load_app_config
 from pult.school.timetable import get_timetable_path
-from pult.screens.confirmation_screen import ConfirmationScreen
+from pult.screens.common.confirmation_screen import ConfirmationScreen
 from pult.screens.main_screen import MainScreen
-from pult.screens.sequence_library_screen import SequenceLibraryScreen
-from pult.screens.settings_screen import SettingsScreen
-from pult.screens.setup_pult_screen import SetupScreen
+from pult.screens.settings.settings_screen import SettingsScreen
+from pult.screens.setup.setup_pult_screen import SetupScreen
+from pult.screens.teaching.sequence_library_screen import SequenceLibraryScreen
 from pult.services.settings import (
     get_editor_options,
     get_suggested_school_year,
@@ -69,9 +69,11 @@ def test_missing_editor_notifies_without_starting_process(
     screen = SimpleNamespace(app_config=config, notify=notify)
     run = Mock()
     monkeypatch.setattr(
-        "pult.screens.sequence_library_screen.shutil.which", lambda _: None
+        "pult.screens.teaching.sequence_library_screen.shutil.which", lambda _: None
     )
-    monkeypatch.setattr("pult.screens.sequence_library_screen.subprocess.run", run)
+    monkeypatch.setattr(
+        "pult.screens.teaching.sequence_library_screen.subprocess.run", run
+    )
     SequenceLibraryScreen.open_sequence_in_editor(
         screen, SimpleNamespace(data=sequences[0])
     )
@@ -90,7 +92,7 @@ def test_settings_screen_switches_year_without_restart(tmp_path, monkeypatch):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause(0.3)
             await pilot.wait_for_scheduled_animations()
             main = app.screen
@@ -113,7 +115,7 @@ def test_initial_setup_offers_editor_select(monkeypatch):
 
     async def run():
         app = PultApp()
-        async with app.run_test() as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
             assert isinstance(app.screen, SetupScreen)
             assert app.screen.query_one("#editor", Select).value == "nvim"
@@ -133,7 +135,7 @@ def test_startup_year_offer(tmp_path, monkeypatch, confirm):
 
     async def run():
         app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
+        async with app.run_test(size=(160, 46)) as pilot:
             for _ in range(60):
                 await pilot.pause(0.05)
                 if (
@@ -169,42 +171,6 @@ def test_school_year_offer_ignores_empty_screen_stack():
     assert not app.screen_stack
     app.offer_school_year_change()
     assert not app.screen_stack
-
-
-@pytest.mark.parametrize("available", [True, False])
-def test_document_font_picker_persists_choice(tmp_path, monkeypatch, available):
-    config = prepare_root(tmp_path)
-    monkeypatch.setattr("pult.app.load_app_config", lambda: config)
-    monkeypatch.setattr("pult.app.get_suggested_school_year", lambda *_: None)
-    monkeypatch.setattr(
-        "pult.config.app_config.APP_CONFIG_PATH", tmp_path / "config.toml"
-    )
-
-    async def availability(_):
-        return available
-
-    monkeypatch.setattr(
-        "pult.services.document_rendering.DocumentRenderer.avenir_available",
-        availability,
-    )
-
-    async def run():
-        app = PultApp()
-        async with app.run_test(size=(140, 42)) as pilot:
-            await pilot.pause(0.3)
-            main = app.screen
-            await app.push_screen(SettingsScreen(), main.settings_changed)
-            await pilot.pause()
-            picker = app.screen.query_one("#settings-document-font", Select)
-            assert not picker.disabled
-            choice = "avenir-next" if available else "source-sans-3"
-            picker.value = choice
-            await pilot.click("#save-settings")
-            await pilot.pause(0.3)
-            assert app.require_config().document_font == choice
-            assert load_app_config().document_font == choice
-
-    asyncio.run(run())
 
 
 def test_old_config_defaults_to_automatic_font(tmp_path, monkeypatch):

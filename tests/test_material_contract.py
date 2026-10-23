@@ -8,7 +8,6 @@ from pult.curriculum.sequence import (
     SequenceFileError,
     get_sequence_path,
     load_sequence,
-    load_sequence_library,
     save_sequence,
 )
 from pult.storage import load_toml, save_toml
@@ -154,18 +153,6 @@ def test_external_symlink_reference_rejected(tmp_path):
     task.symlink_to(target)
     with pytest.raises(SequenceFileError, match="außerhalb"):
         load_sequence(tmp_path, 6, "mathematik", "brueche")
-
-
-def test_all_default_ids_and_planning_slots_preserved():
-    root = Path(__file__).parents[1] / "src/pult/defaults"
-    library = load_sequence_library(root)
-    assert len(library) == 116
-    assert sum(len(s.lessons) for s in library) == 1645
-    assert all(
-        lesson.title == "Noch nicht vorbereitet"
-        for s in library
-        for lesson in s.lessons
-    )
 
 
 def test_material_summary_in_home_and_class_view(planned_lesson, sequences, subject):

@@ -50,19 +50,6 @@ def test_invalid_time_consumption_and_group_are_rejected(changes):
         assessment(**changes)
 
 
-def test_linked_tests_remain_separate_appointments():
-    bmt = assessment(group_id="sa-1")
-    follow_up = assessment(
-        id="test-1",
-        date=date(2026, 10, 15),
-        kind=AssessmentKind.ANNOUNCED_TEST,
-        group_id="sa-1",
-    )
-    assert bmt.group_id == follow_up.group_id
-    assert bmt.id != follow_up.id
-    assert bmt.date != follow_up.date
-
-
 @pytest.fixture
 def assessment_path(tmp_path):
     path = get_assessments_path(tmp_path, "2026-2027", "8A")

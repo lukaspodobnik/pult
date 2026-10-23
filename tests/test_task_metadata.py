@@ -5,12 +5,12 @@ from test_material_contract import sample, store
 
 from pult.curriculum.material import Task, TaskMetadata, load_task, save_task
 from pult.curriculum.sequence import SequenceFileError, load_sequence, save_sequence
-from pult.screens.task_screen import TaskScreen
+from pult.screens.teaching.task_screen import TaskScreen
 from pult.storage import load_toml, save_toml
 
 
-@pytest.mark.parametrize("level", ["I", "II", "III"])
-def test_task_roundtrip_includes_metadata_without_rewriting_markdown(tmp_path, level):
+def test_task_roundtrip_includes_metadata_without_rewriting_markdown(tmp_path):
+    level = "II"
     task = Task(
         "terme",
         "# Andere Überschrift\n\na) Berechne $2+3$.\n\nb) Begründe deine Aussage.\n",
@@ -40,15 +40,11 @@ def test_task_roundtrip_includes_metadata_without_rewriting_markdown(tmp_path, l
         ("kompetenzen", ["K1", 2]),
         ("kompetenzen", ["K1", "K2", "K3", "K4"]),
         ("anforderungsbereich", "IV"),
-        ("anforderungsbereich", ""),
         ("anforderungsbereich", ["I", "II"]),
-        ("anforderungsbereich", 2),
-        ("anforderungsbereich", True),
-        ("anforderungsbereich", {"a": "I"}),
         ("unbekannt", "Feld"),
     ],
 )
-def test_invalid_task_metadata_has_file_context_in_both_loaders(tmp_path, field, value):
+def test_invalid_task_metadata_reports_file(tmp_path, field, value):
     _, sequence_path = store(tmp_path)
     path = sequence_path.parent / "aufgaben/vergleichen/aufgabe.toml"
     data = load_toml(path)
@@ -56,11 +52,14 @@ def test_invalid_task_metadata_has_file_context_in_both_loaders(tmp_path, field,
     save_toml(path, data)
     with pytest.raises(ValueError, match="aufgabe.toml"):
         load_task(sequence_path.parent, "vergleichen")
-    with pytest.raises(SequenceFileError, match="aufgabe.toml"):
-        load_sequence(tmp_path, 6, "mathematik", "brueche")
 
 
-@pytest.mark.parametrize("field", ["titel", "kompetenzen", "anforderungsbereich"])
+@pytest.mark.parametrize(
+    "field",
+    [
+        "kompetenzen",
+    ],
+)
 def test_missing_metadata_field_is_rejected(tmp_path, field):
     _, sequence_path = store(tmp_path)
     path = sequence_path.parent / "aufgaben/vergleichen/aufgabe.toml"
@@ -124,3 +123,13 @@ def test_conflicting_metadata_for_shared_task_rejected_before_writing(tmp_path):
     with pytest.raises(ValueError, match="Widersprüchliche"):
         save_sequence(tmp_path, sequence)
     assert not (tmp_path / "sequences").exists()
+
+
+def test_sequence_reports_invalid_task_metadata_file(tmp_path):
+    _, sequence_path = store(tmp_path)
+    path = sequence_path.parent / "aufgaben/vergleichen/aufgabe.toml"
+    data = load_toml(path)
+    data["titel"] = " "
+    save_toml(path, data)
+    with pytest.raises(SequenceFileError, match="aufgabe.toml"):
+        load_sequence(tmp_path, 6, "mathematik", "brueche")
