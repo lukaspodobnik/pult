@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import nullcontext
 from pathlib import Path
 from types import SimpleNamespace
@@ -41,6 +42,7 @@ class RecordingRenderer:
         self.block = None
         self.started = asyncio.Event()
         self.cancelled = asyncio.Event()
+        self.memory_only = False
 
     async def render(
         self, source, path, directory, width, font_size, *colors, **kwargs
@@ -57,6 +59,10 @@ class RecordingRenderer:
         metadata = PngInfo()
         metadata.add_text(SEPARATOR_Y, "800")
         Image.new("RGB", (width, 1600), colors[0]).save(target, pnginfo=metadata)
+        if self.memory_only:
+            data = target.read_bytes()
+            target.unlink()
+            return data
         return target
 
     async def close(self):
@@ -110,12 +116,14 @@ def ready(screen, lesson_id):
     )
 
 
-def test_neighbours_reuse_and_bounded_views(tmp_path, monkeypatch):
+@pytest.mark.parametrize("memory_only", [False, True])
+def test_neighbours_reuse_and_bounded_views(tmp_path, monkeypatch, memory_only):
     _, sequence = setup_lessons(tmp_path, monkeypatch)
 
     async def run():
         app = PultApp()
         renderer = RecordingRenderer(tmp_path)
+        renderer.memory_only = memory_only
         app.document_renderer = renderer
         async with app.run_test(size=(160, 46)) as pilot:
             await pilot.pause()
@@ -141,11 +149,16 @@ def test_neighbours_reuse_and_bounded_views(tmp_path, monkeypatch):
             initial.position_continuation()
             await pilot.pause()
             assert pane.scroll_y == 0
+            cached = initial._cache_path
+            if cached is not None:
+                os.utime(cached, (1, 1))
             picker.highlighted = 3
             await until(lambda: ready(screen, "lesson-3"))
             await pilot.pause()
             assert visible_document(screen) is initial
             assert initial.image_tiles[0][0] is tile
+            if cached is not None:
+                assert cached.stat().st_mtime > 1
             assert pane.scroll_y > 0
             assert app.focused is picker
             screen.action_toggle_material()

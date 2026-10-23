@@ -227,7 +227,10 @@ Die Konfiguration liegt in `~/.config/pult/config.toml`. Der gewählte Datenordn
 
 **Sichere den gesamten Datenordner.** Persönliche Dateien werden bei der Einrichtung
 nicht überschrieben. Der Dokumentcache liegt unter `$XDG_CACHE_HOME/pult/documents`
-bzw. `~/.cache/pult/documents`. Auf Omarchy folgt PULT dem aktuellen Theme;
+bzw. `~/.cache/pult/documents` und bleibt über Neustarts erhalten. PULT begrenzt die
+gespeicherten Dokumentbilder auf 500 MB: Beim Start und nach dem Speichern neuer
+Bilder werden bei Bedarf die am längsten nicht verwendeten gelöscht. Sie werden
+beim nächsten Aufruf neu erzeugt. Auf Omarchy folgt PULT dem aktuellen Theme;
 sonst verwendet es sein dunkles Standardtheme. Das Layout ist für große
 Terminalfenster ausgelegt, etwa 206 × 46 Zeichen.
 

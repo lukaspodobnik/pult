@@ -1,5 +1,6 @@
 """Dokumente in lesbarer Originalgröße, mit gemeinsamem Browser und Cache."""
 
+import io
 import math
 from pathlib import Path
 
@@ -116,6 +117,7 @@ class DocumentViewer(Vertical):
         self.renderer: DocumentRenderer | None = None
         self.signature = None
         self.rendered_signature = None
+        self._cache_path: Path | None = None
         self.render_timer = None
         self.text_mode = False
         self.image_tiles = []
@@ -154,6 +156,8 @@ class DocumentViewer(Vertical):
         self.schedule_render()
         self.position_continuation()
         if self.signature is not None and self.rendered_signature == self.signature:
+            if self._cache_path is not None:
+                DocumentRenderer.touch_cache(self._cache_path)
             self.post_message(self.Ready(self))
 
     def schedule_render(self):
@@ -243,18 +247,27 @@ class DocumentViewer(Vertical):
         body = self.query_one("#document-body", Vertical)
         tiles = []
         separator_row = None
+        cache_path = None
         try:
             if graphics.image_widget() is None or text_mode:
                 widgets = self.fallback_widgets()
             else:
                 cell_width, cell_height = graphics.CELL
                 pixel_width = width * cell_width
-                image_path = await self.render_image(
+                rendered_image = await self.render_image(
                     self.source, self.path, self.planning, signature
                 )
                 if not self.is_mounted or signature != self.signature:
                     return
-                with PILImage.open(image_path) as image:
+                cache_path = (
+                    rendered_image if isinstance(rendered_image, Path) else None
+                )
+                image_source = (
+                    io.BytesIO(rendered_image)
+                    if isinstance(rendered_image, bytes)
+                    else rendered_image
+                )
+                with PILImage.open(image_source) as image:
                     if self.start_at_separator and SEPARATOR_Y in image.info:
                         y = float(image.info[SEPARATOR_Y])
                         if 0 <= y < image.height:
@@ -308,6 +321,7 @@ class DocumentViewer(Vertical):
             self.call_after_refresh(self.position_continuation)
             self.call_after_refresh(self.refresh_corners)
             self.rendered_signature = signature
+            self._cache_path = cache_path
             self.post_message(self.Ready(self))
         except Exception as error:
             if self.is_mounted and signature == self.signature:
@@ -327,6 +341,7 @@ class DocumentViewer(Vertical):
                 self._separator_row = None
                 self.call_after_refresh(self.position_continuation)
                 self.rendered_signature = signature
+                self._cache_path = None
                 self.post_message(self.Ready(self))
 
     def on_markdown_table_of_contents_updated(
@@ -364,7 +379,7 @@ class DocumentViewer(Vertical):
                 middle = pane.scrollable_content_region.height // 2
                 # Use only the document's natural scroll range; no empty tail.
                 target = min(pane.max_scroll_y, max(0, offset + row - middle))
-                pane.scroll_to(y=target, animate=False)
+                pane.scroll_to(y=target, animate=False, immediate=True)
 
     def refresh_corners(self) -> None:
         if not self.is_mounted or not self.display or not self.image_tiles:

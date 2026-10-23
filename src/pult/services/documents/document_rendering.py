@@ -7,6 +7,7 @@ import html
 import io
 import os
 import re
+import stat
 from collections.abc import Callable
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -37,6 +38,7 @@ from pult.services.documents.document_subtasks import SUBTASK_STYLES, subtasks_p
 from pult.storage import save_bytes
 
 SEPARATOR_Y = "pult.separator_y"
+DOCUMENT_CACHE_MAX_BYTES = 500_000_000
 
 
 def highlight_code(code: str, language: str, attributes: str) -> str:
@@ -261,6 +263,48 @@ class DocumentRenderer:
             or Path(os.environ.get("XDG_CACHE_HOME", str(Path.home() / ".cache")))
             / "pult/documents"
         )
+        self.prune_cache()
+
+    @staticmethod
+    def touch_cache(path: Path) -> bool:
+        """Persist last use without creating an empty file on a cache miss."""
+        try:
+            os.utime(path, None)
+        except FileNotFoundError:
+            return False
+        except OSError:
+            # A readable cache hit stays usable even if timestamps are read-only.
+            return path.is_file()
+        return True
+
+    def prune_cache(self, *, protect: Path | None = None) -> None:
+        """Evict least recently used renderer PNGs; leave unrelated files alone."""
+        entries = []
+        try:
+            for path in self.cache.glob("*.png"):
+                if not re.fullmatch(r"[0-9a-f]{64}\.png", path.name):
+                    continue
+                try:
+                    info = path.lstat()
+                except OSError:
+                    continue
+                if stat.S_ISREG(info.st_mode):
+                    entries.append((info.st_mtime_ns, path, info.st_size))
+        except OSError:
+            return
+        total = sum(size for _, _, size in entries)
+        if total <= DOCUMENT_CACHE_MAX_BYTES:
+            return
+        for _, path, size in sorted(entries):
+            if total <= DOCUMENT_CACHE_MAX_BYTES:
+                break
+            if path == protect:
+                continue
+            try:
+                path.unlink(missing_ok=True)
+            except OSError:
+                continue
+            total -= size
 
     async def ensure_browser(self):
         if self.browser is not None and not self.browser.is_connected():
@@ -346,7 +390,7 @@ class DocumentRenderer:
         *,
         font: str = "auto",
         callout_colors: tuple[str, str] | None = None,
-    ) -> Path:
+    ) -> Path | bytes:
         resolved_font = await self.resolve_font(font)
         document = document_html(
             source,
@@ -368,10 +412,10 @@ class DocumentRenderer:
         ).hexdigest()
         target = self.cache / f"{key}.png"
         # Warm documents must not wait behind a background render in Chromium.
-        if target.exists():
+        if self.touch_cache(target):
             return target
         async with self.lock:
-            if target.exists():
+            if self.touch_cache(target):
                 return target
             await self.ensure_browser()
             assert self.browser is not None
@@ -388,7 +432,9 @@ class DocumentRenderer:
                     asyncio.gather(page.close(), rendering, return_exceptions=True)
                 )
 
-    async def _render_png(self, page: Page, document: str, target: Path) -> Path:
+    async def _render_png(
+        self, page: Page, document: str, target: Path
+    ) -> Path | bytes:
         # Offline rendering: never fetch links, remote images, or extra scripts.
         await page.route("**/*", lambda route: route.abort())
         await page.set_content(document, wait_until="load")
@@ -408,7 +454,12 @@ class DocumentRenderer:
                 output = io.BytesIO()
                 image.save(output, format="PNG", pnginfo=metadata)
                 screenshot = output.getvalue()
+        # An individual oversized image can still be displayed, but must not
+        # exceed the disk budget or evict the entire cache.
+        if len(screenshot) > DOCUMENT_CACHE_MAX_BYTES:
+            return screenshot
         save_bytes(target, screenshot)
+        self.prune_cache(protect=target)
 
         return target
 
