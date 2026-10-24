@@ -14,6 +14,11 @@ DistributionView .heading { height: 2; }
 DistributionTable > .distribution-table--border { color: $foreground 20%; }
 DistributionTable > .distribution-table--muted { color: $foreground-muted; }
 DistributionTable > .distribution-table--notes { color: $foreground-muted; }
+DistributionTable > .distribution-table--completed,
+DistributionTable > .distribution-table--assessment-completed { color: $success; text-style: bold; }
+DistributionTable > .distribution-table--continued { color: $accent; text-style: bold; }
+DistributionTable > .distribution-table--cancelled { color: $error; text-style: bold; }
+DistributionTable > .distribution-table--other { text-style: bold; }
 DistributionTable > .distribution-table--assessment { color: $warning; background: $warning 12%; }
 App.-light-mode DistributionTable > .distribution-table--assessment { color: $warning-darken-2; }
 DistributionView .sequence { margin: 1 1 0 1; background: $primary 15%; color: $text-accent; text-style: bold; }

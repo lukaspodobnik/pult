@@ -206,6 +206,13 @@ Prognose folgt dem letzten gebuchten Termin. Fortsetzungen, Spontanunterricht un
 zusätzliche Termine zählen als Unterrichtszeit; Ausfälle und LNWs erhöhen die
 Nummerierung nicht. Jede Sequenz beginnt wieder bei 1.
 
+Eine schmale Symbolspalte zwischen Datum und Stundenthema zeigt die verbuchten
+Aktionen wie in der Tagesübersicht: ✓ für Abschluss und Spontanunterricht, ↻ für
+Fortsetzung und × für protokollierten Ausfall. Geplante und nicht protokollierte
+Stunden bleiben ohne Symbol. Begründungen stehen in den Anmerkungen; beim
+Spontanunterricht bildet die Beschreibung das Stundenthema. Die Symbole erscheinen
+auch im PDF-Export.
+
 Ferien, neue Sequenzen und LNWs sind farblich erkennbar. Auch LNWs anderer Fächer
 oder außerhalb eigener Stunden erscheinen; nur belegte eigene Termine verdrängen
 Unterricht. Anmerkungen stammen aus den vorhandenen Daten, etwa `hinweise` in

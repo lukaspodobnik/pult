@@ -62,6 +62,7 @@ def test_projection_follows_curriculum_and_keeps_all_remaining_dates(data):
     ]
     assert [row.number for row in lessons(data)] == [1, 2, 1]
     assert all(row.projected for row in lessons(data))
+    assert all(row.action is None for row in rows)
     assert [row.title for row in rows if row.kind is Kind.SEQUENCE] == [
         "Natürliche Zahlen (ca. 2 Std.)",
         "Rechenarten (ca. 1 Std.)",
@@ -101,8 +102,14 @@ def test_actual_continuation_cancel_and_completion_use_real_count(data):
     progress = replace(
         data.progresses_by_class_id["5A"],
         entries=(
-            log(date(2026, 9, 7), 1, TeachingAction.CONTINUED),
-            log(date(2026, 9, 7), 2, TeachingAction.CANCELLED, None),
+            replace(
+                log(date(2026, 9, 7), 1, TeachingAction.CONTINUED),
+                comment="Sicherung noch offen",
+            ),
+            replace(
+                log(date(2026, 9, 7), 2, TeachingAction.CANCELLED, None),
+                comment="Klassenversammlung",
+            ),
             log(date(2026, 9, 9), 1, TeachingAction.COMPLETED),
         ),
     )
@@ -114,7 +121,16 @@ def test_actual_continuation_cancel_and_completion_use_real_count(data):
         ("Zahlen runden", 3),
     ]
     assert [row.projected for row in rows] == [False, False, True]
-    assert next(row for row in plan(data) if row.kind is Kind.CANCELLED).number is None
+    assert [row.action for row in rows] == [
+        TeachingAction.CONTINUED,
+        TeachingAction.COMPLETED,
+        None,
+    ]
+    assert rows[0].notes == "Sicherung noch offen"
+    cancelled = next(row for row in plan(data) if row.kind is Kind.CANCELLED)
+    assert cancelled.number is None
+    assert cancelled.action is TeachingAction.CANCELLED
+    assert cancelled.notes == "Klassenversammlung"
 
 
 def test_skipped_lesson_does_not_add_a_date_or_number(data):
@@ -172,10 +188,17 @@ def test_assessments_inside_and_outside_own_lessons_and_other_subject(data):
     lnws = [row for row in rows if row.kind is Kind.ASSESSMENT]
     assert len(lnws) == 4
     assert all(row.number is None for row in lnws)
+    assert all(row.action is None for row in lnws)
     assert lessons(data)[0].date == date(2026, 9, 9)
     assert lessons(data)[0].number == 1
     assert len([row for row in rows if row.date == date(2026, 9, 7)]) == 2
     assert "deutsch" in lnws[-1].notes
+
+    completed = [replace(a, completed_on=a.date) for a in assessments]
+    completed_data = replace(data, assessments_by_class_id={"5A": completed})
+    completed_rows = [r for r in plan(completed_data) if r.kind is Kind.ASSESSMENT]
+    assert len(completed_rows) == 4
+    assert all(r.action is TeachingAction.ASSESSMENT_COMPLETED for r in completed_rows)
 
 
 def test_unrecorded_past_is_not_invented(data):
@@ -188,6 +211,7 @@ def test_unrecorded_past_is_not_invented(data):
         "Nicht protokolliert"
     ] * 2
     assert lessons(data)[0].number == 1
+    assert all(row.action is None for row in plan(data) if row.kind is Kind.UNRECORDED)
 
 
 def test_additional_lesson_preserved_and_future_not_projected_before_it(data):
@@ -209,6 +233,8 @@ def test_additional_lesson_preserved_and_future_not_projected_before_it(data):
         (date(2026, 9, 16), 1),
     ]
     assert lessons(data)[0].notes == "Zusätzlicher Termin"
+    assert lessons(data)[0].action is TeachingAction.COMPLETED
+    assert all(row.action is None for row in lessons(data)[1:])
 
 
 def test_active_sequence_defines_forecast_order(data):
@@ -251,6 +277,17 @@ def test_notes_roundtrip_metadata_assignment_and_validation(tmp_path, sequences)
 def test_notes_come_from_lesson_and_log(data):
     data.sequences[0].lessons[0].notes = "Pausenhof · Freiarbeit"
     assert lessons(data)[0].notes == "Pausenhof · Freiarbeit"
+    progress = replace(
+        data.progresses_by_class_id["5A"],
+        entries=(
+            replace(
+                log(date(2026, 9, 7), 1, TeachingAction.CONTINUED),
+                comment="Sicherung noch offen",
+            ),
+        ),
+    )
+    data = replace(data, progresses_by_class_id={"5A": progress})
+    assert lessons(data)[0].notes == "Pausenhof · Freiarbeit · Sicherung noch offen"
 
 
 @pytest.mark.parametrize("name", ["Buß- und Bettag", "Buß und Bettag"])
@@ -301,6 +338,8 @@ def test_spontaneous_title_real_number_and_unchanged_next_plan_lesson(
         False,
     )
     assert rows[1].notes == ""
+    assert rows[1].action is TeachingAction.OTHER
+    assert rows[2].action is None
     assert (rows[2].date, rows[2].period, rows[2].projected) == (
         date(2026, 9, 9),
         1,

@@ -47,6 +47,7 @@ class DistributionRow:
     sequence_id: str | None = None
     lesson_id: str | None = None
     projected: bool = False
+    action: TeachingAction | None = None
 
 
 def build_distribution_plan(
@@ -173,6 +174,9 @@ def build_distribution_plan(
                         f"{assessment.kind.abbreviation} · {assessment.title}",
                         notes,
                         period=period or None,
+                        action=TeachingAction.ASSESSMENT_COMPLETED
+                        if assessment.completed_on is not None
+                        else None,
                     ),
                 )
             )
@@ -190,6 +194,7 @@ def build_distribution_plan(
                 "Unterricht entfällt",
                 entry.comment,
                 period=entry.period,
+                action=entry.action,
             )
         spontaneous = (
             entry.action is TeachingAction.OTHER
@@ -210,6 +215,7 @@ def build_distribution_plan(
             period=entry.period,
             sequence_id=sequence.id,
             lesson_id=entry.lesson_id,
+            action=entry.action,
         )
 
     day = calendar.first_school_day

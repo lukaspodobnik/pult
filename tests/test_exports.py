@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from pult.config import AppConfig
+from pult.progress.class_progress import TeachingAction
 from pult.progress.queries.distribution import DistributionKind, DistributionRow
 from pult.services.documents.document_rendering import DocumentRenderer
 from pult.services.exports.common import export_path, save_pdf
@@ -96,7 +97,42 @@ def test_pdf_html_preserves_rows_and_escapes_all_user_content():
     assert "Terme (ca. 12 Std.)" in document
     assert "Stand: 11.10.2026, 14:30" in document
     assert "A4 portrait" in document and "table-header-group" in document
-    assert ".assessment td:nth-child(3)" in document
+    assert ".assessment td:nth-child(4)" in document
+    assert '<td colspan="5">HERBSTFERIEN</td>' in document
+
+
+@pytest.mark.parametrize(
+    "action, icon",
+    [
+        (TeachingAction.COMPLETED, "✓"),
+        (TeachingAction.CONTINUED, "↻"),
+        (TeachingAction.CANCELLED, "×"),
+        (TeachingAction.OTHER, "✓"),
+        (TeachingAction.ASSESSMENT_COMPLETED, "✓"),
+        (None, ""),
+    ],
+)
+def test_distribution_pdf_separates_action_from_title_and_notes(action, icon):
+    row = DistributionRow(
+        DistributionKind.LESSON,
+        date(2026, 10, 12),
+        "Zahlen ordnen",
+        'Sicherung <offen> & "Übung"',
+        action=action,
+    )
+    document = distribution_html(
+        (row,),
+        school_class_id="5A",
+        subject_name="Mathematik",
+        school_year="2026-2027",
+        generated_at=datetime(2026, 10, 12, 14, 30),
+    )
+    status_class = f"status {action.value}" if action is not None else "status"
+    assert (
+        f'<td class="{status_class}">{icon}</td><td>Zahlen ordnen</td>'
+        "<td>Sicherung &lt;offen&gt; &amp; &quot;Übung&quot;</td>"
+    ) in document
+    assert '<th aria-label="Status"></th><th>Stundenthema</th>' in document
 
 
 def test_failed_render_preserves_previous_export(tmp_path):

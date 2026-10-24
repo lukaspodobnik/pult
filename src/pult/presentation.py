@@ -3,6 +3,16 @@
 import re
 from datetime import date, datetime
 
+from pult.progress.class_progress import TeachingAction
+
+ACTION_ICONS = {
+    TeachingAction.COMPLETED: "✓",
+    TeachingAction.ASSESSMENT_COMPLETED: "✓",
+    TeachingAction.CONTINUED: "↻",
+    TeachingAction.OTHER: "✓",
+    TeachingAction.CANCELLED: "×",
+}
+
 DATE_INPUT_HINT = "TT.MM.JJJJ"
 UNTITLED_LESSON = "Noch ohne Titel"
 NEXT_LESSON_LABEL = "Nächste Stunde"

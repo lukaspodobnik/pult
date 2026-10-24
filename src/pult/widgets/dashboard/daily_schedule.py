@@ -4,7 +4,7 @@ from textual.app import ComposeResult
 from textual.widgets import Static
 
 from pult.curriculum.sequence import Sequence
-from pult.presentation import UNTITLED_LESSON, WEEKDAY_NAMES
+from pult.presentation import ACTION_ICONS, UNTITLED_LESSON, WEEKDAY_NAMES
 from pult.progress.class_progress import TeachingAction
 from pult.progress.queries import (
     DailyScheduleSummary,
@@ -15,14 +15,6 @@ from pult.school.period import Period
 from pult.school.subject import Subject
 from pult.widgets.capped_text import CappedText
 from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
-
-ACTION_ICONS = {
-    TeachingAction.COMPLETED: "✓",
-    TeachingAction.ASSESSMENT_COMPLETED: "✓",
-    TeachingAction.CONTINUED: "↻",
-    TeachingAction.OTHER: "✓",
-    TeachingAction.CANCELLED: "×",
-}
 
 
 class DailyScheduleRow(Horizontal):

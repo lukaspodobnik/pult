@@ -7,11 +7,11 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.widgets import Static
 
-from pult.presentation import format_compact_date
+from pult.presentation import ACTION_ICONS, format_compact_date
 from pult.progress.queries.distribution import DistributionKind, DistributionRow
 from pult.widgets.scrolling import Vertical, VerticalScroll
 
-HEADINGS = ("Nr.", "Datum", "Stundenthema", "Anmerkungen")
+HEADINGS = ("Nr.", "Datum", "", "Stundenthema", "Anmerkungen")
 SECTION_KINDS = {DistributionKind.SEQUENCE, DistributionKind.HOLIDAY}
 HEADER_BOX = box.Box(str(box.MINIMAL).replace("│", " ").replace("┼", "─"))
 
@@ -38,6 +38,7 @@ class DistributionTable(Static):
         "distribution-table--muted",
         "distribution-table--assessment",
         "distribution-table--notes",
+        *(f"distribution-table--{action.value}" for action in ACTION_ICONS),
     }
 
     def __init__(
@@ -76,9 +77,15 @@ class DistributionTable(Static):
             if row.kind in {DistributionKind.CANCELLED, DistributionKind.UNRECORDED}:
                 style += self.get_component_rich_style("distribution-table--muted")
             notes_style = self.get_component_rich_style("distribution-table--notes")
+            status_style = (
+                self.get_component_rich_style(f"distribution-table--{row.action.value}")
+                if row.action is not None and row.action in ACTION_ICONS
+                else ""
+            )
             values = (
                 str(row.number) if row.number is not None else "—",
                 format_compact_date(row.date),
+                ACTION_ICONS.get(row.action, "") if row.action is not None else "",
                 row.title,
                 row.notes,
             )
@@ -87,12 +94,14 @@ class DistributionTable(Static):
                     Text(
                         " ".join(value.split()),
                         style=(
-                            self.get_component_rich_style(
+                            status_style
+                            if index == 2
+                            else self.get_component_rich_style(
                                 "distribution-table--assessment"
                             )
-                            if index == 2 and row.kind is DistributionKind.ASSESSMENT
+                            if index == 3 and row.kind is DistributionKind.ASSESSMENT
                             else notes_style
-                            if index == 3
+                            if index == 4
                             else ""
                         ),
                         justify="left",
@@ -121,7 +130,7 @@ class DistributionView(Vertical):
     def __init__(self, rows: tuple[DistributionRow, ...]) -> None:
         super().__init__()
         self.rows = rows
-        self.column_widths = (3, 11, 24, 20)
+        self.column_widths = (3, 11, 1, 24, 20)
 
     def compose(self) -> ComposeResult:
         yield DistributionTable(self, heading=True)
@@ -153,19 +162,19 @@ class DistributionView(Vertical):
 
     def update_column_widths(self) -> None:
         body = self.query_one(".distribution-body", VerticalScroll)
-        # Innenpadding: 2; drei Trennlinien und Zellabstände: 9.
-        available = max(34, body.scrollable_content_region.width - 2)
-        flexible = available - 9 - 3 - 11
+        # Innenpadding: 2; vier Trennlinien und Zellabstände: 12.
+        available = max(38, body.scrollable_content_region.width - 2)
+        flexible = available - 12 - 3 - 11 - 1
         # Die vier gewonnenen Zeichen kommen vollständig den Anmerkungen zugute.
         title = max(4, (flexible - 4) * 3 // 5)
-        widths = (3, 11, title, flexible - title)
+        widths = (3, 11, 1, title, flexible - title)
         if widths != self.column_widths:
             self.column_widths = widths
             for table in self.query(DistributionTable):
                 table.refresh(layout=True)
-        # Zwei vorhergehende Zellen, deren Abstände und Trennlinien sowie
+        # Drei vorhergehende Zellen, deren Abstände und Trennlinien sowie
         # das linke Padding der Themenspalte; den Abschnittsrand ausgleichen.
-        title_offset = 1 + sum(self.column_widths[:2]) + 6
+        title_offset = 1 + sum(self.column_widths[:3]) + 9
         for section in self.query(DistributionTableRow):
             section.styles.padding = (
                 0,

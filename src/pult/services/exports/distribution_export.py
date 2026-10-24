@@ -6,7 +6,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from pult.config import AppConfig
-from pult.presentation import format_compact_date, format_school_year
+from pult.presentation import ACTION_ICONS, format_compact_date, format_school_year
 from pult.progress.queries.distribution import DistributionKind, DistributionRow
 from pult.services.documents.document_rendering import DocumentRenderer
 from pult.services.exports.common import export_path, pdf_stylesheet, save_pdf
@@ -28,12 +28,13 @@ def distribution_html(
                 row.title.upper() if row.kind == DistributionKind.HOLIDAY else row.title
             )
             body.append(
-                f'<tr class="{row.kind.value}"><td colspan="4">{escape(title)}</td></tr>'
+                f'<tr class="{row.kind.value}"><td colspan="5">{escape(title)}</td></tr>'
             )
         else:
             cells = (
                 str(row.number) if row.number is not None else "",
                 format_compact_date(row.date),
+                ACTION_ICONS.get(row.action, "") if row.action is not None else "",
                 row.title,
                 row.notes,
             )
@@ -43,13 +44,19 @@ def distribution_html(
                 f'<span class="date-weekday">{escape(weekday)}</span> '
                 f'<span class="date-number">{escape(numeric_date)}</span>'
             )
+            action_class = f" {row.action.value}" if row.action is not None else ""
             body.append(
                 f'<tr class="{row.kind.value}">'
-                + "".join(f"<td>{cell}</td>" for cell in rendered_cells)
+                + "".join(
+                    f'<td class="status{action_class}">{cell}</td>'
+                    if index == 2
+                    else f"<td>{cell}</td>"
+                    for index, cell in enumerate(rendered_cells)
+                )
                 + "</tr>"
             )
     if not rows:
-        body.append('<tr><td colspan="4">Keine Unterrichtstermine vorhanden.</td></tr>')
+        body.append('<tr><td colspan="5">Keine Unterrichtstermine vorhanden.</td></tr>')
     heading = f"{escape(school_class_id)} · {escape(subject_name)}"
     return f"""<!doctype html><html lang="de"><head><meta charset="utf-8">
 <title>Stoffverteilungsplan · {heading}</title><style>
@@ -70,14 +77,18 @@ tr {{ break-inside:avoid; }}
 .sequence,.holiday {{ font-weight:600; break-after:avoid; text-align:center; }}
 .sequence td {{ background:#e6edf3; }}
 .holiday td {{ background:#eeece4; }}
-.assessment td:nth-child(3) {{ background:#f4e3ca; font-weight:600; }}
-td:nth-child(4) {{ color:#59616a; }}
+.assessment td:nth-child(4) {{ background:#f4e3ca; font-weight:600; }}
+td:nth-child(5) {{ color:#59616a; }}
+td.status {{ padding-left:0; padding-right:0; text-align:center; font-weight:600; white-space:nowrap; }}
+.status.completed,.status.assessment-completed {{ color:#238636; }}
+.status.continued {{ color:#2768a8; }}
+.status.cancelled {{ color:#c13c3c; }}
 </style></head><body><h1>Stoffverteilungsplan</h1>
 <p class="meta">{heading} · Schuljahr {escape(format_school_year(school_year))}<br>
 Stand: {generated_at.strftime("%d.%m.%Y, %H:%M")}</p>
 <table><colgroup><col style="width:6mm"><col style="width:25mm">
-<col style="width:60%"><col></colgroup>
-<thead><tr><th>Nr</th><th>Datum</th><th>Stundenthema</th><th>Anmerkungen</th></tr></thead>
+<col style="width:5mm"><col style="width:60%"><col></colgroup>
+<thead><tr><th>Nr</th><th>Datum</th><th aria-label="Status"></th><th>Stundenthema</th><th>Anmerkungen</th></tr></thead>
 <tbody>{"".join(body)}</tbody></table></body></html>"""
 
 
