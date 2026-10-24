@@ -1,6 +1,9 @@
+from rich.table import Table
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.widgets import Static
 
+from pult.curriculum.material import material_entries
 from pult.presentation import (
     NO_NEXT_LESSON,
     UNTITLED_LESSON,
@@ -125,6 +128,19 @@ class SubjectProgressBlock(Vertical):
                 next_lesson.border_title = "ALS NÄCHSTES"
                 with next_lesson:
                     yield from self._compose_texts(self._next_lesson_texts())
+                    material = self._next_lesson_material()
+                    materials = Vertical(classes="next-lesson-materials")
+                    materials.display = bool(material)
+                    with materials:
+                        yield Static(
+                            "Materialien", classes="next-lesson-material-label"
+                        )
+                        items = VerticalScroll(classes="next-lesson-material-list")
+                        items.can_focus = False
+                        with items:
+                            yield Static(
+                                material, classes="next-lesson-material", markup=False
+                            )
                 last = Vertical(classes="class-last-entry")
                 last.border_title = "ZULETZT"
                 with last:
@@ -222,6 +238,22 @@ class SubjectProgressBlock(Vertical):
         texts["next-lesson-title"] = planned_lesson.lesson.title or UNTITLED_LESSON
         return texts
 
+    def _next_lesson_material(self) -> Table | str:
+        planned = next_event(
+            self.summary.next_planned_lesson, self.summary.next_scheduled_assessment
+        )
+        if planned is None or isinstance(planned, PlannedAssessment):
+            return ""
+        entries = material_entries(planned.lesson.material_markdown())
+        if not entries:
+            return "Keine Materialien vorgesehen"
+        table = Table.grid(padding=0, expand=True)
+        table.add_column(width=2)
+        table.add_column(ratio=1)
+        for entry in entries:
+            table.add_row("•", Text(entry.label))
+        return table
+
     def _last_entry_texts(self) -> dict[str, str]:
         texts: dict[str, str] = dict.fromkeys(
             (
@@ -270,6 +302,9 @@ class SubjectProgressBlock(Vertical):
         self.summary = summary
         assessment = self.query_one(".class-assessment", Static)
         assessment.update(self._assessment_text())
+        material = self._next_lesson_material()
+        self.query_one(".next-lesson-materials").display = bool(material)
+        self.query_one(".next-lesson-material", Static).update(material)
         for name, text in {
             **self._next_lesson_texts(),
             **self._last_entry_texts(),

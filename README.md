@@ -71,7 +71,8 @@ je Fach die Sequenzen mit Planfortschritt und tatsächlich gehaltenen Stunden.
 Abschlüsse, Fortsetzungen, Spontanunterricht und zusätzliche Unterrichtstermine
 zählen zur gehaltenen Zeit; übersprungene Stunden, Ausfälle und Leistungsnachweise
 nicht. **Ausblick** zeigt die Stundendifferenz nach aktuellem Plan und den nächsten
-offenen Leistungsnachweis. **Als Nächstes** nennt den nächsten Unterrichtstermin,
+offenen Leistungsnachweis. **Als Nächstes** nennt den nächsten Unterrichtstermin
+mit den benötigten Materialien oder dem Hinweis „Keine Materialien vorgesehen“.
 **Zuletzt** den zeitlich letzten Protokolleintrag des Fachs mit kurzem Kommentar;
 `u` öffnet das vollständige Protokoll. Die Navigation bleibt beim Ansichtswechsel
 an derselben Position. Unter **Verwaltung** werden Klassen,

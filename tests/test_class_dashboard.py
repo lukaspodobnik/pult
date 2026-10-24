@@ -135,7 +135,10 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
     config = prepare_root(tmp_path)
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
     sequences[0].lessons[0].goals = ["Geheimes Ziel $x^2$"]
-    sequences[0].lessons[0].material = ["Geheimes Material"]
+    sequences[0].lessons[0].material = [
+        "Papierstreifen",
+        "[Arbeitsblatt Zahlenstrahl](https://example.com/arbeitsblatt.pdf)",
+    ]
 
     def summary(entries=(), assessments=None):
         return get_class_progress_summary(
@@ -171,7 +174,14 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
                 for widget in view.query_one(".class-next-lesson").query(Static)
             )
             assert "Zahlen ordnen" in preview
-            assert "Geheimes" not in preview
+            assert "Geheimes Ziel" not in preview
+            assert view.query_one(".next-lesson-materials").display
+            with app.console.capture() as capture:
+                app.console.print(view.query_one(".next-lesson-material").content)
+            materials = capture.get()
+            assert "Papierstreifen" in materials
+            assert "Arbeitsblatt Zahlenstrahl" in materials
+            assert "https://" not in materials
             assert not view.query(".remaining-lessons, .available-periods")
 
             log = TeachingLogEntry(
@@ -215,9 +225,12 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
                 == "1. Schulaufgabe · Zahlen"
             )
             assert not view.query_one(".next-lesson-sequence").display
+            assert not view.query_one(".next-lesson-materials").display
+            assert view.query_one(".next-lesson-material").content == ""
             assert "2. Stunde" in str(view.query_one(".class-assessment").content)
 
             # Switching subject/class or undoing must clear the previous entry.
+            sequences[0].lessons[0].material = []
             await view.update_data(school_class, [subject], summary())
             await pilot.pause()
             assert view.query_one(".last-entry-empty").display
@@ -228,6 +241,18 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
             )
             assert view.query_one(SequenceProgressBlock).summary.held_lesson_count == 0
             assert view.query_one(".next-lesson-sequence").display
+            assert view.query_one(".next-lesson-materials").display
+            assert (
+                view.query_one(".next-lesson-material").content
+                == "Keine Materialien vorgesehen"
+            )
+
+            without_lesson = replace(summary()[0], next_planned_lesson=None)
+            await view.update_data(school_class, [subject], [without_lesson])
+            await pilot.pause()
+            assert view.query_one(".next-lesson-empty").display
+            assert not view.query_one(".next-lesson-materials").display
+            assert view.query_one(".next-lesson-material").content == ""
 
     asyncio.run(run())
 

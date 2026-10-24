@@ -155,10 +155,12 @@ def test_external_symlink_reference_rejected(tmp_path):
         load_sequence(tmp_path, 6, "mathematik", "brueche")
 
 
-def test_home_and_class_summaries_omit_material_details(
+def test_home_omits_and_class_shows_material_details(
     planned_lesson, sequences, subject
 ):
     from types import SimpleNamespace
+
+    from rich.console import Console
 
     from pult.views.school_class_view import SubjectProgressBlock
     from pult.widgets.dashboard.next_lesson import NextLessonPanel
@@ -184,10 +186,15 @@ def test_home_and_class_summaries_omit_material_details(
     )
     texts = SubjectProgressBlock._next_lesson_texts(SimpleNamespace(summary=summary))
     assert texts["next-lesson-title"] == planned_lesson.lesson.title
-    assert all(
-        "Papierstreifen" not in value and "Schere" not in value
-        for value in texts.values()
+    material = SubjectProgressBlock._next_lesson_material(
+        SimpleNamespace(summary=summary)
     )
+    console = Console(width=40)
+    with console.capture() as capture:
+        console.print(material)
+    rendered = capture.get()
+    assert "• Papierstreifen" in rendered
+    assert "• Schere" in rendered
     assert planned_lesson.lesson.material == ["Papierstreifen", "Schere"]
 
 
