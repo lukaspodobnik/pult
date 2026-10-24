@@ -103,6 +103,7 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
                 "next-lesson-occurrence",
                 "next-lesson-overdue",
                 "next-lesson-name",
+                "next-lesson-assessment-topic",
                 "next-lesson-sequence",
                 "next-lesson-details",
             ),
@@ -118,7 +119,8 @@ class NextLessonPanel(VerticalScroll, can_focus=False):
             texts["next-lesson-heading"] = (
                 f"{planned_lesson.school_class_id} · {self.subjects_by_id[entry.subject_id].name}"
             )
-            texts["next-lesson-name"] = planned_lesson.label
+            texts["next-lesson-name"] = f"{planned_lesson.number}. {entry.kind.label}"
+            texts["next-lesson-assessment-topic"] = entry.title
             texts["next-lesson-occurrence"] = (
                 f"{format_compact_date(entry.date)} · {planned_lesson.period}. Stunde"
             )

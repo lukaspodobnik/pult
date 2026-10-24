@@ -220,10 +220,10 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
                 view.query_one(".class-last-entry").region.bottom <= view.region.bottom
             )
             assert view.query_one(SequenceProgressBlock).summary.held_lesson_count == 1
-            assert (
-                view.query_one(".next-lesson-title").content
-                == "1. Schulaufgabe · Zahlen"
-            )
+            assert view.query_one(".next-lesson-title").content == "1. Schulaufgabe"
+            assert view.query_one(".next-lesson-assessment-topic").content == "Zahlen"
+            assert view.query_one(".class-assessment").content == "1. Schulaufgabe"
+            assert view.query_one(".class-assessment-topic").content == "Zahlen"
             assert not view.query_one(".next-lesson-sequence").display
             assert not view.query_one(".next-lesson-materials").display
             assert view.query_one(".next-lesson-material").content == ""
@@ -241,6 +241,8 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
             )
             assert view.query_one(SequenceProgressBlock).summary.held_lesson_count == 0
             assert view.query_one(".next-lesson-sequence").display
+            assert not view.query_one(".next-lesson-assessment-topic").display
+            assert not view.query_one(".class-assessment-topic").display
             assert view.query_one(".next-lesson-materials").display
             assert (
                 view.query_one(".next-lesson-material").content

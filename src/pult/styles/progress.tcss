@@ -132,6 +132,8 @@ SchoolClassView .last-entry-action {
 }
 
 SchoolClassView .next-lesson-sequence,
+SchoolClassView .next-lesson-assessment-topic,
+SchoolClassView .class-assessment-topic,
 SchoolClassView .last-entry-sequence,
 SchoolClassView .last-entry-comment {
     height: auto;
@@ -203,7 +205,10 @@ SchoolClassView .capacity-caption {
 SchoolClassView .lesson-balance {
     height: 1;
     text-style: bold;
-    color: $text;
+}
+
+SchoolClassView .lesson-balance.positive {
+    color: $success;
 }
 
 SchoolClassView .lesson-balance.negative {

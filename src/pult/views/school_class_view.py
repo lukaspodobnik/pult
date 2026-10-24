@@ -217,14 +217,20 @@ class SubjectProgressBlock(Vertical):
     def _assessment_texts(self) -> dict[str, str]:
         item = self.summary.next_assessment
         return {
-            "class-assessment": item.label
+            "class-assessment": f"{item.number}. {item.assessment.kind.label}"
             if item
             else "Kein Leistungsnachweis geplant",
+            "class-assessment-topic": item.assessment.title if item else "",
             "class-assessment-date": self._assessment_date(item) if item else "",
         }
 
     def _compose_texts(self, texts: dict[str, str]) -> ComposeResult:
-        line_limits = {"last-entry-comment": 3, "class-assessment-date": 1}
+        line_limits = {
+            "last-entry-comment": 3,
+            "class-assessment": 1,
+            "class-assessment-topic": 1,
+            "class-assessment-date": 1,
+        }
         for name, text in texts.items():
             if name == "last-entry-action":
                 widget = Static(text, classes=name, markup=False)
@@ -240,6 +246,7 @@ class SubjectProgressBlock(Vertical):
                 "next-lesson-empty",
                 "next-lesson-date",
                 "next-lesson-title",
+                "next-lesson-assessment-topic",
                 "next-lesson-sequence",
             ),
             "",
@@ -252,7 +259,10 @@ class SubjectProgressBlock(Vertical):
             return texts
 
         if isinstance(planned_lesson, PlannedAssessment):
-            texts["next-lesson-title"] = planned_lesson.label
+            texts["next-lesson-title"] = (
+                f"{planned_lesson.number}. {planned_lesson.assessment.kind.label}"
+            )
+            texts["next-lesson-assessment-topic"] = planned_lesson.assessment.title
             texts["next-lesson-date"] = self._assessment_date(planned_lesson)
             return texts
 

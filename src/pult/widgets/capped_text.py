@@ -1,4 +1,5 @@
 from rich.text import Text
+from textual.geometry import Size
 from textual.widgets import Static
 
 
@@ -10,6 +11,13 @@ class CappedText(Static):
     ) -> None:
         super().__init__(text, classes=classes, markup=False)
         self.max_lines = lines
+
+    def get_content_height(self, container: Size, viewport: Size, width: int) -> int:
+        """Miss mit der neuen Layoutbreite, auch vor dem ersten Rendern."""
+        if width <= 0:
+            return 0
+        text = Text(" ".join(str(self.content).split()))
+        return min(self.max_lines, len(text.wrap(self.app.console, width)))
 
     def render(self) -> Text:
         width = max(1, self.content_size.width)

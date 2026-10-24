@@ -154,6 +154,7 @@ HomeView #next-planned-lesson {
 HomeView .next-lesson-heading,
 HomeView .next-lesson-sequence,
 HomeView .next-lesson-name,
+HomeView .next-lesson-assessment-topic,
 HomeView .next-lesson-occurrence,
 HomeView .next-lesson-overdue,
 HomeView .next-lesson-details,
