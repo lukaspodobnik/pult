@@ -233,6 +233,12 @@ Ansicht als durchsuchbare A4-PDF mit Seitenzahlen und gewählter Dokumentschrift
 
 Ein erneuter Export ersetzt die gleichnamige Datei erst nach erfolgreicher Erstellung.
 
+In der Stoffverteilungsansicht exportiert **X** (Umschalt+x, unten **Alle exportieren**)
+alle Klassen und deren unterrichtete Fächer in der Reihenfolge der Klassenauswahl.
+Dabei entsteht je Klassen-Fach-Kombination die gewohnte Einzeldatei im jeweiligen
+Klassenordner. Die Abschlussmeldung nennt die Anzahl der gespeicherten PDFs und
+etwaige Fehler; die übrigen Exporte laufen auch bei einem einzelnen Fehler weiter.
+
 Das Aufgabenheft folgt der Reihenfolge der Aufgabenbibliothek und enthält auch
 nicht zugeordnete Aufgaben. Für jede Aufgabe muss eine nicht leere Lösung vorliegen.
 Ohne weitere Angaben gibt es ein gemeinsames Karofeld mit acht Zeilen. Optional

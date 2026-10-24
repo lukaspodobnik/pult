@@ -2,6 +2,7 @@ from typing import ClassVar
 
 from textual import on, work
 from textual.app import ComposeResult
+from textual.binding import Binding
 from textual.containers import Container
 from textual.timer import Timer
 from textual.widgets import Label
@@ -24,6 +25,7 @@ class DistributionScreen(PultScreen[None]):
     BINDINGS: ClassVar = [
         ("escape", "close", "Zurück"),
         ("x", "export_pdf", "PDF exportieren"),
+        Binding("X", "export_all_pdf", "Alle exportieren", key_display="X"),
     ]
 
     def __init__(
@@ -138,14 +140,8 @@ class DistributionScreen(PultScreen[None]):
 
     async def show_distribution(self, school_class: SchoolClass) -> None:
         self._displayed_target = None
-        config = self.app_config
         try:
-            progress = self._planning_cache.get(school_class.id)
-            if progress is None:
-                progress = load_planning_data(
-                    config, school_class.id, sequences=self.sequences
-                )
-                self._planning_cache[school_class.id] = progress
+            progress = self._get_planning_data(school_class.id)
         except (OSError, KeyError, StopIteration, ValueError) as error:
             self.notify(
                 f"Der Stoffverteilungsplan für {school_class.id} konnte nicht geladen werden: {error}",
@@ -184,6 +180,13 @@ class DistributionScreen(PultScreen[None]):
         self._displayed_target = key
         self.refresh_bindings()
 
+    def _get_planning_data(self, school_class_id: str) -> PlanningData:
+        if school_class_id not in self._planning_cache:
+            self._planning_cache[school_class_id] = load_planning_data(
+                self.app_config, school_class_id, sequences=self.sequences
+            )
+        return self._planning_cache[school_class_id]
+
     async def _show_empty_state(self, message: str) -> None:
         self._displayed_target = None
         self._views.clear()
@@ -193,6 +196,8 @@ class DistributionScreen(PultScreen[None]):
         await content.mount(Label(message, classes="distribution-empty"))
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "export_all_pdf":
+            return bool(self.school_classes and self.subjects) and not self._exporting
         if action == "export_pdf":
             return (
                 self._displayed_target is not None
@@ -211,6 +216,70 @@ class DistributionScreen(PultScreen[None]):
         self._exporting = True
         self.refresh_bindings()
         self._export_pdf(school_class_id, subject.id, subject.name, view.rows)
+
+    def action_export_all_pdf(self) -> None:
+        if not self.check_action("export_all_pdf", ()):
+            return
+        picker = self.query_one("#distribution-class-picker", ViewPicker)
+        subjects_by_id = {subject.id: subject for subject in self.subjects}
+        targets = tuple(
+            (school_class_id, subjects_by_id[subject_id])
+            for school_class_id, subject_id in picker.class_subjects_by_option_id.values()
+        )
+        if not targets:
+            return
+        self._exporting = True
+        self.refresh_bindings()
+        self.notify(f"SVP-Export gestartet: {len(targets)} Dateien.")
+        self._export_all_pdf(targets)
+
+    @work(group="pdf-export", exit_on_error=False)
+    async def _export_all_pdf(self, targets: tuple[tuple[str, Subject], ...]) -> None:
+        exported = 0
+        failures = []
+        config = self.app_config
+        labels = {subject.id: subject.short_name for subject in self.subjects}
+        try:
+            for school_class_id, subject in targets:
+                try:
+                    key = (school_class_id, subject.id)
+                    view = self._views.get(key)
+                    rows = (
+                        view.rows
+                        if view is not None
+                        else build_distribution_plan(
+                            self._get_planning_data(school_class_id),
+                            school_class_id,
+                            subject.id,
+                            subject_labels=labels,
+                        )
+                    )
+                    await export_distribution_plan(
+                        self.pult_app.document_renderer,
+                        config,
+                        school_class_id=school_class_id,
+                        subject_id=subject.id,
+                        subject_name=subject.name,
+                        rows=rows,
+                    )
+                    exported += 1
+                except Exception as error:
+                    failures.append(
+                        f"{school_class_id} · {subject.name}: {export_error_message(error)}"
+                    )
+            directory = config.root / "exports" / config.active_school_year
+            if failures:
+                self.notify(
+                    f"{exported} von {len(targets)} PDFs gespeichert: {directory}\n"
+                    + "\n".join(failures),
+                    severity="warning" if exported else "error",
+                    timeout=15,
+                )
+            else:
+                self.notify(f"{exported} PDFs gespeichert: {directory}", timeout=10)
+        finally:
+            self._exporting = False
+            self.refresh_bindings()
 
     @work(group="pdf-export", exit_on_error=False)
     async def _export_pdf(
