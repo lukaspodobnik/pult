@@ -155,9 +155,7 @@ def test_external_symlink_reference_rejected(tmp_path):
         load_sequence(tmp_path, 6, "mathematik", "brueche")
 
 
-def test_home_omits_and_class_shows_material_details(
-    planned_lesson, sequences, subject
-):
+def test_home_and_class_show_material_details(planned_lesson, sequences, subject):
     from types import SimpleNamespace
 
     from rich.console import Console
@@ -172,7 +170,6 @@ def test_home_omits_and_class_shows_material_details(
         {subject.id: subject},
         {(s.grade_level, s.subject_id, s.id): s for s in sequences},
     )
-    assert "next-lesson-material" not in home._texts()
     summary = SimpleNamespace(
         next_planned_lesson=planned_lesson,
         next_scheduled_assessment=None,
@@ -190,11 +187,12 @@ def test_home_omits_and_class_shows_material_details(
         SimpleNamespace(summary=summary)
     )
     console = Console(width=40)
-    with console.capture() as capture:
-        console.print(material)
-    rendered = capture.get()
-    assert "• Papierstreifen" in rendered
-    assert "• Schere" in rendered
+    for content in (material, home._material()):
+        with console.capture() as capture:
+            console.print(content)
+        rendered = capture.get()
+        assert "• Papierstreifen" in rendered
+        assert "• Schere" in rendered
     assert planned_lesson.lesson.material == ["Papierstreifen", "Schere"]
 
 

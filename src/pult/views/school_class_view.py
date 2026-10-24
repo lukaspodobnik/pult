@@ -1,9 +1,7 @@
 from rich.table import Table
-from rich.text import Text
 from textual.app import ComposeResult
 from textual.widgets import Static
 
-from pult.curriculum.material import material_entries
 from pult.presentation import (
     NO_NEXT_LESSON,
     UNTITLED_LESSON,
@@ -20,6 +18,7 @@ from pult.school.subject import Subject
 from pult.views.teaching_log_view import ACTION_LABELS, ORIGIN_LABELS
 from pult.widgets.capped_text import CappedText
 from pult.widgets.lesson_progress_bar import LessonProgressBar
+from pult.widgets.materials import render_material_list
 from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
 
@@ -113,19 +112,19 @@ class SubjectProgressBlock(Vertical):
                 capacity = Vertical(classes="lesson-capacity")
                 capacity.border_title = "AUSBLICK"
                 with capacity:
-                    yield from self._compose_capacity()
-                    yield Static(
-                        "Nächster Leistungsnachweis",
-                        classes="class-assessment-label",
-                    )
-                    yield Static(
-                        self._assessment_text(),
-                        classes="class-assessment",
-                        markup=False,
-                    )
-            with Vertical(classes="class-context"):
+                    with Horizontal(classes="outlook-columns"):
+                        yield from self._compose_capacity()
+                        with Vertical(classes="class-assessment-details"):
+                            yield Static(
+                                "Nächster Leistungsnachweis",
+                                classes="class-assessment-label",
+                            )
+                            yield from self._compose_texts(self._assessment_texts())
+            context = VerticalScroll(classes="class-context")
+            context.can_focus = False
+            with context:
                 next_lesson = Vertical(classes="class-next-lesson")
-                next_lesson.border_title = "ALS NÄCHSTES"
+                next_lesson.border_title = "NÄCHSTE STUNDE"
                 with next_lesson:
                     yield from self._compose_texts(self._next_lesson_texts())
                     material = self._next_lesson_material()
@@ -144,7 +143,20 @@ class SubjectProgressBlock(Vertical):
                 last = Vertical(classes="class-last-entry")
                 last.border_title = "ZULETZT"
                 with last:
-                    yield from self._compose_texts(self._last_entry_texts())
+                    texts = self._last_entry_texts()
+                    yield from self._compose_texts(
+                        {"last-entry-empty": texts.pop("last-entry-empty")}
+                    )
+                    metadata = Horizontal(classes="last-entry-metadata")
+                    metadata.display = self.summary.last_entry is not None
+                    with metadata:
+                        yield from self._compose_texts(
+                            {
+                                name: texts.pop(name)
+                                for name in ("last-entry-date", "last-entry-action")
+                            }
+                        )
+                    yield from self._compose_texts(texts)
 
     @property
     def _total_label(self) -> str:
@@ -159,14 +171,31 @@ class SubjectProgressBlock(Vertical):
         balance_class = (
             "positive" if balance > 0 else "negative" if balance < 0 else "neutral"
         )
-        with Horizontal(classes="capacity-row"):
+        with Vertical(classes="capacity-figure"):
             yield Static("Stundenbilanz", classes="capacity-label")
             value = Static(
-                f"{balance:+d} Std.",
+                self._balance_label,
                 classes=f"capacity-value lesson-balance {balance_class}",
             )
             value.tooltip = self._balance_detail
             yield value
+            yield Static(self._balance_caption, classes="capacity-caption")
+
+    @property
+    def _balance_label(self) -> str:
+        balance = self.summary.lesson_balance
+        return f"{balance:+d} Std." if balance else "0 Std."
+
+    @property
+    def _balance_caption(self) -> str:
+        balance = self.summary.lesson_balance
+        return (
+            "Puffer"
+            if balance > 0
+            else "Fehlende Zeit"
+            if balance < 0
+            else "Ausgeglichen"
+        )
 
     @property
     def _balance_detail(self) -> str:
@@ -185,20 +214,24 @@ class SubjectProgressBlock(Vertical):
         )
         return f"{format_compact_date(entry.date)} · {occurrence}"
 
-    def _assessment_text(self) -> str:
+    def _assessment_texts(self) -> dict[str, str]:
         item = self.summary.next_assessment
-        return (
-            f"{item.label}\n{self._assessment_date(item)}"
+        return {
+            "class-assessment": item.label
             if item
-            else "Kein Leistungsnachweis geplant"
-        )
+            else "Kein Leistungsnachweis geplant",
+            "class-assessment-date": self._assessment_date(item) if item else "",
+        }
 
     def _compose_texts(self, texts: dict[str, str]) -> ComposeResult:
+        line_limits = {"last-entry-comment": 3, "class-assessment-date": 1}
         for name, text in texts.items():
-            widget = CappedText(
-                text, classes=name, lines=3 if name == "last-entry-comment" else 2
-            )
+            if name == "last-entry-action":
+                widget = Static(text, classes=name, markup=False)
+            else:
+                widget = CappedText(text, classes=name, lines=line_limits.get(name, 2))
             widget.display = bool(text)
+            widget.tooltip = text or None
             yield widget
 
     def _next_lesson_texts(self) -> dict[str, str]:
@@ -244,15 +277,7 @@ class SubjectProgressBlock(Vertical):
         )
         if planned is None or isinstance(planned, PlannedAssessment):
             return ""
-        entries = material_entries(planned.lesson.material_markdown())
-        if not entries:
-            return "Keine Materialien vorgesehen"
-        table = Table.grid(padding=0, expand=True)
-        table.add_column(width=2)
-        table.add_column(ratio=1)
-        for entry in entries:
-            table.add_row("•", Text(entry.label))
-        return table
+        return render_material_list(planned.lesson.material_markdown())
 
     def _last_entry_texts(self) -> dict[str, str]:
         texts: dict[str, str] = dict.fromkeys(
@@ -263,7 +288,6 @@ class SubjectProgressBlock(Vertical):
                 "last-entry-title",
                 "last-entry-sequence",
                 "last-entry-comment",
-                "last-entry-hint",
             ),
             "",
         )
@@ -289,7 +313,6 @@ class SubjectProgressBlock(Vertical):
         )
         texts["last-entry-sequence"] = last.sequence_label
         texts["last-entry-comment"] = entry.comment
-        texts["last-entry-hint"] = "u · Vollständiges Protokoll"
         return texts
 
     async def update_data(
@@ -300,18 +323,19 @@ class SubjectProgressBlock(Vertical):
             return
         self.subject = subject
         self.summary = summary
-        assessment = self.query_one(".class-assessment", Static)
-        assessment.update(self._assessment_text())
         material = self._next_lesson_material()
         self.query_one(".next-lesson-materials").display = bool(material)
         self.query_one(".next-lesson-material", Static).update(material)
         for name, text in {
+            **self._assessment_texts(),
             **self._next_lesson_texts(),
             **self._last_entry_texts(),
         }.items():
             widget = self.query_one(f".{name}", Static)
             widget.update(text)
             widget.display = bool(text)
+            widget.tooltip = text or None
+        self.query_one(".last-entry-metadata").display = summary.last_entry is not None
         self.query_one(".total-label", Static).update(self._total_label)
         self.query_one(".subject-progress-bar", LessonProgressBar).update_counts(
             summary.completed_lesson_count,
@@ -319,8 +343,9 @@ class SubjectProgressBlock(Vertical):
             summary.total_lesson_count,
         )
         balance = self.query_one(".lesson-balance", Static)
-        balance.update(f"{summary.lesson_balance:+d} Std.")
+        balance.update(self._balance_label)
         balance.tooltip = self._balance_detail
+        self.query_one(".capacity-caption", Static).update(self._balance_caption)
         for name, enabled in (
             ("positive", summary.lesson_balance > 0),
             ("negative", summary.lesson_balance < 0),

@@ -164,6 +164,8 @@ def test_dashboard_updates_content_and_clears_removed_rows(
             assert len(view.query(DailyScheduleRow)) == 1
             assert not heading.display
             assert panel.query_one(".dashboard-empty").display
+            assert not panel.query_one(".next-lesson-materials").display
+            assert panel.query_one(".next-lesson-material").content == ""
             log = TeachingLogEntry(
                 dashboard.daily_schedule.date,
                 subject.id,
@@ -199,6 +201,11 @@ def test_dashboard_updates_content_and_clears_removed_rows(
             assert lesson_label.display
             assert heading.display
             assert not panel.query_one(".dashboard-empty").display
+            assert panel.query_one(".next-lesson-materials").display
+            assert (
+                panel.query_one(".next-lesson-material").content
+                == "Keine Materialien vorgesehen"
+            )
             await view.update_data(
                 [],
                 [subject],

@@ -147,24 +147,30 @@ MainScreen #schedule {
 HomeView #next-planned-lesson {
     height: 1fr;
     min-height: 7;
-    padding: 0 1 0 2;
+    padding: 1 2;
+    overflow-x: hidden;
 }
 
 HomeView .next-lesson-heading,
 HomeView .next-lesson-sequence,
 HomeView .next-lesson-name,
 HomeView .next-lesson-occurrence,
-HomeView .next-lesson-tasks,
+HomeView .next-lesson-overdue,
+HomeView .next-lesson-details,
+HomeView .next-lesson-materials,
+HomeView .next-lesson-material,
 HomeView .dashboard-empty {
     height: auto;
 }
 
 HomeView .next-lesson-name {
     text-style: bold;
+    margin-top: 1;
 }
 
 HomeView .next-lesson-sequence,
 HomeView .next-lesson-occurrence,
+HomeView .next-lesson-details,
 HomeView .dashboard-empty {
     color: $foreground-muted;
 }
@@ -261,22 +267,34 @@ HomeView .day-entry-lesson {
     height: 1;
 }
 
-HomeView .next-lesson-name {
-    margin-top: 1;
-}
-
 HomeView .next-lesson-heading {
-    color: $foreground-muted;
+    color: $text-accent;
     text-style: none;
+    width: 1fr;
 }
 
-HomeView .next-lesson-spacer {
-    height: 1fr;
-    min-height: 0;
+HomeView .next-lesson-metadata {
+    height: auto;
 }
 
-HomeView .next-lesson-tasks {
+HomeView .next-lesson-occurrence {
+    width: auto;
+    max-width: 29;
+    margin-left: 2;
+}
+
+HomeView .next-lesson-overdue {
+    color: $warning;
+}
+
+HomeView .next-lesson-materials {
     margin-top: 1;
+    border-top: solid $primary;
+}
+
+HomeView .next-lesson-material-label {
+    height: 1;
+    text-style: bold;
 }
 
 HomeView .day-entry-lesson {

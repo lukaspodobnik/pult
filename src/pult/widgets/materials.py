@@ -4,12 +4,27 @@ import subprocess
 import sys
 from pathlib import Path
 
+from rich.table import Table
+from rich.text import Text
 from textual import on
 from textual.widgets import Button, Static
 
 from pult.curriculum.material import material_entries
 from pult.services.documents.document_rendering import safe_local
 from pult.widgets.scrolling import Horizontal, VerticalScroll
+
+
+def render_material_list(source: str) -> Table | str:
+    """Materialnamen mit hängendem Einzug für Übersicht und Klassenansicht."""
+    entries = material_entries(source)
+    if not entries:
+        return "Keine Materialien vorgesehen"
+    table = Table.grid(padding=0, expand=True)
+    table.add_column(width=2)
+    table.add_column(ratio=1)
+    for entry in entries:
+        table.add_row("•", Text(entry.label))
+    return table
 
 
 class MaterialsPane(VerticalScroll):

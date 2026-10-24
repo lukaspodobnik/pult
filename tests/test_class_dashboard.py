@@ -162,7 +162,7 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
             view = screen.query_one(SchoolClassView)
             await view.update_data(school_class, [subject], summary())
             await pilot.pause()
-            assert view.query_one(".class-next-lesson").border_title == "ALS NÄCHSTES"
+            assert view.query_one(".class-next-lesson").border_title == "NÄCHSTE STUNDE"
             assert view.query_one(".lesson-capacity").border_title == "AUSBLICK"
             assert view.query_one(".class-last-entry").border_title == "ZULETZT"
             assert view.query_one(".last-entry-empty").display
@@ -227,14 +227,14 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
             assert not view.query_one(".next-lesson-sequence").display
             assert not view.query_one(".next-lesson-materials").display
             assert view.query_one(".next-lesson-material").content == ""
-            assert "2. Stunde" in str(view.query_one(".class-assessment").content)
+            assert "2. Stunde" in str(view.query_one(".class-assessment-date").content)
 
             # Switching subject/class or undoing must clear the previous entry.
             sequences[0].lessons[0].material = []
             await view.update_data(school_class, [subject], summary())
             await pilot.pause()
             assert view.query_one(".last-entry-empty").display
-            for name in ("date", "action", "title", "sequence", "comment", "hint"):
+            for name in ("date", "action", "title", "sequence", "comment"):
                 assert not view.query_one(f".last-entry-{name}").display
             assert "Kein Leistungsnachweis" in str(
                 view.query_one(".class-assessment").content

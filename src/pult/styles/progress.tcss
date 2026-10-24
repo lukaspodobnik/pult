@@ -70,16 +70,18 @@ SchoolClassView .class-details {
 SchoolClassView .class-context {
     width: 2fr;
     height: 1fr;
+    overflow-x: hidden;
 }
 
-SchoolClassView .lesson-capacity,
 SchoolClassView .class-last-entry {
     height: auto;
     margin-top: 1;
 }
 
-SchoolClassView .class-next-lesson {
+SchoolClassView .class-next-lesson,
+SchoolClassView .class-last-entry {
     height: auto;
+    padding: 1 2;
 }
 
 SchoolClassView .next-lesson-materials,
@@ -89,8 +91,12 @@ SchoolClassView .next-lesson-material {
 
 SchoolClassView .next-lesson-material-label {
     height: 1;
+    text-style: bold;
+}
+
+SchoolClassView .next-lesson-materials {
     margin-top: 1;
-    color: $foreground-muted;
+    border-top: solid $primary;
 }
 
 SchoolClassView .next-lesson-material-list {
@@ -100,22 +106,44 @@ SchoolClassView .next-lesson-material-list {
 }
 
 SchoolClassView .next-lesson-title,
-SchoolClassView .last-entry-title,
-SchoolClassView .last-entry-action {
+SchoolClassView .last-entry-title {
     height: auto;
+    margin-top: 1;
+    text-style: bold;
+}
+
+SchoolClassView .last-entry-metadata {
+    height: auto;
+    align-vertical: top;
+}
+
+SchoolClassView .last-entry-date {
+    width: 1fr;
+}
+
+SchoolClassView .last-entry-action {
+    width: auto;
+    max-width: 20;
+    height: auto;
+    margin-left: 2;
+    padding: 0 1;
+    background: $boost;
     text-style: bold;
 }
 
 SchoolClassView .next-lesson-sequence,
 SchoolClassView .last-entry-sequence,
-SchoolClassView .last-entry-comment,
-SchoolClassView .last-entry-hint {
+SchoolClassView .last-entry-comment {
     height: auto;
 }
 
-SchoolClassView .last-entry-comment,
-SchoolClassView .last-entry-hint {
+SchoolClassView .last-entry-comment {
     margin-top: 1;
+}
+
+SchoolClassView .last-entry-comment {
+    border-left: solid $primary;
+    padding-left: 2;
 }
 
 SchoolClassView .next-lesson-date,
@@ -124,7 +152,7 @@ SchoolClassView .next-lesson-sequence,
 SchoolClassView .last-entry-date,
 SchoolClassView .last-entry-empty,
 SchoolClassView .last-entry-sequence,
-SchoolClassView .last-entry-hint,
+SchoolClassView .class-assessment-date,
 SchoolClassView .held-lessons,
 SchoolClassView .empty-sequence-hint {
     height: auto;
@@ -147,35 +175,39 @@ SchoolClassView .progress-count {
     text-align: right;
 }
 
-SchoolClassView .capacity-row {
-    height: 1;
+SchoolClassView .lesson-capacity {
+    height: 8;
+    min-height: 8;
+    margin-top: 1;
+    padding: 1 2;
 }
 
-SchoolClassView .capacity-label {
-    width: 1fr;
-    height: 1;
+SchoolClassView .outlook-columns {
+    height: 4;
 }
 
-SchoolClassView .capacity-value {
-    width: 12;
+SchoolClassView .capacity-figure {
+    width: 19;
+    height: 4;
+    margin-right: 2;
+    padding-right: 2;
+    border-right: solid $primary;
+}
+
+SchoolClassView .capacity-label,
+SchoolClassView .capacity-caption {
     height: 1;
-    text-align: right;
+    color: $foreground-muted;
 }
 
 SchoolClassView .lesson-balance {
+    height: 1;
     text-style: bold;
-}
-
-SchoolClassView .lesson-balance.positive {
-    color: $success;
+    color: $text;
 }
 
 SchoolClassView .lesson-balance.negative {
     color: $error;
-}
-
-SchoolClassView .lesson-balance.neutral {
-    color: $foreground-muted;
 }
 
 SchoolClassView .sequence-progress {
@@ -195,8 +227,15 @@ SchoolClassView .sequence-progress.active .progress-title {
 
 SchoolClassView .class-assessment-label {
     height: 1;
-    margin-top: 1;
     color: $foreground-muted;
 }
 
-SchoolClassView .class-assessment { height: auto; margin-bottom: 1; }
+SchoolClassView .class-assessment-details {
+    width: 1fr;
+    height: 4;
+}
+
+SchoolClassView .class-assessment {
+    height: auto;
+    text-style: bold;
+}
