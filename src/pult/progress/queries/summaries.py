@@ -1,11 +1,13 @@
 """Fortschritt und Stundenbilanz einer Klasse, gruppiert nach Fach."""
 
+from collections import Counter
 from dataclasses import dataclass
 
 from pult.curriculum.sequence import Sequence, sequence_sort_key
 from pult.progress.class_progress import (
     ClassProgress,
     TeachingAction,
+    TeachingLogEntry,
 )
 from pult.school.assessment import Assessment
 from pult.school.calendar import (
@@ -15,7 +17,7 @@ from pult.school.calendar import (
 from pult.school.school_class import SchoolClass
 from pult.school.timetable import TimetableEntry
 
-from .assessments import PlannedAssessment, next_assessment
+from .assessments import PlannedAssessment, next_assessment, numbered_assessments
 from .planning import PlannedLesson, get_next_planned_lessons_for_class
 from .scheduling import count_available_scheduled_occurrences
 
@@ -31,10 +33,18 @@ class SequenceProgressSummary:
     skipped_lesson_count: int
     total_lesson_count: int
     is_active: bool
+    held_lesson_count: int = 0
 
     @property
     def progressed_lesson_count(self) -> int:
         return self.completed_lesson_count + self.skipped_lesson_count
+
+
+@dataclass(frozen=True)
+class LastTeachingEntry:
+    entry: TeachingLogEntry
+    title: str
+    sequence_label: str
 
 
 @dataclass(frozen=True)
@@ -49,6 +59,7 @@ class SubjectProgressSummary:
     next_scheduled_assessment: PlannedAssessment | None = None
     next_assessment: PlannedAssessment | None = None
     has_assessments: bool = False
+    last_entry: LastTeachingEntry | None = None
 
     @property
     def progressed_lesson_count(self) -> int:
@@ -104,6 +115,16 @@ def get_class_progress_summary(
         for entry in progress.entries
         if entry.action in {TeachingAction.COMPLETED, TeachingAction.SKIPPED}
     }
+    held_lessons = Counter(
+        (entry.subject_id, entry.sequence_id)
+        for entry in progress.entries
+        if entry.action
+        in {TeachingAction.COMPLETED, TeachingAction.CONTINUED, TeachingAction.OTHER}
+    )
+    assessment_labels = {
+        item.assessment.id: item.label
+        for item in numbered_assessments(school_class.id, assessments or [])
+    }
 
     subject_summaries = []
     for subject_id in school_class.subject_ids:
@@ -135,7 +156,51 @@ def get_class_progress_summary(
                     is_active=(
                         active_sequence_ids_by_subject_id.get(subject_id) == sequence.id
                     ),
+                    held_lesson_count=held_lessons[subject_id, sequence.id],
                 )
+            )
+
+        # Same order as the log: date, period, then insertion order. Looking
+        # backwards also makes the latest insertion win equal-date ties.
+        last_entry = max(
+            (e for e in reversed(progress.entries) if e.subject_id == subject_id),
+            key=lambda e: (e.date, e.period if e.period is not None else 99),
+            default=None,
+        )
+        last = None
+        if last_entry is not None:
+            sequence = next(
+                (
+                    s
+                    for s in relevant_sequences
+                    if s.subject_id == subject_id and s.id == last_entry.sequence_id
+                ),
+                None,
+            )
+            lesson = (
+                next(
+                    (
+                        lesson
+                        for lesson in sequence.lessons
+                        if lesson.id == last_entry.lesson_id
+                    ),
+                    None,
+                )
+                if sequence is not None
+                else None
+            )
+            last = LastTeachingEntry(
+                entry=last_entry,
+                title=(
+                    lesson.title
+                    if lesson is not None
+                    else assessment_labels.get(last_entry.assessment_id or "", "")
+                ),
+                sequence_label=(
+                    f"{sequence.curriculum_section_id} · {sequence.title}"
+                    if sequence is not None
+                    else ""
+                ),
             )
 
         subject_summaries.append(
@@ -161,6 +226,7 @@ def get_class_progress_summary(
                 ),
                 next_planned_lesson=next_lessons_by_subject_id.get(subject_id),
                 sequences=tuple(sequence_summaries),
+                last_entry=last,
                 has_assessments=any(
                     item.subject_id == subject_id for item in assessments or []
                 ),

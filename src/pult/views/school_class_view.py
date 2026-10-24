@@ -1,11 +1,12 @@
-from rich.text import Text
 from textual.app import ComposeResult
-from textual.widgets import Rule, Static
+from textual.widgets import Static
 
 from pult.presentation import (
     NO_NEXT_LESSON,
-    format_date,
+    UNTITLED_LESSON,
+    format_compact_date,
 )
+from pult.progress.class_progress import TeachingAction, TeachingOrigin
 from pult.progress.queries import (
     SequenceProgressSummary,
     SubjectProgressSummary,
@@ -13,9 +14,10 @@ from pult.progress.queries import (
 from pult.progress.queries.assessments import PlannedAssessment, next_event
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
+from pult.views.teaching_log_view import ACTION_LABELS, ORIGIN_LABELS
+from pult.widgets.capped_text import CappedText
 from pult.widgets.lesson_progress_bar import LessonProgressBar
 from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
-from pult.widgets.sequence_preview import SequencePreview
 
 
 class SequenceProgressBlock(Vertical):
@@ -41,6 +43,7 @@ class SequenceProgressBlock(Vertical):
             self.summary.skipped_lesson_count,
             self.summary.total_lesson_count,
         )
+        yield Static(self._held_label, classes="held-lessons", markup=False)
 
         hint = Static("Noch nicht ausgefüllt", classes="empty-sequence-hint")
         hint.display = self.summary.total_lesson_count == 0
@@ -57,6 +60,7 @@ class SequenceProgressBlock(Vertical):
             f"{marker}{summary.curriculum_section_id} · {summary.title}"
         )
         self.query_one(".progress-count", Static).update(self._progress_label)
+        self.query_one(".held-lessons", Static).update(self._held_label)
         self.query_one(LessonProgressBar).update_counts(
             summary.completed_lesson_count,
             summary.skipped_lesson_count,
@@ -70,6 +74,10 @@ class SequenceProgressBlock(Vertical):
             f"{self.summary.progressed_lesson_count} / "
             f"{self.summary.total_lesson_count}"
         )
+
+    @property
+    def _held_label(self) -> str:
+        return f"{self.summary.held_lesson_count} Std. gehalten"
 
 
 class SubjectProgressBlock(Vertical):
@@ -100,24 +108,27 @@ class SubjectProgressBlock(Vertical):
                     for sequence in self.summary.sequences:
                         yield SequenceProgressBlock(sequence)
                 capacity = Vertical(classes="lesson-capacity")
-                capacity.border_title = (
-                    "ÜBERSICHT" if self.summary.has_assessments else "STUNDENBILANZ"
-                )
+                capacity.border_title = "AUSBLICK"
                 with capacity:
-                    with Vertical(classes="capacity-summary"):
-                        yield from self._compose_capacity()
-                        assessment = Static(
-                            self._assessment_text(),
-                            classes="class-assessment",
-                            markup=False,
-                        )
-                        assessment.display = bool(self._assessment_text())
-                        yield assessment
-            next_lesson = VerticalScroll(classes="class-next-lesson")
-            next_lesson.border_title = "NÄCHSTE STUNDE"
-            next_lesson.can_focus = False
-            with next_lesson:
-                yield from self._compose_next_lesson()
+                    yield from self._compose_capacity()
+                    yield Static(
+                        "Nächster Leistungsnachweis",
+                        classes="class-assessment-label",
+                    )
+                    yield Static(
+                        self._assessment_text(),
+                        classes="class-assessment",
+                        markup=False,
+                    )
+            with Vertical(classes="class-context"):
+                next_lesson = Vertical(classes="class-next-lesson")
+                next_lesson.border_title = "ALS NÄCHSTES"
+                with next_lesson:
+                    yield from self._compose_texts(self._next_lesson_texts())
+                last = Vertical(classes="class-last-entry")
+                last.border_title = "ZULETZT"
+                with last:
+                    yield from self._compose_texts(self._last_entry_texts())
 
     @property
     def _total_label(self) -> str:
@@ -132,49 +143,55 @@ class SubjectProgressBlock(Vertical):
         balance_class = (
             "positive" if balance > 0 else "negative" if balance < 0 else "neutral"
         )
-        for label, value, classes in (
-            (
-                "Noch benötigt",
-                str(self.summary.remaining_lesson_count),
-                "remaining-lessons",
-            ),
-            (
-                "Verfügbar",
-                str(self.summary.available_period_count),
-                "available-periods",
-            ),
-            ("Differenz", f"{balance:+d}", f"lesson-balance {balance_class}"),
-        ):
-            row_classes = "capacity-row"
-            if classes.startswith("lesson-balance"):
-                row_classes += " capacity-result"
-            with Horizontal(classes=row_classes):
-                yield Static(label, classes="capacity-label")
-                yield Static(value, classes=f"capacity-value {classes}")
-            if classes == "available-periods":
-                yield Rule(classes="capacity-divider")
+        with Horizontal(classes="capacity-row"):
+            yield Static("Stundenbilanz", classes="capacity-label")
+            value = Static(
+                f"{balance:+d} Std.",
+                classes=f"capacity-value lesson-balance {balance_class}",
+            )
+            value.tooltip = self._balance_detail
+            yield value
+
+    @property
+    def _balance_detail(self) -> str:
+        return (
+            f"Nach aktuellem Plan: {self.summary.available_period_count} Std. verfügbar, "
+            f"{self.summary.remaining_lesson_count} Std. noch geplant."
+        )
+
+    @staticmethod
+    def _assessment_date(item: PlannedAssessment) -> str:
+        entry = item.assessment
+        occurrence = (
+            "/".join(map(str, sorted(entry.occupied_periods))) + ". Stunde"
+            if entry.occupied_periods
+            else f"{entry.start:%H:%M} Uhr · extern"
+        )
+        return f"{format_compact_date(entry.date)} · {occurrence}"
 
     def _assessment_text(self) -> str:
         item = self.summary.next_assessment
         return (
-            f"Nächster LNW: {format_date(item.assessment.date)} · {item.label}"
+            f"{item.label}\n{self._assessment_date(item)}"
             if item
-            else ""
+            else "Kein Leistungsnachweis geplant"
         )
 
-    def _compose_next_lesson(self) -> ComposeResult:
-        for name, text in self._next_lesson_texts().items():
-            widget = Static(text, classes=name, markup=False)
+    def _compose_texts(self, texts: dict[str, str]) -> ComposeResult:
+        for name, text in texts.items():
+            widget = CappedText(
+                text, classes=name, lines=3 if name == "last-entry-comment" else 2
+            )
             widget.display = bool(text)
             yield widget
 
-    def _next_lesson_texts(self) -> dict[str, str | Text]:
-        texts: dict[str, str | Text] = dict.fromkeys(
+    def _next_lesson_texts(self) -> dict[str, str]:
+        texts: dict[str, str] = dict.fromkeys(
             (
                 "next-lesson-empty",
-                "next-lesson-sequence",
                 "next-lesson-date",
-                "next-lesson-preview",
+                "next-lesson-title",
+                "next-lesson-sequence",
             ),
             "",
         )
@@ -186,15 +203,8 @@ class SubjectProgressBlock(Vertical):
             return texts
 
         if isinstance(planned_lesson, PlannedAssessment):
-            entry = planned_lesson.assessment
-            texts["next-lesson-sequence"] = planned_lesson.label
-            texts["next-lesson-date"] = (
-                f"{format_date(entry.date, with_weekday=True)} · {planned_lesson.period}. Stunde"
-            )
-            texts["next-lesson-preview"] = (
-                f"{entry.duration_minutes} Minuten · Belegte Stunden: "
-                + ", ".join(map(str, entry.occupied_periods))
-            )
+            texts["next-lesson-title"] = planned_lesson.label
+            texts["next-lesson-date"] = self._assessment_date(planned_lesson)
             return texts
 
         sequence = next(
@@ -206,12 +216,48 @@ class SubjectProgressBlock(Vertical):
             f"{sequence.curriculum_section_id} · {sequence.title}"
         )
         texts["next-lesson-date"] = (
-            f"{format_date(planned_lesson.date, with_weekday=True)} · "
+            f"{format_compact_date(planned_lesson.date)} · "
             f"{planned_lesson.period}. Stunde"
         )
-        texts["next-lesson-preview"] = SequencePreview.render_lesson(
-            planned_lesson.lesson
+        texts["next-lesson-title"] = planned_lesson.lesson.title or UNTITLED_LESSON
+        return texts
+
+    def _last_entry_texts(self) -> dict[str, str]:
+        texts: dict[str, str] = dict.fromkeys(
+            (
+                "last-entry-empty",
+                "last-entry-date",
+                "last-entry-action",
+                "last-entry-title",
+                "last-entry-sequence",
+                "last-entry-comment",
+                "last-entry-hint",
+            ),
+            "",
         )
+        last = self.summary.last_entry
+        if last is None:
+            texts["last-entry-empty"] = "Noch kein Protokolleintrag für dieses Fach"
+            return texts
+        entry = last.entry
+        occurrence = (
+            f"{entry.period}. Stunde"
+            if entry.period is not None
+            else ORIGIN_LABELS[entry.origin]
+        )
+        texts["last-entry-date"] = f"{format_compact_date(entry.date)} · {occurrence}"
+        texts["last-entry-action"] = (
+            "Spontanunterricht"
+            if entry.action is TeachingAction.OTHER
+            and entry.origin is TeachingOrigin.SCHEDULED
+            else ACTION_LABELS[entry.action]
+        )
+        texts["last-entry-title"] = last.title or (
+            UNTITLED_LESSON if entry.lesson_id else ""
+        )
+        texts["last-entry-sequence"] = last.sequence_label
+        texts["last-entry-comment"] = entry.comment
+        texts["last-entry-hint"] = "u · Vollständiges Protokoll"
         return texts
 
     async def update_data(
@@ -222,30 +268,24 @@ class SubjectProgressBlock(Vertical):
             return
         self.subject = subject
         self.summary = summary
-        self.query_one(".lesson-capacity").border_title = (
-            "ÜBERSICHT" if summary.has_assessments else "STUNDENBILANZ"
-        )
         assessment = self.query_one(".class-assessment", Static)
         assessment.update(self._assessment_text())
-        assessment.display = bool(self._assessment_text())
-        for name, text in self._next_lesson_texts().items():
+        for name, text in {
+            **self._next_lesson_texts(),
+            **self._last_entry_texts(),
+        }.items():
             widget = self.query_one(f".{name}", Static)
             widget.update(text)
             widget.display = bool(text)
         self.query_one(".total-label", Static).update(self._total_label)
-        self.query_one(".remaining-lessons", Static).update(
-            str(summary.remaining_lesson_count)
-        )
         self.query_one(".subject-progress-bar", LessonProgressBar).update_counts(
             summary.completed_lesson_count,
             summary.skipped_lesson_count,
             summary.total_lesson_count,
         )
-        self.query_one(".available-periods", Static).update(
-            str(summary.available_period_count)
-        )
         balance = self.query_one(".lesson-balance", Static)
-        balance.update(f"{summary.lesson_balance:+d}")
+        balance.update(f"{summary.lesson_balance:+d} Std.")
+        balance.tooltip = self._balance_detail
         for name, enabled in (
             ("positive", summary.lesson_balance > 0),
             ("negative", summary.lesson_balance < 0),

@@ -50,7 +50,7 @@ def test_class_updates_progress_and_clears_optional_content(
             await pilot.pause()
             view = app.query_one(SchoolClassView)
             block = view.query_one(SubjectProgressBlock)
-            assert block.query_one(".next-lesson-preview").display
+            assert block.query_one(".next-lesson-title").display
             summary = summaries[0]
             completed = replace(
                 summary.sequences[0], completed_lesson_count=1, is_active=False
@@ -71,7 +71,7 @@ def test_class_updates_progress_and_clears_optional_content(
             assert bar.completed == 1
             assert len(block.query(SequenceProgressBlock)) == 1
             assert block.query_one(".next-lesson-empty").display
-            for name in ("sequence", "date", "preview"):
+            for name in ("sequence", "date", "title"):
                 assert not block.query_one(f".next-lesson-{name}").display
 
             empty = replace(completed, completed_lesson_count=0, total_lesson_count=0)
@@ -96,7 +96,7 @@ def test_class_updates_progress_and_clears_optional_content(
             assert len(view.query(SubjectProgressBlock)) == 1
             assert len(block.query(SequenceProgressBlock)) == 2
             assert not first.query_one(".empty-sequence-hint").display
-            assert block.query_one(".next-lesson-preview").display
+            assert block.query_one(".next-lesson-title").display
             assert not block.query_one(".next-lesson-empty").display
 
     asyncio.run(run())

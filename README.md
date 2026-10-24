@@ -66,8 +66,15 @@ Die führende Zahl einer Klasse, etwa `7D`, bestimmt ihre Jahrgangsstufe.
 | `q` | Beenden, außer in Texteingaben |
 
 Die **Übersicht** zeigt den heutigen Tag, Stundenplan, nächste Stunde und alle
-Klassen. Der zeitlich nächste LNW ist hervorgehoben. In den **Klassenansichten**
-stehen Fortschritt und Stundenbilanz je Fach. Unter **Verwaltung** werden Klassen,
+Klassen. Der zeitlich nächste LNW ist hervorgehoben. Die **Klassenansicht** zeigt
+je Fach die Sequenzen mit Planfortschritt und tatsächlich gehaltenen Stunden.
+Abschlüsse, Fortsetzungen, Spontanunterricht und zusätzliche Unterrichtstermine
+zählen zur gehaltenen Zeit; übersprungene Stunden, Ausfälle und Leistungsnachweise
+nicht. **Ausblick** zeigt die Stundendifferenz nach aktuellem Plan und den nächsten
+offenen Leistungsnachweis. **Als Nächstes** nennt den nächsten Unterrichtstermin,
+**Zuletzt** den zeitlich letzten Protokolleintrag des Fachs mit kurzem Kommentar;
+`u` öffnet das vollständige Protokoll. Die Navigation bleibt beim Ansichtswechsel
+an derselben Position. Unter **Verwaltung** werden Klassen,
 Stundenplan, Ausfälle und Leistungsnachweise gepflegt; Änderungen werden beim
 Speichern im jeweiligen Dialog gesichert.
 

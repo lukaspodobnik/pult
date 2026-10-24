@@ -155,7 +155,9 @@ def test_external_symlink_reference_rejected(tmp_path):
         load_sequence(tmp_path, 6, "mathematik", "brueche")
 
 
-def test_material_summary_in_home_and_class_view(planned_lesson, sequences, subject):
+def test_home_and_class_summaries_omit_material_details(
+    planned_lesson, sequences, subject
+):
     from types import SimpleNamespace
 
     from pult.views.school_class_view import SubjectProgressBlock
@@ -180,10 +182,13 @@ def test_material_summary_in_home_and_class_view(planned_lesson, sequences, subj
             )
         ],
     )
-    preview = SubjectProgressBlock._next_lesson_texts(SimpleNamespace(summary=summary))[
-        "next-lesson-preview"
-    ]
-    assert "Benötigtes Material\n• Papierstreifen\n• Schere" in preview.plain
+    texts = SubjectProgressBlock._next_lesson_texts(SimpleNamespace(summary=summary))
+    assert texts["next-lesson-title"] == planned_lesson.lesson.title
+    assert all(
+        "Papierstreifen" not in value and "Schere" not in value
+        for value in texts.values()
+    )
+    assert planned_lesson.lesson.material == ["Papierstreifen", "Schere"]
 
 
 def test_neutral_example_matches_contract():

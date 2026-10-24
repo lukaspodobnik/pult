@@ -198,12 +198,14 @@ def test_foreground_selection_interrupts_prefetch_and_close_stops_work(
             screen = LessonScreen(sequence, "lesson-3")
             await app.push_screen(screen)
             await asyncio.wait_for(renderer.started.wait(), 5)
-            screen.query_one("#lesson-list").highlighted = 4
-            await until(lambda: ready(screen, "lesson-4"))
-            assert renderer.cancelled.is_set()
+            # Arm the next blocked render before selecting its lesson: prefetch
+            # may already finish by the time the visible widget reports ready.
             renderer.block = ("lesson-4", True)
             renderer.started.clear()
             renderer.cancelled.clear()
+            screen.query_one("#lesson-list").highlighted = 4
+            await until(lambda: ready(screen, "lesson-4"))
+            await asyncio.wait_for(renderer.cancelled.wait(), 5)
             await asyncio.wait_for(renderer.started.wait(), 5)
             # Coalesced picker events must leave document and materials on the
             # final selection, even while a background document is blocked.
@@ -219,8 +221,7 @@ def test_foreground_selection_interrupts_prefetch_and_close_stops_work(
             await asyncio.wait_for(renderer.started.wait(), 5)
             renderer.cancelled.clear()
             screen.action_close()
-            await pilot.pause()
-            assert renderer.cancelled.is_set()
+            await asyncio.wait_for(renderer.cancelled.wait(), 5)
             calls = len(renderer.calls)
             await asyncio.sleep(0.25)
             assert len(renderer.calls) == calls
