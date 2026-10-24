@@ -76,9 +76,11 @@ def continue_lesson(
     old_progress: ClassProgress,
     planned_lesson: PlannedLesson,
     sequences: list[Sequence],
-    comment: str = "",
+    comment: str,
 ) -> ClassProgress:
     """Verbrauche den Termin, lasse die aktuelle Lesson aber weiterhin offen."""
+    if not comment.strip():
+        raise ProgressCommandError("Bitte gib einen Grund für die Fortsetzung an.")
     _validate_planned_lesson(old_progress, planned_lesson, sequences)
     return _append_entry(
         old_progress,

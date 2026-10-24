@@ -32,6 +32,7 @@ from pult.screens.management.edit_closures_screen import EditClosuresScreen
 from pult.screens.management.edit_timetable_screen import EditTimetableScreen
 from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
 from pult.screens.progress.confirm_undo_screen import ConfirmUndoScreen
+from pult.screens.progress.continue_lesson_screen import ContinueLessonScreen
 from pult.screens.progress.distribution_screen import DistributionScreen
 from pult.screens.progress.lesson_progress_flow import LessonProgressFlow
 from pult.screens.progress.spontaneous_lesson_screen import SpontaneousLessonScreen
@@ -591,29 +592,43 @@ class MainScreen(PultScreen[None]):
             action_description="übersprungen",
         )
 
-    async def action_continue_next_lesson(self) -> None:
+    def action_continue_next_lesson(self) -> None:
         context = self.load_planned_lesson_context()
         if context is None:
             return
 
-        try:
-            progress = continue_lesson(
-                context.progress,
-                context.planned_lesson,
-                context.sequences,
-            )
-            await self.save_progress_and_refresh(
-                context.school_class,
-                progress,
-                context.sequences,
-            )
-        except (OSError, ProgressCommandError, ValueError) as error:
-            self.notify(str(error), severity="error")
-            return
+        async def continuation_entered(comment: str | None) -> None:
+            if comment is None:
+                return
 
-        self.notify(
-            f"{context.school_class.id}: "
-            f"'{context.planned_lesson.lesson.title or UNTITLED_LESSON}' wird fortgesetzt."
+            try:
+                progress = continue_lesson(
+                    context.progress,
+                    context.planned_lesson,
+                    context.sequences,
+                    comment,
+                )
+                await self.save_progress_and_refresh(
+                    context.school_class,
+                    progress,
+                    context.sequences,
+                )
+            except (OSError, ProgressCommandError, ValueError) as error:
+                self.notify(str(error), severity="error")
+                return
+
+            self.notify(
+                f"{context.school_class.id}: "
+                f"'{context.planned_lesson.lesson.title or UNTITLED_LESSON}' wird fortgesetzt."
+            )
+
+        planned = context.planned_lesson
+        self.app.push_screen(
+            ContinueLessonScreen(
+                f"{context.school_class.id} · "
+                f"{format_compact_date(planned.date)} · {planned.period}. Stunde"
+            ),
+            continuation_entered,
         )
 
     def action_cancel_next_lesson(self) -> None:

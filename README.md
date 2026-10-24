@@ -90,13 +90,17 @@ ungebuchte Termine bleiben offen und lassen sich nachtragen.
 | Taste | Aktion |
 | --- | --- |
 | `n` | Stunde abschließen und zur nächsten Planstunde weitergehen |
-| `c` | Termin verbuchen; die bearbeitete Planstunde bleibt offen |
+| `c` | Termin mit Begründung verbuchen; die bearbeitete Planstunde bleibt offen |
 | `s` | Planstunde überspringen, ohne einen Termin zu verbrauchen |
 | `a` | Spontanen Unterrichtsausfall mit Begründung eintragen |
 | `t` | Spontanunterricht mit Beschreibung eintragen; Planstunde bleibt offen |
 | `z` | Zusätzlichen Termin außerhalb des Stundenplans eintragen |
 | `p` | Letzte Buchung des Fachs nach Bestätigung zurücknehmen |
 | `w` / `u` | In einer Klassenansicht Sequenz wechseln / Unterrichtsprotokoll öffnen |
+
+`c` öffnet einen Dialog mit Pflichtbegründung, etwa „Sicherung noch offen“.
+Erst Speichern verbucht den Termin; die Begründung steht im Protokoll und in den
+SVP-Anmerkungen. Abbrechen verändert den Fortschritt nicht.
 
 `t` passt beispielsweise für eine ungeplante Übungsstunde vor einer Schulaufgabe.
 Die Beschreibung wird im Stoffverteilungsplan zum Stundenthema. Bei `z` kann

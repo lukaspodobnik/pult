@@ -31,6 +31,7 @@ from pult.school.timetable import (
 )
 from pult.screens.progress.add_extra_lesson_screen import AddExtraLessonScreen
 from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.continue_lesson_screen import ContinueLessonScreen
 from pult.screens.progress.select_next_sequence_screen import SelectNextSequenceScreen
 from pult.screens.progress.set_active_sequence_screen import SetActiveSequenceScreen
 from pult.screens.progress.teaching_log_screen import TeachingLogScreen
@@ -173,6 +174,11 @@ def test_planned_commands_use_selected_subject(multi_class_config, command, acti
                 assert isinstance(app.screen, CancelLessonScreen)
                 app.screen.query_one(Input).value = "Feueralarm"
                 await pilot.click("#save-cancelled-lesson")
+            elif command == "continue_next_lesson":
+                await pilot.pause()
+                assert isinstance(app.screen, ContinueLessonScreen)
+                app.screen.query_one(Input).value = "Sicherung noch offen"
+                await pilot.click("#save-continue-lesson")
             await pilot.pause()
             progress = load_class_progress(config.root, config.active_school_year, "9B")
             assert len(progress.entries) == 1

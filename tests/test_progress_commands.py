@@ -53,10 +53,20 @@ def test_skip_progresses_lesson_without_consuming_occurrence(
 def test_continue_consumes_occurrence_but_keeps_lesson_open(
     empty_progress, planned_lesson, sequences
 ):
-    progress = continue_lesson(empty_progress, planned_lesson, sequences)
+    progress = continue_lesson(
+        empty_progress, planned_lesson, sequences, "  Sicherung noch offen  "
+    )
 
     assert progress.entries[-1].action is TeachingAction.CONTINUED
+    assert progress.entries[-1].comment == "Sicherung noch offen"
     assert get_next_lesson(progress, sequences, "mathematik", 5).id == "lesson-1"
+
+
+@pytest.mark.parametrize("comment", ["", "   ", "\n\t"])
+def test_continue_requires_reason(empty_progress, planned_lesson, sequences, comment):
+    with pytest.raises(ProgressCommandError, match="Grund für die Fortsetzung"):
+        continue_lesson(empty_progress, planned_lesson, sequences, comment)
+    assert empty_progress.entries == ()
 
 
 def test_cancel_consumes_occurrence_but_keeps_lesson_open(
