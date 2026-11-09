@@ -12,8 +12,9 @@ from pult.curriculum.material import (
     Task,
     TaskExport,
     TaskPartExport,
-    load_tasks,
+    load_task,
     material_path,
+    task_sort_key,
 )
 from pult.curriculum.sequence import Sequence
 from pult.school.subject import load_subjects
@@ -26,6 +27,7 @@ from pult.services.documents.document_rendering import (
 )
 from pult.services.documents.document_subtasks import SUBTASK_STYLES
 from pult.services.exports.common import material_export_path, save_pdf
+from pult.services.exports.task_export_profile import WorkbookProfile
 
 ASSETS = Path(__file__).parents[2] / "assets/workbook"
 MARGINS: PdfMargins = {"top": "24mm", "bottom": "22mm", "left": "25mm", "right": "18mm"}
@@ -121,9 +123,11 @@ def workbook_html(
     directory: Path,
     *,
     solutions: bool = False,
+    title: str | None = None,
     font: str = "source-sans-3",
     replacements: Mapping[str, str] | None = None,
 ) -> str:
+    profile = WorkbookProfile.for_tasks(tasks, sequence)
     bodies = []
     for number, task in enumerate(tasks, 1):
         source = task.solution if solutions else task.text
@@ -141,17 +145,23 @@ def workbook_html(
             )
         except (OSError, ValueError) as error:
             raise ValueError(f"{task.metadata.title}: {error}") from error
+        image_options = task.metadata.export
         image_style = (
-            f' style="--image-width:{options.image_width_mm}mm"'
-            if options is not None and options.image_width_mm is not None
+            f' style="--image-width:{image_options.image_width_mm}mm"'
+            if image_options is not None and image_options.image_width_mm is not None
             else ""
+        )
+        caption = profile.caption(task)
+        source_caption = (
+            f'<p class="exercise-source">{escape(caption)}</p>' if caption else ""
         )
         bodies.append(
             f'<section class="exercise" data-task="{escape(task.id, quote=True)}"{image_style}>'
-            f'<h2 class="exercise-heading">{number}. Aufgabe</h2>'
+            f'<h2 class="exercise-heading">{escape(profile.heading(task, number))}</h2>'
+            f"{source_caption}"
             f'<div class="exercise-body">{body}</div></section>'
         )
-    title = sequence.title + (" · Lösungen" if solutions else "")
+    title = (title or sequence.title) + (" · Lösungen" if solutions else "")
     return (
         '<!doctype html><html lang="de"><head><meta charset="utf-8">'
         f"<title>{escape(title)}</title><style>"
@@ -163,6 +173,7 @@ def workbook_html(
         + "</style></head><body><article><h1>"
         + escape(title)
         + "</h1>"
+        + profile.source_html(solutions=solutions)
         + "".join(bodies)
         + "</article></body></html>"
     )
@@ -195,11 +206,23 @@ async def export_task_workbooks(
     *,
     sequence: Sequence,
     directory: Path,
+    lesson_id: str | None = None,
 ) -> tuple[Path, Path]:
-    # Re-read edited files; export every task, including unassigned ones, once.
-    tasks = load_tasks(directory)
+    lesson = None
+    if lesson_id is not None:
+        lesson = next((item for item in sequence.lessons if item.id == lesson_id), None)
+        if lesson is None:
+            raise ValueError("Die Stunde wurde in dieser Sequenz nicht gefunden.")
+    lessons = [lesson] if lesson is not None else sequence.lessons
+    # Reload only assigned tasks; duplicate bookmarks refer to the same task.
+    task_ids = dict.fromkeys(task.id for item in lessons for task in item.tasks)
+    tasks = [load_task(directory, task_id) for task_id in task_ids]
     if not tasks:
-        raise ValueError("Diese Sequenz enthält noch keine Aufgaben.")
+        scope = "Stunde" if lesson is not None else "Sequenz"
+        raise ValueError(f"Für diese {scope} sind noch keine Aufgaben vorgemerkt.")
+    if lesson is None:
+        tasks.sort(key=task_sort_key)
+    title = lesson.title if lesson is not None else sequence.title
     subject = next(
         (s for s in load_subjects(config.root) if s.id == sequence.subject_id), None
     )
@@ -212,7 +235,7 @@ async def export_task_workbooks(
             sequence.grade_level,
             sequence.subject_id,
             sequence.id,
-            name,
+            f"{lesson.id}-{name}" if lesson is not None else name,
         )
         for name in ("aufgaben", "loesungen")
     )
@@ -223,14 +246,16 @@ async def export_task_workbooks(
             sequence,
             directory,
             solutions=solutions,
+            title=title,
             font=font,
             replacements=config.document_replacements,
         )
         for solutions in (False, True)
     ]
+    profile = WorkbookProfile.for_tasks(tasks, sequence)
     header, footer = workbook_furniture(
-        f"{subject.name} {sequence.grade_level} · {sequence.title}",
-        config.export_author,
+        f"{subject.name} {sequence.grade_level} · {title}",
+        profile.author(config.export_author),
         font,
     )
     contents = []

@@ -8,7 +8,8 @@ Ablauf einer KI-gestützten Vorbereitung werden gesondert festgelegt.
 Eine Sequenz liegt unter `sequences/<Jahrgang>/<Fach-ID>/<Sequenz-ID>/`.
 `sequenz.toml` enthält `id`, `curriculum_section_id`, `subject_id`, `grade_level`,
 `titel` und die geordnete Liste `stunden` mit Stunden-IDs. Optional sind
-`recommended_lesson_count` sowie gemeinsam `chapter_id` und `chapter_title`.
+`recommended_lesson_count`, gemeinsam `chapter_id` und `chapter_title` sowie
+die Buchtabelle `buecher` (siehe Herkunft einer Aufgabe).
 Die Angaben müssen zum Ablageort passen; weitere Felder sind nicht erlaubt.
 
 Stunden-, Aufgaben-, Fach- und Sequenz-IDs bestehen aus Kleinbuchstaben, Zahlen
@@ -63,10 +64,13 @@ Unter `aufgaben/<Aufgaben-ID>/` liegen `aufgabe.toml`, `aufgabe.md` und optional
 aus `aufgabe.toml`; eine Überschrift im Aufgabentext ist optional. Aufgaben können
 mehreren Stunden derselben Sequenz zugeordnet sein.
 
-Die Aufgabenbibliothek sortiert Titel mit führender Nummer numerisch, etwa
-`1. Produkte vereinfachen`, `2. Terme vergleichen`, `10. Gemischte Aufgaben`.
-Titel ohne Nummer folgen alphabetisch. Die Nummer ist Teil von `titel`;
-ein zusätzliches Feld oder eine Änderung bestehender Aufgaben-IDs ist nicht nötig.
+Buchaufgaben haben keine laufende PULT-Nummer. Titel enthalten die Buchfundstelle,
+etwa `Trainieren, S. 32 A. 8`, passend zu `[quelle]`. PULT prüft Seite und Nummer
+und sortiert numerisch nach Buchseite und Aufgabe. Innerhalb einer Seite stehen
+unnummerierte Einstiege zuerst, dann arabisch und danach römisch nummerierte
+Aufgaben. Bei Einstiegen ersetzt die Bezeichnung die Aufgabennummer. Eigene
+Aufgaben folgen danach: führende Titelnummern numerisch, sonst alphabetisch.
+Bestehende Aufgaben-IDs und die Reihenfolge von Vormerklisten bleiben erhalten.
 
 ```toml
 titel = "Nullstellen bestimmen"
@@ -76,7 +80,7 @@ anforderungsbereich = "I"
 
 Alle drei Felder sind Pflicht: ein nicht leerer Titel, eine Liste aus ein bis drei
 verschiedenen, nicht leeren Kompetenzbezeichnungen und genau ein Anforderungsbereich
-als `"I"`, `"II"` oder `"III"`. Optional ist die Tabelle `export` (siehe unten).
+als `"I"`, `"II"` oder `"III"`. Optional sind die Tabellen `quelle` und `export` (siehe unten).
 Weitere Felder sind nicht erlaubt. Kompetenzbezeichnungen
 richten sich nach dem Fach; vorzugsweise eine oder zwei Hauptkompetenzen wählen.
 
@@ -85,6 +89,50 @@ Gemischte Teilaufgaben bleiben zusammen. Diese grobe Einordnung wird von der
 Lehrkraft oder der vorbereitenden KI angegeben; PULT prüft die Form, nicht den
 fachlichen Inhalt. Für LNWs ist eine gesonderte Einordnung der Teilaufgaben nötig.
 Kompetenzen und Anforderungsbereich gehören nicht in den Schülertext.
+
+### Zuordnung zu Stunden
+
+Die Vormerkung für Stunden bestimmt die Unterrichtsauswahl und den Export.
+In der Aufgabenbibliothek ordnet `v` eine Aufgabe der aktuellen Stunde zu oder
+entfernt die Zuordnung. Der Haken kennzeichnet die Vormerkung; eine zusätzliche
+Sequenzauswahl gibt es nicht. Beim Vorbereiten die Aufgaben bereits den geplanten
+Stunden zuordnen, damit der Sequenzexport zu Beginn vollständig verfügbar ist.
+Dafür müssen noch keine Verlaufspläne angelegt werden. Nicht zugeordnete Aufgaben
+bleiben im Bestand verfügbar. Alle Teilaufgaben bleiben vollständig erhalten.
+
+### Herkunft einer Aufgabe
+
+Buchtitel werden einmal in `sequenz.toml` registriert:
+
+```toml
+[buecher]
+fokus-7 = "Fokus Mathematik 7"
+```
+
+Die Schlüssel folgen denselben ID-Regeln wie Aufgaben. Jeder Titel ist ein nicht
+leerer Text. Buchaufgaben erhalten in `aufgabe.toml` eine strukturierte Quelle:
+
+```toml
+[quelle]
+art = "buch"
+buch = "fokus-7"
+seite = 32
+nummer = "8"
+rubrik = "Trainieren"
+```
+
+`buch` verweist auf einen registrierten Buchtitel; `seite` ist eine positive
+Ganzzahl. `nummer` ist eine positive arabische Zahl ohne führende Nullen oder
+eine gültige römische Zahl in Großbuchstaben, jeweils als Text (`"8"`, `"II"`). Unnummerierte Einstiege verwenden stattdessen `bezeichnung`, etwa
+`bezeichnung = "Äquivalente Terme"`. Genau eines der beiden Felder ist nötig.
+`rubrik` ist optional. Titel, Seite und Nummer bzw. Bezeichnung reichen aus;
+Ausgabejahr und ISBN werden nicht benötigt und nicht erfragt.
+
+Eigene Aufgaben können ausdrücklich `[quelle]` mit `art = "eigen"` erhalten;
+Buchfelder sind dann nicht erlaubt. Ohne `quelle` bleiben ältere Aufgaben beim
+bisherigen Exportverhalten für eigene Aufgaben. Die Herkunft wird nicht aus
+Titel, Jahrgang oder ID erraten. Vor dem Export älterer Buchbestände die Quellen
+nachtragen. Aufgaben-IDs und Stundenverknüpfungen bleiben dabei erhalten.
 
 Markdown unterstützt Tabellen, Codeblöcke mit Sprachangabe, TeX als `$…$` bzw.
 `$$…$$` und lokale Bilder (SVG, PNG, JPEG, WebP). Bildpfade sind relativ zur
@@ -154,15 +202,36 @@ Einträge ohne Trennlinie beginnen oben.
 
 ## Aufgabenexport
 
-In der Aufgabenbibliothek exportiert `x` alle Aufgaben der Sequenz in der
-angezeigten Reihenfolge, auch nicht vorgemerkte Aufgaben. Es entstehen
-`aufgaben.pdf` und `loesungen.pdf` unter
-`exports/<Schuljahr>/materialien/<Fach-ID>/<Jahrgang>/<Sequenz-ID>/`.
-Beide Dateien verwenden dieselbe fortlaufende Nummerierung. Eine führende
-`#`-Überschrift wird durch „1. Aufgabe“, „2. Aufgabe“ usw. ersetzt; weitere
-Überschriften bleiben erhalten. Kompetenzen und Anforderungsbereiche werden
-nicht gedruckt. Leere Aufgaben oder fehlende/leere Lösungen verhindern den
-Export mit Hinweis auf die betroffene Aufgabe.
+In der Aufgabenbibliothek exportiert `x` die vorgemerkten Aufgaben der aktuellen
+Stunde in der Reihenfolge ihrer Vormerkungen. Ohne Stundenkontext ist `x` nicht
+verfügbar. `X` (Umschalt+x) exportiert die Aufgaben aller Stunden dieser Sequenz,
+jede Aufgaben-ID nur einmal, in der Reihenfolge der Aufgabenbibliothek. Nicht
+zugeordnete Aufgaben werden nicht exportiert. Ohne Vormerkungen meldet PULT dies
+und lässt vorhandene Exporte unverändert.
+
+Die Ablage ist `exports/<Schuljahr>/materialien/<Fach-ID>/<Jahrgang>/<Sequenz-ID>/`.
+Der Sequenzexport erzeugt `aufgaben.pdf` und `loesungen.pdf`, der Stundenexport
+`<Stunden-ID>-aufgaben.pdf` und `<Stunden-ID>-loesungen.pdf`.
+So bleiben Exporte verschiedener Stunden und der gesamten Sequenz getrennt.
+Das Exportprofil folgt den Quellen der tatsächlich exportierten Aufgaben:
+
+- Nur Buchaufgaben: „S. 32 · Aufgabe 8“ statt einer fortlaufenden Exportnummer.
+  Unnummerierte Einstiege zeigen ihre Bezeichnung. Die Buchrubrik steht dezent
+  darunter. Der Buchtitel erscheint einmal am Anfang; bei mehreren Büchern
+  zusätzlich bei jeder Aufgabe. Der persönliche Name entfällt.
+- Nur eigene Aufgaben: bisherige Nummerierung „1. Aufgabe“, „2. Aufgabe“ usw.
+  und der konfigurierte Name in der Fußzeile.
+- Gemischter Bestand: fortlaufende Exportnummern; Buchaufgaben zeigen zusätzlich
+  Buchtitel, Seite und Buchnummer. Kein persönlicher Name für die gesamte Sammlung.
+
+Aufgaben und Lösungen erhalten dieselben Nummern und Quellenangaben. Im
+Lösungsheft lautet die Quellenzeile „Lösungen zu Aufgaben aus“, denn die Lösungen
+werden eigenständig erstellt. Eine führende `#`-Überschrift wird durch die
+Profilbeschriftung ersetzt; weitere Überschriften bleiben erhalten. Die internen
+PULT-Titel und ihre Sortierung ändern sich nicht. Kompetenzen und
+Anforderungsbereiche werden nicht gedruckt. Bei zugeordneten Aufgaben verhindern
+leere Texte oder fehlende/leere Lösungen den Export mit Hinweis auf die betroffene
+Aufgabe. Nicht zugeordnete Aufgaben benötigen für diesen Export keine Lösung.
 
 Antwortbereiche stehen optional in `aufgabe.toml`:
 
@@ -193,7 +262,9 @@ pro_teilaufgabe = true
 - `gleichheitszeichen = true`: ergänzt nur im Aufgabenexport ein `=` hinter
   einem einzelnen mathematischen Ausdruck, ohne ein vorhandenes zu verdoppeln.
   Erfordert Schreiblinien je Teilaufgabe; nicht für Textaufträge verwenden.
-- `bildbreite_mm`: optionale maximale Bildbreite/-höhe (10–65 mm) im Aufgabenexport.
+- `bildbreite_mm`: optionale maximale Bildbreite/-höhe (10–167 mm) für Aufgaben
+  und Lösungen. Ohne Angabe gilt 65 mm. Für große Diagramme eine gut lesbare
+  Größe wählen; die verfügbare Inhaltsbreite bleibt die obere Grenze.
 - `[export.teilaufgaben.a]` (entsprechend `b`, …): überschreibt `zeilen` und/oder
   `bildbreite_mm` für diese Teilaufgabe. Abweichende Zeilen benötigen
   `pro_teilaufgabe = true`. Die Buchstaben beziehen sich auf die äußeren
@@ -204,8 +275,9 @@ verwenden `kariert`, `false` und acht Zeilen (für `linien` eine, für `keiner` 
 Schreiblinien folgen einzelnen Formeln bei Platz direkt in derselben Zeile,
 Textaufträgen darunter. Linien nicht durch Unterstriche vortäuschen.
 Druckspalten, ergänzte Gleichheitszeichen und Bildgrößen verändern weder die
-Markdown-Dateien noch die PULT-Ansicht oder Lösungen. Lösungen erhalten keine
-Antwortbereiche. Umfang und Art je Teilaufgabe aus einer knappen, vollständigen
+Markdown-Dateien noch die PULT-Ansicht. Die globale Bildgröße gilt auch für
+Lösungen; die übrigen Exportoptionen und teilaufgabenspezifischen Größen gelten
+nur im Aufgabenheft. Lösungen erhalten keine Antwortbereiche. Umfang und Art je Teilaufgabe aus einer knappen, vollständigen
 und altersgerechten Musterlösung ableiten: nötige Zwischenschritte, Begründungen,
 Skizzen und Handschrift berücksichtigen, mit nur kleiner Reserve. Abgedruckte
 Ausdrücke müssen nicht nochmals abgeschrieben werden. Keine pauschalen
@@ -224,7 +296,8 @@ Fließtext (11,5 pt), in Halbfett. Die Kopfzeile nennt Fach, Jahrgang und Sequen
 Kopf- und Fußzeile einschließlich Name und Seitenzahl erscheinen in sanftem,
 gut lesbarem Grau (`#647282`), auch im gedruckten PDF. Der Name für die Fußzeile
 wird unter **Einstellungen → Name auf Arbeitsblättern** gesetzt; ein leeres Feld
-lässt ihn weg. Bestehende PDFs werden erst nach erfolgreicher Erzeugung beider
+lässt ihn weg. Bei Buch- und Mischprofilen wird er unabhängig von dieser
+Einstellung weggelassen. Bestehende PDFs werden erst nach erfolgreicher Erzeugung beider
 Dokumente ersetzt.
 
 ## Muster und Änderungen

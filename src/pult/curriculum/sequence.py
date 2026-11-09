@@ -1,5 +1,5 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
@@ -49,6 +49,7 @@ class Sequence:
     lessons: list[Lesson]
     chapter_id: str | None = None
     chapter_title: str | None = None
+    books: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         self.id = validate_id(self.id, "Die Sequenz-ID")
@@ -94,6 +95,28 @@ class Sequence:
                     "Eine Sequenz mit empfohlener Stundenzahl muss mindestens "
                     "eine Stunde enthalten."
                 )
+
+        if not isinstance(self.books, dict):
+            raise ValueError("buecher muss eine Tabelle aus Buch-IDs und Titeln sein.")
+        for book_id, title in self.books.items():
+            if (
+                not isinstance(book_id, str)
+                or validate_id(book_id, "Buch-ID") != book_id
+            ):
+                raise ValueError("Ungültige Buch-ID.")
+            if not isinstance(title, str) or not title.strip():
+                raise ValueError("Jedes Buch benötigt einen nicht leeren Titel.")
+        for lesson in self.lessons:
+            for task in lesson.tasks:
+                source = task.metadata.source
+                if (
+                    source is not None
+                    and source.kind == "buch"
+                    and source.book_id not in self.books
+                ):
+                    raise ValueError(
+                        f"Aufgabe '{task.id}': Unbekanntes Buch '{source.book_id}'."
+                    )
 
         lesson_ids = [lesson.id for lesson in self.lessons]
         if len(lesson_ids) != len(set(lesson_ids)):
@@ -167,6 +190,7 @@ def load_sequence(
                 "recommended_lesson_count",
                 "chapter_id",
                 "chapter_title",
+                "buecher",
             },
         )
         lessons_data = reference_ids(data, "stunden")
@@ -196,6 +220,7 @@ def load_sequence(
             ],
             chapter_id=_optional_string(data, "chapter_id"),
             chapter_title=_optional_string(data, "chapter_title"),
+            books=data.get("buecher", {}),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise SequenceFileError(f"Ungültige Sequenzdatei '{path}': {error}") from error
@@ -293,6 +318,9 @@ def save_sequence(root: Path, sequence: Sequence) -> None:
     if sequence.chapter_id is not None and sequence.chapter_title is not None:
         data["chapter_id"] = sequence.chapter_id
         data["chapter_title"] = sequence.chapter_title
+
+    if sequence.books:
+        data["buecher"] = sequence.books
 
     # Gleiche IDs bezeichnen dieselbe Aufgabe, auch über mehrere Stunden hinweg.
     tasks = {}

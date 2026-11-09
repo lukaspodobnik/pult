@@ -93,9 +93,9 @@ class TaskPartExport:
                 "export.teilaufgaben.*.zeilen muss zwischen 0 und 40 liegen."
             )
         if self.image_width_mm is not None and (
-            type(self.image_width_mm) is not int or not 10 <= self.image_width_mm <= 65
+            type(self.image_width_mm) is not int or not 10 <= self.image_width_mm <= 167
         ):
-            raise ValueError("bildbreite_mm muss eine ganze Zahl von 10 bis 65 sein.")
+            raise ValueError("bildbreite_mm muss eine ganze Zahl von 10 bis 167 sein.")
 
     @classmethod
     def from_dict(cls, data: Any) -> "TaskPartExport":
@@ -229,12 +229,133 @@ class TaskExport:
         return data
 
 
+ROMAN_NUMBER = re.compile(r"M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})")
+
+
+def book_number_key(number: str | None) -> tuple[int, int]:
+    """Unnummerierte Einstiege, arabische Aufgaben, römische Wiederholungsaufgaben."""
+    if number is None:
+        return 0, 0
+    if re.fullmatch(r"[1-9][0-9]*", number):
+        return 1, int(number)
+    if number and ROMAN_NUMBER.fullmatch(number):
+        values = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000}
+        total = 0
+        previous = 0
+        for letter in reversed(number):
+            value = values[letter]
+            total += -value if value < previous else value
+            previous = max(previous, value)
+        return 2, total
+    raise ValueError(
+        "quelle.nummer muss eine positive arabische oder römische Zahl sein."
+    )
+
+
+@dataclass(frozen=True)
+class TaskSource:
+    """Herkunft einer Aufgabe; Buchdaten werden in der Sequenz gemeinsam gepflegt."""
+
+    kind: str = "eigen"
+    book_id: str | None = None
+    page: int | None = None
+    number: str | None = None
+    label: str | None = None
+    rubric: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.kind not in ("eigen", "buch"):
+            raise ValueError("quelle.art muss 'eigen' oder 'buch' sein.")
+        values = (self.book_id, self.page, self.number, self.label, self.rubric)
+        if self.kind == "eigen":
+            if any(value is not None for value in values):
+                raise ValueError("Eigene Aufgaben haben keine Buchfundstelle.")
+            return
+        if (
+            not isinstance(self.book_id, str)
+            or validate_id(self.book_id, "quelle.buch") != self.book_id
+        ):
+            raise ValueError("quelle.buch benötigt eine kanonische Buch-ID.")
+        if type(self.page) is not int or self.page < 1:
+            raise ValueError("quelle.seite muss eine positive ganze Zahl sein.")
+        if (self.number is None) == (self.label is None):
+            raise ValueError("Buchaufgaben benötigen entweder nummer oder bezeichnung.")
+        for key, value in (
+            ("nummer", self.number),
+            ("bezeichnung", self.label),
+            ("rubrik", self.rubric),
+        ):
+            if value is not None and (
+                not isinstance(value, str)
+                or not value.strip()
+                or value != value.strip()
+            ):
+                raise ValueError(f"quelle.{key} muss ein nicht leerer Text sein.")
+        book_number_key(self.number)
+
+    def validate_title(self, title: str) -> None:
+        if self.kind != "buch":
+            return
+        if re.match(r"^[0-9]+[.)]\s*", title):
+            raise ValueError(
+                "Buchaufgaben dürfen keine laufende PULT-Nummer im Titel haben."
+            )
+        pages = re.findall(r"(?<!\w)S\. ([1-9][0-9]*)(?![\w.])", title)
+        if pages != [str(self.page)]:
+            raise ValueError(
+                f"Der Aufgabentitel muss genau einmal 'S. {self.page}' enthalten."
+            )
+        numbers = re.findall(r"(?<!\w)A\. ([1-9][0-9]*|[IVXLCDM]+)(?![\w.])", title)
+        if self.number is not None:
+            if numbers != [self.number]:
+                raise ValueError(
+                    f"Der Aufgabentitel muss genau einmal 'A. {self.number}' enthalten."
+                )
+        elif numbers or self.label is None or self.label not in title:
+            raise ValueError(
+                "Unnummerierte Buchaufgaben benötigen ihre Bezeichnung im Titel."
+            )
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "TaskSource":
+        if not isinstance(data, dict):
+            raise ValueError("quelle muss eine Tabelle sein.")
+        reject_unknown(
+            data, {"art", "buch", "seite", "nummer", "bezeichnung", "rubrik"}
+        )
+        if "art" not in data:
+            raise ValueError("quelle.art fehlt.")
+        return cls(
+            require_text(data, "art"),
+            data.get("buch"),
+            data.get("seite"),
+            data.get("nummer"),
+            data.get("bezeichnung"),
+            data.get("rubrik"),
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        self.__post_init__()
+        data: dict[str, Any] = {"art": self.kind}
+        for key, value in (
+            ("buch", self.book_id),
+            ("seite", self.page),
+            ("nummer", self.number),
+            ("bezeichnung", self.label),
+            ("rubrik", self.rubric),
+        ):
+            if value is not None:
+                data[key] = value
+        return data
+
+
 @dataclass
 class TaskMetadata:
     title: str
     competencies: list[str]
     requirement_level: str
     export: TaskExport | None = None
+    source: TaskSource | None = None
 
     def __post_init__(self) -> None:
         self.title = " ".join(require_text({"titel": self.title}, "titel").split())
@@ -252,17 +373,32 @@ class TaskMetadata:
             if not isinstance(self.export, TaskExport):
                 raise ValueError("Ungültige Exportangaben für die Aufgabe.")
             self.export.__post_init__()
+        if self.source is not None:
+            if not isinstance(self.source, TaskSource):
+                raise ValueError("Ungültige Quellenangaben für die Aufgabe.")
+            self.source.__post_init__()
+            self.source.validate_title(self.title)
         if self.requirement_level not in ("I", "II", "III"):
             raise ValueError("'anforderungsbereich' muss 'I', 'II' oder 'III' sein.")
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "TaskMetadata":
-        reject_unknown(data, {"titel", "kompetenzen", "anforderungsbereich", "export"})
+        reject_unknown(
+            data,
+            {
+                "titel",
+                "kompetenzen",
+                "anforderungsbereich",
+                "export",
+                "quelle",
+            },
+        )
         return cls(
             data["titel"],
             data["kompetenzen"],
             data["anforderungsbereich"],
             TaskExport.from_dict(data["export"]) if "export" in data else None,
+            TaskSource.from_dict(data["quelle"]) if "quelle" in data else None,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -274,6 +410,8 @@ class TaskMetadata:
         }
         if self.export is not None:
             data["export"] = self.export.to_dict()
+        if self.source is not None:
+            data["quelle"] = self.source.to_dict()
         return data
 
 
@@ -612,13 +750,18 @@ def save_lesson_metadata(directory: Path, lesson: Lesson) -> None:
     )
 
 
-def task_sort_key(task: Task) -> tuple[int, int, str, str]:
-    """Titelnummern numerisch sortieren; unnummerierte Titel folgen alphabetisch."""
+def task_sort_key(task: Task) -> tuple[int, int, int, int, str, str]:
+    """Buchfundstellen numerisch; eigene Aufgaben wie bisher nach Titelnummer."""
     title = task.metadata.title.casefold()
+    source = task.metadata.source
+    if source is not None and source.kind == "buch":
+        category, number = book_number_key(source.number)
+        assert source.page is not None
+        return 0, source.page, category, number, title, task.id
     number = re.match(r"^(\d+)\.\s+", title)
     if number:
-        return 0, int(number[1]), title[number.end() :], task.id
-    return 1, 0, title, task.id
+        return 1, int(number[1]), 0, 0, title[number.end() :], task.id
+    return 2, 0, 0, 0, title, task.id
 
 
 def load_tasks(directory: Path) -> list[Task]:

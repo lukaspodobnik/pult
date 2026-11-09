@@ -80,7 +80,7 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             await pilot.pause()
             assert not screen.show_solution
             assert screen.query_one(DocumentViewer).source == "# Zusatz"
-            assert str(picker.get_option("zusatz").prompt) == "Zusatzaufgabe"
+            assert str(picker.get_option("zusatz").prompt) == ("Zusatzaufgabe")
             assert (
                 screen.query_one("#task-content").border_subtitle
                 == "Aufgabe · AFB II · K1, K6"
@@ -113,7 +113,9 @@ def test_tasks_solutions_assignment_and_editor(tmp_path, monkeypatch):
             assert screen.selected_task.metadata == TaskMetadata(
                 "1. Neuer Titel", ["K2"], "III"
             )
-            assert str(picker.get_option("zusatz").prompt).endswith("1. Neuer Titel")
+            assert str(picker.get_option("zusatz").prompt).startswith(
+                "✓ 1. Neuer Titel"
+            )
             assert screen.query_one(DocumentViewer).source == "# Zusatz"
             assert (
                 screen.query_one("#task-content").border_subtitle
@@ -176,16 +178,16 @@ def test_sequence_export_hotkey_is_guarded_and_recovers_after_failure(
             screen = TaskScreen(sequence, directory)
             await app.push_screen(screen)
             await pilot.pause()
-            await pilot.press("x")
+            await pilot.press("X")
             await asyncio.wait_for(started.wait(), 2)
             assert screen._exporting
-            await pilot.press("x")
+            await pilot.press("X", "x")
             assert mock.await_count == 1
             release.set()
             await pilot.pause()
-            assert screen.check_action("export_pdf", ())
+            assert screen.check_action("export_sequence_pdf", ())
             assert mock.call_args.kwargs["sequence"] == sequence
             screen.tasks = []
-            assert not screen.check_action("export_pdf", ())
+            assert not screen.check_action("export_sequence_pdf", ())
 
     asyncio.run(run())

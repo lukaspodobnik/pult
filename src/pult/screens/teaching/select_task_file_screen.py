@@ -42,13 +42,18 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
         picker.border_title = Text(task.metadata.title)
         picker.highlighted = 0
 
+    def task_options(self):
+        for i, task in enumerate(self.tasks, 1):
+            source = task.metadata.source
+            title = task.metadata.title
+            if source is None or source.kind != "buch":
+                title = f"{i} · {title}"
+            yield Option(Text(title), id=task.id)
+
     def compose(self):
         with FormDialog("Aufgabe bearbeiten", id="task-file-dialog"):
             yield OptionList(
-                *(
-                    Option(Text(f"{i} · {task.metadata.title}"), id=task.id)
-                    for i, task in enumerate(self.tasks, 1)
-                ),
+                *self.task_options(),
                 id="task-file-picker",
             )
 
@@ -69,9 +74,6 @@ class SelectTaskFileScreen(PultModalScreen[tuple[str, str] | None]):
         self.task_id = None
         picker = self.query_one(OptionList)
         picker.clear_options()
-        picker.add_options(
-            Option(Text(f"{i} · {task.metadata.title}"), id=task.id)
-            for i, task in enumerate(self.tasks, 1)
-        )
+        picker.add_options(self.task_options())
         picker.border_title = ""
         picker.highlighted = picker.get_option_index(selected)

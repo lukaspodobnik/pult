@@ -229,7 +229,10 @@ Ansicht als durchsuchbare A4-PDF mit Seitenzahlen und gewählter Dokumentschrift
 | --- | --- | --- |
 | Stoffverteilungsplan | Hochformat | `exports/<Jahr>/<Klasse>/stoffverteilungsplan-<Fach-ID>.pdf` |
 | Stundenplan | Querformat | `exports/<Jahr>/uebersichten/stundenplan.pdf` |
-| Aufgaben und Lösungen | Hochformat | `exports/<Jahr>/materialien/<Fach-ID>/<Jahrgang>/<Sequenz-ID>/aufgaben.pdf` bzw. `loesungen.pdf` |
+| Aufgaben und Lösungen einer Sequenz | Hochformat | `exports/<Jahr>/materialien/<Fach-ID>/<Jahrgang>/<Sequenz-ID>/aufgaben.pdf` bzw. `loesungen.pdf` |
+
+Für einzelne Stunden heißen die Dateien `<Stunden-ID>-aufgaben.pdf` und
+`<Stunden-ID>-loesungen.pdf` im selben Sequenzordner.
 
 Ein erneuter Export ersetzt die gleichnamige Datei erst nach erfolgreicher Erstellung.
 
@@ -239,8 +242,15 @@ Dabei entsteht je Klassen-Fach-Kombination die gewohnte Einzeldatei im jeweilige
 Klassenordner. Die Abschlussmeldung nennt die Anzahl der gespeicherten PDFs und
 etwaige Fehler; die übrigen Exporte laufen auch bei einem einzelnen Fehler weiter.
 
-Das Aufgabenheft folgt der Reihenfolge der Aufgabenbibliothek und enthält auch
-nicht zugeordnete Aufgaben. Für jede Aufgabe muss eine nicht leere Lösung vorliegen.
+In der Aufgabenbibliothek exportiert **x** die Aufgaben der aktuellen Stunde
+in der Reihenfolge ihrer Vormerkungen. **X** exportiert die Aufgaben aller Stunden
+der Sequenz, jede Aufgabe einmal, in der Reihenfolge der Aufgabenbibliothek.
+**v** pflegt die Vormerkungen für die aktuelle Stunde; eine zusätzliche
+Sequenzauswahl gibt es nicht. Ohne Stundenkontext ist nur **X** verfügbar.
+Nicht zugeordnete Aufgaben bleiben im Bestand und werden nicht exportiert.
+Ohne Vormerkungen entstehen keine neuen PDFs. Für jede exportierte Aufgabe muss
+eine nicht leere Lösung vorliegen. Für einen vollständigen Sequenzexport zu Beginn
+die Aufgaben bereits den geplanten Stunden zuordnen.
 Ohne weitere Angaben gibt es ein gemeinsames Karofeld mit acht Zeilen. Optional
 steuert `[export]` in `aufgabe.toml` Linien, Karofelder oder keinen Antwortbereich,
 die Zeilenzahl und die Platzierung pro Teilaufgabe. Beispiele und Grenzen stehen
@@ -248,7 +258,21 @@ im [Materialvertrag](src/pult/defaults/vorbereitung/materialvertrag.md#aufgabene
 Druckspalten, ergänzte Gleichheitszeichen und Bildgrößen lassen sich unabhängig
 von der PULT-Ansicht einstellen. Karofelder nutzen immer die volle Inhaltsbreite.
 
+Die Herkunft steht in `[quelle]` der Aufgabe; Buchtitel werden einmal unter
+`[buecher]` in `sequenz.toml` hinterlegt. Buchaufgabentitel enthalten `S. <Zahl>`
+und `A. <Zahl>` passend zur Quelle, ohne laufende PULT-Nummer. Unnummerierte
+Einstiege und römische Buchnummern bleiben zulässig. Die Bibliothek sortiert nach
+Seite und Buchnummer; Einstiege stehen am Seitenanfang, römische Aufgaben nach
+den arabischen. Eigene Aufgaben behalten ihre bisherige Titelordnung.
+Reine Buchsammlungen verwenden Seite und
+Buchnummer statt laufender Exportnummern. Mischsammlungen bleiben nummeriert und
+zeigen bei Buchaufgaben die Quelle. Aufgaben und Lösungen verwenden dieselben
+Referenzen. Ausgabejahr oder ISBN sind nicht erforderlich.
+
 Unter **Einstellungen → Name auf Arbeitsblättern** lässt sich die Fußzeile setzen.
+Der Name erscheint nur bei einer Sammlung ausschließlich eigener Aufgaben.
+Ältere Aufgaben ohne Quellenangabe behalten das bisherige Verhalten; ihre
+Herkunft wird nicht aus dem Titel oder Jahrgang abgeleitet.
 
 ## Leistungsnachweise und Einstellungen
 

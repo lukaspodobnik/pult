@@ -151,6 +151,7 @@ def test_planning_and_workbook_exports_use_configured_rules(tmp_path, sequences)
         metadata=TaskMetadata("Pfeile", ["K5"], "I"),
     )
     save_task(tmp_path, task)
+    sequences[0].lessons[0].tasks = [task]
     sources = {
         path: path.read_bytes() for path in (tmp_path / "aufgaben/arrows").glob("*.md")
     }

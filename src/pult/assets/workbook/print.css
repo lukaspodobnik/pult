@@ -66,3 +66,14 @@ blockquote.callout { break-inside:avoid; }
 .exercise-body > :has(+ .answer-area),
 .subtasks:has(+ .answer-area) .subtask-row:last-child { break-after:avoid; }
 .exercise-body:has(> .answer-area) { break-inside:avoid; }
+
+.workbook-sources { color:#647282; font-size:10pt; margin:-3mm 0 6mm; }
+.exercise-source { color:#647282; font-size:9.5pt; margin:0 0 2mm; break-after:avoid; }
+
+.exercise-intro { break-inside:avoid; }
+.subtask:has(> .subtask-content > p:first-child > img:only-child) { align-items:start; }
+
+/* Single-block exercises keep their source heading with the content. */
+.exercise:not(:has(.subtasks)) { break-inside:avoid; }
+/* The last introductory block must not glue the following exercise to this one. */
+.exercise-body > .exercise-intro:last-child { break-after:auto; }

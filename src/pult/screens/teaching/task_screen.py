@@ -35,7 +35,8 @@ class TaskScreen(PultScreen[Sequence]):
         ("escape", "close", "Zurück"),
         ("e", "edit_task", "Bearbeiten"),
         ("n", "create_task", "Neue Aufgabe"),
-        ("x", "export_pdf", "Sequenz exportieren"),
+        ("x", "export_pdf", "Stunde exportieren"),
+        Binding("X", "export_sequence_pdf", "Sequenz exportieren", key_display="X"),
         Binding("space", "toggle_solution", "Aufgabe / Lösung", priority=True),
         ("v", "assign_task", "Vormerken / entfernen"),
     ]
@@ -76,9 +77,6 @@ class TaskScreen(PultScreen[Sequence]):
         return next((task for task in self.tasks if task.id == self.task_id), None)
 
     def options(self):
-        assigned = {
-            task.id for lesson in self.sequence.lessons for task in lesson.tasks
-        }
         lesson = next(
             (item for item in self.sequence.lessons if item.id == self.lesson_id), None
         )
@@ -88,8 +86,6 @@ class TaskScreen(PultScreen[Sequence]):
             if task.id in bookmarked:
                 label.append("✓ ", style="bold")
             label.append(task.metadata.title)
-            if self.lesson_id is None and task.id not in assigned:
-                label.append("\nNoch nicht zugeordnet", style="dim")
             yield Option(label, id=task.id)
 
     def material(self):
@@ -119,8 +115,12 @@ class TaskScreen(PultScreen[Sequence]):
         return Text(label)
 
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
-        if action == "export_pdf":
-            return bool(self.tasks) and not self._exporting
+        if action in ("export_pdf", "export_sequence_pdf"):
+            return (
+                bool(self.tasks)
+                and not self._exporting
+                and (action == "export_sequence_pdf" or self.lesson_id is not None)
+            )
         if action == "assign_task":
             return self.lesson_id is not None
         return True
@@ -295,19 +295,29 @@ class TaskScreen(PultScreen[Sequence]):
     def action_export_pdf(self) -> None:
         if not self.check_action("export_pdf", ()):
             return
+        self.start_export(self.lesson_id)
+
+    def action_export_sequence_pdf(self) -> None:
+        if not self.check_action("export_sequence_pdf", ()):
+            return
+        self.start_export(None)
+
+    def start_export(self, lesson_id: str | None) -> None:
         self._exporting = True
         self.refresh_bindings()
-        self.notify("Aufgabenheft und Lösungen werden erstellt …")
-        self._export_pdf()
+        scope = "Stunde" if lesson_id is not None else "Sequenz"
+        self.notify(f"Aufgaben und Lösungen der {scope} werden erstellt …")
+        self._export_pdf(lesson_id)
 
     @work(group="pdf-export", exit_on_error=False)
-    async def _export_pdf(self) -> None:
+    async def _export_pdf(self, lesson_id: str | None) -> None:
         try:
             tasks_path, solutions_path = await export_task_workbooks(
                 self.pult_app.document_renderer,
                 self.app_config,
                 sequence=self.sequence,
                 directory=self.directory,
+                lesson_id=lesson_id,
             )
             self.notify(
                 f"Aufgaben und Lösungen gespeichert: {tasks_path.parent}", timeout=12

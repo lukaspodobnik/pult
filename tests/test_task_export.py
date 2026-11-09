@@ -75,7 +75,7 @@ def test_export_metadata_roundtrip(tmp_path, data):
         {"gleichheitszeichen": True},
         {"bildbreite_mm": True},
         {"bildbreite_mm": 9},
-        {"bildbreite_mm": 66},
+        {"bildbreite_mm": 168},
         {"teilaufgaben": []},
         {"teilaufgaben": {"a)": {"zeilen": 2}}},
         {"teilaufgaben": {"a": 3}},
@@ -193,16 +193,18 @@ def setup_export(tmp_path, sequence):
             ]
         },
     )
+    sequence.lessons[0].tasks = []
     for number in [10, 2, 1]:
         task = exercise()
         task.id = f"task-{number}"
         task.metadata.title = f"{number}. Aufgabe {number}"
         task.text = f"Inhalt {number}"
         save_task(tmp_path, task)
+        sequence.lessons[0].tasks.append(task)
     return AppConfig(tmp_path, "true", "2026-2027")
 
 
-def test_export_loads_all_tasks_in_library_order_and_renders_both_before_saving(
+def test_export_loads_assigned_tasks_in_library_order_and_renders_both_before_saving(
     tmp_path, sequences
 ):
     sequence = sequences[0]
@@ -240,6 +242,7 @@ def test_missing_solution_leaves_previous_exports_and_reports_task(tmp_path, seq
     config = setup_export(tmp_path, sequences[0])
     task = exercise()
     task.solution = None
+    sequences[0].lessons[0].tasks.append(task)
     save_task(tmp_path, task)
     from pult.services.exports.common import material_export_path, save_pdf
 
@@ -478,7 +481,9 @@ def test_export_rejects_equals_on_prose_and_unknown_or_ambiguous_part(
         workbook_html([task], sequences[0], tmp_path)
 
 
-def test_image_settings_apply_only_to_task_and_selected_part(tmp_path, sequences):
+def test_image_settings_share_global_size_but_keep_part_overrides_on_task(
+    tmp_path, sequences
+):
     task = exercise(
         TaskExport(image_width_mm=40, parts={"a": TaskPartExport(image_width_mm=30)})
     )
@@ -486,4 +491,40 @@ def test_image_settings_apply_only_to_task_and_selected_part(tmp_path, sequences
     assert 'style="--image-width:40mm"' in result
     assert result.count('style="--image-width:30mm"') == 1
     solution = workbook_html([task], sequences[0], tmp_path, solutions=True)
-    assert 'style="--image-width:' not in solution
+    assert 'style="--image-width:40mm"' in solution
+    assert 'style="--image-width:30mm"' not in solution
+
+
+@pytest.mark.parametrize("mixed", [False, True])
+def test_book_export_omits_personal_author_in_both_pdfs(tmp_path, sequences, mixed):
+    from pult.curriculum.material import TaskSource
+
+    sequence = sequences[0]
+    sequence.books = {"fokus-7": "Fokus Mathematik 7"}
+    config = setup_export(tmp_path, sequence)
+    config.export_author = "Persönlicher Name"
+    for number in [1, 2, 10]:
+        task = load_task(tmp_path, f"task-{number}")
+        if not mixed or number != 10:
+            task.metadata.source = TaskSource("buch", "fokus-7", 32, str(number))
+            task.metadata.title = f"Trainieren, S. 32 A. {number}"
+        save_task(tmp_path, task)
+    renderer = SimpleNamespace(
+        resolve_font=AsyncMock(return_value="source-sans-3"),
+        render_pdf=AsyncMock(side_effect=[b"%PDF-tasks", b"%PDF-solutions"]),
+    )
+    asyncio.run(
+        export_task_workbooks(renderer, config, sequence=sequence, directory=tmp_path)
+    )
+    for call in renderer.render_pdf.call_args_list:
+        assert "Persönlicher Name" not in call.kwargs["footer_template"]
+        assert "pageNumber" in call.kwargs["footer_template"]
+        assert "S. 32 · Aufgabe 2" in call.args[0]
+
+
+def test_wide_diagram_size_is_shared_by_exercises_and_solutions(tmp_path, sequences):
+    task = exercise(TaskExport(image_width_mm=130))
+    for solutions in (False, True):
+        html = workbook_html([task], sequences[0], tmp_path, solutions=solutions)
+        assert 'style="--image-width:130mm"' in html
+        assert ('class="answer-area ' in html) != solutions
