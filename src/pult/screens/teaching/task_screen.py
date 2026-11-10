@@ -199,6 +199,10 @@ class TaskScreen(PultScreen[Sequence]):
         pane.scroll_home(animate=False)
 
     def action_close(self):
+        # The previous screen resumes before Textual finishes unmounting this
+        # one. Stop pending image updates before handing the terminal back.
+        for viewer in self.query(DocumentViewer):
+            viewer.set_active(False)
         self.dismiss(self.sequence)
 
     def action_edit_task(self):

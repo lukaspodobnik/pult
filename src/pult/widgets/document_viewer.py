@@ -21,6 +21,7 @@ from textual.color import Color
 from textual.geometry import Region
 from textual.message import Message
 from textual.strip import Strip
+from textual.widget import Widget
 from textual.widgets import Markdown, Static
 
 from pult.curriculum.material import Lesson
@@ -177,9 +178,30 @@ class DocumentViewer(Vertical):
         self.call_after_refresh(self.activate_document)
 
     def activate_document(self):
+        # A queued activation may outlive a rapid lesson or screen switch.
+        if (
+            not self.is_mounted
+            or not self.display
+            or self.screen is not self.app.screen
+        ):
+            return
         self.schedule_render()
         self.position_continuation()
         if self.signature is not None and self.rendered_signature == self.signature:
+            # Cached document images can outlive their terminal representation.
+            # Repaint the existing tiles (including Sixel's child widget) so the
+            # graphics data is sent again, without rebuilding the document.
+            for tile, _ in self.image_tiles:
+                if tile.is_mounted:
+                    for widget in tile.walk_children(Widget, with_self=True):
+                        widget.refresh(repaint=True)
+            if self.image_tiles:
+                logger.debug(
+                    "viewer_redraw_requested viewer=%s document=%s tiles=%s reason=activation",
+                    self.diagnostic_id,
+                    self.document_id,
+                    len(self.image_tiles),
+                )
             logger.debug(
                 "viewer_reused viewer=%s document=%s tiles=%s width=%s height=%s",
                 self.diagnostic_id,

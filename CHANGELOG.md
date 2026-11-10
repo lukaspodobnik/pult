@@ -2,6 +2,11 @@
 
 ## Noch nicht veröffentlicht
 
+- Stundenansicht: Bereits gerenderte Dokumentbilder werden beim Wiederanzeigen
+  gezielt neu ausgegeben. Dokumentcache, Auswahl und Scrollposition bleiben bei
+  der Rückkehr aus der Aufgabenbibliothek erhalten. Beim Schließen der Aufgaben
+  werden laufende Darstellungen vor dem Ansichtswechsel abgebrochen.
+
 - Tagesübersicht: Zeilen und Textfelder werden nach dem Start, beim erneuten
   Anzeigen und beim Wechsel der Zeitmarkierung gezielt neu gezeichnet, damit
   keine veralteten Hintergrundflächen stehen bleiben. Unterrichtsdaten und
