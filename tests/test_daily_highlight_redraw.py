@@ -86,7 +86,14 @@ def test_startup_and_highlight_change_keep_backgrounds_consistent(
             for row in rows:
                 assert_background(row)
             text = logging_session.path.read_text()
-            assert text.count("reason=startup_finished") == 2
+            assert (
+                sum(
+                    "daily_row_redraw_requested" in line
+                    and "reason=startup_finished" in line
+                    for line in text.splitlines()
+                )
+                == 2
+            )
             redraws = text.count("daily_row_redraw_requested")
             for _ in range(3):
                 panel.refresh_time_highlight(load_periods(config.root), clock.now(None))

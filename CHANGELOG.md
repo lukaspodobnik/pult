@@ -2,6 +2,10 @@
 
 ## Noch nicht veröffentlicht
 
+- Navigation: Nach der Startanimation werden die Darstellungsstile der drei
+  Navigationslisten aktualisiert, damit die ausgewählte Ansicht sofort sichtbar
+  hinterlegt ist. Auswahl, Fokus und Scrollposition bleiben erhalten.
+
 - Stundenansicht: Bereits gerenderte Dokumentbilder werden beim Wiederanzeigen
   gezielt neu ausgegeben. Dokumentcache, Auswahl und Scrollposition bleiben bei
   der Rückkehr aus der Aufgabenbibliothek erhalten. Beim Schließen der Aufgaben

@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from typing import ClassVar
 
 from textual import on
@@ -62,6 +63,8 @@ from pult.widgets.footer import PultFooter
 from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
 from pult.widgets.startup_logo import StartupLogo
+
+logger = logging.getLogger(__name__)
 
 
 class MainScreen(PultScreen[None]):
@@ -163,7 +166,23 @@ class MainScreen(PultScreen[None]):
 
     def _finish_startup(self) -> None:
         self.startup_active = False
+        self.call_after_refresh(self._redraw_startup_navigation)
         self.call_after_refresh(self._redraw_daily_schedule, "startup_finished")
+
+    def _redraw_startup_navigation(self) -> None:
+        if not self.is_mounted or self.startup_active:
+            return
+        for picker in self.query_one("#navigation").query(OptionList):
+            # Die Einblendanimation kann einen mit opacity=0 berechneten
+            # Komponentenstil hinterlassen; ein Repaint allein erhält ihn.
+            picker.update_node_styles(animate=False)
+            picker.refresh(repaint=True)
+            logger.debug(
+                "navigation_redraw_requested picker=%s highlighted=%s focused=%s reason=startup_finished",
+                picker.id,
+                picker.highlighted,
+                picker.has_focus,
+            )
 
     def _redraw_daily_schedule(self, reason: str) -> None:
         """Nach dem Sichtbarwerden auch die gecachten Textfelder aktualisieren."""
