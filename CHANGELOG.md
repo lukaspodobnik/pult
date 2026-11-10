@@ -2,6 +2,11 @@
 
 ## Noch nicht veröffentlicht
 
+- Tagesübersicht: Zeilen und Textfelder werden nach dem Start, beim erneuten
+  Anzeigen und beim Wechsel der Zeitmarkierung gezielt neu gezeichnet, damit
+  keine veralteten Hintergrundflächen stehen bleiben. Unterrichtsdaten und
+  Fortschritt bleiben dabei unverändert.
+
 - Lokale Diagnoseprotokolle mit Größenbegrenzung und Rotation; `pult --debug`
   erfasst zusätzlich Stundenwechsel, Cache-Nutzung, Darstellung und Tagesmarkierung.
   `pult --help` nennt Optionen und Logpfad. Fehler aus Oberfläche und

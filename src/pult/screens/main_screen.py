@@ -57,6 +57,7 @@ from pult.services.progress import (
 from pult.views.home_view import HomeView
 from pult.views.school_class_view import SchoolClassView
 from pult.widgets.app_logo import AppLogo
+from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
 from pult.widgets.footer import PultFooter
 from pult.widgets.navigation import ManagementPicker, TeachingPicker, ViewPicker
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
@@ -162,6 +163,15 @@ class MainScreen(PultScreen[None]):
 
     def _finish_startup(self) -> None:
         self.startup_active = False
+        self.call_after_refresh(self._redraw_daily_schedule, "startup_finished")
+
+    def _redraw_daily_schedule(self, reason: str) -> None:
+        """Nach dem Sichtbarwerden auch die gecachten Textfelder aktualisieren."""
+        if not self.is_mounted or self.app.screen is not self or self.startup_active:
+            return
+        view = self.query_one("#content", ContentSwitcher).visible_content
+        if isinstance(view, HomeView):
+            view.query_one(DailySchedulePanel).redraw_rows(reason)
 
     def on_resize(self) -> None:
         self.call_after_refresh(self.align_dashboard)
@@ -246,6 +256,7 @@ class MainScreen(PultScreen[None]):
 
     def on_screen_resume(self) -> None:
         self._schedule_view_change()
+        self.call_after_refresh(self._redraw_daily_schedule, "screen_resumed")
 
     def on_unmount(self) -> None:
         if self._view_timer is not None:
@@ -259,7 +270,10 @@ class MainScreen(PultScreen[None]):
         if not view.is_mounted:
             await content.add_content(view, id=type(view).__name__)
         if self.app.is_running:
+            previous = content.current
             content.current = view.id
+            if isinstance(view, HomeView) and previous != view.id:
+                self.call_after_refresh(self._redraw_daily_schedule, "view_shown")
 
     async def show_home_view(self) -> None:
         """Lade alle Dashboarddaten neu und zeige anschließend die HomeView."""

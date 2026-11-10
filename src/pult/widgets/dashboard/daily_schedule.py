@@ -109,8 +109,28 @@ class DailyScheduleRow(Horizontal):
                 highlighted,
                 reason,
             )
-            if logger.isEnabledFor(logging.DEBUG) and self.is_mounted:
-                self.call_after_refresh(self.log_highlight_layout)
+            if self.is_mounted:
+                # Transparente Textfelder können noch die zuvor gezeichnete
+                # Hintergrundfarbe enthalten, obwohl die Zeilenklasse stimmt.
+                self.call_after_refresh(self.redraw_contents, f"highlight_{reason}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    self.call_after_refresh(self.log_highlight_layout)
+
+    def redraw_contents(self, reason: str) -> None:
+        """Vererbte Farben und Zeichen-Caches der Zeile samt Textfeldern erneuern."""
+        if not self.is_mounted:
+            return
+        logger.debug(
+            "daily_row_redraw_requested occurrence=%s reason=%s",
+            self.occurrence,
+            reason,
+        )
+        # Ein Repaint allein kann den berechneten VisualStyle der Textfelder
+        # wiederverwenden. Nach Änderungen an Vorfahren (z. B. der Startblende)
+        # auch diesen Stil über Textuals öffentliche CSS-Aktualisierung erneuern.
+        self.update_node_styles(animate=False)
+        for widget in self.walk_children(Widget, with_self=True):
+            widget.refresh(repaint=True)
 
     def log_highlight_layout(self) -> None:
         if self.is_mounted:
@@ -196,15 +216,17 @@ class DailySchedulePanel(Vertical):
             for item in self.daily_schedule.external_assessments
         )
 
+    def redraw_rows(self, reason: str) -> None:
+        for row in self.query(DailyScheduleRow):
+            row.redraw_contents(reason)
+
     def diagnostic_redraw(self) -> None:
         """Temporärer Repaint-Test: weder Daten noch Layout oder Widgets ersetzen."""
         redraw = diagnostic_id("daily-redraw")
         rows = list(self.query(DailyScheduleRow))
         logger.debug("daily_redraw_requested redraw=%s rows=%s", redraw, len(rows))
         self._log_redraw_state(redraw, "before")
-        for row in rows:
-            for widget in row.walk_children(Widget, with_self=True):
-                widget.refresh(repaint=True)
+        self.redraw_rows("diagnostic")
         # Keine Benachrichtigung: deren Overlay würde den Repaint-Test verfälschen.
         self.call_after_refresh(self._log_redraw_state, redraw, "after")
 
