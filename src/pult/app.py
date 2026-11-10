@@ -1,3 +1,4 @@
+import logging
 from dataclasses import replace
 from datetime import datetime
 from typing import ClassVar
@@ -8,6 +9,7 @@ from textual.app import App
 from textual.binding import Binding
 from textual.events import Event, InputEvent, Key, Resize
 from textual.widgets import Input, TextArea
+from textual.worker import WorkerFailed
 
 from pult.config import AppConfig, load_app_config
 from pult.presentation import format_school_year
@@ -15,13 +17,18 @@ from pult.screens.common.confirmation_screen import ConfirmationScreen
 from pult.screens.main_screen import MainScreen
 from pult.screens.settings.renderer_setup_screen import RendererSetupScreen
 from pult.screens.setup.setup_pult_screen import SetupScreen
+from pult.services.diagnostics import log_failure
 from pult.services.documents.document_rendering import DocumentRenderer
 from pult.services.documents.renderer_setup import RendererSetup
 from pult.services.omarchy_theme import OmarchyThemeWatcher
 from pult.services.sequence_library import SequenceLibrary
 from pult.services.settings import get_suggested_school_year, update_settings
 from pult.services.themes import standard_theme
+from pult.views.home_view import HomeView
+from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
 from pult.widgets.terminal_size_notice import TerminalSizeNotice
+
+logger = logging.getLogger(__name__)
 
 
 class PultApp(App):
@@ -91,8 +98,15 @@ class PultApp(App):
             event = Key(directions[event.key], None)
         await super().on_event(event)
 
-    def __init__(self) -> None:
+    def __init__(self, *, diagnostic_mode: bool = False) -> None:
         super().__init__()
+        self.diagnostic_mode = diagnostic_mode
+        # Temporäre Hilfe zur Diagnose der fragmentierten Tagesmarkierung.
+        # Nach Behebung des Darstellungsfehlers wieder entfernen.
+        if diagnostic_mode:
+            self.bind(
+                "ctrl+r", "diagnostic_redraw", description="Diagnose: Neuzeichnen"
+            )
         self.document_renderer = DocumentRenderer()
         self.renderer_setup = RendererSetup(self.document_renderer)
         self._renderer_setup_offered = False
@@ -101,12 +115,44 @@ class PultApp(App):
         self.omarchy_theme = OmarchyThemeWatcher()
         self._theme_slot = 0
 
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "diagnostic_redraw":
+            return (
+                self.diagnostic_mode
+                and not self.terminal_too_small
+                and isinstance(self.screen, MainScreen)
+                and not self.screen.startup_active
+                and self.screen._pending_view_id is None
+                and self.screen.active_school_class_id is None
+                and bool(self.screen.query(HomeView))
+            )
+        return super().check_action(action, parameters)
+
+    def action_diagnostic_redraw(self) -> None:
+        if not self.check_action("diagnostic_redraw", ()):
+            return
+        self.screen.query_one(HomeView).query_one(
+            DailySchedulePanel
+        ).diagnostic_redraw()
+
+    def _handle_exception(self, error: Exception) -> None:
+        # Textual handles UI and fatal worker exceptions before run_async returns.
+        # Keep its exit behaviour; unwrap WorkerFailed to retain the original stack.
+        cause = error.error if isinstance(error, WorkerFailed) else error
+        log_failure(logger, "ui_failed", cause)
+        if isinstance(error, WorkerFailed):
+            setattr(error, "_pult_logged", True)
+        super()._handle_exception(error)
+
     @property
     def terminal_too_small(self) -> bool:
         width, height = self.MINIMUM_TERMINAL_SIZE
         return self.size.width < width or self.size.height < height
 
     def on_resize(self, event: Resize) -> None:
+        logger.debug(
+            "terminal_resized width=%s height=%s", event.size.width, event.size.height
+        )
         self.call_after_refresh(self.update_terminal_size_notice)
 
     async def update_terminal_size_notice(self) -> None:
@@ -149,6 +195,7 @@ class PultApp(App):
         return self.sequence_library
 
     def on_mount(self) -> None:
+        self.screen_change_signal.subscribe(self, self._log_screen_change)
         self.screen_change_signal.subscribe(
             self, lambda _: self.call_after_refresh(self.update_terminal_size_notice)
         )
@@ -159,6 +206,9 @@ class PultApp(App):
         self.set_interval(1, self.refresh_omarchy_theme)
         self.app_config = load_app_config()
         self.show_initial_screen()
+
+    def _log_screen_change(self, screen) -> None:
+        logger.debug("screen_changed screen=%s", type(screen).__name__)
 
     def refresh_omarchy_theme(self) -> None:
         """Übernimm neue Farben ohne Screens, Eingaben oder Fokus neu aufzubauen."""

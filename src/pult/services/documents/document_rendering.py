@@ -5,6 +5,7 @@ import base64
 import hashlib
 import html
 import io
+import logging
 import os
 import re
 import stat
@@ -24,6 +25,7 @@ from pygments.lexers import get_lexer_by_name
 from pygments.util import ClassNotFound
 
 from pult.curriculum.material import Lesson
+from pult.services.diagnostics import document_id
 from pult.services.documents.document_callouts import (
     callouts_plugin,
     resolve_callout_colors,
@@ -40,6 +42,7 @@ from pult.storage import save_bytes
 
 SEPARATOR_Y = "pult.separator_y"
 DOCUMENT_CACHE_MAX_BYTES = 500_000_000
+logger = logging.getLogger(__name__)
 
 
 def highlight_code(code: str, language: str, attributes: str) -> str:
@@ -316,9 +319,11 @@ class DocumentRenderer:
         if self.browser is not None and not self.browser.is_connected():
             self.browser = None
         if self.browser is None:
+            logger.debug("renderer_browser_starting")
             if self.driver is None:
                 self.driver = await async_playwright().start()
             self.browser = await self.driver.chromium.launch(headless=True)
+            logger.debug("renderer_browser_started")
 
     async def check_available(self) -> None:
         """Einen echten Bild- und PDF-Test ausführen, ohne Dateien zu speichern."""
@@ -421,9 +426,20 @@ class DocumentRenderer:
         target = self.cache / f"{key}.png"
         # Warm documents must not wait behind a background render in Chromium.
         if self.touch_cache(target):
+            logger.debug(
+                "document_cache_hit document=%s cache=%s", document_id(path), key[:12]
+            )
             return target
+        logger.debug(
+            "document_cache_miss document=%s cache=%s", document_id(path), key[:12]
+        )
         async with self.lock:
             if self.touch_cache(target):
+                logger.debug(
+                    "document_cache_hit_after_wait document=%s cache=%s",
+                    document_id(path),
+                    key[:12],
+                )
                 return target
             await self.ensure_browser()
             assert self.browser is not None
@@ -465,8 +481,18 @@ class DocumentRenderer:
         # An individual oversized image can still be displayed, but must not
         # exceed the disk budget or evict the entire cache.
         if len(screenshot) > DOCUMENT_CACHE_MAX_BYTES:
+            logger.debug(
+                "document_cache_bypassed cache=%s bytes=%s",
+                target.stem[:12],
+                len(screenshot),
+            )
             return screenshot
         save_bytes(target, screenshot)
+        logger.debug(
+            "document_cache_written cache=%s bytes=%s",
+            target.stem[:12],
+            len(screenshot),
+        )
         self.prune_cache(protect=target)
 
         return target

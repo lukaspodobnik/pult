@@ -1,10 +1,13 @@
 """Dokumente in lesbarer Originalgröße, mit gemeinsamem Browser und Cache."""
 
+import asyncio
 import io
+import logging
 import math
 from collections.abc import Mapping
 from functools import partial
 from pathlib import Path
+from time import perf_counter
 
 from PIL import Image as PILImage
 from rich import box
@@ -21,6 +24,7 @@ from textual.strip import Strip
 from textual.widgets import Markdown, Static
 
 from pult.curriculum.material import Lesson
+from pult.services.diagnostics import diagnostic_id, document_id, log_failure, operation
 from pult.services.documents import material_rendering as graphics
 from pult.services.documents.document_callouts import (
     resolve_callout_colors,
@@ -34,6 +38,8 @@ from pult.services.documents.document_rendering import (
 )
 from pult.services.documents.document_replacements import DEFAULT_REPLACEMENTS
 from pult.widgets.scrolling import Vertical, VerticalScroll
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentPane(VerticalScroll):
@@ -113,6 +119,8 @@ class DocumentViewer(Vertical):
     ):
         super().__init__(classes="document-viewer")
         self.source, self.path, self.directory = source, path, directory
+        self.diagnostic_id = diagnostic_id("viewer")
+        self.document_id = document_id(path)
         self.planning = planning
         self.start_at_separator = start_at_separator and planning is None
         self._initial_scroll_pending = self.start_at_separator
@@ -133,6 +141,9 @@ class DocumentViewer(Vertical):
         )
 
     def on_mount(self):
+        logger.debug(
+            "viewer_mounted viewer=%s document=%s", self.diagnostic_id, self.document_id
+        )
         self.query_one("#document-body").styles.height = "auto"
         self.set_interval(0.5, self.schedule_render)
         self.call_after_refresh(self.schedule_render)
@@ -141,6 +152,16 @@ class DocumentViewer(Vertical):
         self.schedule_render()
 
     def set_active(self, active: bool, *, reset_position: bool = False):
+        logger.debug(
+            "viewer_activation viewer=%s document=%s active=%s mounted=%s reset=%s width=%s height=%s",
+            self.diagnostic_id,
+            self.document_id,
+            active,
+            self.is_mounted,
+            reset_position,
+            self.content_size.width,
+            self.content_size.height,
+        )
         self.display = active
         if not active:
             if self.render_timer:
@@ -159,6 +180,14 @@ class DocumentViewer(Vertical):
         self.schedule_render()
         self.position_continuation()
         if self.signature is not None and self.rendered_signature == self.signature:
+            logger.debug(
+                "viewer_reused viewer=%s document=%s tiles=%s width=%s height=%s",
+                self.diagnostic_id,
+                self.document_id,
+                len(self.image_tiles),
+                self.content_size.width,
+                self.content_size.height,
+            )
             if self._cache_path is not None:
                 DocumentRenderer.touch_cache(self._cache_path)
             self.post_message(self.Ready(self))
@@ -201,6 +230,15 @@ class DocumentViewer(Vertical):
             self.refresh_corners()
             return
         first_render = self.signature is None
+        logger.debug(
+            "render_scheduled viewer=%s document=%s first=%s width=%s viewport_height=%s text_mode=%s",
+            self.diagnostic_id,
+            self.document_id,
+            first_render,
+            self.content_size.width,
+            viewport_height,
+            self.text_mode,
+        )
         self.signature = signature
         self.post_message(self.Rendering(self))
         self.styles.background = background
@@ -259,6 +297,29 @@ class DocumentViewer(Vertical):
 
     @work(exclusive=True)
     async def render_document(self, signature):
+        with operation("render"):
+            started = perf_counter()
+            logger.debug(
+                "render_started viewer=%s document=%s",
+                self.diagnostic_id,
+                self.document_id,
+            )
+            try:
+                await self._render_document(signature)
+            except asyncio.CancelledError:
+                logger.debug("render_cancelled viewer=%s", self.diagnostic_id)
+                raise
+            except Exception as error:
+                log_failure(logger, "render_failed", error)
+                raise
+            else:
+                logger.debug(
+                    "render_finished viewer=%s duration_ms=%.1f",
+                    self.diagnostic_id,
+                    (perf_counter() - started) * 1000,
+                )
+
+    async def _render_document(self, signature):
         (
             width,
             colors,
@@ -275,6 +336,7 @@ class DocumentViewer(Vertical):
         cache_path = None
         try:
             if graphics.image_widget() is None or text_mode:
+                logger.debug("render_text_mode viewer=%s", self.diagnostic_id)
                 widgets = self.fallback_widgets(dict(replacements))
             else:
                 cell_width, cell_height = graphics.CELL
@@ -283,6 +345,11 @@ class DocumentViewer(Vertical):
                     self.source, self.path, self.planning, signature
                 )
                 if not self.is_mounted or signature != self.signature:
+                    logger.debug(
+                        "render_discarded viewer=%s mounted=%s",
+                        self.diagnostic_id,
+                        self.is_mounted,
+                    )
                     return
                 cache_path = (
                     rendered_image if isinstance(rendered_image, Path) else None
@@ -332,6 +399,11 @@ class DocumentViewer(Vertical):
                         widgets.append(widget)
                         tiles.append((widget, padded))
             if not self.is_mounted or signature != self.signature:
+                logger.debug(
+                    "render_discarded viewer=%s mounted=%s",
+                    self.diagnostic_id,
+                    self.is_mounted,
+                )
                 return
             self.image_tiles = []
             self.corner_signatures.clear()
@@ -347,8 +419,23 @@ class DocumentViewer(Vertical):
             self.call_after_refresh(self.refresh_corners)
             self.rendered_signature = signature
             self._cache_path = cache_path
+            logger.debug(
+                "viewer_updated viewer=%s document=%s tiles=%s active=%s",
+                self.diagnostic_id,
+                self.document_id,
+                len(tiles),
+                self.display,
+            )
             self.post_message(self.Ready(self))
         except Exception as error:
+            logger.warning(
+                "render_fallback viewer=%s document=%s mounted=%s current=%s",
+                self.diagnostic_id,
+                self.document_id,
+                self.is_mounted,
+                signature == self.signature,
+                exc_info=True,
+            )
             if self.is_mounted and signature == self.signature:
                 self.image_tiles = []
                 self.corner_signatures.clear()

@@ -1,5 +1,7 @@
 """Unterrichtsansicht mit freier Vorbereitung, Planung und separatem Material."""
 
+import asyncio
+import logging
 import shlex
 import shutil
 import subprocess
@@ -17,10 +19,13 @@ from pult.curriculum.material import Lesson, initialize_lesson_files, material_p
 from pult.curriculum.sequence import Sequence, get_sequence_path, load_sequence
 from pult.screens.base_screen import PultScreen
 from pult.screens.teaching.select_lesson_file_screen import SelectLessonFileScreen
+from pult.services.diagnostics import operation
 from pult.widgets.document_viewer import DocumentPane, DocumentViewer
 from pult.widgets.footer import PultFooter
 from pult.widgets.materials import MaterialsPane
 from pult.widgets.scrolling import Horizontal, OptionList, Vertical
+
+logger = logging.getLogger(__name__)
 
 
 class LessonScreen(PultScreen[Sequence]):
@@ -72,6 +77,12 @@ class LessonScreen(PultScreen[Sequence]):
             return Static("Noch keine Stunden vorhanden.", classes="lesson-empty")
         key = (lesson.id, planning)
         if key in self._documents:
+            logger.debug(
+                "lesson_viewer_cache_hit lesson=%s planning=%s viewer=%s",
+                lesson.id,
+                planning,
+                self._documents[key].diagnostic_id,
+            )
             return self._documents[key]
         viewer = DocumentViewer(
             lesson.preparation_markdown(),
@@ -86,6 +97,12 @@ class LessonScreen(PultScreen[Sequence]):
             start_at_separator=not planning,
         )
         self._documents[key] = viewer
+        logger.debug(
+            "lesson_viewer_created lesson=%s planning=%s viewer=%s",
+            lesson.id,
+            planning,
+            viewer.diagnostic_id,
+        )
         return viewer
 
     def materials(self):
@@ -125,6 +142,12 @@ class LessonScreen(PultScreen[Sequence]):
                 listing.highlighted = listing.get_option_index(self.lesson.id)
 
     def update_view(self, *, reset_position: bool = False):
+        logger.debug(
+            "lesson_view_update lesson=%s planning=%s reset=%s",
+            self.lesson_id,
+            self.show_planning,
+            reset_position,
+        )
         self.query_one("#lesson-preparation").display = not self.show_planning
         self.query_one("#lesson-planning").display = self.show_planning
         for selector, label in (
@@ -135,6 +158,13 @@ class LessonScreen(PultScreen[Sequence]):
             pane.border_title = self.sequence.title
             pane.border_subtitle = label
             current = self._documents.get((self.lesson_id, label == "Planung"))
+            logger.debug(
+                "lesson_pane_state pane=%s displayed=%s current_viewer=%s viewers=%s",
+                selector,
+                pane.display,
+                current.diagnostic_id if current else None,
+                len(pane.query(DocumentViewer)),
+            )
             for viewer in pane.query(DocumentViewer):
                 viewer.set_active(
                     pane.display and viewer is current,
@@ -148,7 +178,15 @@ class LessonScreen(PultScreen[Sequence]):
             event.option_index != self.query_one("#lesson-list", OptionList).highlighted
             or event.option.id == self.lesson_id
         ):
+            logger.debug(
+                "lesson_selection_ignored selected=%s current=%s",
+                event.option.id,
+                self.lesson_id,
+            )
             return
+        logger.debug(
+            "lesson_selected previous=%s lesson=%s", self.lesson_id, event.option.id
+        )
         self.lesson_id = str(event.option.id)
         self.show_planning = False
         await self.refresh_contents()
@@ -161,6 +199,11 @@ class LessonScreen(PultScreen[Sequence]):
         return ids[max(0, index - self.CACHE_RADIUS) : index + self.CACHE_RADIUS + 1]
 
     async def refresh_contents(self, *, clear_cache: bool = False):
+        logger.debug(
+            "lesson_refresh_started lesson=%s clear_cache=%s",
+            self.lesson_id,
+            clear_cache,
+        )
         self.stop_prefetch()
         for viewer in self._documents.values():
             viewer.set_active(False)
@@ -185,6 +228,11 @@ class LessonScreen(PultScreen[Sequence]):
         for key in list(self._documents):
             if key[0] not in keep:
                 await self._documents.pop(key).remove()
+        logger.debug(
+            "lesson_refresh_finished lesson=%s viewers=%s",
+            self.lesson_id,
+            len(self._documents),
+        )
 
     def stop_prefetch(self):
         if self._prefetch_timer:
@@ -238,41 +286,69 @@ class LessonScreen(PultScreen[Sequence]):
         for lesson, planning in requests:
             if self._prefetch_key != key or viewer.signature != key[2]:
                 return
-            try:
-                await viewer.prefetch(
-                    lesson.preparation_markdown(),
-                    material_path(
-                        self.directory,
-                        "stunden",
-                        lesson.id,
-                        "verlauf.md" if planning else "vorbereitung.md",
-                    ),
-                    lesson if planning else None,
+            with operation("prefetch"):
+                logger.debug(
+                    "prefetch_started lesson=%s planning=%s", lesson.id, planning
                 )
-            except Exception:
-                # A broken neighbour must not disturb the current lesson. Its
-                # own viewer will report the error if it is actually selected.
-                continue
+                try:
+                    await viewer.prefetch(
+                        lesson.preparation_markdown(),
+                        material_path(
+                            self.directory,
+                            "stunden",
+                            lesson.id,
+                            "verlauf.md" if planning else "vorbereitung.md",
+                        ),
+                        lesson if planning else None,
+                    )
+                except asyncio.CancelledError:
+                    logger.debug("prefetch_cancelled lesson=%s", lesson.id)
+                    raise
+                except Exception:
+                    # A failed neighbour must not disturb the current lesson.
+                    logger.warning(
+                        "prefetch_failed lesson=%s planning=%s",
+                        lesson.id,
+                        planning,
+                        exc_info=True,
+                    )
+                else:
+                    logger.debug(
+                        "prefetch_finished lesson=%s planning=%s", lesson.id, planning
+                    )
 
     def on_screen_suspend(self):
+        logger.debug("lesson_screen_suspended lesson=%s", self.lesson_id)
         self.stop_prefetch()
 
     def on_screen_resume(self):
+        logger.debug(
+            "lesson_screen_resumed lesson=%s planning=%s",
+            self.lesson_id,
+            self.show_planning,
+        )
         self.call_after_refresh(self.update_view)
 
     def action_close(self):
+        logger.debug("lesson_screen_closed lesson=%s", self.lesson_id)
         self.stop_prefetch()
         self.dismiss(self.sequence)
 
     def action_toggle_material(self):
         self.stop_prefetch()
         self.show_planning = not self.show_planning
+        logger.debug(
+            "lesson_mode_changed lesson=%s planning=%s",
+            self.lesson_id,
+            self.show_planning,
+        )
         self.update_view()
 
     def action_open_tasks(self):
         from pult.screens.teaching.task_screen import TaskScreen
 
         try:
+            logger.debug("task_library_opened lesson=%s", self.lesson_id)
             self.app.push_screen(
                 TaskScreen(self.sequence, self.directory, lesson_id=self.lesson_id),
                 self.tasks_closed,
@@ -281,6 +357,11 @@ class LessonScreen(PultScreen[Sequence]):
             self.notify(str(error), severity="error")
 
     def tasks_closed(self, sequence: Sequence | None):
+        logger.debug(
+            "task_library_closed lesson=%s updated=%s",
+            self.lesson_id,
+            sequence is not None,
+        )
         if sequence is not None:
             self.sequence = sequence
         # The existing document widgets, mode and scroll position remain mounted.

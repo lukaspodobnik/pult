@@ -13,6 +13,16 @@ from pult.school.subject import Subject
 from pult.school.timetable import TimetableEntry
 
 
+@pytest.fixture
+def logging_session(tmp_path):
+    from pult.services import diagnostics
+
+    session = diagnostics.configure_logging(directory=tmp_path / "logs", debug=True)
+    yield session
+    if diagnostics._session is not None:
+        diagnostics._session.close()
+
+
 @pytest.fixture(autouse=True)
 def isolated_omarchy_palette(tmp_path, monkeypatch):
     """Tests lesen nie die Palette des tatsächlich laufenden Desktops."""

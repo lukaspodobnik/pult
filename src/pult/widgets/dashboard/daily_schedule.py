@@ -1,6 +1,8 @@
+import logging
 from datetime import datetime
 
 from textual.app import ComposeResult
+from textual.widget import Widget
 from textual.widgets import Static
 
 from pult.curriculum.sequence import Sequence
@@ -13,8 +15,11 @@ from pult.progress.queries import (
 )
 from pult.school.period import Period
 from pult.school.subject import Subject
+from pult.services.diagnostics import diagnostic_id
 from pult.widgets.capped_text import CappedText
 from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
+
+logger = logging.getLogger(__name__)
 
 
 class DailyScheduleRow(Horizontal):
@@ -34,6 +39,13 @@ class DailyScheduleRow(Horizontal):
         self.daily_entry = daily_entry
         self.subjects_by_id = subjects_by_id
         self.sequences_by_key = sequences_by_key
+
+    def on_mount(self) -> None:
+        logger.debug(
+            "daily_row_mounted occurrence=%s highlighted=%s",
+            self.occurrence,
+            self.has_class("time-highlighted"),
+        )
 
     @property
     def occurrence(self) -> tuple[str, str, int]:
@@ -67,12 +79,13 @@ class DailyScheduleRow(Horizontal):
         sequences_by_key: dict[tuple[int, str, str], Sequence],
     ) -> None:
         """Ersetze Daten und Status einer bestehenden Tageszeile."""
+        logger.debug("daily_row_updated previous=%s", self.occurrence)
         self.daily_entry = daily_entry
         self.subjects_by_id = subjects_by_id
         self.sequences_by_key = sequences_by_key
         for action in TeachingAction:
             self.set_class(daily_entry.action == action, action.value)
-        self.set_class(daily_entry.is_time_highlighted, "time-highlighted")
+        self.set_time_highlight(daily_entry.is_time_highlighted, reason="data")
         entry = daily_entry.timetable_entry
         self.query_one(".day-status", Static).update(
             ACTION_ICONS.get(daily_entry.action, " ") if daily_entry.action else " "
@@ -85,6 +98,29 @@ class DailyScheduleRow(Horizontal):
         lesson = self.query_one(".day-entry-lesson", Static)
         lesson.update(title or "")
         lesson.display = title is not None
+
+    def set_time_highlight(self, highlighted: bool, *, reason: str) -> None:
+        changed = self.has_class("time-highlighted") != highlighted
+        self.set_class(highlighted, "time-highlighted")
+        if changed:
+            logger.debug(
+                "daily_highlight_changed occurrence=%s highlighted=%s reason=%s",
+                self.occurrence,
+                highlighted,
+                reason,
+            )
+            if logger.isEnabledFor(logging.DEBUG) and self.is_mounted:
+                self.call_after_refresh(self.log_highlight_layout)
+
+    def log_highlight_layout(self) -> None:
+        if self.is_mounted:
+            logger.debug(
+                "daily_highlight_layout occurrence=%s highlighted=%s region=%s background=%s",
+                self.occurrence,
+                self.has_class("time-highlighted"),
+                self.region,
+                self.styles.background.hex,
+            )
 
     def _get_lesson_title(self) -> str | None:
         if self.daily_entry.assessment is not None:
@@ -160,6 +196,41 @@ class DailySchedulePanel(Vertical):
             for item in self.daily_schedule.external_assessments
         )
 
+    def diagnostic_redraw(self) -> None:
+        """Temporärer Repaint-Test: weder Daten noch Layout oder Widgets ersetzen."""
+        redraw = diagnostic_id("daily-redraw")
+        rows = list(self.query(DailyScheduleRow))
+        logger.debug("daily_redraw_requested redraw=%s rows=%s", redraw, len(rows))
+        self._log_redraw_state(redraw, "before")
+        for row in rows:
+            for widget in row.walk_children(Widget, with_self=True):
+                widget.refresh(repaint=True)
+        # Keine Benachrichtigung: deren Overlay würde den Repaint-Test verfälschen.
+        self.call_after_refresh(self._log_redraw_state, redraw, "after")
+
+    def _log_redraw_state(self, redraw: str, phase: str) -> None:
+        if not self.is_mounted:
+            return
+        for row in self.query(DailyScheduleRow):
+            for widget in row.walk_children(Widget, with_self=True):
+                logger.debug(
+                    "daily_redraw_state redraw=%s phase=%s occurrence=%s "
+                    "highlighted=%s widget=%s classes=%s region=%s "
+                    "display=%s visible=%s background=%s opacity=%s",
+                    redraw,
+                    phase,
+                    row.occurrence,
+                    row.has_class("time-highlighted"),
+                    type(widget).__name__,
+                    ",".join(sorted(widget.classes)),
+                    widget.region,
+                    widget.display,
+                    widget.visible,
+                    widget.styles.background,
+                    widget.styles.opacity,
+                )
+        logger.debug("daily_redraw_snapshot_finished redraw=%s phase=%s", redraw, phase)
+
     async def update_data(
         self,
         daily_schedule: DailyScheduleSummary,
@@ -168,6 +239,12 @@ class DailySchedulePanel(Vertical):
     ) -> None:
         """Verwende Tageszeilen wieder und passe nur deren Anzahl an."""
         changed_day = self.daily_schedule.date != daily_schedule.date
+        logger.debug(
+            "daily_schedule_updated date=%s changed_day=%s rows=%s",
+            daily_schedule.date,
+            changed_day,
+            len(daily_schedule.timetable_entries),
+        )
         self.daily_schedule = daily_schedule
         self.subjects_by_id = subjects_by_id
         self.sequences_by_key = sequences_by_key
@@ -208,7 +285,7 @@ class DailySchedulePanel(Vertical):
             current_datetime,
         )
         for row in self.query(DailyScheduleRow):
-            row.set_class(
+            row.set_time_highlight(
                 row.occurrence == highlighted_occurrence,
-                "time-highlighted",
+                reason="clock",
             )

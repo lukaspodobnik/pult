@@ -308,6 +308,55 @@ beim nächsten Aufruf neu erzeugt. Auf Omarchy folgt PULT dem aktuellen Theme;
 sonst verwendet es sein dunkles Standardtheme. Das Layout ist für große
 Terminalfenster ausgelegt, etwa 206 × 46 Zeichen.
 
+## Diagnose und Logdateien
+
+`pult` schreibt wichtige Betriebsereignisse sowie Warnungen und Fehler in eine
+lokale Logdatei. Mit `pult --debug` kommen Details zu Ansichtswechseln,
+Stundenauswahl, Dokumentdarstellung, Cache-Nutzung und Tagesmarkierung hinzu.
+`pult --help` zeigt die Optionen und den auf diesem Rechner verwendeten Logpfad,
+ohne die Oberfläche oder Grafikerkennung zu starten.
+
+- macOS: `~/Library/Logs/PULT/pult.log`
+- Linux: `$XDG_STATE_HOME/pult/logs/pult.log`, standardmäßig
+  `~/.local/state/pult/logs/pult.log`. Relative XDG-Pfade werden ignoriert.
+
+Die aktuelle Datei und bis zu drei ältere Dateien (`pult.log.1` bis `.3`) werden
+bei ungefähr 5 MB je Datei automatisch gewechselt. Die letzte Sitzung bleibt
+nach dem Beenden lesbar. Die Dateien gehören weder zum Unterrichtsordner noch
+zum Dokumentcache. Ist die Logdatei nicht beschreibbar, bleibt PULT nutzbar und
+meldet das nach dem Beenden; Diagnosemeldungen schreiben nicht in die laufende
+Terminaloberfläche.
+
+Jeder Eintrag enthält die lokale Uhrzeit mit Millisekunden, die Wichtigkeitsstufe,
+den Programmteil und eine Sitzungskennung. Zusammengehörige Darstellungs- und
+Vorladevorgänge tragen zusätzlich dieselbe Vorgangskennung. `DEBUG` beschreibt
+Abläufe, `INFO` den Betrieb, `WARNING` Probleme mit Ersatzlösung und `ERROR`
+fehlgeschlagene Vorgänge. Erwartete Abbrüche beim Wechseln sind keine Fehler.
+
+Unterrichtstexte, freie Benutzereingaben und Variablenwerte werden nicht
+protokolliert. Dokumentpfade erscheinen als technische Kennungen; Fehlerketten
+enthalten Ausnahmetypen und Codestellen, aber keine Ausnahmetexte (diese können
+Dokumentinhalte enthalten). Klassen-, Sequenz- und Stundenkennungen können in
+Diagnosemeldungen stehen, Codepfade in Fehlerketten.
+
+Bei einem Darstellungsfehler PULT mit `pult --debug` starten, den Ablauf
+wiederholen und die ungefähre Uhrzeit notieren. Nach dem Beenden die aktuelle
+Logdatei samt gegebenenfalls zugehörigen älteren Dateien sichern. Sie zeigen die
+internen Zustände; ob das Terminal die Pixel korrekt angezeigt hat, muss
+zusätzlich beobachtet werden. Normales `pult` beendet den ausführlichen Modus
+beim nächsten Start. Das technische Log ist vom Unterrichtsprotokoll unabhängig.
+
+Vorübergehend steht in der Tagesübersicht bei `pult --debug` die Diagnosetaste
+`Strg+R` (auf dem Mac: **Control**, nicht Command) zur Verfügung. Bei fehlerhafter
+Hinterlegung einmal drücken und beobachten, ob sie danach vollständig ist.
+Die Taste zeichnet die vorhandenen Tageszeilen samt Textfeldern neu, ohne
+Fortschritt zu buchen, Daten neu zu laden oder die Fenstergröße zu verändern.
+Es erscheint bewusst kein Dialog und keine Meldung, die das Ergebnis beeinflussen
+könnten. Im Log verbinden `daily_redraw_requested` und `daily_redraw_state` den
+Vorgang mit Zustandsaufnahmen vor und nach dem Neuzeichnen über dieselbe
+`redraw`-Kennung. Die Taste ist im normalen Betrieb und in anderen Ansichten
+inaktiv und wird nach Behebung und Prüfung des Darstellungsfehlers entfernt.
+
 ## Entwicklung und Lizenz
 
 ```sh
