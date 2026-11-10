@@ -346,17 +346,6 @@ internen Zustände; ob das Terminal die Pixel korrekt angezeigt hat, muss
 zusätzlich beobachtet werden. Normales `pult` beendet den ausführlichen Modus
 beim nächsten Start. Das technische Log ist vom Unterrichtsprotokoll unabhängig.
 
-Vorübergehend steht in der Tagesübersicht bei `pult --debug` die Diagnosetaste
-`Strg+R` (auf dem Mac: **Control**, nicht Command) zur Verfügung. Bei fehlerhafter
-Hinterlegung einmal drücken und beobachten, ob sie danach vollständig ist.
-Die Taste zeichnet die vorhandenen Tageszeilen samt Textfeldern neu, ohne
-Fortschritt zu buchen, Daten neu zu laden oder die Fenstergröße zu verändern.
-Es erscheint bewusst kein Dialog und keine Meldung, die das Ergebnis beeinflussen
-könnten. Im Log verbinden `daily_redraw_requested` und `daily_redraw_state` den
-Vorgang mit Zustandsaufnahmen vor und nach dem Neuzeichnen über dieselbe
-`redraw`-Kennung. Die Taste ist im normalen Betrieb und in anderen Ansichten
-inaktiv und wird nach Behebung und Prüfung des Darstellungsfehlers entfernt.
-
 ## Entwicklung und Lizenz
 
 ```sh

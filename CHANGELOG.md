@@ -11,8 +11,6 @@
   erfasst zusätzlich Stundenwechsel, Cache-Nutzung, Darstellung und Tagesmarkierung.
   `pult --help` nennt Optionen und Logpfad. Fehler aus Oberfläche und
   Hintergrundaufgaben werden mit Typen und Codestellen erfasst.
-  Vorübergehend zeichnet `Strg+R` im Debug-Modus die Tageszeilen gezielt neu und
-  protokolliert ihren Zustand davor und danach, ohne Fortschritt zu buchen.
 
 - Aufgabenbibliothek: `x` exportiert die ganze Sequenz als Aufgabenheft und
   getrenntes Lösungsheft. Optionale Exportangaben in `aufgabe.toml` steuern

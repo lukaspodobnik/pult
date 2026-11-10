@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> None:
         previous_handler = loop.get_exception_handler()
         loop.set_exception_handler(log_async_exception)
         try:
-            app = PultApp(diagnostic_mode=args.debug)
+            app = PultApp()
             try:
                 await app.run_async()
             finally:

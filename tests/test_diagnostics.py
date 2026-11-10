@@ -196,8 +196,7 @@ def test_cli_starts_and_cleans_up_with_unavailable_log_directory(
         run_async=run, document_renderer=SimpleNamespace(close=closed)
     )
 
-    def create_app(*, diagnostic_mode):
-        assert diagnostic_mode is debug
+    def create_app():
         return app
 
     monkeypatch.setattr(pult.app, "PultApp", create_app)

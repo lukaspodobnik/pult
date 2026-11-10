@@ -24,8 +24,6 @@ from pult.services.omarchy_theme import OmarchyThemeWatcher
 from pult.services.sequence_library import SequenceLibrary
 from pult.services.settings import get_suggested_school_year, update_settings
 from pult.services.themes import standard_theme
-from pult.views.home_view import HomeView
-from pult.widgets.dashboard.daily_schedule import DailySchedulePanel
 from pult.widgets.terminal_size_notice import TerminalSizeNotice
 
 logger = logging.getLogger(__name__)
@@ -98,15 +96,8 @@ class PultApp(App):
             event = Key(directions[event.key], None)
         await super().on_event(event)
 
-    def __init__(self, *, diagnostic_mode: bool = False) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.diagnostic_mode = diagnostic_mode
-        # Temporäre Hilfe zur Diagnose der fragmentierten Tagesmarkierung.
-        # Nach Behebung des Darstellungsfehlers wieder entfernen.
-        if diagnostic_mode:
-            self.bind(
-                "ctrl+r", "diagnostic_redraw", description="Diagnose: Neuzeichnen"
-            )
         self.document_renderer = DocumentRenderer()
         self.renderer_setup = RendererSetup(self.document_renderer)
         self._renderer_setup_offered = False
@@ -114,26 +105,6 @@ class PultApp(App):
         self.sequence_library: SequenceLibrary | None = None
         self.omarchy_theme = OmarchyThemeWatcher()
         self._theme_slot = 0
-
-    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
-        if action == "diagnostic_redraw":
-            return (
-                self.diagnostic_mode
-                and not self.terminal_too_small
-                and isinstance(self.screen, MainScreen)
-                and not self.screen.startup_active
-                and self.screen._pending_view_id is None
-                and self.screen.active_school_class_id is None
-                and bool(self.screen.query(HomeView))
-            )
-        return super().check_action(action, parameters)
-
-    def action_diagnostic_redraw(self) -> None:
-        if not self.check_action("diagnostic_redraw", ()):
-            return
-        self.screen.query_one(HomeView).query_one(
-            DailySchedulePanel
-        ).diagnostic_redraw()
 
     def _handle_exception(self, error: Exception) -> None:
         # Textual handles UI and fatal worker exceptions before run_async returns.

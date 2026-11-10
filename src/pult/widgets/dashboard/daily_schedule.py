@@ -15,7 +15,6 @@ from pult.progress.queries import (
 )
 from pult.school.period import Period
 from pult.school.subject import Subject
-from pult.services.diagnostics import diagnostic_id
 from pult.widgets.capped_text import CappedText
 from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
@@ -219,39 +218,6 @@ class DailySchedulePanel(Vertical):
     def redraw_rows(self, reason: str) -> None:
         for row in self.query(DailyScheduleRow):
             row.redraw_contents(reason)
-
-    def diagnostic_redraw(self) -> None:
-        """Temporärer Repaint-Test: weder Daten noch Layout oder Widgets ersetzen."""
-        redraw = diagnostic_id("daily-redraw")
-        rows = list(self.query(DailyScheduleRow))
-        logger.debug("daily_redraw_requested redraw=%s rows=%s", redraw, len(rows))
-        self._log_redraw_state(redraw, "before")
-        self.redraw_rows("diagnostic")
-        # Keine Benachrichtigung: deren Overlay würde den Repaint-Test verfälschen.
-        self.call_after_refresh(self._log_redraw_state, redraw, "after")
-
-    def _log_redraw_state(self, redraw: str, phase: str) -> None:
-        if not self.is_mounted:
-            return
-        for row in self.query(DailyScheduleRow):
-            for widget in row.walk_children(Widget, with_self=True):
-                logger.debug(
-                    "daily_redraw_state redraw=%s phase=%s occurrence=%s "
-                    "highlighted=%s widget=%s classes=%s region=%s "
-                    "display=%s visible=%s background=%s opacity=%s",
-                    redraw,
-                    phase,
-                    row.occurrence,
-                    row.has_class("time-highlighted"),
-                    type(widget).__name__,
-                    ",".join(sorted(widget.classes)),
-                    widget.region,
-                    widget.display,
-                    widget.visible,
-                    widget.styles.background,
-                    widget.styles.opacity,
-                )
-        logger.debug("daily_redraw_snapshot_finished redraw=%s phase=%s", redraw, phase)
 
     async def update_data(
         self,
