@@ -7,8 +7,15 @@ from test_ui_integration import prepare_root
 from textual.widgets import Input, Select, SelectionList
 
 from pult.app import PultApp
-from pult.school.assessment import Assessment, AssessmentKind, load_assessments
+from pult.initialization.school_class import initialize_school_class
+from pult.school.assessment import (
+    Assessment,
+    AssessmentKind,
+    load_assessments,
+    save_assessments,
+)
 from pult.school.period import load_periods
+from pult.school.school_class import SchoolClass
 from pult.school.timetable import TimetableEntry, get_timetable_path, save_timetable
 from pult.screens.management.edit_assessment_screen import EditAssessmentScreen
 from pult.screens.management.edit_assessments_screen import EditAssessmentsScreen
@@ -18,6 +25,7 @@ from pult.services.assessments import (
     validate_assessment,
 )
 from pult.widgets.navigation import ManagementPicker
+from pult.widgets.scrolling import OptionList
 
 
 def test_numbering_and_slot_validation(tmp_path):
@@ -118,6 +126,60 @@ def test_management_create_edit_delete(tmp_path, monkeypatch):
             await pilot.pause()
             assert screen.entries == []
             assert load_assessments(config.root, config.active_school_year, "5A") == []
+
+            # Group boundaries must not change which assessment an action targets.
+            initialize_school_class(
+                config.root,
+                config.active_school_year,
+                SchoolClass("6B", 6, ["mathematik"]),
+            )
+            earlier = Assessment(
+                "earlier",
+                "mathematik",
+                AssessmentKind.SCHOOL_EXAM,
+                "Zahlen",
+                date(2026, 9, 21),
+                time(8),
+                45,
+            )
+            later = replace(earlier, id="later", date=date(2026, 10, 5))
+            save_assessments(
+                config.root, config.active_school_year, "5A", [later, earlier]
+            )
+            save_assessments(
+                config.root,
+                config.active_school_year,
+                "6B",
+                [replace(earlier, date=date(2026, 9, 18))],
+            )
+            screen.reload_entries()
+            await pilot.pause()
+            listing = screen.query_one("#assessments-list", OptionList)
+            assert [
+                (item.school_class_id, item.assessment.id) for item in screen.entries
+            ] == [("5A", "earlier"), ("5A", "later"), ("6B", "earlier")]
+            assert [
+                str(option.prompt) for option in listing.options if option.disabled
+            ] == ["Klasse 5A", "Klasse 6B"]
+            assert screen.selected_key == ("5A", "earlier")
+            await pilot.press("down", "down")
+            assert screen.selected_key == ("6B", "earlier")
+            screen.refresh_columns()
+            screen.reload_entries()
+            await pilot.pause()
+            assert screen.selected_key == ("6B", "earlier")
+            screen.action_delete()
+            await pilot.pause()
+            await pilot.click("#confirm-assessment-deletion")
+            await pilot.pause()
+            assert load_assessments(config.root, config.active_school_year, "6B") == []
+            assert (
+                len(load_assessments(config.root, config.active_school_year, "5A")) == 2
+            )
+            assert [
+                str(option.prompt) for option in listing.options if option.disabled
+            ] == ["Klasse 5A"]
+            assert screen.selected_key == ("5A", "earlier")
 
     asyncio.run(run())
 

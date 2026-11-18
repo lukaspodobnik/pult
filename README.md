@@ -289,6 +289,9 @@ PULT verwaltet Schulaufgaben, Stegreifaufgaben, angekündigte kleine LNWs und
 Jahrgangsstufentests. Datum, Startstunde und Dauer bestimmen den Termin; belegte
 Unterrichtsstunden werden gesondert ausgewählt. Termine ohne eigenen Unterricht
 sind ebenfalls möglich. Konflikte mit Ferien, Ausfällen oder Vorgaben werden angezeigt.
+Die LNW-Übersicht gruppiert Termine nach Klassen, geordnet nach Jahrgang und
+Klassenbezeichnung. Innerhalb jeder Klasse stehen die Termine chronologisch;
+dezente Überschriften und Trennlinien gliedern die gemeinsame Liste.
 
 Unter **Einstellungen** lassen sich erlaubte LNW-Arten und Mindestzahlen je Fach
 und Jahrgang, Stundenzeiten, Editor, Dokumentschrift und Schuljahr anpassen.

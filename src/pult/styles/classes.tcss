@@ -59,6 +59,9 @@ EditClassesScreen #school-classes > .option-list--option { padding: 0; }
         height: 1fr; border: none; padding: 0; background: transparent; scrollbar-gutter: stable;
     }
     EditAssessmentsScreen #assessments-list > .option-list--option { padding: 0; }
+    EditAssessmentsScreen #assessments-list > .option-list--option-disabled {
+        color: $foreground-muted; text-style: bold;
+    }
 
 
 EditAssessmentScreen #assessment-dialog { width: 86; padding: 1 2; }

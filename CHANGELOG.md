@@ -2,6 +2,10 @@
 
 ## Noch nicht veröffentlicht
 
+- LNW-Übersicht: Termine stehen nach Klassen gruppiert in der gemeinsamen Liste,
+  mit dezenten Überschriften und Trennlinien. Innerhalb jeder Klasse bleibt die
+  chronologische Reihenfolge erhalten; die Navigation überspringt Überschriften.
+
 - Klassenansicht: „Zuletzt“ zeigt mehrere Buchungen des gewählten Fachs, die
   neuesten zuerst. Der Bereich füllt den freien Platz unter „Nächste Stunde“
   mit vollständigen, dezent getrennten Einträgen und gekürzten Texten.

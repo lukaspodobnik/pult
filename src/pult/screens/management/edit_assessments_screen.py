@@ -84,7 +84,19 @@ class EditAssessmentsScreen(PultScreen[None]):
 
     def reload_entries(self) -> None:
         try:
-            self.entries = list_assessments(self.app_config)
+            class_order = {
+                item.id: index
+                for index, item in enumerate(
+                    load_school_classes(
+                        self.app_config.root, self.app_config.active_school_year
+                    )
+                )
+            }
+            # Stable sorting keeps chronological order within each class.
+            self.entries = sorted(
+                list_assessments(self.app_config),
+                key=lambda item: class_order[item.school_class_id],
+            )
             self.kind_issues = {
                 (item.school_class_id, item.assessment.id): assessment_kind_issue(
                     self.app_config, item.school_class_id, item.assessment
@@ -114,16 +126,26 @@ class EditAssessmentsScreen(PultScreen[None]):
             self.selected_key = keys[0] if keys else None
         listing = self.query_one("#assessments-list", OptionList)
         listing.clear_options()
-        listing.add_options(
-            Option(self.row(item), id=str(index))
-            for index, item in enumerate(self.entries)
-        )
+        options: list[Option | None] = []
+        previous_class = None
+        for index, item in enumerate(self.entries):
+            if item.school_class_id != previous_class:
+                if options:
+                    options.append(None)
+                options.append(
+                    Option(Text(f"Klasse {item.school_class_id}"), disabled=True)
+                )
+                previous_class = item.school_class_id
+            options.append(Option(self.row(item), id=str(index)))
+        listing.add_options(options)
         listing.highlighted = (
-            keys.index(self.selected_key) if self.selected_key else None
+            listing.get_option_index(str(keys.index(self.selected_key)))
+            if self.selected_key
+            else None
         )
         self.query_one("#assessments-empty").display = not self.entries
         self.query_one("#assessments-headings", Static).update(
-            self.columns(("Datum", "Klasse", "Fach", "Nr. / Art", "Bezeichnung"))
+            self.columns(("Datum", "Fach", "Nr. / Art", "Bezeichnung"))
         )
         for name in ("edit", "delete"):
             self.query_one(f"#{name}-assessment", Button).disabled = not self.entries
@@ -180,8 +202,8 @@ class EditAssessmentsScreen(PultScreen[None]):
         return text
 
     def columns(self, values: tuple[str, ...]) -> Text:
-        width = max(92, self.query_one("#assessments-list").content_size.width)
-        widths = (12, 7, 32, 14, max(19, width - 73))
+        width = max(83, self.query_one("#assessments-list").content_size.width)
+        widths = (12, 32, 14, max(19, width - 64))
         result = Text(no_wrap=True, overflow="ellipsis")
         for index, (value, size) in enumerate(zip(values, widths)):
             part = Text(value)
@@ -201,7 +223,6 @@ class EditAssessmentsScreen(PultScreen[None]):
         return self.columns(
             (
                 format_date(entry.date),
-                item.school_class_id,
                 self.subjects.get(entry.subject_id, entry.subject_id),
                 f"{marker}{item.number}. {entry.kind.abbreviation}",
                 entry.title,
@@ -281,7 +302,7 @@ class EditAssessmentsScreen(PultScreen[None]):
         except (OSError, ValueError):
             pass
         self.query_one("#assessments-headings", Static).update(
-            self.columns(("Datum", "Klasse", "Fach", "Nr. / Art", "Bezeichnung"))
+            self.columns(("Datum", "Fach", "Nr. / Art", "Bezeichnung"))
         )
         listing = self.query_one("#assessments-list", OptionList)
         for index, item in enumerate(self.entries):
