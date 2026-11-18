@@ -1,16 +1,18 @@
 """Stets sichtbare Materialliste, mit direkt zu öffnenden Links."""
 
+import asyncio
 import subprocess
 import sys
 from pathlib import Path
 
 from rich.table import Table
 from rich.text import Text
-from textual import on
+from textual import on, work
 from textual.widgets import Button, Static
 
 from pult.curriculum.material import material_entries
 from pult.services.documents.document_rendering import safe_local
+from pult.services.geogebra import GeoGebraOpenError, open_geogebra
 from pult.widgets.scrolling import Horizontal, VerticalScroll
 
 
@@ -74,6 +76,9 @@ class MaterialsPane(VerticalScroll):
             path = safe_local(target, self.path, self.directory)
             if not path.is_file():
                 raise ValueError("Die verlinkte Datei existiert nicht.")
+            if sys.platform == "darwin" and path.suffix.lower() == ".ggb":
+                self._open_geogebra(path)
+                return
             subprocess.Popen(
                 ["open" if sys.platform == "darwin" else "xdg-open", str(path)],
                 stdout=subprocess.DEVNULL,
@@ -81,3 +86,10 @@ class MaterialsPane(VerticalScroll):
             )
         except (OSError, ValueError) as error:
             self.notify(str(error), severity="warning")
+
+    @work(group="geogebra-open", exit_on_error=False)
+    async def _open_geogebra(self, path: Path) -> None:
+        try:
+            await asyncio.to_thread(open_geogebra, path)
+        except GeoGebraOpenError as error:
+            self.notify(str(error), severity="error")

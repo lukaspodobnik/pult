@@ -2,6 +2,10 @@
 
 ## Noch nicht veröffentlicht
 
+- GeoGebra: Lokale `.ggb`-Materiallinks öffnen unter macOS die Calculator Suite
+  mit dem Dateiinhalt als Standardeingabe. Jeder Klick startet eine neue Instanz;
+  die Originaldatei bleibt unverändert. Startfehler werden angezeigt und protokolliert.
+
 - Navigation: Nach der Startanimation werden die Darstellungsstile der drei
   Navigationslisten aktualisiert, damit die ausgewählte Ansicht sofort sichtbar
   hinterlegt ist. Auswahl, Fokus und Scrollposition bleiben erhalten.

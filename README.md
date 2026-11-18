@@ -133,6 +133,12 @@ Ansichten in diesem Bereich bleiben für schnelle Wechsel erhalten. Nach Änderu
 | `m` | Titel, Aufgabenverweise und optionale Hinweise bearbeiten |
 | `a` | Aufgabenbibliothek der Sequenz öffnen |
 
+Lokale `.ggb`-Materiallinks öffnen unter macOS die installierte **GeoGebra
+Calculator Suite**. Jeder Klick startet eine neue Instanz und importiert den
+Dateiinhalt. Die Originaldatei bleibt unverändert; zum dauerhaften Bearbeiten
+die Datei in GeoGebra über „Lokale Datei“ öffnen bzw. Änderungen gezielt speichern.
+Auf anderen Systemen verwendet PULT die zugeordnete Standardanwendung.
+
 In Markdown-Texten stellt PULT `->`, `<-` und `<->` automatisch als →, ← und ↔ dar.
 Das gilt für Dokumentansichten, die Textansicht sowie Aufgaben- und Lösungshefte.
 Code, TeX-Formeln und Linkadressen bleiben erhalten; die Quelldateien werden nicht
