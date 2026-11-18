@@ -72,7 +72,8 @@ hervorgehoben. Die **Klassenansicht** zeigt
 je Fach die Sequenzen mit Planfortschritt und tatsächlich gehaltenen Stunden.
 Abschlüsse, Fortsetzungen, Spontanunterricht und zusätzliche Unterrichtstermine
 zählen zur gehaltenen Zeit; übersprungene Stunden, Ausfälle und Leistungsnachweise
-nicht. **Ausblick** zeigt die Stundendifferenz nach aktuellem Plan und den nächsten
+nicht. Ein kurzer Restabschluss zählt ebenfalls keinen weiteren Termin.
+**Ausblick** zeigt die Stundendifferenz nach aktuellem Plan und den nächsten
 offenen Leistungsnachweis. **Nächste Stunde** nennt den nächsten Unterrichtstermin
 mit den benötigten Materialien oder dem Hinweis „Keine Materialien vorgesehen“.
 **Zuletzt** zeigt die jüngsten Buchungen des Fachs mit Datum, Aktion, Thema und
@@ -104,6 +105,15 @@ ungebuchte Termine bleiben offen und lassen sich nachtragen.
 `c` öffnet einen Dialog mit Pflichtbegründung, etwa „Sicherung noch offen“.
 Erst Speichern verbucht den Termin; die Begründung steht im Protokoll und in den
 SVP-Anmerkungen. Abbrechen verändert den Fortschritt nicht.
+
+Nach einer Fortsetzung fragt `n`, ob das Fertigstellen einen ganzen Termin
+beansprucht hat oder nur ein kurzer Rest abgeschlossen wurde. **Abschließen und
+Termin buchen** arbeitet wie bisher. **Nur den Rest abschließen** erledigt den
+Inhalt und lässt den aktuellen Termin für die nächste Planstunde frei. Deren
+Unterricht wird anschließend wie gewohnt mit `n` oder `c` gebucht. Im SVP und
+PDF steht der Restabschluss als Anmerkung beim selben Termin, ohne zusätzliche
+Zeile oder Stundenzählung. Im Protokoll und unter „Zuletzt“ heißt er „Rest
+abgeschlossen“. `p` nimmt beide Buchungen einzeln zurück, die jüngste zuerst.
 
 `t` passt beispielsweise für eine ungeplante Übungsstunde vor einer Schulaufgabe.
 Die Beschreibung wird im Stoffverteilungsplan zum Stundenthema. Bei `z` kann

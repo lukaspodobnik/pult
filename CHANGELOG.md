@@ -2,6 +2,11 @@
 
 ## Noch nicht veröffentlicht
 
+- Nach einer Fortsetzung bietet `n` neben dem normalen Abschluss einen kurzen
+  Restabschluss an. Der Termin bleibt dabei für die nächste Planstunde frei;
+  SVP und PDF vermerken den Rest in der Anmerkung desselben Termins. Protokoll,
+  „Zuletzt“ und Rückgängig berücksichtigen den Abschluss ohne zusätzliche Stunde.
+
 - Stoffverteilungsplan: Sequenzüberschriften stehen als reguläre Tabellenzeilen
   mit dezenter Hervorhebung der Themenspalte im Plan. Ferien bilden ein höheres
   Band über die gesamte Breite. Der PDF-Export übernimmt dieselbe Gliederung.

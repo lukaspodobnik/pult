@@ -8,6 +8,7 @@ from pult.progress.class_progress import (
     ClassProgress,
     TeachingAction,
     TeachingLogEntry,
+    TeachingOrigin,
 )
 from pult.school.assessment import Assessment
 from pult.school.calendar import (
@@ -120,6 +121,7 @@ def get_class_progress_summary(
         for entry in progress.entries
         if entry.action
         in {TeachingAction.COMPLETED, TeachingAction.CONTINUED, TeachingAction.OTHER}
+        and entry.origin is not TeachingOrigin.SHARED
     )
     assessment_labels = {
         item.assessment.id: item.label

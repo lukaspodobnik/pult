@@ -21,6 +21,7 @@ class ClassProgressValidationError(ValueError):
 
 class TeachingOrigin(StrEnum):
     SCHEDULED = "scheduled"
+    SHARED = "shared"  # Restabschluss am Termin; reserviert oder zählt ihn nicht.
     ADDITIONAL = "additional"
     NONE = "none"
     ASSESSMENT = "assessment"
@@ -159,15 +160,22 @@ class TeachingLogEntry:
         ):
             raise ValueError("Spontanunterricht benötigt eine Beschreibung.")
 
-        if self.origin is TeachingOrigin.SCHEDULED and self.period is None:
+        timed_origins = {TeachingOrigin.SCHEDULED, TeachingOrigin.SHARED}
+        if self.origin in timed_origins and self.period is None:
             raise ValueError(
                 "Ein regulärer Stundenplantermin benötigt eine Stundennummer."
             )
 
-        if self.origin is not TeachingOrigin.SCHEDULED and self.period is not None:
+        if self.origin not in timed_origins and self.period is not None:
             raise ValueError(
-                "Nur ein regulärer Stundenplantermin darf eine Stundennummer besitzen."
+                "Nur ein Stundenplantermin oder Restabschluss darf eine Stundennummer besitzen."
             )
+
+        if (
+            self.origin is TeachingOrigin.SHARED
+            and self.action is not TeachingAction.COMPLETED
+        ):
+            raise ValueError("Ein Restabschluss muss eine geplante Stunde abschließen.")
 
         if self.action is TeachingAction.SKIPPED:
             if self.origin is not TeachingOrigin.NONE:

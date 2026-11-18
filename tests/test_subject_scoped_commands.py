@@ -21,6 +21,7 @@ from pult.progress.class_progress import (
 from pult.progress.commands import (
     ProgressCommandError,
     complete_additional_lesson,
+    continue_lesson,
     undo_last_entry,
 )
 from pult.school.school_class import SchoolClass
@@ -31,6 +32,9 @@ from pult.school.timetable import (
 )
 from pult.screens.progress.add_extra_lesson_screen import AddExtraLessonScreen
 from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.complete_continued_lesson_screen import (
+    CompleteContinuedLessonScreen,
+)
 from pult.screens.progress.continue_lesson_screen import ContinueLessonScreen
 from pult.screens.progress.select_next_sequence_screen import SelectNextSequenceScreen
 from pult.screens.progress.set_active_sequence_screen import SetActiveSequenceScreen
@@ -376,6 +380,7 @@ def test_open_next_lesson_uses_visible_lesson_and_returns(
         ("complete_next_lesson", TeachingAction.COMPLETED, TeachingOrigin.SCHEDULED),
         ("skip_next_lesson", TeachingAction.SKIPPED, TeachingOrigin.NONE),
         ("extra", TeachingAction.COMPLETED, TeachingOrigin.ADDITIONAL),
+        ("remainder", TeachingAction.COMPLETED, TeachingOrigin.SHARED),
     ],
 )
 def test_sequence_transition_is_saved_only_after_confirmation(
@@ -410,6 +415,16 @@ def test_sequence_transition_is_saved_only_after_confirmation(
                 ).progress
             save_class_progress(config.root, config.active_school_year, "9B", progress)
             await main.refresh_current_view()
+            if action_name == "remainder":
+                context = main.load_planned_lesson_context()
+                progress = continue_lesson(
+                    progress, context.planned_lesson, context.sequences, "Rest offen"
+                )
+                save_class_progress(
+                    config.root, config.active_school_year, "9B", progress
+                )
+                await main.refresh_current_view()
+                context = main.load_planned_lesson_context()
             path = get_class_progress_path(config.root, config.active_school_year, "9B")
             saved = path.read_bytes()
             other_progress = load_class_progress(
@@ -442,6 +457,11 @@ def test_sequence_transition_is_saved_only_after_confirmation(
                         "#complete-next-extra-lesson", Checkbox
                     ).value = True
                     await pilot.click("#save-extra-lesson")
+                elif action_name == "remainder":
+                    await main.action_complete_next_lesson()
+                    await pilot.pause()
+                    assert isinstance(app.screen, CompleteContinuedLessonScreen)
+                    await pilot.click("#complete-remainder")
                 else:
                     await getattr(main, f"action_{action_name}")()
                 await pilot.pause()
@@ -472,6 +492,12 @@ def test_sequence_transition_is_saved_only_after_confirmation(
             else:
                 assert main.active_school_class_id == "9B"
                 assert main.active_subject_id == "informatik-ntg"
+            if action_name == "remainder":
+                following = main.load_planned_lesson_context().planned_lesson
+                assert (following.date, following.period) == (
+                    context.planned_lesson.date,
+                    context.planned_lesson.period,
+                )
             assert updated.active_sequences == tuple(
                 ActiveSequence(active.subject_id, str(selected_sequence))
                 if active.subject_id == "informatik-ntg"

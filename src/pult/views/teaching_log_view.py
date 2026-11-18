@@ -23,10 +23,22 @@ ACTION_LABELS = {
 
 ORIGIN_LABELS = {
     TeachingOrigin.SCHEDULED: "Stundenplantermin",
+    TeachingOrigin.SHARED: "Im selben Termin weiter",
     TeachingOrigin.ADDITIONAL: "Zusätzlicher Termin",
     TeachingOrigin.NONE: "Ohne Termin",
     TeachingOrigin.ASSESSMENT: "Leistungsnachweis",
 }
+
+
+def action_label(entry: TeachingLogEntry) -> str:
+    if entry.origin is TeachingOrigin.SHARED:
+        return "Rest abgeschlossen"
+    if (
+        entry.action is TeachingAction.OTHER
+        and entry.origin is TeachingOrigin.SCHEDULED
+    ):
+        return "Spontanunterricht"
+    return ACTION_LABELS[entry.action]
 
 
 class TeachingLogEntryBlock(Vertical):
@@ -73,14 +85,8 @@ class TeachingLogEntryBlock(Vertical):
         if lesson_title is not None:
             yield Static(lesson_title, classes="teaching-log-lesson")
 
-        action_label = (
-            "Spontanunterricht"
-            if self.entry.action is TeachingAction.OTHER
-            and self.entry.origin is TeachingOrigin.SCHEDULED
-            else ACTION_LABELS[self.entry.action]
-        )
         yield Static(
-            f"{action_label} · {ORIGIN_LABELS[self.entry.origin]}",
+            f"{action_label(self.entry)} · {ORIGIN_LABELS[self.entry.origin]}",
             classes="teaching-log-kind",
         )
 

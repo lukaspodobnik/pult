@@ -8,6 +8,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from pult.curriculum.sequence import sequence_sort_key
+from pult.presentation import UNTITLED_LESSON
 from pult.progress.class_progress import (
     TeachingAction,
     TeachingLogEntry,
@@ -136,6 +137,18 @@ def build_distribution_plan(
         for e in progress.entries
         if e.subject_id == subject_id and e.origin is TeachingOrigin.SCHEDULED
     }
+    remainder_notes: dict[tuple[date, int], list[str]] = {}
+    for entry in progress.entries:
+        if entry.subject_id == subject_id and entry.origin is TeachingOrigin.SHARED:
+            assert entry.period is not None
+            lesson = next(
+                lesson
+                for lesson in by_id[entry.sequence_id].lessons
+                if lesson.id == entry.lesson_id
+            )
+            remainder_notes.setdefault((entry.date, entry.period), []).append(
+                f"Rest von „{lesson.title or UNTITLED_LESSON}“ abgeschlossen"
+            )
     events: list[tuple[date, int, int, DistributionRow]] = []
     for holiday in holidays:
         if (
@@ -283,6 +296,10 @@ def build_distribution_plan(
     current_sequence = None
     number = 0
     for _, _, _, row in sorted(events, key=lambda event: event[:3]):
+        if row.period is not None and (
+            notes := remainder_notes.get((row.date, row.period))
+        ):
+            row = replace(row, notes=" · ".join(filter(None, [row.notes, *notes])))
         if row.kind is DistributionKind.LESSON:
             assert row.sequence_id is not None
             if current_sequence != row.sequence_id:

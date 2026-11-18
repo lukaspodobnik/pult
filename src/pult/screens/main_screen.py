@@ -17,7 +17,9 @@ from pult.progress.commands import (
     ProgressCommandError,
     cancel_scheduled_lesson,
     complete_lesson,
+    complete_lesson_remainder,
     continue_lesson,
+    has_lesson_continuation,
     record_spontaneous_lesson,
     skip_lesson,
     undo_last_entry,
@@ -32,6 +34,9 @@ from pult.screens.management.edit_classes_screen import EditClassesScreen
 from pult.screens.management.edit_closures_screen import EditClosuresScreen
 from pult.screens.management.edit_timetable_screen import EditTimetableScreen
 from pult.screens.progress.cancel_lesson_screen import CancelLessonScreen
+from pult.screens.progress.complete_continued_lesson_screen import (
+    CompleteContinuedLessonScreen,
+)
 from pult.screens.progress.confirm_undo_screen import ConfirmUndoScreen
 from pult.screens.progress.continue_lesson_screen import ContinueLessonScreen
 from pult.screens.progress.distribution_screen import DistributionScreen
@@ -584,23 +589,42 @@ class MainScreen(PultScreen[None]):
         if context is None:
             return
 
-        try:
-            result = complete_lesson(
-                context.progress,
-                context.planned_lesson,
-                context.sequences,
-            )
-        except ProgressCommandError as error:
-            self.notify(str(error), severity="error")
-            return
+        async def complete(rest_only: bool | None) -> None:
+            if rest_only is None:
+                return
+            command = complete_lesson_remainder if rest_only else complete_lesson
+            try:
+                result = command(
+                    context.progress,
+                    context.planned_lesson,
+                    context.sequences,
+                )
+            except ProgressCommandError as error:
+                self.notify(str(error), severity="error")
+                return
 
-        await self._lesson_progress_flow.handle_result(
-            context.school_class,
-            context.planned_lesson.lesson.title,
-            context.sequences,
-            result,
-            action_description="abgeschlossen",
-        )
+            await self._lesson_progress_flow.handle_result(
+                context.school_class,
+                context.planned_lesson.lesson.title,
+                context.sequences,
+                result,
+                action_description="als Rest abgeschlossen"
+                if rest_only
+                else "abgeschlossen",
+            )
+
+        if has_lesson_continuation(context.progress, context.planned_lesson):
+            planned = context.planned_lesson
+            self.app.push_screen(
+                CompleteContinuedLessonScreen(
+                    f"{context.school_class.id} · "
+                    f"{format_compact_date(planned.date)} · {planned.period}. Stunde",
+                    planned.lesson.title or UNTITLED_LESSON,
+                ),
+                complete,
+            )
+        else:
+            await complete(False)
 
     async def action_skip_next_lesson(self) -> None:
         context = self.load_planned_lesson_context()

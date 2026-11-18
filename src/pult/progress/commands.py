@@ -53,6 +53,62 @@ def complete_lesson(
     )
 
 
+def has_lesson_continuation(
+    progress: ClassProgress, planned_lesson: PlannedLesson
+) -> bool:
+    """Ist diese offene Planstunde bereits an einem früheren Termin fortgesetzt?"""
+    for entry in reversed(progress.entries):
+        if (
+            entry.subject_id != planned_lesson.subject_id
+            or entry.sequence_id != planned_lesson.sequence_id
+            or entry.lesson_id != planned_lesson.lesson.id
+        ):
+            continue
+        if entry.action in {TeachingAction.COMPLETED, TeachingAction.SKIPPED}:
+            return False
+        if entry.action is TeachingAction.CONTINUED:
+            return (entry.date, entry.period or 0) < (
+                planned_lesson.date,
+                planned_lesson.period,
+            )
+    return False
+
+
+def complete_lesson_remainder(
+    old_progress: ClassProgress,
+    planned_lesson: PlannedLesson,
+    sequences: list[Sequence],
+) -> CompleteLessonResult:
+    """Schließe einen Rest ab; sein Termin bleibt für die nächste Planstunde frei."""
+    if not has_lesson_continuation(old_progress, planned_lesson):
+        raise ProgressCommandError(
+            "Nur eine zuvor fortgesetzte Stunde kann als Rest abgeschlossen werden."
+        )
+    occurrence = (planned_lesson.date, planned_lesson.period)
+    if any(
+        (
+            entry.origin is TeachingOrigin.SCHEDULED
+            and (entry.date, entry.period) == occurrence
+        )
+        or (
+            entry.date == planned_lesson.date
+            and planned_lesson.period in entry.assessment_periods
+        )
+        for entry in old_progress.entries
+    ):
+        raise ProgressCommandError("Dieser Unterrichtstermin ist bereits verbucht.")
+    return _progress_lesson(
+        old_progress,
+        planned_lesson,
+        sequences,
+        action=TeachingAction.COMPLETED,
+        origin=TeachingOrigin.SHARED,
+        entry_date=planned_lesson.date,
+        period=planned_lesson.period,
+        comment="",
+    )
+
+
 def skip_lesson(
     old_progress: ClassProgress,
     planned_lesson: PlannedLesson,

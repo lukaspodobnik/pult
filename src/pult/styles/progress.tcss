@@ -1,3 +1,13 @@
+CompleteContinuedLessonScreen FormDialog .form-fields .completion-choice {
+    width: 100%;
+    margin-top: 1;
+}
+
+CompleteContinuedLessonScreen .form-context,
+CompleteContinuedLessonScreen .form-hint {
+    width: 1fr;
+}
+
 LessonProgressBar {
     width: 1fr;
     height: 1;

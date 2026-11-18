@@ -1,5 +1,5 @@
 from dataclasses import replace
-from datetime import date, time
+from datetime import date, datetime, time
 
 import pytest
 
@@ -10,11 +10,29 @@ from pult.progress.class_progress import (
     TeachingAction,
     TeachingLogEntry,
     TeachingOrigin,
+    get_class_progress_path,
+    load_class_progress,
+    save_class_progress,
+    validate_class_progress,
+)
+from pult.progress.commands import (
+    LessonCompletionState,
+    complete_lesson,
+    complete_lesson_remainder,
+    continue_lesson,
+    set_active_sequence,
+    undo_last_entry,
+)
+from pult.progress.queries import (
+    PlannedLesson,
+    get_class_progress_summary,
+    get_next_scheduled_occurrence,
 )
 from pult.progress.queries.distribution import DistributionKind as Kind
 from pult.progress.queries.distribution import build_distribution_plan
 from pult.school.assessment import Assessment, AssessmentKind
 from pult.school.calendar import Closure, ClosureKind
+from pult.services.exports.distribution_export import distribution_html
 from pult.services.progress import PlanningData
 from pult.storage import load_toml, save_toml
 
@@ -150,6 +168,108 @@ def test_skipped_lesson_does_not_add_a_date_or_number(data):
         ("Zahlen runden", 1),
         ("Addieren", 1),
     ]
+
+
+@pytest.mark.parametrize("at_sequence_end", [False, True])
+def test_remainder_shares_period_note_and_count_and_survives_save_and_undo(
+    data, planned_lesson, tmp_path, at_sequence_end
+):
+    progress = data.progresses_by_class_id["5A"]
+    if at_sequence_end:
+        progress = complete_lesson(progress, planned_lesson, data.sequences).progress
+        planned_lesson = replace(
+            planned_lesson, lesson=data.sequences[0].lessons[1], period=2
+        )
+    continued = continue_lesson(progress, planned_lesson, data.sequences, "Rest offen")
+
+    def next_occurrence(progress):
+        return get_next_scheduled_occurrence(
+            progress,
+            data.timetable_entries,
+            "5A",
+            "mathematik",
+            data.school_calendar,
+            [],
+        )
+
+    def summary(progress):
+        return get_class_progress_summary(
+            progress,
+            data.sequences,
+            data.timetable_entries,
+            data.school_classes[0],
+            data.school_calendar,
+            [],
+            [],
+        )[0]
+
+    occurrence = next_occurrence(continued)
+    remainder_plan = replace(planned_lesson, date=occurrence[0], period=occurrence[1])
+    result = complete_lesson_remainder(continued, remainder_plan, data.sequences)
+    finished = result.progress
+    if at_sequence_end:
+        assert result.state is LessonCompletionState.NEEDS_NEXT_SEQUENCE
+        finished = set_active_sequence(
+            finished, "mathematik", "sequence-2", 5, data.sequences
+        )
+    else:
+        assert result.state is LessonCompletionState.CONTINUES_SEQUENCE
+    validate_class_progress(finished, data.school_classes[0], data.sequences)
+    assert next_occurrence(finished) == occurrence
+    before, after = summary(continued), summary(finished)
+    assert after.completed_lesson_count == before.completed_lesson_count + 1
+    assert after.skipped_lesson_count == before.skipped_lesson_count
+    assert after.available_period_count == before.available_period_count
+    assert sum(s.held_lesson_count for s in after.sequences) == sum(
+        s.held_lesson_count for s in before.sequences
+    )
+    assert finished.entries[:-1] == continued.entries
+    assert finished.entries[-1].origin is TeachingOrigin.SHARED
+
+    path = get_class_progress_path(tmp_path, "2026-2027", "5A")
+    path.parent.mkdir(parents=True)
+    save_class_progress(tmp_path, "2026-2027", "5A", finished)
+    assert load_class_progress(tmp_path, "2026-2027", "5A") == finished
+
+    next_plan = after.next_planned_lesson
+    assert isinstance(next_plan, PlannedLesson)
+    assert (next_plan.date, next_plan.period) == occurrence
+    booked = complete_lesson(finished, next_plan, data.sequences).progress
+    assert next_occurrence(booked) != occurrence
+    assert summary(booked).available_period_count == after.available_period_count - 1
+    assert (
+        sum(s.held_lesson_count for s in summary(booked).sequences)
+        == sum(s.held_lesson_count for s in after.sequences) + 1
+    )
+
+    note = f"Rest von „{planned_lesson.lesson.title}“ abgeschlossen"
+    original_row_count = len([row for row in plan(data) if row.period is not None])
+    for current_progress in (finished, booked, undo_last_entry(booked)):
+        rows = plan(replace(data, progresses_by_class_id={"5A": current_progress}))
+        assert (
+            len([row for row in rows if row.period is not None]) == original_row_count
+        )
+        matching = [row for row in rows if (row.date, row.period) == occurrence]
+        assert len(matching) == 1
+        row = matching[0]
+        assert row.title == next_plan.lesson.title
+        assert row.number == (1 if at_sequence_end else 2)
+        assert row.notes == " · ".join(filter(None, [next_plan.lesson.notes, note]))
+        assert row.projected == (current_progress != booked)
+        html = distribution_html(
+            tuple(rows),
+            school_class_id="5A",
+            subject_name="Mathematik",
+            school_year="2026-2027",
+            generated_at=datetime(2026, 9, 7),
+        )
+        assert html.count(note) == 1
+
+    assert undo_last_entry(booked, subject_id="mathematik") == finished
+    restored = undo_last_entry(finished, subject_id="mathematik")
+    assert restored == continued
+    rows = plan(replace(data, progresses_by_class_id={"5A": restored}))
+    assert not any(note in row.notes for row in rows)
 
 
 def test_assessments_inside_and_outside_own_lessons_and_other_subject(data):

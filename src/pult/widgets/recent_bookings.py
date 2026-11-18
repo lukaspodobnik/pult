@@ -4,9 +4,8 @@ from rich.text import Text
 from textual.widget import Widget
 
 from pult.presentation import UNTITLED_LESSON, format_compact_date
-from pult.progress.class_progress import TeachingAction, TeachingOrigin
 from pult.progress.queries.summaries import RecentTeachingEntry
-from pult.views.teaching_log_view import ACTION_LABELS, ORIGIN_LABELS
+from pult.views.teaching_log_view import ORIGIN_LABELS, action_label
 
 
 class RecentBookings(Widget, can_focus=False):
@@ -47,13 +46,7 @@ class RecentBookings(Widget, can_focus=False):
             if entry.period is not None
             else ORIGIN_LABELS[entry.origin]
         )
-        label = (
-            "Spontanunterricht"
-            if entry.action is TeachingAction.OTHER
-            and entry.origin is TeachingOrigin.SCHEDULED
-            else ACTION_LABELS[entry.action]
-        )
-        action = self._line(label, width, "action")
+        action = self._line(action_label(entry), width, "action")
         date_width = max(0, width - action.cell_len - 2)
         header = self._line(
             f"{format_compact_date(entry.date)} · {occurrence}", date_width, "muted"

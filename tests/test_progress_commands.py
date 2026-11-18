@@ -16,6 +16,7 @@ from pult.progress.commands import (
     cancel_scheduled_lesson,
     complete_additional_lesson,
     complete_lesson,
+    complete_lesson_remainder,
     continue_lesson,
     record_spontaneous_lesson,
     set_active_sequence,
@@ -177,9 +178,13 @@ def test_set_active_sequence_rejects_current_sequence(empty_progress, sequences)
 def test_command_rejects_stale_planned_lesson(
     empty_progress, planned_lesson, sequences
 ):
+    with pytest.raises(ProgressCommandError, match="zuvor fortgesetzte"):
+        complete_lesson_remainder(empty_progress, planned_lesson, sequences)
     progress = complete_lesson(empty_progress, planned_lesson, sequences).progress
     with pytest.raises(ProgressCommandError):
         complete_lesson(progress, planned_lesson, sequences)
+    with pytest.raises(ProgressCommandError):
+        complete_lesson_remainder(progress, planned_lesson, sequences)
 
 
 def test_spontaneous_consumes_regular_slot_without_advancing_and_can_be_undone(

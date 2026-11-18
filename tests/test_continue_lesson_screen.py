@@ -5,9 +5,16 @@ from test_ui_integration import prepare_root
 from textual.widgets import Input, Label
 
 from pult.app import PultApp
-from pult.progress.class_progress import TeachingAction, load_class_progress
+from pult.progress.class_progress import (
+    TeachingAction,
+    TeachingOrigin,
+    load_class_progress,
+)
 from pult.progress.queries.distribution import build_distribution_plan
 from pult.school.timetable import TimetableEntry, get_timetable_path, save_timetable
+from pult.screens.progress.complete_continued_lesson_screen import (
+    CompleteContinuedLessonScreen,
+)
 from pult.screens.progress.continue_lesson_screen import ContinueLessonScreen
 from pult.services.progress import load_planning_data
 from pult.widgets.navigation import ViewPicker
@@ -101,5 +108,51 @@ def test_continue_requires_reason_and_saves_only_after_confirmation(
                 row for row in rows if row.action is TeachingAction.CONTINUED
             )
             assert "Sicherung noch offen" in continued.notes
+
+            await pilot.press("n")
+            await pilot.pause()
+            assert isinstance(app.screen, CompleteContinuedLessonScreen)
+            await pilot.press("escape")
+            await pilot.pause()
+            assert app.screen is main
+            assert (
+                load_class_progress(tmp_path, config.active_school_year, "5A")
+                == progress
+            )
+
+            main.query_one(ViewPicker).focus()
+            await pilot.press("n")
+            await pilot.pause()
+            assert isinstance(app.screen, CompleteContinuedLessonScreen)
+            await pilot.click(
+                "#complete-remainder" if from_home else "#complete-with-period"
+            )
+            await pilot.pause()
+            assert app.screen is main
+            completed = load_class_progress(tmp_path, config.active_school_year, "5A")
+            assert completed.entries[:-1] == progress.entries
+            assert completed.entries[-1].origin is (
+                TeachingOrigin.SHARED if from_home else TeachingOrigin.SCHEDULED
+            )
+            next_plan = main.load_planned_lesson_context().planned_lesson
+            assert next_plan.lesson.id != following.planned_lesson.lesson.id
+            assert (next_plan.date == following.planned_lesson.date) is from_home
+            assert next_plan.period == following.planned_lesson.period
+
+            if from_home:
+                await main.show_school_class_view(main.school_classes_by_id["5A"])
+            main.query_one(ViewPicker).focus()
+            await pilot.press("p")
+            await pilot.pause()
+            app.screen.confirm()
+            await pilot.pause()
+            assert (
+                load_class_progress(tmp_path, config.active_school_year, "5A")
+                == progress
+            )
+            assert (
+                main.load_planned_lesson_context().planned_lesson
+                == following.planned_lesson
+            )
 
     asyncio.run(run())
