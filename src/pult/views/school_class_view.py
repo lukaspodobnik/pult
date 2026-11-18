@@ -7,7 +7,6 @@ from pult.presentation import (
     UNTITLED_LESSON,
     format_compact_date,
 )
-from pult.progress.class_progress import TeachingAction, TeachingOrigin
 from pult.progress.queries import (
     SequenceProgressSummary,
     SubjectProgressSummary,
@@ -15,10 +14,10 @@ from pult.progress.queries import (
 from pult.progress.queries.assessments import PlannedAssessment, next_event
 from pult.school.school_class import SchoolClass
 from pult.school.subject import Subject
-from pult.views.teaching_log_view import ACTION_LABELS, ORIGIN_LABELS
 from pult.widgets.capped_text import CappedText
 from pult.widgets.lesson_progress_bar import LessonProgressBar
 from pult.widgets.materials import render_material_list
+from pult.widgets.recent_bookings import RecentBookings
 from pult.widgets.scrolling import Horizontal, Vertical, VerticalScroll
 
 
@@ -140,23 +139,7 @@ class SubjectProgressBlock(Vertical):
                             yield Static(
                                 material, classes="next-lesson-material", markup=False
                             )
-                last = Vertical(classes="class-last-entry")
-                last.border_title = "ZULETZT"
-                with last:
-                    texts = self._last_entry_texts()
-                    yield from self._compose_texts(
-                        {"last-entry-empty": texts.pop("last-entry-empty")}
-                    )
-                    metadata = Horizontal(classes="last-entry-metadata")
-                    metadata.display = self.summary.last_entry is not None
-                    with metadata:
-                        yield from self._compose_texts(
-                            {
-                                name: texts.pop(name)
-                                for name in ("last-entry-date", "last-entry-action")
-                            }
-                        )
-                    yield from self._compose_texts(texts)
+                yield RecentBookings(self.summary.recent_entries)
 
     @property
     def _total_label(self) -> str:
@@ -226,16 +209,12 @@ class SubjectProgressBlock(Vertical):
 
     def _compose_texts(self, texts: dict[str, str]) -> ComposeResult:
         line_limits = {
-            "last-entry-comment": 3,
             "class-assessment": 1,
             "class-assessment-topic": 1,
             "class-assessment-date": 1,
         }
         for name, text in texts.items():
-            if name == "last-entry-action":
-                widget = Static(text, classes=name, markup=False)
-            else:
-                widget = CappedText(text, classes=name, lines=line_limits.get(name, 2))
+            widget = CappedText(text, classes=name, lines=line_limits.get(name, 2))
             widget.display = bool(text)
             widget.tooltip = text or None
             yield widget
@@ -289,42 +268,6 @@ class SubjectProgressBlock(Vertical):
             return ""
         return render_material_list(planned.lesson.material_markdown())
 
-    def _last_entry_texts(self) -> dict[str, str]:
-        texts: dict[str, str] = dict.fromkeys(
-            (
-                "last-entry-empty",
-                "last-entry-date",
-                "last-entry-action",
-                "last-entry-title",
-                "last-entry-sequence",
-                "last-entry-comment",
-            ),
-            "",
-        )
-        last = self.summary.last_entry
-        if last is None:
-            texts["last-entry-empty"] = "Noch kein Protokolleintrag für dieses Fach"
-            return texts
-        entry = last.entry
-        occurrence = (
-            f"{entry.period}. Stunde"
-            if entry.period is not None
-            else ORIGIN_LABELS[entry.origin]
-        )
-        texts["last-entry-date"] = f"{format_compact_date(entry.date)} · {occurrence}"
-        texts["last-entry-action"] = (
-            "Spontanunterricht"
-            if entry.action is TeachingAction.OTHER
-            and entry.origin is TeachingOrigin.SCHEDULED
-            else ACTION_LABELS[entry.action]
-        )
-        texts["last-entry-title"] = last.title or (
-            UNTITLED_LESSON if entry.lesson_id else ""
-        )
-        texts["last-entry-sequence"] = last.sequence_label
-        texts["last-entry-comment"] = entry.comment
-        return texts
-
     async def update_data(
         self, subject: Subject, summary: SubjectProgressSummary
     ) -> None:
@@ -339,13 +282,12 @@ class SubjectProgressBlock(Vertical):
         for name, text in {
             **self._assessment_texts(),
             **self._next_lesson_texts(),
-            **self._last_entry_texts(),
         }.items():
             widget = self.query_one(f".{name}", Static)
             widget.update(text)
             widget.display = bool(text)
             widget.tooltip = text or None
-        self.query_one(".last-entry-metadata").display = summary.last_entry is not None
+        self.query_one(RecentBookings).update_entries(summary.recent_entries)
         self.query_one(".total-label", Static).update(self._total_label)
         self.query_one(".subject-progress-bar", LessonProgressBar).update_counts(
             summary.completed_lesson_count,

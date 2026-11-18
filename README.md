@@ -75,8 +75,11 @@ zählen zur gehaltenen Zeit; übersprungene Stunden, Ausfälle und Leistungsnach
 nicht. **Ausblick** zeigt die Stundendifferenz nach aktuellem Plan und den nächsten
 offenen Leistungsnachweis. **Nächste Stunde** nennt den nächsten Unterrichtstermin
 mit den benötigten Materialien oder dem Hinweis „Keine Materialien vorgesehen“.
-**Zuletzt** den zeitlich letzten Protokolleintrag des Fachs mit kurzem Kommentar;
-`u` öffnet das vollständige Protokoll. Die Navigation bleibt beim Ansichtswechsel
+**Zuletzt** zeigt die jüngsten Buchungen des Fachs mit Datum, Aktion, Thema und
+kurzem Kommentar. Der Bereich nutzt den übrigen Platz unter **Nächste Stunde**;
+es erscheinen so viele vollständige Einträge, wie hineinpassen, die neuesten zuerst.
+Lange Texte werden gekürzt; `u` öffnet das vollständige Protokoll.
+Die Navigation bleibt beim Ansichtswechsel
 an derselben Position. Unter **Verwaltung** werden Klassen,
 Stundenplan, Ausfälle und Leistungsnachweise gepflegt; Änderungen werden beim
 Speichern im jeweiligen Dialog gesichert.

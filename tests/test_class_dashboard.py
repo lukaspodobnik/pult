@@ -16,6 +16,7 @@ from pult.progress.queries import get_class_progress_summary
 from pult.school.assessment import Assessment, AssessmentKind
 from pult.views.school_class_view import SchoolClassView, SequenceProgressBlock
 from pult.widgets.navigation import ViewPicker
+from pult.widgets.recent_bookings import RecentBookings
 
 
 def test_held_hours_count_occurrences_and_exclude_skips_cancellations_and_assessments(
@@ -83,13 +84,14 @@ def test_held_hours_count_occurrences_and_exclude_skips_cancellations_and_assess
     first, second = summary.sequences
     assert (first.held_lesson_count, second.held_lesson_count) == (4, 1)
     assert (first.completed_lesson_count, first.skipped_lesson_count) == (1, 1)
-    assert summary.last_entry.entry == entries[-1]
-    assert summary.last_entry.title == "1. Schulaufgabe · Zahlen"
-    assert summary.last_entry.sequence_label == ""
+    assert summary.recent_entries[0].entry == entries[-1]
+    assert summary.recent_entries[0].title == "1. Schulaufgabe · Zahlen"
+    assert summary.recent_entries[0].sequence_label == ""
+    assert summary.recent_entries[-1].title == "Zahlen ordnen"
     assert summary.next_assessment is None
 
 
-def test_last_entry_uses_log_order_and_selected_subject(
+def test_recent_entries_use_log_order_and_selected_subject(
     empty_progress, sequences, timetable_entries, school_class, school_calendar
 ):
     first = TeachingLogEntry(
@@ -101,6 +103,8 @@ def test_last_entry_uses_log_order_and_selected_subject(
         "Erster Eintrag",
     )
     latest = replace(first, comment="Zweiter Eintrag")
+    earlier_period = replace(first, origin=TeachingOrigin.SCHEDULED, period=1)
+    later_period = replace(earlier_period, period=2)
     entries = (
         first,
         latest,
@@ -108,6 +112,8 @@ def test_last_entry_uses_log_order_and_selected_subject(
             first, date=date(2026, 9, 8), comment="Später erfasst, früher gehalten"
         ),
         replace(first, date=date(2026, 9, 16), subject_id="anderes"),
+        later_period,
+        earlier_period,
     )
     summary = get_class_progress_summary(
         replace(empty_progress, entries=entries),
@@ -118,8 +124,14 @@ def test_last_entry_uses_log_order_and_selected_subject(
         [],
         [],
     )[0]
-    assert summary.last_entry.entry == latest
-    assert summary.sequences[0].held_lesson_count == 3
+    assert tuple(item.entry for item in summary.recent_entries) == (
+        latest,
+        first,
+        later_period,
+        earlier_period,
+        entries[2],
+    )
+    assert summary.sequences[0].held_lesson_count == 5
 
 
 def test_class_panels_refresh_content_and_keep_long_comments_compact(
@@ -164,8 +176,9 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
             await pilot.pause()
             assert view.query_one(".class-next-lesson").border_title == "NÄCHSTE STUNDE"
             assert view.query_one(".lesson-capacity").border_title == "AUSBLICK"
-            assert view.query_one(".class-last-entry").border_title == "ZULETZT"
-            assert view.query_one(".last-entry-empty").display
+            recent = view.query_one(RecentBookings)
+            assert recent.border_title == "ZULETZT"
+            assert "Noch kein Protokolleintrag" in recent.render().plain
             assert "Kein Leistungsnachweis" in str(
                 view.query_one(".class-assessment").content
             )
@@ -204,22 +217,23 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
                 45,
                 (2,),
             )
+            older_log = replace(log, date=date(2026, 9, 4), comment="Ältere Buchung")
             await view.update_data(
-                school_class, [subject], summary((log,), [assessment])
+                school_class, [subject], summary((older_log, log), [assessment])
             )
             await pilot.pause()
-            assert not view.query_one(".last-entry-empty").display
-            assert view.query_one(".last-entry-action").content == "Fortgesetzt"
-            assert view.query_one(".last-entry-title").content == "Zahlen ordnen"
-            comment = view.query_one(".last-entry-comment")
-            assert comment.content == log.comment
-            assert comment.render().plain.endswith("…")
-            assert comment.render().plain.startswith("[bold]")
-            assert comment.size.height <= 3
+            rendered = recent.render().plain
+            assert "Noch kein Protokolleintrag" not in rendered
+            assert "Fortgesetzt" in rendered
+            assert "Zahlen ordnen" in rendered
+            assert recent.entries[0].entry.comment == log.comment
+            comment = next(line for line in rendered.splitlines() if "[bold]" in line)
+            assert comment.endswith("…")
+            assert "Ältere Buchung" in rendered
             assert (
                 view.query_one(".class-last-entry").region.bottom <= view.region.bottom
             )
-            assert view.query_one(SequenceProgressBlock).summary.held_lesson_count == 1
+            assert view.query_one(SequenceProgressBlock).summary.held_lesson_count == 2
             assert view.query_one(".next-lesson-title").content == "1. Schulaufgabe"
             assert view.query_one(".next-lesson-assessment-topic").content == "Zahlen"
             assert view.query_one(".class-assessment").content == "1. Schulaufgabe"
@@ -229,13 +243,13 @@ def test_class_panels_refresh_content_and_keep_long_comments_compact(
             assert view.query_one(".next-lesson-material").content == ""
             assert "2. Stunde" in str(view.query_one(".class-assessment-date").content)
 
-            # Switching subject/class or undoing must clear the previous entry.
+            # Switching subject/class or undoing must clear the previous entries.
             sequences[0].lessons[0].material = []
             await view.update_data(school_class, [subject], summary())
             await pilot.pause()
-            assert view.query_one(".last-entry-empty").display
-            for name in ("date", "action", "title", "sequence", "comment"):
-                assert not view.query_one(f".last-entry-{name}").display
+            assert recent.entries == ()
+            assert "Noch kein Protokolleintrag" in recent.render().plain
+            assert "Ältere Buchung" not in recent.render().plain
             assert "Kein Leistungsnachweis" in str(
                 view.query_one(".class-assessment").content
             )

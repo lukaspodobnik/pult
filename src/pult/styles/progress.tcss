@@ -74,14 +74,29 @@ SchoolClassView .class-context {
 }
 
 SchoolClassView .class-last-entry {
-    height: auto;
+    height: 1fr;
+    min-height: 5;
     margin-top: 1;
+    padding: 0 2;
+    border-subtitle-color: $foreground-muted;
 }
 
-SchoolClassView .class-next-lesson,
-SchoolClassView .class-last-entry {
+SchoolClassView .class-next-lesson {
     height: auto;
     padding: 1 2;
+}
+
+RecentBookings > .recent-bookings--muted {
+    color: $foreground-muted;
+}
+
+RecentBookings > .recent-bookings--title,
+RecentBookings > .recent-bookings--action {
+    text-style: bold;
+}
+
+RecentBookings > .recent-bookings--separator {
+    color: $surface-lighten-2;
 }
 
 SchoolClassView .next-lesson-materials,
@@ -105,55 +120,21 @@ SchoolClassView .next-lesson-material-list {
     overflow-x: hidden;
 }
 
-SchoolClassView .next-lesson-title,
-SchoolClassView .last-entry-title {
+SchoolClassView .next-lesson-title {
     height: auto;
     margin-top: 1;
-    text-style: bold;
-}
-
-SchoolClassView .last-entry-metadata {
-    height: auto;
-    align-vertical: top;
-}
-
-SchoolClassView .last-entry-date {
-    width: 1fr;
-}
-
-SchoolClassView .last-entry-action {
-    width: auto;
-    max-width: 20;
-    height: auto;
-    margin-left: 2;
-    padding: 0 1;
-    background: $boost;
     text-style: bold;
 }
 
 SchoolClassView .next-lesson-sequence,
 SchoolClassView .next-lesson-assessment-topic,
-SchoolClassView .class-assessment-topic,
-SchoolClassView .last-entry-sequence,
-SchoolClassView .last-entry-comment {
+SchoolClassView .class-assessment-topic {
     height: auto;
-}
-
-SchoolClassView .last-entry-comment {
-    margin-top: 1;
-}
-
-SchoolClassView .last-entry-comment {
-    border-left: solid $primary;
-    padding-left: 2;
 }
 
 SchoolClassView .next-lesson-date,
 SchoolClassView .next-lesson-empty,
 SchoolClassView .next-lesson-sequence,
-SchoolClassView .last-entry-date,
-SchoolClassView .last-entry-empty,
-SchoolClassView .last-entry-sequence,
 SchoolClassView .class-assessment-date,
 SchoolClassView .held-lessons,
 SchoolClassView .empty-sequence-hint {

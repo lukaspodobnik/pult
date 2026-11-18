@@ -2,6 +2,11 @@
 
 ## Noch nicht veröffentlicht
 
+- Klassenansicht: „Zuletzt“ zeigt mehrere Buchungen des gewählten Fachs, die
+  neuesten zuerst. Der Bereich füllt den freien Platz unter „Nächste Stunde“
+  mit vollständigen, dezent getrennten Einträgen und gekürzten Texten.
+  Das vollständige Protokoll bleibt über `u` erreichbar.
+
 - GeoGebra: Lokale `.ggb`-Materiallinks öffnen unter macOS die Calculator Suite
   mit dem Dateiinhalt als Standardeingabe. Jeder Klick startet eine neue Instanz;
   die Originaldatei bleibt unverändert. Startfehler werden angezeigt und protokolliert.

@@ -41,7 +41,7 @@ class SequenceProgressSummary:
 
 
 @dataclass(frozen=True)
-class LastTeachingEntry:
+class RecentTeachingEntry:
     entry: TeachingLogEntry
     title: str
     sequence_label: str
@@ -59,7 +59,7 @@ class SubjectProgressSummary:
     next_scheduled_assessment: PlannedAssessment | None = None
     next_assessment: PlannedAssessment | None = None
     has_assessments: bool = False
-    last_entry: LastTeachingEntry | None = None
+    recent_entries: tuple[RecentTeachingEntry, ...] = ()
 
     @property
     def progressed_lesson_count(self) -> int:
@@ -160,47 +160,44 @@ def get_class_progress_summary(
                 )
             )
 
-        # Same order as the log: date, period, then insertion order. Looking
-        # backwards also makes the latest insertion win equal-date ties.
-        last_entry = max(
+        # Newest first, using the same date/period/insertion order as the log.
+        entries = sorted(
             (e for e in reversed(progress.entries) if e.subject_id == subject_id),
             key=lambda e: (e.date, e.period if e.period is not None else 99),
-            default=None,
+            reverse=True,
         )
-        last = None
-        if last_entry is not None:
-            sequence = next(
-                (
-                    s
-                    for s in relevant_sequences
-                    if s.subject_id == subject_id and s.id == last_entry.sequence_id
-                ),
-                None,
-            )
+        recent_entries = []
+        sequences_by_id = {
+            s.id: s for s in relevant_sequences if s.subject_id == subject_id
+        }
+        for entry in entries:
+            sequence = sequences_by_id.get(entry.sequence_id)
             lesson = (
                 next(
                     (
                         lesson
                         for lesson in sequence.lessons
-                        if lesson.id == last_entry.lesson_id
+                        if lesson.id == entry.lesson_id
                     ),
                     None,
                 )
                 if sequence is not None
                 else None
             )
-            last = LastTeachingEntry(
-                entry=last_entry,
-                title=(
-                    lesson.title
-                    if lesson is not None
-                    else assessment_labels.get(last_entry.assessment_id or "", "")
-                ),
-                sequence_label=(
-                    f"{sequence.curriculum_section_id} · {sequence.title}"
-                    if sequence is not None
-                    else ""
-                ),
+            recent_entries.append(
+                RecentTeachingEntry(
+                    entry=entry,
+                    title=(
+                        lesson.title
+                        if lesson is not None
+                        else assessment_labels.get(entry.assessment_id or "", "")
+                    ),
+                    sequence_label=(
+                        f"{sequence.curriculum_section_id} · {sequence.title}"
+                        if sequence is not None
+                        else ""
+                    ),
+                )
             )
 
         subject_summaries.append(
@@ -226,7 +223,7 @@ def get_class_progress_summary(
                 ),
                 next_planned_lesson=next_lessons_by_subject_id.get(subject_id),
                 sequences=tuple(sequence_summaries),
-                last_entry=last,
+                recent_entries=tuple(recent_entries),
                 has_assessments=any(
                     item.subject_id == subject_id for item in assessments or []
                 ),
