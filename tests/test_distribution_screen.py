@@ -17,6 +17,7 @@ from pult.views.distribution_view import (
     DistributionView,
 )
 from pult.widgets.navigation import TeachingPicker, ViewPicker
+from pult.widgets.scrolling import VerticalScroll
 
 
 def test_class_selection_and_export_keep_the_correct_scope(tmp_path, monkeypatch):
@@ -24,11 +25,18 @@ def test_class_selection_and_export_keep_the_correct_scope(tmp_path, monkeypatch
     initialize_school_class(
         tmp_path, config.active_school_year, SchoolClass("5B", 5, ["mathematik"])
     )
+    initialize_school_class(
+        tmp_path,
+        config.active_school_year,
+        SchoolClass("9B", 9, ["mathematik", "informatik-ntg"]),
+    )
     save_timetable(
         get_timetable_path(tmp_path, config.active_school_year),
         [
             TimetableEntry("monday", 1, "5A", "mathematik", "101"),
             TimetableEntry("wednesday", 1, "5B", "mathematik", "102"),
+            TimetableEntry("monday", 2, "9B", "mathematik", "103"),
+            TimetableEntry("friday", 1, "9B", "informatik-ntg", "104"),
         ],
     )
     monkeypatch.setattr("pult.app.load_app_config", lambda: config)
@@ -85,6 +93,27 @@ def test_class_selection_and_export_keep_the_correct_scope(tmp_path, monkeypatch
             assert all(
                 row.date.weekday() == 0 for row in view.rows if row.period is not None
             )
+
+            # Each class/subject restores its own reading position on return.
+            def body():
+                return next(
+                    view.query_one(".distribution-body", VerticalScroll)
+                    for view in screen.query(DistributionView)
+                    if view.display
+                )
+
+            positions = {0: 9, 2: 15, 3: 21}
+            for index, position in positions.items():
+                picker.highlighted = index
+                await pilot.pause(0.2)
+                assert body().scroll_y == 0
+                body().scroll_to(y=position, animate=False, immediate=True)
+                await pilot.pause()
+                assert body().scroll_y == position
+            for index, position in positions.items():
+                picker.highlighted = index
+                await pilot.pause(0.2)
+                assert body().scroll_y == position
             await pilot.press("escape")
             assert app.screen is main
 

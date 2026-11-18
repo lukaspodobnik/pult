@@ -23,12 +23,14 @@ def distribution_html(
 ) -> str:
     body = []
     for row in rows:
-        if row.kind in {DistributionKind.SEQUENCE, DistributionKind.HOLIDAY}:
-            title = (
-                row.title.upper() if row.kind == DistributionKind.HOLIDAY else row.title
-            )
+        if row.kind is DistributionKind.HOLIDAY:
             body.append(
-                f'<tr class="{row.kind.value}"><td colspan="5">{escape(title)}</td></tr>'
+                f'<tr class="holiday"><td colspan="5">{escape(row.title.upper())}</td></tr>'
+            )
+        elif row.kind is DistributionKind.SEQUENCE:
+            body.append(
+                '<tr class="sequence"><td></td><td></td><td></td>'
+                f"<td>{escape(row.title)}</td><td></td></tr>"
             )
         else:
             cells = (
@@ -67,16 +69,17 @@ thead {{ display:table-header-group; }}
 th {{ font-weight:600; text-align:left; white-space:nowrap; border-bottom:1px solid #82909b; }}
 td,th {{ padding:1.8mm 1mm; vertical-align:top; overflow-wrap:anywhere; }}
 td {{ border-bottom:.2mm solid #e2e5e8; }}
-tbody tr:not(.sequence):not(.holiday) td {{ padding-top:1.1mm; padding-bottom:1.1mm; }}
+tbody tr:not(.holiday) td {{ padding-top:1.1mm; padding-bottom:1.1mm; }}
 tbody tr:not(.sequence):not(.holiday) td:first-child {{ font-weight:500; }}
 th:nth-child(n+2),td:nth-child(n+2) {{ border-left:.2mm solid #c5cdd4; padding-left:2mm; }}
 td:nth-child(2) {{ white-space:nowrap; }}
 .date-weekday {{ display:inline-block; width:1.8em; }}
 .date-number {{ font-variant-numeric:tabular-nums; font-kerning:none; }}
 tr {{ break-inside:avoid; }}
-.sequence,.holiday {{ font-weight:600; break-after:avoid; text-align:center; }}
-.sequence td {{ background:#e6edf3; }}
-.holiday td {{ background:#eeece4; }}
+.sequence,.holiday {{ font-weight:600; break-after:avoid; }}
+.sequence td:nth-child(4) {{ background:#e6edf3; }}
+.holiday td {{ background:#eeece4; text-align:center; padding:1.35em 1mm;
+  border-top:.3mm solid #b9b5a5; border-bottom:.3mm solid #b9b5a5; }}
 .assessment td:nth-child(4) {{ background:#f4e3ca; font-weight:600; }}
 td:nth-child(5) {{ color:#59616a; }}
 td.status {{ padding-left:0; padding-right:0; text-align:center; font-weight:600; white-space:nowrap; }}

@@ -2,6 +2,11 @@
 
 ## Noch nicht veröffentlicht
 
+- Stoffverteilungsplan: Sequenzüberschriften stehen als reguläre Tabellenzeilen
+  mit dezenter Hervorhebung der Themenspalte im Plan. Ferien bilden ein höheres
+  Band über die gesamte Breite. Der PDF-Export übernimmt dieselbe Gliederung.
+  Die eigene Scrollposition je Klasse und Fach beim Wechsel bleibt erhalten.
+
 - LNW-Übersicht: Termine stehen nach Klassen gruppiert in der gemeinsamen Liste,
   mit dezenten Überschriften und Trennlinien. Innerhalb jeder Klasse bleibt die
   chronologische Reihenfolge erhalten; die Navigation überspringt Überschriften.

@@ -226,10 +226,14 @@ Stunden bleiben ohne Symbol. Begründungen stehen in den Anmerkungen; beim
 Spontanunterricht bildet die Beschreibung das Stundenthema. Die Symbole erscheinen
 auch im PDF-Export.
 
-Ferien, neue Sequenzen und LNWs sind farblich erkennbar. Auch LNWs anderer Fächer
+Sequenzüberschriften bleiben als reguläre Zeilen in der Tabelle; hervorgehoben
+ist nur die Zelle „Stundenthema“. Ferien bilden ein dreizeiliges Band über die
+gesamte Breite. Diese Gliederung erscheint auch im PDF-Export. LNWs sind ebenfalls
+farblich erkennbar. Auch LNWs anderer Fächer
 oder außerhalb eigener Stunden erscheinen; nur belegte eigene Termine verdrängen
 Unterricht. Anmerkungen stammen aus den vorhandenen Daten, etwa `hinweise` in
-`stunde.toml`. Die Tabelle wird mit der Maus gescrollt.
+`stunde.toml`. Die Tabelle wird mit der Maus gescrollt. Solange der SVP geöffnet
+ist, behält jede Klasse/Fachkombination beim Wechsel ihre eigene Scrollposition.
 
 Mit **x** exportieren Stoffverteilungsplan und Stundenplanverwaltung die jeweilige
 Ansicht als durchsuchbare A4-PDF mit Seitenzahlen und gewählter Dokumentschrift:

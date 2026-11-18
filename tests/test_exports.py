@@ -94,7 +94,10 @@ def test_pdf_html_preserves_rows_and_escapes_all_user_content():
         '<span class="date-number">12.10.26</span></td>'
     ) in document
     assert "HERBSTFERIEN" in document and "Buß und Bettag" in document
-    assert "Terme (ca. 12 Std.)" in document
+    assert (
+        '<tr class="sequence"><td></td><td></td><td></td>'
+        "<td>Terme (ca. 12 Std.)</td><td></td></tr>"
+    ) in document
     assert "Stand: 11.10.2026, 14:30" in document
     assert "A4 portrait" in document and "table-header-group" in document
     assert ".assessment td:nth-child(4)" in document

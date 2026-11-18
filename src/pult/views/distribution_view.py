@@ -1,4 +1,4 @@
-"""Rich-Tabellen mit gemeinsamen Spalten und durchgehenden Abschnittszeilen."""
+"""Durchgehende SVP-Tabellen mit dezenten Sequenzzeilen und Ferienabschnitten."""
 
 from rich import box
 from rich.console import Console, ConsoleOptions, RenderResult
@@ -12,7 +12,6 @@ from pult.progress.queries.distribution import DistributionKind, DistributionRow
 from pult.widgets.scrolling import Vertical, VerticalScroll
 
 HEADINGS = ("Nr.", "Datum", "", "Stundenthema", "Anmerkungen")
-SECTION_KINDS = {DistributionKind.SEQUENCE, DistributionKind.HOLIDAY}
 HEADER_BOX = box.Box(str(box.MINIMAL).replace("│", " ").replace("┼", "─"))
 
 
@@ -37,6 +36,7 @@ class DistributionTable(Static):
         "distribution-table--border",
         "distribution-table--muted",
         "distribution-table--assessment",
+        "distribution-table--sequence",
         "distribution-table--notes",
         *(f"distribution-table--{action.value}" for action in ACTION_ICONS),
     }
@@ -82,12 +82,21 @@ class DistributionTable(Static):
                 if row.action is not None and row.action in ACTION_ICONS
                 else ""
             )
+            title_style = (
+                self.get_component_rich_style(f"distribution-table--{row.kind.value}")
+                if row.kind in {DistributionKind.SEQUENCE, DistributionKind.ASSESSMENT}
+                else ""
+            )
             values = (
-                str(row.number) if row.number is not None else "—",
-                format_compact_date(row.date),
-                ACTION_ICONS.get(row.action, "") if row.action is not None else "",
-                row.title,
-                row.notes,
+                ("", "", "", row.title, "")
+                if row.kind is DistributionKind.SEQUENCE
+                else (
+                    str(row.number) if row.number is not None else "—",
+                    format_compact_date(row.date),
+                    ACTION_ICONS.get(row.action, "") if row.action is not None else "",
+                    row.title,
+                    row.notes,
+                )
             )
             table.add_row(
                 *(
@@ -96,10 +105,8 @@ class DistributionTable(Static):
                         style=(
                             status_style
                             if index == 2
-                            else self.get_component_rich_style(
-                                "distribution-table--assessment"
-                            )
-                            if index == 3 and row.kind is DistributionKind.ASSESSMENT
+                            else title_style
+                            if index == 3
                             else notes_style
                             if index == 4
                             else ""
@@ -113,15 +120,13 @@ class DistributionTable(Static):
         return table
 
 
-class DistributionTableRow(Static):
-    """Eine Abschnittszeile ohne Spaltengrenzen."""
+class DistributionHoliday(Static):
+    """Ein Ferienband über die gesamte Tabellenbreite."""
 
     def __init__(self, row: DistributionRow) -> None:
         super().__init__(
-            Text(
-                row.title.upper() if row.kind is DistributionKind.HOLIDAY else row.title
-            ),
-            classes=f"distribution-section {row.kind.value}",
+            Text(row.title.upper()),
+            classes="distribution-holiday",
         )
         self.row = row
 
@@ -144,11 +149,11 @@ class DistributionView(Vertical):
                 )
             pending = []
             for row in self.rows:
-                if row.kind in SECTION_KINDS:
+                if row.kind is DistributionKind.HOLIDAY:
                     if pending:
                         yield DistributionTable(self, tuple(pending))
                         pending = []
-                    yield DistributionTableRow(row)
+                    yield DistributionHoliday(row)
                 else:
                     pending.append(row)
             if pending:
@@ -172,13 +177,3 @@ class DistributionView(Vertical):
             self.column_widths = widths
             for table in self.query(DistributionTable):
                 table.refresh(layout=True)
-        # Drei vorhergehende Zellen, deren Abstände und Trennlinien sowie
-        # das linke Padding der Themenspalte; den Abschnittsrand ausgleichen.
-        title_offset = 1 + sum(self.column_widths[:3]) + 9
-        for section in self.query(DistributionTableRow):
-            section.styles.padding = (
-                0,
-                1,
-                0,
-                title_offset - section.styles.margin.left,
-            )

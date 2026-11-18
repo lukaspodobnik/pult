@@ -9,7 +9,6 @@ App.-light-mode DistributionScreen #distribution-content:focus-within { border: 
 DistributionView { width: 1fr; height: 1fr; padding: 0 1; }
 DistributionView .distribution-body { height: 1fr; scrollbar-gutter: stable; }
 DistributionView .distribution-table { width: 1fr; height: auto; padding: 0 1; }
-DistributionView .distribution-section { width: 1fr; height: auto; padding: 0 1; }
 DistributionView .heading { height: 2; }
 DistributionTable > .distribution-table--border { color: $foreground 20%; }
 DistributionTable > .distribution-table--muted { color: $foreground-muted; }
@@ -21,8 +20,8 @@ DistributionTable > .distribution-table--cancelled { color: $error; text-style: 
 DistributionTable > .distribution-table--other { text-style: bold; }
 DistributionTable > .distribution-table--assessment { color: $warning; background: $warning 12%; }
 App.-light-mode DistributionTable > .distribution-table--assessment { color: $warning-darken-2; }
-DistributionView .sequence { margin: 1 1 0 1; background: $primary 15%; color: $text-accent; text-style: bold; }
-DistributionView .holiday { margin: 1 0; background: $secondary 12%; color: $secondary; text-style: bold; }
+DistributionTable > .distribution-table--sequence { background: $primary 15%; color: $text-accent; text-style: bold; }
+DistributionView .distribution-holiday { height: auto; min-height: 3; margin: 0 1; padding: 1 1; background: $secondary 12%; color: $secondary; text-style: bold; text-align: center; }
 DistributionView .distribution-empty { height: auto; padding: 1; color: $foreground-muted; }
 
-App.-light-mode DistributionView .holiday { color: $secondary-darken-2; }
+App.-light-mode DistributionView .distribution-holiday { color: $secondary-darken-2; }
