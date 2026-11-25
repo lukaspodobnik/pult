@@ -1,80 +1,37 @@
 # Änderungen
 
-## Noch nicht veröffentlicht
+## 1.4.0
 
-- Nach einer Fortsetzung bietet `n` neben dem normalen Abschluss einen kurzen
-  Restabschluss an. Der Termin bleibt dabei für die nächste Planstunde frei;
-  SVP und PDF vermerken den Rest in der Anmerkung desselben Termins. Protokoll,
-  „Zuletzt“ und Rückgängig berücksichtigen den Abschluss ohne zusätzliche Stunde.
+- Aufgaben- und Lösungshefte als PDF: `x` exportiert die Aufgaben der aktuellen
+  Stunde, `X` die zugeordneten Aufgaben der Sequenz. Antwortbereiche, Druckspalten,
+  Bildgrößen, Buchquellen und eine optionale Namenszeile sind einstellbar.
+- Aufgaben erhalten Metadaten für Titel, Hauptkompetenzen und Anforderungsbereich.
+  Buchaufgaben können Quellenangaben tragen und werden nach Seite und Nummer
+  sortiert; eigene Aufgaben nach ihrer Titelnummer.
+- Nach `c` bietet `n` einen kurzen Restabschluss an. Der Termin bleibt für die
+  nächste Planstunde frei; SVP und PDF führen den Rest als Anmerkung beim selben
+  Termin. Protokoll, Stundenbilanz und Rückgängig berücksichtigen den Unterschied.
+- Stoffverteilungsplan mit dezenten Sequenzüberschriften, deutlicheren Ferien und
+  Aktionssymbolen, auch im PDF. Scrollpositionen bleiben je Klasse und Fach beim
+  Wechsel erhalten; `X` exportiert die Pläne aller Klassen und Fächer.
+- LNW-Übersicht nach Klassen gruppiert. „Zuletzt“ zeigt so viele Buchungen, wie
+  Platz haben; „Nächste Stunde“ nennt benötigte Materialien.
+- GeoGebra-Dateien öffnen unter macOS in der Calculator Suite. Dabei wird der
+  Dateiinhalt importiert; die Originaldatei wird nicht verändert.
+- Dokumente unterstützen Definitionen und Merksätze, mehrspaltige Teilaufgaben,
+  Abbildungen neben Text und anpassbare Textersetzungen. Leertaste wechselt
+  zwischen Aufgabe und Lösung; Verlaufspläne zeigen Zeiten in einer eigenen Spalte.
+- Benachbarte Stunden werden vorgeladen; der Dokumentcache ist auf 500 MB begrenzt.
+- Darstellungsfehler bei Tagesmarkierung, Navigation und der Rückkehr aus der
+  Aufgabenbibliothek behoben.
+- Lokale Diagnoseprotokolle mit Rotation und zusätzlicher Ausgabe bei `pult --debug`.
 
-- Stoffverteilungsplan: Sequenzüberschriften stehen als reguläre Tabellenzeilen
-  mit dezenter Hervorhebung der Themenspalte im Plan. Ferien bilden ein höheres
-  Band über die gesamte Breite. Der PDF-Export übernimmt dieselbe Gliederung.
-  Die eigene Scrollposition je Klasse und Fach beim Wechsel bleibt erhalten.
-
-- LNW-Übersicht: Termine stehen nach Klassen gruppiert in der gemeinsamen Liste,
-  mit dezenten Überschriften und Trennlinien. Innerhalb jeder Klasse bleibt die
-  chronologische Reihenfolge erhalten; die Navigation überspringt Überschriften.
-
-- Klassenansicht: „Zuletzt“ zeigt mehrere Buchungen des gewählten Fachs, die
-  neuesten zuerst. Der Bereich füllt den freien Platz unter „Nächste Stunde“
-  mit vollständigen, dezent getrennten Einträgen und gekürzten Texten.
-  Das vollständige Protokoll bleibt über `u` erreichbar.
-
-- GeoGebra: Lokale `.ggb`-Materiallinks öffnen unter macOS die Calculator Suite
-  mit dem Dateiinhalt als Standardeingabe. Jeder Klick startet eine neue Instanz;
-  die Originaldatei bleibt unverändert. Startfehler werden angezeigt und protokolliert.
-
-- Navigation: Nach der Startanimation werden die Darstellungsstile der drei
-  Navigationslisten aktualisiert, damit die ausgewählte Ansicht sofort sichtbar
-  hinterlegt ist. Auswahl, Fokus und Scrollposition bleiben erhalten.
-
-- Stundenansicht: Bereits gerenderte Dokumentbilder werden beim Wiederanzeigen
-  gezielt neu ausgegeben. Dokumentcache, Auswahl und Scrollposition bleiben bei
-  der Rückkehr aus der Aufgabenbibliothek erhalten. Beim Schließen der Aufgaben
-  werden laufende Darstellungen vor dem Ansichtswechsel abgebrochen.
-
-- Tagesübersicht: Zeilen und Textfelder werden nach dem Start, beim erneuten
-  Anzeigen und beim Wechsel der Zeitmarkierung gezielt neu gezeichnet, damit
-  keine veralteten Hintergrundflächen stehen bleiben. Unterrichtsdaten und
-  Fortschritt bleiben dabei unverändert.
-
-- Lokale Diagnoseprotokolle mit Größenbegrenzung und Rotation; `pult --debug`
-  erfasst zusätzlich Stundenwechsel, Cache-Nutzung, Darstellung und Tagesmarkierung.
-  `pult --help` nennt Optionen und Logpfad. Fehler aus Oberfläche und
-  Hintergrundaufgaben werden mit Typen und Codestellen erfasst.
-
-- Aufgabenbibliothek: `x` exportiert die ganze Sequenz als Aufgabenheft und
-  getrenntes Lösungsheft. Optionale Exportangaben in `aufgabe.toml` steuern
-  Schreiblinien und Karofelder, gemeinsam oder pro Teilaufgabe. A4-Hochformat
-  mit Formeln, Abbildungen, Seitenzahlen und einstellbarem Namen in der Fußzeile.
-
-- Abbildungsblöcke setzen eine kompakte Skizze neben den zugehörigen Text;
-  bei wenig Breite stehen beide untereinander.
-
-- Bei langen Hefteinträgen rückt die erste freistehende Trennlinie beim Öffnen
-  möglichst in die Mitte. Vollständig sichtbare Einträge bleiben oben; es entsteht
-  kein zusätzlicher Leerraum am Ende. Gilt für Grafik- und Textansicht.
-
-- Merksatz-Kästen tragen die Beschriftung „Merke“; abgesetzte Formeln
-  stehen kompakter, auch innerhalb der Kästen.
-
-- Teilaufgabenblöcke mit ausgerichteten Beschriftungen und ein bis drei Spalten;
-  schmale Ansichten verwenden weniger Spalten, die Textansicht bleibt einspaltig.
-
-- Leertaste wechselt zwischen Aufgabe und Lösung; Verlaufspläne zeigen die Zeit
-  als Zahl in einer eigenen Spalte vor Phase und Inhalt, auch in der Textansicht.
-
-- Aufgabenbibliothek nach Titelnummer sortiert: `1.`, `2.`, …, `10.`;
-  unnummerierte Titel folgen alphabetisch. Aufgaben-IDs und Zuordnungen bleiben erhalten.
-
-- Definitionen und Merksätze als Markdown-Callouts: blaue bzw. orange Akzente
-  passend zum Theme, mit Beschriftung auch in der Textansicht.
-- Aufgaben besitzen eine `aufgabe.toml` mit Titel, ein bis drei Hauptkompetenzen
-  und einem Anforderungsbereich (höchster Bereich der Teilaufgaben). Anlage,
-  Bearbeitung und Aufgabenbibliothek berücksichtigen die Metadaten.
-- Bestehende Aufgaben benötigen die neue Metadatendatei ebenfalls; keine
-  automatische fachliche Einordnung.
+**Update von 1.3.1:** Bestehende Aufgaben brauchen ebenfalls eine `aufgabe.toml`
+mit Titel, Hauptkompetenzen und Anforderungsbereich. Diese Angaben werden nicht
+automatisch ergänzt. Das [Materialformat](src/pult/defaults/vorbereitung/materialvertrag.md)
+beschreibt die Felder. Neue Einstellungen besitzen Standardwerte; bestehende
+Klassenprotokolle bleiben lesbar. Ein mit 1.4.0 gespeicherter Restabschluss wird
+von älteren PULT-Versionen nicht unterstützt.
 
 ## 1.3.1
 

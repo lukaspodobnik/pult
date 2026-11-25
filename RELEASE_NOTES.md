@@ -1,35 +1,26 @@
-# PULT 1.2.0
+# PULT 1.4.0
 
-## Neu
-
-- Schriftliche Leistungsnachweise planen: Schulaufgaben, Stegreifaufgaben,
-  angekündigte kleine Leistungsnachweise und Jahrgangsstufentests.
-- Termine mit Beginn, Dauer und belegten Unterrichtsstunden verwalten;
-  Konflikte mit Ausfällen und Ferien erkennen.
-- Leistungsnachweise mit `n` abschließen und im Unterrichtsprotokoll erfassen,
-  ohne den Sequenzfortschritt weiterzuschalten. Abschlüsse lassen sich zurücknehmen.
-- Erlaubte Arten und jährliche Mindestzahlen je Fach und Jahrgangsstufe unter
-  Einstellungen festlegen. Neue Schuljahre übernehmen die bisherigen Vorgaben.
-- Klassenübersicht mit Stundendifferenz, nächstem Leistungsnachweis und Zählern
-  für große und kleine schriftliche Leistungsnachweise. Die Verwaltung zeigt,
-  welche Leistungsnachweise noch zu planen sind. Jahrgangsstufentests zählen
-  nicht zu den Mindestzahlen.
-
-## Verbessert
-
-- Dashboard mit sechs sichtbaren Stunden und scrollbaren weiteren Einträgen.
-- Erweiterte Klassen- und Ausfallverwaltung mit Unterrichtsterminen.
-- Einheitlichere Rahmen, kompaktere Dialoge und dezente Fokusmarkierungen.
-- Sanfter Start mit großem PULT-Logo und anschließendem Einblenden des Dashboards.
-- Ergänzte Lehrplanreferenzen sowie überarbeitete Dokumentation.
+- Aufgaben- und Lösungshefte als PDF: für eine Stunde oder eine ganze Sequenz,
+  mit Antwortbereichen und Quellenangaben.
+- Kurze Reste nach einer Fortsetzung abschließen, ohne einen weiteren Termin
+  zu verbuchen. Der SVP erhält eine Anmerkung beim selben Termin.
+- Überarbeiteter Stoffverteilungsplan mit klareren Ferienabschnitten,
+  Scrollposition je Klasse und Fach sowie gesammelt exportierbaren Plänen.
+- LNW-Übersicht nach Klassen gruppiert; „Zuletzt“ zeigt mehrere Buchungen.
+- GeoGebra-Dateien aus PULT unter macOS öffnen.
+- Verbesserte Dokumentdarstellung und behobene Anzeigefehler beim Start
+  und beim Wechsel zwischen Stunden und Aufgaben.
+- Lokale Diagnoseprotokolle; ausführlicher Modus mit `pult --debug`.
 
 ## Installation und Update
 
 ```sh
-uv tool install --force --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.2.0/pult-1.2.0-py3-none-any.whl
+uv tool install --force --python 3.11 https://github.com/lukaspodobnik/pult/releases/download/v1.4.0/pult-1.4.0-py3-none-any.whl
 ```
 
-Persönliche Unterrichtsdaten bleiben erhalten. Eine Sicherung des Datenverzeichnisses
-vor dem Update ist empfehlenswert. Fehlende LNW-Vorgaben bestehender Schuljahre
-verwenden die letzte frühere Konfiguration oder die mitgelieferten Standards;
-bestehende Vorgaben werden nicht überschrieben.
+Bestehende Aufgaben benötigen eine `aufgabe.toml` mit Titel, Hauptkompetenzen und
+Anforderungsbereich. Ältere Aufgaben ohne diese Metadaten werden nicht automatisch
+migriert. Bereits entsprechend gepflegte Unterrichtsdaten können weiterverwendet
+werden. Falls PULT die Dokumenteinrichtung anbietet, den Chromium-Download ausführen.
+
+[Alle Änderungen und Materialformat](https://github.com/lukaspodobnik/pult/blob/v1.4.0/CHANGELOG.md)

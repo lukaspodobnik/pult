@@ -17,6 +17,7 @@ from textual.widgets import Input, Select
 
 import pult
 import pult.config.app_config as config_module
+import pult.services.diagnostics as diagnostics_module
 import pult.services.omarchy_theme as theme_module
 from pult.app import PultApp
 from pult.curriculum.sequence import load_sequence_library
@@ -88,6 +89,9 @@ def main() -> None:
         in files("pult").joinpath("legal/GPL-3.0.txt").read_text()
     )
     old_cwd = Path.cwd()
+    old_argv = sys.argv[:]
+    entry = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else None
+    old_log_directory = diagnostics_module.log_directory
     try:
         with TemporaryDirectory(prefix="pult-installed-smoke-") as directory:
             root = Path(directory)
@@ -96,21 +100,24 @@ def main() -> None:
             os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(root / "missing-browser")
             config_module.APP_CONFIG_PATH = root / "config.toml"
             theme_module.get_omarchy_palette_path = lambda: root / "no-theme.toml"
-            if len(sys.argv) > 1:
+            diagnostics_module.log_directory = lambda: root / "logs"
+            if entry is not None:
                 # Durchlaufe den echten installierten Einstiegspunkt headless.
-                entry = Path(sys.argv[1]).resolve()
 
                 async def run_headless(self):
                     await smoke(self, root)
 
                 PultApp.run_async = run_headless
                 try:
+                    sys.argv = [str(entry)]
                     runpy.run_path(str(entry), run_name="__main__")
                 except SystemExit as error:
                     assert error.code in (None, 0)
             else:
                 asyncio.run(smoke(PultApp(), root))
     finally:
+        sys.argv = old_argv
+        diagnostics_module.log_directory = old_log_directory
         os.chdir(old_cwd)
     print(
         "Installiertes PULT: Einstiegspunkt, Setup, Rendererangebot, Neustart, Defaults und Lizenzdialog erfolgreich."
